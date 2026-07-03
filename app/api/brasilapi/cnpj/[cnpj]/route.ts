@@ -1,6 +1,7 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-import { extractCnpjCompanyName, normalizeCnpj, type BrasilApiCnpjLookup } from "@/lib/brasilApiCnpj";
+import { normalizeCnpj } from "@/lib/brasilApiCnpj";
+import { lookupCompanyByCnpj } from "@/lib/company-lookup/companyLookup";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -9,68 +10,52 @@ function jsonError(error: string, status: number) {
   return NextResponse.json({ error }, { status });
 }
 
+function nullable(value: string | null | undefined) {
+  return value && value.trim() ? value.trim() : null;
+}
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ cnpj: string }> }) {
   const { cnpj: rawCnpj } = await params;
   const cnpj = normalizeCnpj(rawCnpj);
 
   if (cnpj.length !== 14) {
-    return jsonError("CNPJ invalido", 400);
+    return jsonError("CNPJ inválido", 400);
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10_000);
-
   try {
-    const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, {
-      signal: controller.signal,
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    const item = await lookupCompanyByCnpj(cnpj);
+    const companyName = item.companyName || item.fantasyName || "";
 
-    const data = (await response.json().catch(() => null)) as BrasilApiCnpjLookup | null;
-    if (!response.ok || !data) {
-      return jsonError("CNPJ nao encontrado", response.status === 404 ? 404 : 502);
-    }
-
-    const companyName = extractCnpjCompanyName(data);
-    const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
     return NextResponse.json(
       {
-        cnpj,
-        nome_fantasia: str(data.nome_fantasia),
-        razao_social: str(data.razao_social),
-        company_name: companyName || null,
-        descricao_situacao_cadastral: str(data.descricao_situacao_cadastral),
-        data_situacao_cadastral: str(data.data_situacao_cadastral),
-        cnae_fiscal_descricao: str(data.cnae_fiscal_descricao),
-        natureza_juridica: str(data.natureza_juridica),
-        capital_social: str(data.capital_social),
-        porte: str(data.porte),
-        opcao_pelo_simples: typeof data.opcao_pelo_simples === "boolean" ? data.opcao_pelo_simples : null,
-        data_opcao_pelo_simples: str(data.data_opcao_pelo_simples),
-        abertura: str(data.abertura),
-        cep: str(data.cep),
-        logradouro: str(data.logradouro),
-        numero: str(data.numero),
-        complemento: str(data.complemento),
-        bairro: str(data.bairro),
-        municipio: str(data.municipio),
-        uf: str(data.uf),
-        ddd_telefone_1: str(data.ddd_telefone_1),
-        ddd_telefone_2: str(data.ddd_telefone_2),
-        email: str(data.email),
+        cnpj: item.cnpj || cnpj,
+        nome_fantasia: nullable(item.fantasyName),
+        razao_social: nullable(item.companyName),
+        company_name: nullable(companyName),
+        descricao_situacao_cadastral: nullable(item.situation),
+        data_situacao_cadastral: null,
+        cnae_fiscal_descricao: nullable(item.mainActivity),
+        natureza_juridica: nullable(item.legalNature),
+        capital_social: nullable(item.shareCapital),
+        porte: nullable(item.size),
+        opcao_pelo_simples: null,
+        data_opcao_pelo_simples: null,
+        abertura: nullable(item.openingDate),
+        cep: nullable(item.cep),
+        logradouro: nullable(item.address),
+        numero: nullable(item.number),
+        complemento: nullable(item.complement),
+        bairro: nullable(item.district),
+        municipio: nullable(item.city),
+        uf: nullable(item.state),
+        ddd_telefone_1: nullable(item.phone),
+        ddd_telefone_2: nullable(item.phone2),
+        email: nullable(item.email),
       },
       { status: 200 },
     );
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      return jsonError("Consulta a BrasilAPI demorou demais", 504);
-    }
-    return jsonError("Nao foi possivel consultar a BrasilAPI", 502);
-  } finally {
-    clearTimeout(timeoutId);
+    const message = error instanceof Error ? error.message : "Não foi possível consultar o CNPJ.";
+    return jsonError(message, 400);
   }
 }
-

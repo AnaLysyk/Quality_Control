@@ -2075,6 +2075,8 @@ export default function CompanyDefectsPage() {
     return Array.from(unique.values()).sort((left, right) => collator.compare(left.label, right.label));
   }, [collator, defects, responsibleOptions]);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+
   const activeFilterChips = useMemo(() => {
     const chips: string[] = [];
     if (runFilter && runFilterLabel) chips.push(interpolate(copy.filters.chipRun, { value: runFilterLabel }));

@@ -315,6 +315,7 @@ export default function AdminPermissionsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [showFullHistory, setShowFullHistory] = useState(false);
+  const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<NoticeState>({ type: "idle" });
@@ -539,6 +540,38 @@ export default function AdminPermissionsPage() {
 
   const visibleHistoryItems = showFullHistory ? historyItems : historyItems.slice(0, 2);
 
+  const searchSuggestions = useMemo(() => {
+    const suggestions = new Set<string>();
+
+    for (const module of PERMISSION_MODULES) {
+      suggestions.add(module.label);
+      suggestions.add(module.id);
+      suggestions.add(module.category);
+
+      if (module.description) suggestions.add(module.description);
+
+      for (const action of module.actions) {
+        suggestions.add(action);
+        suggestions.add(getActionLabel(action));
+      }
+
+      for (const route of getRoutesForModule(module)) {
+        const path = getRouteValue(route, "path");
+        const label = getRouteValue(route, "label");
+        const description = getRouteValue(route, "description");
+
+        if (path) suggestions.add(path);
+        if (label) suggestions.add(label);
+        if (description) suggestions.add(description);
+      }
+    }
+
+    return Array.from(suggestions)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 160);
+  }, []);
+
   function handleSelectRole(role: SystemRole) {
     setSelectedRole(role);
     setQuery("");
@@ -727,6 +760,114 @@ export default function AdminPermissionsPage() {
       });
     };
   }, []);
+  useEffect(() => {
+    const markerClass = "qc-permissions-remove-cover-actions";
+
+    const removeCoverActions = () => {
+      const roots = Array.from(
+        document.querySelectorAll(".profile-permissions-page, .qc-profile-permissions-page")
+      );
+
+      for (const root of roots) {
+        const actions = Array.from(root.querySelectorAll("button, a"));
+
+        for (const action of actions) {
+          const text = (action.textContent || "").trim().toLowerCase();
+          const title = (action.getAttribute("title") || "").trim().toLowerCase();
+          const aria = (action.getAttribute("aria-label") || "").trim().toLowerCase();
+
+          const label = [text, title, aria].join(" ");
+
+          const shouldHide =
+            label.includes("permissões por usuário") ||
+            label.includes("permissoes por usuario") ||
+            label.includes("atualizar") ||
+            label.includes("recarregar") ||
+            label.includes("refresh");
+
+          if (shouldHide) {
+            action.classList.add(markerClass);
+          }
+        }
+      }
+    };
+
+    removeCoverActions();
+
+    const observer = new MutationObserver(removeCoverActions);
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+    });
+
+    return () => {
+      observer.disconnect();
+      document
+        .querySelectorAll("." + markerClass)
+        .forEach((node) => node.classList.remove(markerClass));
+    };
+  }, []);
+  useEffect(() => {
+    const markerClass = "qc-permissions-history-icon-modal";
+
+    const syncHistoryButton = () => {
+      const roots = Array.from(
+        document.querySelectorAll(".profile-permissions-page, .qc-profile-permissions-page")
+      );
+
+      for (const root of roots) {
+        const actions = Array.from(root.querySelectorAll("button, a"));
+
+        const historyActions = actions.filter((action) => {
+          const label = (action.textContent || "").trim().toLowerCase();
+          const title = (action.getAttribute("title") || "").trim().toLowerCase();
+          const aria = (action.getAttribute("aria-label") || "").trim().toLowerCase();
+
+          return [label, title, aria].join(" ").includes("histórico");
+        });
+
+        const mainHistory = historyActions.find((action) =>
+          action.closest(".permissions-profile-hero-unified, .permissions-profile-panel")
+        ) ?? historyActions[0];
+
+        for (const action of historyActions) {
+          action.classList.remove("qc-permissions-history-icon-only");
+          action.classList.remove("qc-permissions-history-extra-hidden");
+
+          if (action === mainHistory) {
+            action.classList.add("qc-permissions-history-icon-only");
+            action.setAttribute("aria-label", "Histórico");
+            action.setAttribute("title", "Histórico");
+          } else {
+            action.classList.add("qc-permissions-history-extra-hidden");
+          }
+        }
+      }
+    };
+
+    syncHistoryButton();
+
+    const observer = new MutationObserver(syncHistoryButton);
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+    });
+
+    return () => {
+      observer.disconnect();
+
+      document
+        .querySelectorAll(".qc-permissions-history-icon-only, .qc-permissions-history-extra-hidden")
+        .forEach((node) => {
+          node.classList.remove("qc-permissions-history-icon-only");
+          node.classList.remove("qc-permissions-history-extra-hidden");
+        });
+    };
+  }, []);
 
 
   if (loading) return <AccessDeniedState state="loading" />;
@@ -745,7 +886,7 @@ export default function AdminPermissionsPage() {
   const sortMark = sortDirection === "asc" ? "?" : "?";
 
   return (
-    <main className="qc-profile-permissions-page profile-permissions-page min-h-screen bg-[#f8fafc] px-4 py-0 text-[#0f172a] lg:px-6">
+    <main data-history-open={historyPanelOpen ? "true" : "false"} className="profile-permissions-page qc-profile-permissions-page qc-profile-permissions-page profile-permissions-page min-h-screen bg-[#f8fafc] px-4 py-0 text-[#0f172a] lg:px-6">
       <div className="flex w-full max-w-none flex-col gap-4">
         <section className="permissions-profile-panel permissions-profile-hero-unified permissions-profile-hero-unified permissions-profile-cover-content rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -765,8 +906,16 @@ export default function AdminPermissionsPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Link
-                href="/admin/users/permissions"
+              <button
+                  type="button"
+                  onClick={() => setHistoryPanelOpen((current) => !current)}
+                  className="permissions-hero-history-toggle inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
+                >
+                  {historyPanelOpen ? "Fechar histórico" : "Histórico"}
+                </button>
+
+                <Link
+                  href="/admin/users/permissions"
                 className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
               >
                 <FiUsers className="h-3.5 w-3.5" />
@@ -810,7 +959,40 @@ export default function AdminPermissionsPage() {
           </div>
         </section>
 
-        <section className="grid gap-3 xl:grid-cols-5">
+        {historyPanelOpen ? (
+          <section className="profile-permissions-history permissions-history-panel permissions-history-panel rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-500">
+              <FiClock className="h-4 w-4" />
+              Histórico do perfil
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {visibleHistoryItems.map((item) => (
+                <div key={`${item.title}-${item.date}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-sm font-black text-[#0f172a]">{item.title}</p>
+                  <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500">{item.description}</p>
+                  <p className="mt-2 text-[10px] font-black uppercase tracking-wide text-slate-400">{item.date}</p>
+                </div>
+              ))}
+            </div>
+
+            {historyItems.length > 2 ? (
+              <button
+                type="button"
+                onClick={() => setShowFullHistory((current) => !current)}
+                className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
+              >
+                {showFullHistory ? "Ver menos" : "Ver mais histórico"}
+              </button>
+            ) : null}
+
+            <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-3 text-xs font-semibold leading-relaxed text-[#011848]">
+              <strong>Regra:</strong> esta tela define o padrão do perfil. Exceções individuais ficam em permissões por usuário e não alteram o padrão global.
+            </div>
+          </section>
+        ) : null}
+
+        <section className="permissions-profile-type-grid grid gap-3 xl:grid-cols-5">
           {roleCards.map((card) => {
             const selected = selectedRole === card.role;
 
@@ -877,7 +1059,7 @@ export default function AdminPermissionsPage() {
           </section>
         ) : null}
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="permissions-profile-content-grid grid gap-4">
           <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-5 py-4">
               <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
@@ -890,61 +1072,31 @@ export default function AdminPermissionsPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <label className="flex h-10 min-w-72 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3">
-                    <FiSearch className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                <div className="permissions-list-toolbar flex w-full flex-col gap-2 2xl:max-w-none">
+                  <label className="permissions-smart-search flex h-12 w-full items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4">
+                    <FiSearch className="h-4 w-4 shrink-0 text-slate-500" />
                     <input
                       type="search"
+                      list="permissions-search-suggestions"
                       value={query}
                       onChange={(event) => {
                         setQuery(event.target.value);
                         setPage(1);
                       }}
-                      placeholder="Buscar módulo, rota ou permissão"
-                      className="w-full bg-transparent text-xs font-semibold outline-none placeholder:text-slate-400"
+                      placeholder="Buscar módulo, rota, ação ou permissão..."
+                      className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
                     />
                   </label>
 
-                  <select
-                    aria-label="Ordenar matriz"
-                    title="Ordenar matriz"
-                    value={sortKey}
-                    onChange={(event) => {
-                      setSortKey(event.target.value as SortKey);
-                      setPage(1);
-                    }}
-                    className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 outline-none"
-                  >
-                    <option value="module">Ordenar por módulo</option>
-                    <option value="status">Ordenar por status</option>
-                    <option value="actions">Ordenar por ações</option>
-                    <option value="routes">Ordenar por rotas</option>
-                    <option value="changes">Ordenar por ajustes</option>
-                  </select>
+                  <datalist id="permissions-search-suggestions">
+                    {searchSuggestions.map((suggestion) => (
+                      <option key={suggestion} value={suggestion} />
+                    ))}
+                  </datalist>
 
-                  <button
-                    type="button"
-                    onClick={() => setSortDirection((current) => (current === "asc" ? "desc" : "asc"))}
-                    className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
-                  >
-                    {sortDirection === "asc" ? "Crescente ?" : "Decrescente ?"}
-                  </button>
-
-                  <select
-                    aria-label="Itens por página"
-                    title="Itens por página"
-                    value={pageSize}
-                    onChange={(event) => {
-                      setPageSize(Number(event.target.value));
-                      setPage(1);
-                    }}
-                    className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-700 outline-none"
-                  >
-                    <option value={8}>8 por página</option>
-                    <option value={12}>12 por página</option>
-                    <option value={20}>20 por página</option>
-                    <option value={50}>50 por página</option>
-                  </select>
+                  <span className="text-xs font-semibold text-slate-500">
+                    Ordene clicando nas colunas da listagem.
+                  </span>
                 </div>
               </div>
             </div>
@@ -1184,7 +1336,7 @@ export default function AdminPermissionsPage() {
               </table>
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-xs font-bold text-slate-500 md:flex-row md:items-center md:justify-between">
+            <div className="permissions-pagination-footer flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-xs font-bold text-slate-500 md:flex-row md:items-center md:justify-center">
               <span>
                 Exibindo {pageRows.length ? (currentPage - 1) * pageSize + 1 : 0}–
                 {Math.min(currentPage * pageSize, sortedRows.length)} de {sortedRows.length} módulos
@@ -1234,36 +1386,7 @@ export default function AdminPermissionsPage() {
             </div>
           </section>
 
-          <aside className="profile-permissions-history rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-500">
-              <FiClock className="h-4 w-4" />
-              Histórico do perfil
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {visibleHistoryItems.map((item) => (
-                <div key={`${item.title}-${item.date}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-sm font-black text-[#0f172a]">{item.title}</p>
-                  <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500">{item.description}</p>
-                  <p className="mt-2 text-[10px] font-black uppercase tracking-wide text-slate-400">{item.date}</p>
-                </div>
-              ))}
-            </div>
-
-            {historyItems.length > 2 ? (
-              <button
-                type="button"
-                onClick={() => setShowFullHistory((current) => !current)}
-                className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
-              >
-                {showFullHistory ? "Ver menos" : "Ver mais histórico"}
-              </button>
-            ) : null}
-
-            <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-3 text-xs font-semibold leading-relaxed text-[#011848]">
-              <strong>Regra:</strong> esta tela define o padrão do perfil. Exceções individuais ficam em permissões por usuário e não alteram o padrão global.
-            </div>
-          </aside>
+          
         </section>
       </div>
     </main>

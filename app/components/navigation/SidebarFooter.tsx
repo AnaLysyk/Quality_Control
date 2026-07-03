@@ -50,11 +50,13 @@ export default function SidebarFooter({ collapsed }: SidebarFooterProps) {
           href="https://www.testingcompany.com.br/"
           target="_blank"
           rel="noopener noreferrer"
-          title="Testing Company"
-          className="sidebar-footer-company-link truncate text-center text-[8.5px] font-black uppercase tracking-[0.08em] text-slate-500 transition"
-        >Testing Company ↗</Link>
-        <span className="sidebar-footer-version select-none truncate text-center font-mono text-[8.5px] leading-tight text-slate-400">
-          {APP_VERSION}
+          title="Abrir site da Testing Company"
+          className="sidebar-footer-company-link truncate text-center text-[10px] font-black tracking-[0.04em] text-white/80 transition hover:text-white"
+        >
+          testingcompany.com.br
+        </Link>
+        <span className="sidebar-footer-version select-none truncate text-center font-mono text-[8.5px] leading-tight text-white/45">
+          Quality Control • {APP_VERSION}
         </span>
       </div>
 

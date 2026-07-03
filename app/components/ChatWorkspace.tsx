@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import {
   FiChevronRight,
@@ -430,7 +430,9 @@ function extractCommandMessage(command: string, contact: ChatContact | null) {
 
 export default function ChatWorkspace() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isChatRoute = pathname === "/chat" || pathname.startsWith("/chat/");
   const { user, loading } = useAuthUser();
   const { activeClient } = useClientContext();
   const activeIdentity = resolveActiveIdentity({ user, activeCompany: activeClient });
@@ -465,8 +467,9 @@ export default function ChatWorkspace() {
   const [threadError, setThreadError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isChatRoute) return;
     if (!loading && !user) router.replace("/login");
-  }, [loading, router, user]);
+  }, [isChatRoute, loading, router, user]);
 
   useEffect(() => {
     return () => {
@@ -566,18 +569,21 @@ export default function ChatWorkspace() {
   );
 
   useEffect(() => {
+    if (!isChatRoute) return;
     void loadContacts();
     void loadThreads();
-  }, [loadContacts, loadThreads]);
+  }, [isChatRoute, loadContacts, loadThreads]);
 
   useEffect(() => {
+    if (!isChatRoute) return;
     const peerId = searchParams.get("peer")?.trim() || null;
     if (peerId !== selectedPeerId) setSelectedPeerId(peerId);
-  }, [searchParams, selectedPeerId]);
+  }, [isChatRoute, searchParams, selectedPeerId]);
 
   useEffect(() => {
+    if (!isChatRoute) return;
     void loadMessages(selectedPeerId);
-  }, [loadMessages, selectedPeerId]);
+  }, [isChatRoute, loadMessages, selectedPeerId]);
 
   useEffect(() => {
     setMessage("");
@@ -839,7 +845,7 @@ export default function ChatWorkspace() {
   }, [assistantCommand, commandSending, contacts, sendToPeer]);
 
   const selectedPeerAvatar = selectedContact?.avatar_url ?? selectedThreadSummary?.peerAvatarUrl ?? null;
-  const selectedPeerName = selectedContact?.name ?? selectedThreadSummary?.peerName ?? "Selecione um usuario";
+  const selectedPeerName = selectedContact?.name ?? selectedThreadSummary?.peerName ?? "Escolha uma conversa";
   const selectedPeerHandle = selectedContact?.user ? `@${selectedContact.user}` : selectedThreadSummary?.peerHandle ? `@${selectedThreadSummary.peerHandle}` : null;
   const selectedPeerCompany = selectedContact ? getCompanySummary(selectedContact) : null;
   const selectedThreadPreview = selectedThreadSummary
@@ -847,11 +853,12 @@ export default function ChatWorkspace() {
     : "";
   const canSeeAllContacts = activeIdentity.roleKind === "global" || activeIdentity.roleKind === "leader_tc";
 
+  if (!isChatRoute) return null;
   if (loading && !user) return <LoadingSkeleton />;
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,var(--page-bg)_0%,var(--tc-bg)_100%)] px-3 py-4 text-[var(--tc-text-primary)] sm:px-5 lg:px-6">
+    <div className="qc-chat-workspace min-h-screen bg-[linear-gradient(180deg,var(--page-bg)_0%,var(--tc-bg)_100%)] px-3 py-4 text-[var(--tc-text-primary)] sm:px-5 lg:px-6">
       <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
         <header className="flex flex-col gap-4 rounded-[28px] border border-[var(--tc-border)] bg-[var(--tc-surface)]/95 px-4 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.07)] sm:px-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-4">
@@ -1028,7 +1035,7 @@ export default function ChatWorkspace() {
                   <div ref={messagesEndRef} />
                 </div>
               ) : (
-                <div className="flex min-h-120 flex-1 flex-col items-center justify-center rounded-[26px] border border-dashed border-[var(--tc-border)] bg-[var(--tc-surface)] px-6 text-center">
+                <div className="qc-chat-empty-state flex min-h-120 flex-1 flex-col items-center justify-center rounded-[26px] border border-dashed border-[var(--tc-border)] bg-[var(--tc-surface)] px-6 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)]">
                     <FiUsers size={24} className="text-[var(--tc-text-muted)]" />
                   </div>

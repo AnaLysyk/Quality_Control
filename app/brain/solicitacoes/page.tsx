@@ -1,11 +1,10 @@
-﻿export const dynamic = "force-dynamic";
+import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Brain - Solicitações",
-  description: "Trilha de solicitações públicas no Brain",
+  title: "Brain",
+  description: "Fluxos internos do Brain",
 };
 
 export default function BrainSolicitacoesPage() {
-  return null;
+  redirect("/brain");
 }
-

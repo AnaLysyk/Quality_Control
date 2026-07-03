@@ -13,6 +13,7 @@ type SidebarSectionProps = {
   open: boolean;
   onToggle: () => void;
   onClose?: () => void;
+  badgeLabel?: string;
 };
 
 function resolveSidebarHref(href: string) {
@@ -33,6 +34,7 @@ export default function SidebarSection({
   open,
   onToggle,
   onClose,
+  badgeLabel = "",
 }: SidebarSectionProps) {
   const visibleItems = mod.items.filter((item) => item.href);
   const hasChildren = visibleItems.length > 0;
@@ -50,6 +52,7 @@ export default function SidebarSection({
       >
         {createElement(getIcon(mod.iconKey), { size: 16, className: "shrink-0 text-current" })}
         <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">{mod.label}</span>
+        {badgeLabel ? <span className="qc-sidebar-chat-badge">{badgeLabel}</span> : null}
       </Link>
     );
   }
@@ -64,6 +67,7 @@ export default function SidebarSection({
       >
         {createElement(getIcon(mod.iconKey), { size: 16, className: "shrink-0 text-current" })}
         <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">{mod.label}</span>
+        {badgeLabel ? <span className="qc-sidebar-chat-badge">{badgeLabel}</span> : null}
         {open ? (
           <FiChevronDown size={13} className="shrink-0 text-current opacity-55" />
         ) : (

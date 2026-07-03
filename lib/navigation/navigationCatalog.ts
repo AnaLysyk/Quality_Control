@@ -93,16 +93,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
     testId: "nav-companies",
     items: [
       {
-        id: "companies-listing",
-        routeId: "empresas.listagem",
-        label: "Listar empresas",
-        iconKey: "layout",
-        module: "companies",
-        href: "/admin/clients",
-        favoriteEnabled: true,
-        testId: "nav-companies-list",
-      },
-      {
         id: "companies-search",
         routeId: "empresas.buscar",
         label: "Buscar empresa",

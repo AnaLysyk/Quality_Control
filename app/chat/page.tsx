@@ -1,10 +1,18 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
+
 import loadDynamic from "next/dynamic";
-const Chat = loadDynamic(() => import("../components/TeamChat"), { ssr: false, loading: () => <div>Carregando chat...</div> });
+
+const Chat = loadDynamic(() => import("../components/TeamChat"), {
+  ssr: false,
+  loading: () => <div className="qc-chat-page-loading">Carregando chat...</div>,
+});
 
 export default function ChatPage() {
-  return <Chat />;
+  return (
+    <div className="qc-chat-page-shell">
+      <Chat />
+    </div>
+  );
 }
-

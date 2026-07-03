@@ -46,11 +46,11 @@ function IconForNode({ node }: { node: BrainNode }) {
 
 function theme(node: BrainNode, selected: boolean, orphan: boolean) {
   if (selected) return "border-cyan-100 bg-cyan-200 text-[#03111f] shadow-[0_0_90px_rgba(103,232,249,.92),0_0_180px_rgba(103,232,249,.22),inset_0_0_28px_rgba(255,255,255,.45)]";
-  if (node.type === "integration") return "border-violet-300/80 bg-violet-950/24 text-violet-50 shadow-[0_0_48px_rgba(167,139,250,.42),inset_0_0_30px_rgba(167,139,250,.08)]";
-  if (node.type === "screen") return "border-sky-300/80 bg-sky-950/24 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_30px_rgba(56,189,248,.08)]";
-  if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300/80 bg-rose-950/24 text-rose-50 shadow-[0_0_48px_rgba(251,113,133,.46),inset_0_0_30px_rgba(251,113,133,.08)]";
-  if (["pending", "warning"].includes(node.status)) return "border-yellow-300/80 bg-yellow-950/24 text-yellow-50 shadow-[0_0_48px_rgba(250,204,21,.42),inset_0_0_30px_rgba(250,204,21,.08)]";
-  return "border-emerald-300/75 bg-emerald-950/24 text-emerald-50 shadow-[0_0_48px_rgba(52,211,153,.38),inset_0_0_30px_rgba(52,211,153,.08)]";
+  if (node.type === "integration") return "border-violet-300/80 bg-violet-950/78 text-violet-50 shadow-[0_0_48px_rgba(167,139,250,.42),inset_0_0_34px_rgba(167,139,250,.22)]";
+  if (node.type === "screen") return "border-sky-300/80 bg-sky-950/78 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
+  if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300/80 bg-rose-950/82 text-rose-50 shadow-[0_0_48px_rgba(251,113,133,.46),inset_0_0_34px_rgba(251,113,133,.24)]";
+  if (["pending", "warning"].includes(node.status)) return "border-yellow-300/80 bg-yellow-950/82 text-yellow-50 shadow-[0_0_48px_rgba(250,204,21,.42),inset_0_0_34px_rgba(250,204,21,.24)]";
+  return "border-emerald-300/75 bg-emerald-950/82 text-emerald-50 shadow-[0_0_48px_rgba(52,211,153,.38),inset_0_0_34px_rgba(52,211,153,.24)]";
 }
 
 function nodeKicker(node: BrainNode) {
@@ -87,20 +87,20 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
       data-brain-node-status={node.status}
       data-brain-node-type={node.type}
       title={`${node.label} · ${labelize(node.type)} · ${statusLabel(node.status)}`}
-      className={`brain-orb-node relative flex ${size} cursor-grab select-none flex-col items-center justify-center rounded-full border text-center backdrop-blur-md transition duration-300 active:cursor-grabbing ${theme(node, isSelected, nodeData.orphan)} ${dimmed ? "scale-75 opacity-5 blur-[2px]" : "opacity-100"} ${isSelected ? "z-30 scale-110" : "z-10"}`}
+      className={`brain-orb-node relative flex ${size} cursor-grab select-none flex-col items-center justify-center rounded-full border text-center backdrop-blur-md transition duration-300 active:cursor-grabbing ${theme(node, isSelected, nodeData.orphan)} ${dimmed ? "scale-75 opacity-35 blur-[1px]" : "opacity-100"} ${isSelected ? "z-30 scale-110" : "z-10"}`}
     >
       <Handle type="target" position={Position.Left} className="!h-2 !w-2 !border-cyan-100 !bg-cyan-300" />
 
-      <span className="pointer-events-none absolute inset-[-18px] rounded-full border border-white/6" />
-      <span className="pointer-events-none absolute inset-[-34px] rounded-full bg-cyan-300/10 blur-3xl" />
-      <span className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/14 blur-2xl" />
+      <span className="pointer-events-none absolute inset-[-18px] rounded-full border border-white/18" />
+      <span className="pointer-events-none absolute inset-[-34px] rounded-full bg-cyan-300/24 blur-3xl" />
+      <span className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/24 blur-2xl" />
       {hasOperationalFlow ? (
-        <span className="pointer-events-none absolute -top-2 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/18 bg-black/28 px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.12em] text-white/82">
+        <span className="pointer-events-none absolute -top-2 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/18 bg-black/48 px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.12em] text-white/82">
           fluxo
         </span>
       ) : null}
 
-      <span className="relative z-10 mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/22">
+      <span className="relative z-10 mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/42">
         <IconForNode node={node} />
       </span>
 
@@ -112,7 +112,7 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
         {isCore ? labelize(node.type) : nodeKicker(node)}
       </span>
 
-      <span className="relative z-10 mt-1 rounded-full bg-black/22 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] opacity-80">
+      <span className="relative z-10 mt-1 rounded-full bg-black/42 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] opacity-80">
         {statusLabel(node.status)}
       </span>
 

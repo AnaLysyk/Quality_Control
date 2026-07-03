@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type KeyboardEvent } from "react";
-import { FiBell, FiChevronRight, FiFile, FiImage, FiInbox, FiPaperclip, FiRefreshCw, FiSearch, FiSend, FiSmile, FiUploadCloud, FiUsers, FiX } from "react-icons/fi";
+import { type PointerEvent as ReactPointerEvent, type CSSProperties, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type MouseEvent } from "react";
+import { FiBell, FiChevronRight, FiFile, FiImage, FiInbox, FiPaperclip, FiPlus, FiRefreshCw, FiSearch, FiSend, FiSmile, FiUploadCloud, FiUsers, FiX } from "react-icons/fi";
 
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -61,10 +61,60 @@ type ChatMessage = {
 };
 
 const QUICK_REACTIONS = ["✅", "🐞", "🔥", "👀", "🙌", "⚠️", "🎉", "🤔"];
+
+const CHAT_MESSAGE_REACTION_OPTIONS = [
+  { emoji: "👍", label: "Curtir", description: "Curtir essa mensagem" },
+  { emoji: "❤️", label: "Amei", description: "Gostei muito dessa mensagem" },
+  { emoji: "✅", label: "Resolvido", description: "Essa mensagem resolveu" },
+  { emoji: "👀", label: "Visto", description: "Estou acompanhando" },
+  { emoji: "🔥", label: "Destaque", description: "Mensagem importante" },
+  { emoji: "🎉", label: "Celebrar", description: "Comemorar avanço" },
+  { emoji: "🐞", label: "Bug", description: "Marcar como ponto técnico" },
+  { emoji: "⚠️", label: "Atenção", description: "Precisa de cuidado" },
+  { emoji: "🤔", label: "Revisar", description: "Precisa revisar" },
+  { emoji: "🙌", label: "Aprovado", description: "Está aprovado" },
+];
 const QUICK_GIFS = [
   { label: "Digitando", url: "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" },
   { label: "Feito", url: "https://media.giphy.com/media/26u4lOMA8JKSnL9Uk/giphy.gif" },
   { label: "Celebrando", url: "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif" },
+];
+
+const CHAT_UNIFIED_ACTION_OPTIONS = [
+  { emoji: "👍", label: "Curtir", description: "Curtir ou enviar curtida" },
+  { emoji: "❤️", label: "Amei", description: "Reação positiva" },
+  { emoji: "✅", label: "Resolvido", description: "Marcar como resolvido" },
+  { emoji: "👀", label: "Visto", description: "Estou acompanhando" },
+  { emoji: "🔥", label: "Destaque", description: "Mensagem importante" },
+  { emoji: "🎉", label: "Celebrar", description: "Comemorar avanço" },
+  { emoji: "🐞", label: "Bug", description: "Sinalizar problema" },
+  { emoji: "⚠️", label: "Atenção", description: "Marcar risco ou cuidado" },
+  { emoji: "🤔", label: "Revisar", description: "Pedir revisão" },
+  { emoji: "🙌", label: "Aprovado", description: "Aprovar mensagem" },
+];
+
+const CHAT_MESSAGE_EMOJI_OPTIONS = [
+  { emoji: "👍", label: "Curtir", description: "Enviar curtida na conversa" },
+  { emoji: "❤️", label: "Amei", description: "Enviar reação positiva" },
+  { emoji: "✅", label: "Feito", description: "Confirmar que foi resolvido" },
+  { emoji: "👀", label: "Vendo", description: "Avisar que está acompanhando" },
+  { emoji: "🔥", label: "Destaque", description: "Marcar algo importante" },
+  { emoji: "🎉", label: "Celebrar", description: "Comemorar avanço" },
+  { emoji: "🐞", label: "Bug", description: "Sinalizar problema" },
+  { emoji: "⚠️", label: "Atenção", description: "Marcar risco ou cuidado" },
+];
+
+const CHAT_REACTION_OPTIONS = [
+  { emoji: "👍", label: "Curtir", description: "Marcar que você gostou da conversa" },
+  { emoji: "❤️", label: "Amei", description: "Reação positiva com mais destaque" },
+  { emoji: "✅", label: "Resolvido", description: "Indicar que ficou certo" },
+  { emoji: "👀", label: "Estou vendo", description: "Mostrar que está acompanhando" },
+  { emoji: "🔥", label: "Muito bom", description: "Dar destaque para algo importante" },
+  { emoji: "🎉", label: "Celebrar", description: "Comemorar avanço ou entrega" },
+  { emoji: "🐞", label: "Bug", description: "Marcar ponto de atenção técnico" },
+  { emoji: "⚠️", label: "Atenção", description: "Sinalizar cuidado ou risco" },
+  { emoji: "🤔", label: "Revisar", description: "Pedir análise com calma" },
+  { emoji: "🙌", label: "Aprovado", description: "Confirmar que está bom" },
 ];
 
 function normalizeSearch(value: string) {
@@ -151,14 +201,49 @@ function ContactRow({ contact, active, recent, onSelect }: { contact: ChatContac
   );
 }
 
-function MessageBubble({ message, mine, avatar, name }: { message: ChatMessage; mine: boolean; avatar: string | null; name: string }) {
+function MessageBubble({
+  message,
+  mine,
+  avatar,
+  name,
+  reactions,
+  onOpenMessageReaction,
+}: {
+  message: ChatMessage;
+  mine: boolean;
+  avatar: string | null;
+  name: string;
+  reactions: Record<string, number>;
+  onOpenMessageReaction: (message: ChatMessage) => void;
+}) {
   return (
-    <div className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+    <div className={`qc-chat-message-row group flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
       {!mine ? <UserAvatar src={avatar} name={name} size="sm" frameClassName="border border-(--tc-border)" /> : null}
-      <div className={`max-w-[min(52rem,86%)] rounded-[28px] px-4 py-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] ${mine ? "rounded-br-md bg-[linear-gradient(135deg,#011848,#0b2b66)] text-white" : "rounded-bl-md bg-white text-slate-900 dark:bg-white/10 dark:text-white"}`}>
+      <div className={`qc-chat-message-bubble relative max-w-[min(52rem,86%)] rounded-[28px] px-4 py-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] ${mine ? "rounded-br-md bg-[linear-gradient(135deg,#011848,#0b2b66)] text-white" : "rounded-bl-md bg-white text-slate-900 dark:bg-white/10 dark:text-white"}`}>
         <div className={`flex items-center justify-between gap-3 text-[11px] font-bold ${mine ? "text-white/65" : "text-slate-500 dark:text-white/50"}`}><span>{mine ? "Você" : message.senderName}</span><span>{formatClock(message.createdAt)}</span></div>
         {message.text ? <p className="mt-1 whitespace-pre-wrap text-sm leading-6">{message.text}</p> : null}
         {(message.attachments ?? []).map((attachment) => <AttachmentView key={attachment.id ?? `${attachment.label}-${attachment.url}`} attachment={attachment} mine={mine} />)}
+
+        {Object.keys(reactions).length > 0 ? (
+          <div className="qc-chat-message-reactions">
+            {Object.entries(reactions).map(([emoji, count]) => (
+              <span key={emoji}>
+                {emoji}
+                {count > 1 ? <strong>{count}</strong> : null}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          className="qc-chat-message-reaction-plus"
+          title="Reagir a esta mensagem"
+          aria-label="Reagir a esta mensagem"
+          onClick={() => onOpenMessageReaction(message)}
+        >
+          <FiPlus size={14} />
+        </button>
       </div>
       {mine ? <UserAvatar src={avatar} name={name} size="sm" frameClassName="border border-(--tc-border)" /> : null}
     </div>
@@ -182,8 +267,12 @@ export default function TeamChat() {
   const [threads, setThreads] = useState<ChatThreadSummary[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedPeerId, setSelectedPeerId] = useState<string | null>(() => searchParams.get("peer")?.trim() || null);
+  const [chatSidebarWidth, setChatSidebarWidth] = useState(304);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
+  const [chatActionTarget, setChatActionTarget] = useState<"composer" | ChatMessage | null>(null);
+  const [messageReactions, setMessageReactions] = useState<Record<string, Record<string, number>>>({});
+  const [messageReactionTarget, setMessageReactionTarget] = useState<ChatMessage | null>(null);
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [loadingThreads, setLoadingThreads] = useState(false);
@@ -191,6 +280,8 @@ export default function TeamChat() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [messageToolsModalOpen, setMessageToolsModalOpen] = useState(false);
+  const [reactionModalOpen, setReactionModalOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noticePermission, setNoticePermission] = useState<NotificationPermission | "unsupported">("default");
@@ -203,6 +294,10 @@ export default function TeamChat() {
   useEffect(() => {
     if (typeof window !== "undefined") setNoticePermission("Notification" in window ? Notification.permission : "unsupported");
   }, []);
+
+  useEffect(() => {
+    setChatActionTarget(null);
+  }, [selectedPeerId]);
 
   const loadContacts = useCallback(async () => {
     setLoadingContacts(true);
@@ -291,7 +386,7 @@ export default function TeamChat() {
   const threadsByPeer = useMemo(() => new Map(threads.map((thread) => [thread.peerId, thread])), [threads]);
   const selectedContact = selectedPeerId ? contactsById.get(selectedPeerId) ?? null : null;
   const selectedThread = selectedPeerId ? threadsByPeer.get(selectedPeerId) ?? null : null;
-  const selectedName = selectedContact?.name ?? selectedThread?.peerName ?? "Escolha uma conversa";
+  const selectedName = selectedContact?.name ?? selectedThread?.peerName ?? "Selecione uma conversa";
   const selectedAvatar = selectedContact?.avatar_url ?? selectedThread?.peerAvatarUrl ?? null;
   const selectedCompany = selectedContact ? getCompanyLabel(selectedContact) : "";
   const currentUserId = user?.id ?? "";
@@ -383,15 +478,72 @@ export default function TeamChat() {
     }
   }, [message, pendingAttachments, selectedPeerId, sendToPeer, sending, uploading]);
 
+  const reactToMessage = useCallback((emoji: string) => {
+    if (!messageReactionTarget) return;
+
+    setMessageReactions((current) => {
+      const currentMessage = current[messageReactionTarget.id] ?? {};
+      const nextCount = (currentMessage[emoji] ?? 0) + 1;
+
+      return {
+        ...current,
+        [messageReactionTarget.id]: {
+          ...currentMessage,
+          [emoji]: nextCount,
+        },
+      };
+    });
+
+    setMessageReactionTarget(null);
+  }, [messageReactionTarget]);
+
   const sendSticker = useCallback(async (label: string) => {
     if (!selectedPeerId) return;
     await sendToPeer(selectedPeerId, label, [{ kind: "note", label, url: null, mimeType: null, sizeLabel: null, sourceLabel: "Figurinha" }]);
+    setReactionModalOpen(false);
   }, [selectedPeerId, sendToPeer]);
 
   const sendGif = useCallback(async (gif: (typeof QUICK_GIFS)[number]) => {
     if (!selectedPeerId) return;
     await sendToPeer(selectedPeerId, "", [{ kind: "link", label: gif.label, url: gif.url, mimeType: "image/gif", sizeLabel: null, sourceLabel: "GIF" }]);
   }, [selectedPeerId, sendToPeer]);
+
+  const applyMessageReaction = useCallback((target: ChatMessage, emoji: string) => {
+    setMessageReactions((current) => {
+      const currentMessage = current[target.id] ?? {};
+      const nextCount = (currentMessage[emoji] ?? 0) + 1;
+
+      return {
+        ...current,
+        [target.id]: {
+          ...currentMessage,
+          [emoji]: nextCount,
+        },
+      };
+    });
+
+    setChatActionTarget(null);
+  }, []);
+
+  const handleUnifiedEmojiAction = useCallback((emoji: string) => {
+    if (!chatActionTarget) return;
+
+    if (chatActionTarget === "composer") {
+      setChatActionTarget(null);
+      void sendSticker(emoji);
+      return;
+    }
+
+    applyMessageReaction(chatActionTarget, emoji);
+  }, [applyMessageReaction, chatActionTarget, sendSticker]);
+
+  const handleUnifiedGifAction = useCallback((gif: (typeof QUICK_GIFS)[number]) => {
+    setChatActionTarget(null);
+    void sendGif(gif);
+  }, [sendGif]);
+
+  const selectedActionMessage = chatActionTarget && chatActionTarget !== "composer" ? chatActionTarget : null;
+  const isComposerAction = chatActionTarget === "composer";
 
   const handleDrop = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -404,13 +556,227 @@ export default function TeamChat() {
     event.target.value = "";
   }, [uploadFiles]);
 
+  const handleChatModalButtonCapture = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    const button = target?.closest("button");
+
+    if (!button) return;
+
+    const action = button.getAttribute("data-qc-chat-action");
+    const label = button.textContent?.trim().toLowerCase() ?? "";
+
+    if (action === "open-message-tools" || label.includes("gif") || label.includes("figura") || label.includes("ícone") || label.includes("icone")) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!selectedPeerId || sending) return;
+      setMessageToolsModalOpen(true);
+      return;
+    }
+
+    if (action === "open-reaction-tools" || label.includes("reações") || label.includes("reacoes") || label.includes("reagir")) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!selectedPeerId || sending) return;
+      setReactionModalOpen(true);
+    }
+  }, [selectedPeerId, sending]);
+
+  const handleReactionButtonCapture = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    const button = target?.closest("button");
+
+    if (!button) return;
+
+    const label = button.textContent?.trim().toLowerCase() ?? "";
+    const opensReactionModal = label.includes("reações") || label.includes("reacoes");
+
+    if (!opensReactionModal) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!selectedPeerId || sending) return;
+
+    setReactionModalOpen(true);
+  }, [selectedPeerId, sending]);
+
+
+  const startChatSidebarResize = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    const startX = event.clientX;
+    const startWidth = chatSidebarWidth;
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const nextWidth = Math.min(Math.max(startWidth + moveEvent.clientX - startX, 248), 420);
+      setChatSidebarWidth(nextWidth);
+    };
+
+    const handlePointerUp = () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+  }, [chatSidebarWidth]);
+
   if (!isChatRoute) return null;
   if (loading && !user) return <div className="h-screen animate-pulse bg-[#061225]" />;
   if (!user) return null;
 
   return (
-    <div className="qc-team-chat-clean h-[calc(100vh-0.5rem)] min-h-[720px] overflow-hidden bg-[linear-gradient(180deg,var(--page-bg),var(--tc-bg))] text-(--tc-text-primary)">
-      <section className="grid h-full min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-[360px_minmax(0,1fr)]">
+    <div className="qc-team-chat-testing-company h-full min-h-0 overflow-hidden bg-[linear-gradient(180deg,var(--page-bg),var(--tc-bg))] text-(--tc-text-primary)" onClickCapture={handleChatModalButtonCapture}>
+      {chatActionTarget ? (
+        <div className="qc-chat-unified-action-modal" role="dialog" aria-modal="true" aria-label={isComposerAction ? "Enviar na conversa" : "Reagir à mensagem"}>
+          <div className="qc-chat-modal-backdrop" onClick={() => setChatActionTarget(null)} />
+          <div className="qc-chat-unified-action-modal__panel">
+            <div className="qc-chat-unified-action-modal__header">
+              <div>
+                <span>{isComposerAction ? "Enviar na conversa" : "Reagir à mensagem"}</span>
+                <h2>{isComposerAction ? "GIFs, ícones e figuras" : "Curtir comentário"}</h2>
+                <p>{isComposerAction ? "Escolha uma opção para enviar na conversa." : "Escolha uma reação para essa mensagem."}</p>
+              </div>
+              <button type="button" onClick={() => setChatActionTarget(null)} aria-label="Fechar">
+                <FiX size={18} />
+              </button>
+            </div>
+
+            {selectedActionMessage ? (
+              <div className="qc-chat-unified-action-modal__preview">
+                <strong>{selectedActionMessage.senderName}</strong>
+                <span>{selectedActionMessage.text || "Mensagem com anexo"}</span>
+              </div>
+            ) : null}
+
+            <div className="qc-chat-unified-action-modal__section">
+              <h3>{isComposerAction ? "Ícones e figurinhas" : "Reações"}</h3>
+              <div className="qc-chat-unified-action-modal__grid">
+                {CHAT_UNIFIED_ACTION_OPTIONS.map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    onClick={() => handleUnifiedEmojiAction(option.emoji)}
+                  >
+                    <span className="qc-chat-unified-action-modal__emoji">{option.emoji}</span>
+                    <span>
+                      <strong>{option.label}</strong>
+                      <small>{option.description}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {isComposerAction ? (
+              <div className="qc-chat-unified-action-modal__section">
+                <h3>GIFs rápidos</h3>
+                <div className="qc-chat-unified-action-modal__grid qc-chat-unified-action-modal__grid--compact">
+                  {QUICK_GIFS.map((gif) => (
+                    <button
+                      key={gif.label}
+                      type="button"
+                      onClick={() => handleUnifiedGifAction(gif)}
+                    >
+                      <span className="qc-chat-unified-action-modal__emoji">🎞️</span>
+                      <span>
+                        <strong>{gif.label}</strong>
+                        <small>Enviar GIF na conversa</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      {messageReactionTarget ? (
+        <div className="qc-chat-message-reaction-modal" role="dialog" aria-modal="true" aria-label="Reagir à mensagem">
+          <div className="qc-chat-modal-backdrop" onClick={() => setMessageReactionTarget(null)} />
+          <div className="qc-chat-modal-panel qc-chat-message-reaction-modal__panel">
+            <div className="qc-chat-modal-header">
+              <div>
+                <span className="qc-chat-modal-eyebrow">Reagir à mensagem</span>
+                <h2>Curtir comentário</h2>
+                <p>Escolha uma reação para marcar essa mensagem. Pode ter várias reações na mesma mensagem.</p>
+              </div>
+              <button type="button" onClick={() => setMessageReactionTarget(null)} aria-label="Fechar">
+                <FiX size={18} />
+              </button>
+            </div>
+
+            <div className="qc-chat-message-reaction-preview">
+              <strong>{messageReactionTarget.senderName}</strong>
+              <span>{messageReactionTarget.text || "Mensagem com anexo"}</span>
+            </div>
+
+            <div className="qc-chat-modal-grid">
+              {CHAT_MESSAGE_REACTION_OPTIONS.map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => reactToMessage(option.emoji)}
+                >
+                  <span className="qc-chat-modal-emoji">{option.emoji}</span>
+                  <span>
+                    <strong>{option.label}</strong>
+                    <small>{option.description}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {reactionModalOpen ? (
+        <div className="qc-chat-reaction-modal" role="dialog" aria-modal="true" aria-label="Reagir à conversa">
+          <div className="qc-chat-reaction-modal__backdrop" onClick={() => setReactionModalOpen(false)} />
+          <div className="qc-chat-reaction-modal__panel">
+            <div className="qc-chat-reaction-modal__header">
+              <div>
+                <span className="qc-chat-reaction-modal__eyebrow">Reação rápida</span>
+                <h2>Curtir conversa</h2>
+                <p>Escolha uma opção para reagir à mensagem/conversa atual.</p>
+              </div>
+              <button type="button" onClick={() => setReactionModalOpen(false)} aria-label="Fechar reações">
+                <FiX size={18} />
+              </button>
+            </div>
+
+            <div className="qc-chat-reaction-modal__grid">
+              {CHAT_REACTION_OPTIONS.map((reaction) => (
+                <button
+                  key={reaction.label}
+                  type="button"
+                  onClick={() => void sendSticker(reaction.emoji)}
+                  disabled={!selectedPeerId || sending}
+                >
+                  <span className="qc-chat-reaction-modal__emoji">{reaction.emoji}</span>
+                  <span className="qc-chat-reaction-modal__content">
+                    <strong>{reaction.label}</strong>
+                    <small>{reaction.description}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="qc-chat-reaction-modal__footer">
+              <span>Essa reação entra na conversa como mensagem rápida.</span>
+              <button type="button" onClick={() => setReactionModalOpen(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      <section
+        className="grid h-full min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]"
+        style={{
+          gridTemplateColumns: `${chatSidebarWidth}px minmax(0, 1fr)`,
+          "--qc-chat-sidebar-width": `${chatSidebarWidth}px`,
+        } as CSSProperties}
+      >
         <aside className="flex min-h-0 flex-col border-r border-white/10 bg-[#061225]/95 text-white">
           <div className="border-b border-white/10 p-4">
             <div className="flex items-center gap-3">
@@ -427,20 +793,59 @@ export default function TeamChat() {
             <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiUsers size={12} /> Usuários visíveis</span><span>{filteredContacts.length}</span></div><div className="space-y-1.5">{loadingContacts ? <div className="px-4 py-4 text-sm text-white/48">Carregando contatos...</div> : filteredContacts.map((contact) => <ContactRow key={contact.id} contact={contact} active={contact.id === selectedPeerId} recent={recentIds.has(contact.id)} onSelect={openConversation} />)}</div></div>
           </div>
         </aside>
+
+        <button
+          type="button"
+          aria-label="Ajustar largura da coluna de conversas"
+          title="Ajustar largura"
+          className="qc-chat-sidebar-resizer"
+          onPointerDown={startChatSidebarResize}
+        >
+          <span>↔</span>
+        </button>
+
         <main className="relative flex min-h-0 flex-col" onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={handleDrop}>
           {dragging ? <div className="pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-[32px] border-2 border-dashed border-(--tc-accent) bg-slate-950/70 text-white"><div className="text-center"><FiUploadCloud size={42} className="mx-auto mb-3" /><div className="text-lg font-black">Solte aqui para anexar</div><div className="text-sm text-white/70">Imagem, GIF, PDF ou TXT até 10 MB</div></div></div> : null}
           <header className="flex min-h-[88px] items-center justify-between gap-4 border-b border-(--tc-border) bg-(--tc-surface)/90 px-5 py-4">
             <div className="flex min-w-0 items-center gap-4"><UserAvatar src={selectedAvatar} name={selectedName} size="lg" frameClassName="border border-(--tc-border)" /><div className="min-w-0"><h1 className="truncate text-2xl font-black tracking-[-0.04em]">{selectedName}</h1><div className="mt-1 truncate text-xs text-(--tc-text-muted)">{selectedContact?.user ? `@${selectedContact.user}` : selectedThread?.peerHandle ? `@${selectedThread.peerHandle}` : "Busque uma pessoa na lateral para começar"}{selectedCompany ? ` • ${selectedCompany}` : ""}</div></div></div>
             <div className="hidden" aria-hidden />
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><div className="flex min-h-full w-full flex-col justify-end gap-4">{selectedPeerId ? loadingMessages && messages.length === 0 ? <div className="h-24 animate-pulse rounded-[28px] bg-white/50 dark:bg-white/8" /> : messages.length > 0 ? messages.map((item) => { const mine = item.senderId === currentUserId; return <MessageBubble key={item.id} message={item} mine={mine} avatar={mine ? activeIdentity.avatarUrl : selectedAvatar} name={mine ? activeIdentity.displayName : selectedName} />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa pronta</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Escreva, envie uma figurinha ou arraste um arquivo.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-[-0.05em]">Escolha uma conversa</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaço inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><div className="flex min-h-full w-full flex-col justify-end gap-4">{selectedPeerId ? loadingMessages && messages.length === 0 ? <div className="h-24 animate-pulse rounded-[28px] bg-white/50 dark:bg-white/8" /> : messages.length > 0 ? messages.map((item) => { const mine = item.senderId === currentUserId; return <MessageBubble
+                      key={item.id}
+                      message={item}
+                      mine={mine}
+                      avatar={mine ? activeIdentity.avatarUrl : selectedAvatar}
+                      name={mine ? activeIdentity.displayName : selectedName}
+                      reactions={messageReactions[item.id] ?? {}}
+                      onOpenMessageReaction={setChatActionTarget}
+                    />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Use mensagens, arquivos, GIFs e reações para conversar.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-[-0.05em]">Selecione uma conversa</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaço inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
           <form onSubmit={sendMessage} className="border-t border-(--tc-border) bg-(--tc-surface)/94 px-5 py-4">
+              <div className="qc-chat-composer-one-plus">
+                <button
+                  type="button"
+                  onClick={() => setChatActionTarget("composer")}
+                  disabled={!selectedPeerId || sending}
+                  aria-label="Abrir opções da conversa"
+                  title="Abrir opções"
+                >
+                  <FiPlus size={16} />
+                  <span>Opções</span>
+                </button>
+              </div>
+              <div className="qc-chat-composer-modal-actions">
+                <button type="button" data-qc-chat-action="open-message-tools" disabled={!selectedPeerId || sending}>
+                  <span>✨</span> GIFs, ícones e figuras
+                </button>
+                <button type="button" data-qc-chat-action="open-reaction-tools" disabled={!selectedPeerId || sending}>
+                  <span>👍</span> Reagir
+                </button>
+              </div>
             <input ref={fileInputRef} type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain" className="hidden" onChange={handleFileChange} />
             <div className="w-full">{pendingAttachments.length > 0 ? <div className="mb-3 flex gap-2 overflow-x-auto">{pendingAttachments.map((attachment, index) => <AttachmentView key={attachment.id ?? index} attachment={attachment} removable onRemove={() => setPendingAttachments((items) => items.filter((_, i) => i !== index))} />)}</div> : null}
               <div className="mb-3 flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
                   <button type="button" disabled={!selectedPeerId || sending} onClick={() => setToolsOpen((value) => !value)} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-xs font-black text-(--tc-text-primary) disabled:opacity-50">
-                    <FiSmile size={14} /> GIFs e figurinhas
+                    <FiSmile size={14} /> Reações
                   </button>
                   <span className="text-[11px] text-(--tc-text-muted)">Anexe arquivos no clipe ou arraste para a conversa.</span>
                 </div>
@@ -459,7 +864,7 @@ export default function TeamChat() {
                   </div>
                 ) : null}
               </div>
-              <div className="flex items-end gap-3 rounded-[28px] border border-(--tc-border) bg-(--tc-surface-2) p-2"><button type="button" onClick={() => fileInputRef.current?.click()} disabled={!selectedPeerId || uploading} className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface)">{uploading ? <FiRefreshCw className="animate-spin" /> : <FiPaperclip />}</button><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={selectedPeerId ? `Mensagem para ${selectedName}...` : "Escolha uma pessoa para começar"} rows={1} disabled={!selectedPeerId || sending} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-1 py-3 text-sm leading-6 outline-none placeholder:text-(--tc-text-muted)" /><button type="submit" disabled={!selectedPeerId || sending || uploading || (!message.trim() && pendingAttachments.length === 0)} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 text-sm font-black text-white disabled:opacity-50"><FiSend size={16} /> Enviar</button></div>
+              <div className="flex items-end gap-3 rounded-[28px] border border-(--tc-border) bg-(--tc-surface-2) p-2"><button type="button" onClick={() => fileInputRef.current?.click()} disabled={!selectedPeerId || uploading} className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface)">{uploading ? <FiRefreshCw className="animate-spin" /> : <FiPaperclip />}</button><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={selectedPeerId ? `Enviar mensagem para ${selectedName}...` : "Escolha uma pessoa para começar"} rows={1} disabled={!selectedPeerId || sending} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-1 py-3 text-sm leading-6 outline-none placeholder:text-(--tc-text-muted)" /><button type="submit" disabled={!selectedPeerId || sending || uploading || (!message.trim() && pendingAttachments.length === 0)} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 text-sm font-black text-white disabled:opacity-50"><FiSend size={16} /> Enviar</button></div>
               <div className="mt-2 flex justify-between px-2 text-[11px] text-(--tc-text-muted)"><span>Enter envia, Shift+Enter quebra linha. Arraste arquivos para anexar.</span><span>{uploading ? "Anexando..." : "Imagem, GIF, PDF ou TXT"}</span></div></div>
           </form>
         </main>

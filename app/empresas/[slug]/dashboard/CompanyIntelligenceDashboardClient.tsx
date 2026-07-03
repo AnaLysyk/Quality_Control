@@ -2630,6 +2630,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     [currentDraftFilters, filterOptions],
   );
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+
   const activeFilterChips = useMemo(
     () => buildResolvedFilterChipList(activeFilters, filterOptions),
     [activeFilters, filterOptions],

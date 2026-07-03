@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { FiCamera } from "react-icons/fi";
@@ -60,20 +60,31 @@ export default function UserAvatar({
   const initials = useMemo(() => getUserInitials(name), [name]);
   const normalizedSrc = typeof src === "string" ? src.trim() : "";
   const looksLikeUrl = /^(https?:\/\/|\/|blob:|data:)/i.test(normalizedSrc);
+  const isGeneratedMissingPersistAvatar = /^\/images\/empresa-admin-persist-[a-z0-9-]+\.png(?:[?#].*)?$/i.test(normalizedSrc);
   const looksLikeEmoji = Boolean(normalizedSrc && !looksLikeUrl);
-  const showImage = looksLikeUrl && failedSrc !== normalizedSrc && !hasFailedImageSrc(normalizedSrc);
+  const showImage =
+    looksLikeUrl &&
+    !isGeneratedMissingPersistAvatar &&
+    failedSrc !== normalizedSrc &&
+    !hasFailedImageSrc(normalizedSrc);
+  const isGifAvatar = showImage && (/\.gif(?:[?#]|$)/i.test(normalizedSrc) || /^data:image\/gif/i.test(normalizedSrc));
 
   return (
-    <div className={`relative ${sizeClassMap[size]} ${className}`}>
+    <div
+      data-qc-avatar-kind={isGifAvatar ? "gif" : showImage ? "image" : looksLikeEmoji ? "emoji" : "initials"}
+      className={`qc-user-avatar relative ${sizeClassMap[size]} ${className}`}
+    >
       <div
-        className={`h-full w-full overflow-hidden rounded-full border border-white/70 bg-linear-to-br from-slate-100 to-slate-200 shadow-[0_14px_30px_rgba(15,23,42,0.16)] ring-1 ring-black/6 dark:from-slate-700 dark:to-slate-800 dark:ring-white/10 ${frameClassName}`}
+        className={`qc-user-avatar-frame h-full w-full overflow-hidden rounded-full border border-white/70 bg-linear-to-br from-slate-100 to-slate-200 shadow-[0_14px_30px_rgba(15,23,42,0.16)] ring-1 ring-black/6 dark:from-slate-700 dark:to-slate-800 dark:ring-white/10 ${frameClassName}`}
       >
         {showImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={normalizedSrc}
             alt={name ? `Foto de ${name}` : "Foto do usuário"}
-            className={`block h-full w-full object-cover ${imageClassName}`}
+            loading="lazy"
+            decoding="async"
+            className={`qc-user-avatar-image ${isGifAvatar ? "qc-user-avatar-gif" : ""} block h-full w-full object-cover ${imageClassName}`}
             onError={() => {
               markFailedImageSrc(normalizedSrc);
               setFailedSrc(normalizedSrc);
@@ -114,4 +125,3 @@ export default function UserAvatar({
     </div>
   );
 }
-

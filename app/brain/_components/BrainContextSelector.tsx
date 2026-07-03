@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import { FiChevronDown, FiRefreshCw, FiRotateCcw, FiSearch, FiSliders } from "react-icons/fi";
+import { useEffect, useMemo, useState } from "react";
+import { FiChevronDown, FiFilter, FiRefreshCw, FiRotateCcw, FiSearch, FiSliders, FiX } from "react-icons/fi";
 import type {
   BrainContextCompany,
   BrainContextProject,
@@ -85,6 +86,13 @@ function belongsToSelectedProject(node: BrainNode, selectedProjectId: string | n
   return node.type === "company" || node.type === "project" || node.metadata?.isBrainCore === true || node.metadata?.isContextCore === true;
 }
 
+function periodLabel(period: "all" | "today" | "7d" | "30d") {
+  if (period === "today") return "Hoje";
+  if (period === "7d") return "7 dias";
+  if (period === "30d") return "30 dias";
+  return "Todo período";
+}
+
 function resetDependentFilters(callback: () => void) {
   callback();
 }
@@ -118,173 +126,304 @@ export function BrainContextSelector({
   onRefresh,
   source = "fallback",
 }: BrainContextSelectorProps) {
-  const companyNodes = nodes.filter((node) => belongsToSelectedCompany(node, selectedCompanyId));
-  const projectOptions = selectedCompanyId
-    ? projects.filter((project) => !project.companyId || project.companyId === selectedCompanyId)
-    : projects;
-  const projectNodes = companyNodes.filter((node) => belongsToSelectedProject(node, selectedProjectId));
-  const areaNodes = activeModule ? projectNodes.filter((node) => node.module === activeModule) : projectNodes;
-  const typeNodes = nodeType === "all" ? areaNodes : areaNodes.filter((node) => node.type === nodeType);
+  const [open, setOpen] = useState(false);
+  const [apiBrainOptions, setApiBrainOptions] = useState<{
+    companies: Array<{ id: string; label: string }>;
+    projects: Array<{ id: string; label: string }>;
+    modules: Array<{ id: string; label: string }>;
+    nodes: Array<{ id: string; label: string; type?: string; module?: string; source?: string }>;
+    events: Array<{ id: string; label: string; module?: string }>;
+    source?: string;
+  } | null>(null);
 
-  const modules = unique(projectNodes.map((node) => node.module));
-  const types = unique(areaNodes.map((node) => node.type)) as BrainNodeType[];
-  const statuses = unique(typeNodes.map((node) => node.status)) as BrainNodeStatus[];
-  const currentCompany = companies.find((company) => company.id === selectedCompanyId)?.name ?? "Todas as empresas";
-  const currentProject = projectOptions.find((project) => project.id === selectedProjectId)?.name ?? "Todos os projetos";
-  const hasAnyFilter = Boolean(activeModule || searchText || nodeType !== "all" || nodeStatus !== "all" || period !== "all" || showOrphansOnly || showPendingOnly);
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+
+    if (searchText.trim()) params.set("q", searchText.trim());
+    if (activeModule) params.set("module", activeModule);
+    params.set("limit", "50");
+
+    fetch(`/api/brain/rag/context?${params.toString()}`, {
+      credentials: "include",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!data) return;
+        setApiBrainOptions({
+          companies: Array.isArray(data.companies) ? data.companies : Array.isArray(data.filters?.companies) ? data.filters.companies : [],
+          projects: Array.isArray(data.projects) ? data.projects : Array.isArray(data.filters?.projects) ? data.filters.projects : [],
+          modules: Array.isArray(data.modules) ? data.modules : Array.isArray(data.filters?.modules) ? data.filters.modules : [],
+          nodes: Array.isArray(data.nodes) ? data.nodes : [],
+          events: Array.isArray(data.events) ? data.events : [],
+          source: typeof data.source === "string" ? data.source : undefined,
+        });
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setApiBrainOptions(null);
+      });
+
+    return () => controller.abort();
+  }, [activeModule, searchText]);
+
+  const {
+    projectOptions,
+    modules,
+    types,
+    statuses,
+    currentCompany,
+    currentProject,
+    hasAnyFilter,
+    activeFilterCount,
+    summaryChips,
+  } = useMemo(() => {
+    const companyNodes = nodes.filter((node) => belongsToSelectedCompany(node, selectedCompanyId));
+    const projectOptions = selectedCompanyId
+      ? projects.filter((project) => !project.companyId || project.companyId === selectedCompanyId)
+      : projects;
+    const projectNodes = companyNodes.filter((node) => belongsToSelectedProject(node, selectedProjectId));
+    const areaNodes = activeModule ? projectNodes.filter((node) => node.module === activeModule) : projectNodes;
+    const typeNodes = nodeType === "all" ? areaNodes : areaNodes.filter((node) => node.type === nodeType);
+
+    const modules = unique([
+      ...projectNodes.map((node) => node.module),
+      ...(apiBrainOptions?.modules ?? []).map((module) => module.id || module.label),
+    ]);
+    const types = unique(areaNodes.map((node) => node.type)) as BrainNodeType[];
+    const statuses = unique(typeNodes.map((node) => node.status)) as BrainNodeStatus[];
+
+    const currentCompany = companies.find((company) => company.id === selectedCompanyId)?.name ?? "Todas as empresas";
+    const currentProject = projectOptions.find((project) => project.id === selectedProjectId)?.name ?? "Todos os projetos";
+
+    const summaryChips = [
+      selectedCompanyId ? currentCompany : null,
+      selectedProjectId ? currentProject : null,
+      activeModule ? displayModule(activeModule) : null,
+      nodeType !== "all" ? nodeTypeLabel(nodeType) : null,
+      nodeStatus !== "all" ? nodeStatusLabel(nodeStatus) : null,
+      period !== "all" ? periodLabel(period) : null,
+      showPendingOnly ? "Só pendências" : null,
+      showOrphansOnly ? "Só órfãos" : null,
+      searchText ? `Busca: ${searchText}` : null,
+    ].filter((item): item is string => Boolean(item));
+
+    return {
+      projectOptions,
+      modules,
+      types,
+      statuses,
+      currentCompany,
+      currentProject,
+      hasAnyFilter: summaryChips.length > 0,
+      activeFilterCount: summaryChips.length,
+      summaryChips,
+    };
+  }, [
+    activeModule,
+    apiBrainOptions,
+    companies,
+    nodes,
+    nodeStatus,
+    nodeType,
+    period,
+    projects,
+    searchText,
+    selectedCompanyId,
+    selectedProjectId,
+    showOrphansOnly,
+    showPendingOnly,
+  ]);
 
   return (
-    <section className="qc-brain-filter-panel">
-      <div className="qc-brain-filter-header">
-        <div className="qc-brain-filter-title">
+    <section className="qc-brain-filter-panel qc-brain-filter-panel-compact" data-open={open ? "true" : "false"}>
+      <div className="qc-brain-filter-compact-bar">
+        <div className="qc-brain-filter-brand" aria-label="Brain">
+          <span className="qc-brain-filter-brand-logo" />
+          <strong>Brain</strong>
+        </div>
+        <button
+          type="button"
+          className="qc-brain-filter-main-button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+        >
           <FiSliders aria-hidden />
-          <span>Recorte do Brain</span>
-        </div>
+          <span>Filtros</span>
+          {activeFilterCount ? <strong>{activeFilterCount}</strong> : null}
+        </button>
 
-        <div className="qc-brain-filter-stats" aria-label="Resumo do grafo filtrado">
-          <span>{visibleNodeCount} nós visíveis</span>
-          <span>{visibleEdgeCount} conexões</span>
-          <span>{pendingCount} pendências no recorte</span>
-          {source !== "database" ? <span>dados parciais</span> : null}
-        </div>
-      </div>
-
-      <div className="qc-brain-filter-grid">
-        <label className="qc-brain-filter-field">
-          <span>Empresa</span>
-          <select
-            aria-label="Empresa"
-            value={selectedCompanyId ?? "all"}
-            onChange={(event) => onCompanyChange(event.target.value === "all" ? null : event.target.value)}
-          >
-            <option value="all">Todas as empresas</option>
-            {companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-          <FiChevronDown aria-hidden />
-        </label>
-
-        <label className="qc-brain-filter-field">
-          <span>Projeto</span>
-          <select
-            aria-label="Projeto"
-            value={selectedProjectId ?? "all"}
-            onChange={(event) => onProjectChange(event.target.value === "all" ? null : event.target.value)}
-          >
-            <option value="all">Todos os projetos</option>
-            {projectOptions.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-          <FiChevronDown aria-hidden />
-        </label>
-
-        <label className="qc-brain-filter-field">
-          <span>Área</span>
-          <select
-            aria-label="Área"
-            value={activeModule ?? "all"}
-            onChange={(event) => onModuleChange(event.target.value === "all" ? null : event.target.value)}
-          >
-            <option value="all">Todas as áreas</option>
-            {modules.map((moduleName) => (
-              <option key={moduleName} value={moduleName}>
-                {displayModule(moduleName)}
-              </option>
-            ))}
-          </select>
-          <FiChevronDown aria-hidden />
-        </label>
-
-        <label className="qc-brain-filter-field">
-          <span>Tipo de nó</span>
-          <select
-            aria-label="Tipo de nó"
-            value={nodeType}
-            onChange={(event) => resetDependentFilters(() => onNodeTypeChange(event.target.value as BrainNodeType | "all"))}
-          >
-            <option value="all">Todos os tipos</option>
-            {types.map((type) => (
-              <option key={type} value={type}>
-                {nodeTypeLabel(type)}
-              </option>
-            ))}
-          </select>
-          <FiChevronDown aria-hidden />
-        </label>
-
-        <label className="qc-brain-filter-field">
-          <span>Status do nó</span>
-          <select
-            aria-label="Status do nó"
-            value={nodeStatus}
-            onChange={(event) => onNodeStatusChange(event.target.value as BrainNodeStatus | "all")}
-          >
-            <option value="all">Todos os status</option>
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {nodeStatusLabel(status)}
-              </option>
-            ))}
-          </select>
-          <FiChevronDown aria-hidden />
-        </label>
-      </div>
-
-      <div className="qc-brain-filter-row">
-        <label className="qc-brain-filter-search">
+        <label className="qc-brain-filter-compact-search">
           <FiSearch aria-hidden />
           <input
             value={searchText}
             onChange={(event) => onSearchTextChange(event.target.value)}
-            placeholder="Buscar nó, usuário, empresa, defeito, suporte, caso, plano ou nota..."
+            placeholder="Buscar nó, usuário, empresa, defeito, suporte, caso, plano..."
           />
         </label>
 
-        <label className="qc-brain-filter-field qc-brain-filter-period">
-          <span>Período</span>
-          <select
-            aria-label="Período"
-            value={period}
-            onChange={(event) => onPeriodChange(event.target.value as "all" | "today" | "7d" | "30d")}
-          >
-            <option value="all">Todo período</option>
-            <option value="today">Hoje</option>
-            <option value="7d">7 dias</option>
-            <option value="30d">30 dias</option>
-          </select>
-          <FiChevronDown aria-hidden />
-        </label>
-
-        <div className="qc-brain-filter-actions">
-          <button type="button" onClick={onTogglePending} data-active={showPendingOnly ? "true" : "false"} className="qc-brain-filter-chip qc-brain-filter-chip-pending">
-            Só pendências
-          </button>
-
-          <button type="button" onClick={onToggleOrphans} data-active={showOrphansOnly ? "true" : "false"} className="qc-brain-filter-chip qc-brain-filter-chip-orphan">
-            Só órfãos
-          </button>
-
-          <button type="button" onClick={onRefresh} className="qc-brain-filter-icon-button" aria-label="Atualizar Brain" title="Atualizar Brain">
-            <FiRefreshCw aria-hidden />
-          </button>
-
-          <button type="button" onClick={onClear} className="qc-brain-filter-icon-button" aria-label="Limpar filtros" title="Limpar filtros">
-            <FiRotateCcw aria-hidden />
-          </button>
+        <div className="qc-brain-filter-compact-stats">
+          <span>{visibleNodeCount} nós</span>
+          <span>{visibleEdgeCount} conexões</span>
+          {pendingCount ? <span>{pendingCount} pendências</span> : null}
+          {(apiBrainOptions?.source ?? source) !== "database" ? <span>{apiBrainOptions?.source === "brain-index" ? "API Brain" : "dados parciais"}</span> : null}
         </div>
+
+        <button type="button" onClick={onRefresh} className="qc-brain-filter-icon-button" aria-label="Atualizar Brain" title="Atualizar Brain">
+          <FiRefreshCw aria-hidden />
+        </button>
       </div>
 
-      <div className="qc-brain-filter-breadcrumb">
-        <span>Brain / {contextLabel(currentCompany, currentProject, activeModule)}</span>
-        {hasAnyFilter ? <strong>Filtro aplicado ao mapa</strong> : null}
-      </div>
+      {hasAnyFilter ? (
+        <div className="qc-brain-filter-summary-chips">
+          {summaryChips.slice(0, 5).map((chip) => (
+            <span key={chip}>{chip}</span>
+          ))}
+          {summaryChips.length > 5 ? <span>+{summaryChips.length - 5}</span> : null}
+        </div>
+      ) : null}
+
+      {open ? (
+        <div className="qc-brain-filter-popover">
+          <div className="qc-brain-filter-popover-header">
+            <div>
+              <span className="qc-brain-filter-eyebrow">Recorte do Brain</span>
+              <h2>Filtrar sem quebrar o fluxo dos nós</h2>
+              <p>
+                As opções abaixo são montadas a partir do que a API trouxe para o grafo. Se preferir, peça ao chat do Brain para ajustar o recorte por você.
+              </p>
+            </div>
+
+            <button type="button" onClick={() => setOpen(false)} className="qc-brain-filter-icon-button" aria-label="Fechar filtros" title="Fechar filtros">
+              <FiX aria-hidden />
+            </button>
+          </div>
+
+          <div className="qc-brain-filter-grid">
+            <label className="qc-brain-filter-field">
+              <span>Empresa</span>
+              <select
+                aria-label="Empresa"
+                value={selectedCompanyId ?? "all"}
+                onChange={(event) => onCompanyChange(event.target.value === "all" ? null : event.target.value)}
+              >
+                <option value="all">Todas as empresas</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+              <FiChevronDown aria-hidden />
+            </label>
+
+            <label className="qc-brain-filter-field">
+              <span>Projeto</span>
+              <select
+                aria-label="Projeto"
+                value={selectedProjectId ?? "all"}
+                onChange={(event) => onProjectChange(event.target.value === "all" ? null : event.target.value)}
+              >
+                <option value="all">Todos os projetos</option>
+                {projectOptions.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <FiChevronDown aria-hidden />
+            </label>
+
+            <label className="qc-brain-filter-field">
+              <span>Área</span>
+              <select
+                aria-label="Área"
+                value={activeModule ?? "all"}
+                onChange={(event) => onModuleChange(event.target.value === "all" ? null : event.target.value)}
+              >
+                <option value="all">Todas as áreas</option>
+                {modules.map((moduleName) => (
+                  <option key={moduleName} value={moduleName}>
+                    {displayModule(moduleName)}
+                  </option>
+                ))}
+              </select>
+              <FiChevronDown aria-hidden />
+            </label>
+
+            <label className="qc-brain-filter-field">
+              <span>Tipo de nó</span>
+              <select
+                aria-label="Tipo de nó"
+                value={nodeType}
+                onChange={(event) => resetDependentFilters(() => onNodeTypeChange(event.target.value as BrainNodeType | "all"))}
+              >
+                <option value="all">Todos os tipos</option>
+                {types.map((type) => (
+                  <option key={type} value={type}>
+                    {nodeTypeLabel(type)}
+                  </option>
+                ))}
+              </select>
+              <FiChevronDown aria-hidden />
+            </label>
+
+            <label className="qc-brain-filter-field">
+              <span>Status do nó</span>
+              <select
+                aria-label="Status do nó"
+                value={nodeStatus}
+                onChange={(event) => onNodeStatusChange(event.target.value as BrainNodeStatus | "all")}
+              >
+                <option value="all">Todos os status</option>
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {nodeStatusLabel(status)}
+                  </option>
+                ))}
+              </select>
+              <FiChevronDown aria-hidden />
+            </label>
+
+            <label className="qc-brain-filter-field">
+              <span>Período</span>
+              <select
+                aria-label="Período"
+                value={period}
+                onChange={(event) => onPeriodChange(event.target.value as "all" | "today" | "7d" | "30d")}
+              >
+                <option value="all">Todo período</option>
+                <option value="today">Hoje</option>
+                <option value="7d">7 dias</option>
+                <option value="30d">30 dias</option>
+              </select>
+              <FiChevronDown aria-hidden />
+            </label>
+          </div>
+
+          <div className="qc-brain-filter-actions">
+            <button type="button" onClick={onTogglePending} data-active={showPendingOnly ? "true" : "false"} className="qc-brain-filter-chip qc-brain-filter-chip-pending">
+              Só pendências
+            </button>
+
+            <button type="button" onClick={onToggleOrphans} data-active={showOrphansOnly ? "true" : "false"} className="qc-brain-filter-chip qc-brain-filter-chip-orphan">
+              Só órfãos
+            </button>
+
+            <button type="button" onClick={onClear} className="qc-brain-filter-chip">
+              <FiRotateCcw aria-hidden />
+              Limpar recorte
+            </button>
+
+            <span className="qc-brain-filter-context">
+              <FiFilter aria-hidden />
+              Brain / {contextLabel(currentCompany, currentProject, activeModule)}
+            </span>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
-

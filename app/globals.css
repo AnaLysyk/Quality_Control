@@ -12740,272 +12740,6 @@ body.dark .qc-brain-filter-panel-compact,
 }
 
 
-/* FIX: brain filtro largo inteligente */
-
-/* HUD ocupa a área útil do Brain, sem empurrar o grafo */
-.brain-filter-hud {
-  top: 16px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: min(1040px, calc(100% - 96px)) !important;
-  max-width: 1040px !important;
-  z-index: 90 !important;
-  pointer-events: none !important;
-}
-
-.brain-filter-hud > * {
-  pointer-events: auto !important;
-}
-
-/* força o filtro a usar toda a largura do HUD */
-.qc-brain-filter-panel-compact {
-  width: 100% !important;
-  min-width: 0 !important;
-  border-radius: 18px !important;
-  padding: 9px !important;
-  min-height: 62px !important;
-  overflow: visible !important;
-}
-
-/* dark clean, mais legível */
-html.dark .qc-brain-filter-panel-compact,
-body.dark .qc-brain-filter-panel-compact,
-[data-theme="dark"] .qc-brain-filter-panel-compact {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
-    rgba(4, 13, 31, 0.94) !important;
-  border: 1px solid rgba(148, 163, 184, 0.26) !important;
-  box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255,255,255,0.05) !important;
-}
-
-/* claro continua limpo */
-html:not(.dark) .qc-brain-filter-panel-compact,
-body:not(.dark) .qc-brain-filter-panel-compact {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96)) !important;
-  border: 1px solid rgba(15, 23, 42, 0.12) !important;
-  box-shadow:
-    0 16px 42px rgba(15, 23, 42, 0.14),
-    inset 0 1px 0 rgba(255,255,255,0.80) !important;
-}
-
-/* grid do filtro: logo + filtros + busca + métricas + atualizar */
-.qc-brain-filter-compact-bar {
-  width: 100% !important;
-  display: grid !important;
-  grid-template-columns: auto auto minmax(360px, 1fr) auto auto !important;
-  gap: 12px !important;
-  align-items: center !important;
-}
-
-/* logo Brain mais visível */
-.qc-brain-filter-brand {
-  height: 44px !important;
-  min-width: 112px !important;
-  border-radius: 15px !important;
-  padding: 0 16px 0 10px !important;
-  gap: 10px !important;
-  flex-shrink: 0 !important;
-}
-
-.qc-brain-filter-brand-logo {
-  width: 31px !important;
-  height: 31px !important;
-  flex: 0 0 31px !important;
-}
-
-.qc-brain-filter-brand strong {
-  display: inline !important;
-  font-size: 14px !important;
-  font-weight: 950 !important;
-  letter-spacing: -0.02em !important;
-}
-
-/* botões quadradinhos, não grudados */
-.qc-brain-filter-main-button,
-.qc-brain-filter-icon-button,
-.qc-brain-filter-chip {
-  height: 44px !important;
-  min-height: 44px !important;
-  border-radius: 15px !important;
-  padding: 0 15px !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  white-space: nowrap !important;
-}
-
-/* busca maior, estilo cockpit */
-.qc-brain-filter-compact-search {
-  width: 100% !important;
-  min-width: 320px !important;
-  height: 44px !important;
-  min-height: 44px !important;
-  border-radius: 15px !important;
-  padding: 0 15px !important;
-}
-
-.qc-brain-filter-compact-search input {
-  font-size: 12px !important;
-  font-weight: 650 !important;
-}
-
-/* métricas agrupadas e espaçadas */
-.qc-brain-filter-compact-stats {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  gap: 8px !important;
-  white-space: nowrap !important;
-}
-
-.qc-brain-filter-compact-stats span,
-.qc-brain-filter-compact-stats::after {
-  height: 38px !important;
-  min-height: 38px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  border-radius: 13px !important;
-  padding: 0 12px !important;
-  font-size: 11px !important;
-  font-weight: 950 !important;
-}
-
-/* botão atualizar */
-.qc-brain-filter-icon-button {
-  width: 44px !important;
-  min-width: 44px !important;
-  padding: 0 !important;
-  flex: 0 0 44px !important;
-}
-
-/* dark dos itens internos */
-html.dark .qc-brain-filter-brand,
-html.dark .qc-brain-filter-main-button,
-html.dark .qc-brain-filter-icon-button,
-html.dark .qc-brain-filter-chip,
-html.dark .qc-brain-filter-compact-search,
-html.dark .qc-brain-filter-compact-stats span,
-html.dark .qc-brain-filter-compact-stats::after,
-body.dark .qc-brain-filter-brand,
-body.dark .qc-brain-filter-main-button,
-body.dark .qc-brain-filter-icon-button,
-body.dark .qc-brain-filter-chip,
-body.dark .qc-brain-filter-compact-search,
-body.dark .qc-brain-filter-compact-stats span,
-body.dark .qc-brain-filter-compact-stats::after,
-[data-theme="dark"] .qc-brain-filter-brand,
-[data-theme="dark"] .qc-brain-filter-main-button,
-[data-theme="dark"] .qc-brain-filter-icon-button,
-[data-theme="dark"] .qc-brain-filter-chip,
-[data-theme="dark"] .qc-brain-filter-compact-search,
-[data-theme="dark"] .qc-brain-filter-compact-stats span,
-[data-theme="dark"] .qc-brain-filter-compact-stats::after {
-  background: rgba(8, 18, 40, 0.96) !important;
-  border: 1px solid rgba(148, 163, 184, 0.22) !important;
-  color: #f8fafc !important;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.18) !important;
-}
-
-html.dark .qc-brain-filter-compact-search input,
-body.dark .qc-brain-filter-compact-search input,
-[data-theme="dark"] .qc-brain-filter-compact-search input {
-  color: #f8fafc !important;
-}
-
-html.dark .qc-brain-filter-compact-search input::placeholder,
-body.dark .qc-brain-filter-compact-search input::placeholder,
-[data-theme="dark"] .qc-brain-filter-compact-search input::placeholder {
-  color: rgba(226, 232, 240, 0.58) !important;
-}
-
-/* painel expandido: não ocupa layout, abre por cima como dropdown moderno */
-.qc-brain-filter-popover {
-  position: absolute !important;
-  top: calc(100% + 12px) !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: min(920px, calc(100vw - 96px)) !important;
-  max-height: min(72vh, 650px) !important;
-  overflow: auto !important;
-  border-radius: 22px !important;
-  padding: 20px !important;
-  z-index: 100 !important;
-}
-
-html.dark .qc-brain-filter-popover,
-body.dark .qc-brain-filter-popover,
-[data-theme="dark"] .qc-brain-filter-popover {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
-    rgba(4, 13, 30, 0.98) !important;
-  border: 1px solid rgba(148, 163, 184, 0.24) !important;
-  box-shadow:
-    0 30px 80px rgba(0,0,0,0.48),
-    inset 0 1px 0 rgba(255,255,255,0.04) !important;
-}
-
-/* campos do painel expandido */
-.qc-brain-filter-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 14px !important;
-}
-
-.qc-brain-filter-field {
-  border-radius: 16px !important;
-  padding: 12px !important;
-}
-
-.qc-brain-filter-field select {
-  min-height: 34px !important;
-}
-
-/* controla responsividade sem esmagar tudo */
-@media (max-width: 1280px) {
-  .brain-filter-hud {
-    width: min(900px, calc(100% - 60px)) !important;
-  }
-
-  .qc-brain-filter-compact-bar {
-    grid-template-columns: auto auto minmax(280px, 1fr) auto auto !important;
-  }
-
-  .qc-brain-filter-compact-stats span:nth-child(n+3) {
-    display: none !important;
-  }
-}
-
-@media (max-width: 980px) {
-  .brain-filter-hud {
-    width: calc(100% - 24px) !important;
-    top: 12px !important;
-  }
-
-  .qc-brain-filter-compact-bar {
-    grid-template-columns: auto auto minmax(160px, 1fr) auto !important;
-    gap: 8px !important;
-  }
-
-  .qc-brain-filter-brand strong,
-  .qc-brain-filter-compact-stats {
-    display: none !important;
-  }
-
-  .qc-brain-filter-compact-search {
-    min-width: 0 !important;
-  }
-
-  .qc-brain-filter-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .qc-brain-filter-popover {
-    width: calc(100vw - 24px) !important;
-    padding: 14px !important;
-  }
-}
 
 /* FIX: Brain final sem filtro + universo estrelado */
 
@@ -13344,4 +13078,4716 @@ body[data-qc-brain-theme="dark"] .qc-brain-dashboard-surface::after,
 
 .qc-team-chat-clean .rounded-\[32px\] {
   border-radius: 26px !important;
+}
+
+/* FIX: Quality Messenger Pro theme */
+
+:root {
+  --qc-chat-bg: #f7fbff;
+  --qc-chat-panel: rgba(255, 255, 255, 0.78);
+  --qc-chat-panel-strong: rgba(255, 255, 255, 0.92);
+  --qc-chat-border: rgba(15, 23, 42, 0.10);
+  --qc-chat-text: #0f172a;
+  --qc-chat-muted: rgba(71, 85, 105, 0.78);
+  --qc-chat-soft: rgba(226, 246, 255, 0.74);
+  --qc-chat-accent: var(--tc-accent, #ef0001);
+  --qc-chat-blue: #0f4fd6;
+}
+
+html.dark,
+body.dark,
+[data-theme="dark"],
+[data-appearance="dark"] {
+  --qc-chat-bg: #020817;
+  --qc-chat-panel: rgba(5, 16, 36, 0.74);
+  --qc-chat-panel-strong: rgba(7, 20, 44, 0.92);
+  --qc-chat-border: rgba(148, 163, 184, 0.14);
+  --qc-chat-text: #f8fafc;
+  --qc-chat-muted: rgba(203, 213, 225, 0.68);
+  --qc-chat-soft: rgba(15, 23, 42, 0.84);
+  --qc-chat-blue: #164aa5;
+}
+
+.qc-team-chat-pro {
+  height: calc(100vh - 0.5rem) !important;
+  min-height: 0 !important;
+  color: var(--qc-chat-text) !important;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(34, 211, 238, 0.10), transparent 30%),
+    radial-gradient(circle at 86% 72%, rgba(239, 0, 1, 0.08), transparent 34%),
+    linear-gradient(180deg, var(--qc-chat-bg), var(--tc-bg, var(--qc-chat-bg))) !important;
+}
+
+.qc-team-chat-pro section {
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* lateral mais profissional */
+.qc-team-chat-pro aside {
+  width: min(340px, 32vw);
+  border-right: 1px solid var(--qc-chat-border) !important;
+  background:
+    linear-gradient(180deg, rgba(2, 8, 20, 0.98), rgba(5, 18, 40, 0.96)) !important;
+  box-shadow: none !important;
+}
+
+.qc-team-chat-pro aside > div:first-child {
+  border-bottom-color: rgba(148, 163, 184, 0.12) !important;
+  background: transparent !important;
+}
+
+/* área principal sem card em cima de card */
+.qc-team-chat-pro main {
+  background:
+    radial-gradient(circle at 50% 20%, rgba(34, 211, 238, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(3, 12, 30, 0.96), rgba(2, 8, 20, 0.99)) !important;
+}
+
+.qc-team-chat-pro main > header {
+  min-height: 72px !important;
+  padding: 14px 18px !important;
+  border-bottom: 1px solid var(--qc-chat-border) !important;
+  background: rgba(2, 8, 20, 0.30) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.qc-team-chat-pro main > header h1 {
+  font-size: clamp(1.2rem, 1.8vw, 1.55rem) !important;
+  letter-spacing: -0.035em !important;
+}
+
+.qc-team-chat-pro main > header .hidden {
+  display: none !important;
+}
+
+/* usa mais espaço da conversa */
+.qc-team-chat-pro main > div {
+  padding: 18px !important;
+}
+
+.qc-team-chat-pro main > div > div {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* estado vazio menos grosseiro */
+.qc-team-chat-pro main h3 {
+  letter-spacing: -0.045em !important;
+}
+
+.qc-team-chat-pro main h3:has(+ p) {
+  font-size: clamp(1.45rem, 2.4vw, 2.1rem) !important;
+}
+
+/* composer limpo */
+.qc-team-chat-pro form {
+  border-top: 1px solid var(--qc-chat-border) !important;
+  background:
+    linear-gradient(180deg, rgba(2, 8, 20, 0.68), rgba(2, 8, 20, 0.92)) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 12px 18px !important;
+}
+
+.qc-team-chat-pro form > div {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* remove card dentro de card no composer */
+.qc-team-chat-pro form .rounded-\[28px\],
+.qc-team-chat-pro form .rounded-\[24px\] {
+  border-radius: 22px !important;
+}
+
+.qc-team-chat-pro form textarea {
+  min-height: 46px !important;
+}
+
+/* tira a sensação de ícones/GIFs soltos */
+.qc-team-chat-pro form .mb-3.flex.gap-2.overflow-x-auto {
+  display: none !important;
+}
+
+/* se tiver painel de ferramentas, fica como gaveta */
+.qc-team-chat-pro [data-qc-chat-tools-panel] {
+  border-radius: 22px !important;
+  background:
+    linear-gradient(135deg, rgba(8, 20, 44, 0.94), rgba(5, 16, 36, 0.90)) !important;
+  border: 1px solid var(--qc-chat-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 18px 44px rgba(0,0,0,0.18) !important;
+}
+
+/* botões mais finos */
+.qc-team-chat-pro button {
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.qc-team-chat-pro button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.qc-team-chat-pro button:disabled {
+  opacity: 0.46 !important;
+}
+
+/* bolhas mais profissionais */
+.qc-team-chat-pro main [class*="rounded-\[28px\]"] {
+  border-radius: 24px !important;
+}
+
+.qc-team-chat-pro audio {
+  width: 100%;
+}
+
+/* modo claro do chat */
+html:not(.dark) .qc-team-chat-pro,
+body:not(.dark) .qc-team-chat-pro {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(34, 211, 238, 0.18), transparent 30%),
+    radial-gradient(circle at 86% 72%, rgba(239, 0, 1, 0.06), transparent 34%),
+    linear-gradient(180deg, #ffffff, #f7fbff) !important;
+}
+
+html:not(.dark) .qc-team-chat-pro main {
+  background:
+    radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.10), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(241,248,255,0.98)) !important;
+}
+
+html:not(.dark) .qc-team-chat-pro main > header,
+html:not(.dark) .qc-team-chat-pro form {
+  background: rgba(255,255,255,0.76) !important;
+}
+
+html:not(.dark) .qc-team-chat-pro aside {
+  background:
+    linear-gradient(180deg, rgba(3, 18, 42, 0.98), rgba(6, 30, 66, 0.96)) !important;
+}
+
+/* FIX: TeamChat tela cheia sem rolagem e tema claro */
+
+.qc-team-chat-pro {
+  height: calc(100dvh - 86px) !important;
+  max-height: calc(100dvh - 86px) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  color: var(--qc-chat-text, var(--tc-text-primary)) !important;
+}
+
+.qc-team-chat-pro,
+.qc-team-chat-pro section,
+.qc-team-chat-pro main {
+  overscroll-behavior: contain;
+}
+
+.qc-team-chat-pro section {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) !important;
+}
+
+.qc-team-chat-pro aside {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.qc-team-chat-pro main {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.qc-team-chat-pro main > header {
+  flex: 0 0 auto !important;
+  min-height: 72px !important;
+  padding-block: 12px !important;
+}
+
+.qc-team-chat-pro main > div {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 16px 18px !important;
+}
+
+.qc-team-chat-pro form {
+  flex: 0 0 auto !important;
+  padding: 10px 18px 12px !important;
+}
+
+.qc-team-chat-pro form > div,
+.qc-team-chat-pro main > div > div {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* MODO CLARO: fundo branco/claro real */
+html:not(.dark) .qc-team-chat-pro,
+body:not(.dark) .qc-team-chat-pro,
+html.light .qc-team-chat-pro,
+body.light .qc-team-chat-pro,
+.theme-light .qc-team-chat-pro,
+[data-theme="light"] .qc-team-chat-pro,
+[data-appearance="light"] .qc-team-chat-pro {
+  --qc-chat-text: #0f172a;
+  --qc-chat-muted: rgba(71, 85, 105, 0.78);
+  --qc-chat-border: rgba(15, 23, 42, 0.10);
+  background:
+    radial-gradient(circle at 18% 14%, rgba(14, 165, 233, 0.12), transparent 32%),
+    radial-gradient(circle at 92% 78%, rgba(239, 0, 1, 0.05), transparent 36%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-team-chat-pro main,
+body:not(.dark) .qc-team-chat-pro main,
+html.light .qc-team-chat-pro main,
+body.light .qc-team-chat-pro main,
+.theme-light .qc-team-chat-pro main,
+[data-theme="light"] .qc-team-chat-pro main,
+[data-appearance="light"] .qc-team-chat-pro main {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(14, 165, 233, 0.10), transparent 38%),
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,249,255,0.98)) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-team-chat-pro main > header,
+body:not(.dark) .qc-team-chat-pro main > header,
+html.light .qc-team-chat-pro main > header,
+body.light .qc-team-chat-pro main > header,
+.theme-light .qc-team-chat-pro main > header,
+[data-theme="light"] .qc-team-chat-pro main > header,
+[data-appearance="light"] .qc-team-chat-pro main > header {
+  background: rgba(255,255,255,0.82) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.10) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-team-chat-pro form,
+body:not(.dark) .qc-team-chat-pro form,
+html.light .qc-team-chat-pro form,
+body.light .qc-team-chat-pro form,
+.theme-light .qc-team-chat-pro form,
+[data-theme="light"] .qc-team-chat-pro form,
+[data-appearance="light"] .qc-team-chat-pro form {
+  background: rgba(255,255,255,0.88) !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.10) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-team-chat-pro form textarea,
+body:not(.dark) .qc-team-chat-pro form textarea,
+html.light .qc-team-chat-pro form textarea,
+body.light .qc-team-chat-pro form textarea,
+.theme-light .qc-team-chat-pro form textarea,
+[data-theme="light"] .qc-team-chat-pro form textarea,
+[data-appearance="light"] .qc-team-chat-pro form textarea {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-team-chat-pro form textarea::placeholder,
+body:not(.dark) .qc-team-chat-pro form textarea::placeholder,
+html.light .qc-team-chat-pro form textarea::placeholder,
+body.light .qc-team-chat-pro form textarea::placeholder,
+.theme-light .qc-team-chat-pro form textarea::placeholder,
+[data-theme="light"] .qc-team-chat-pro form textarea::placeholder,
+[data-appearance="light"] .qc-team-chat-pro form textarea::placeholder {
+  color: rgba(71, 85, 105, 0.72) !important;
+}
+
+/* MODO ESCURO */
+html.dark .qc-team-chat-pro,
+body.dark .qc-team-chat-pro,
+.theme-dark .qc-team-chat-pro,
+[data-theme="dark"] .qc-team-chat-pro,
+[data-appearance="dark"] .qc-team-chat-pro {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(34, 211, 238, 0.09), transparent 30%),
+    radial-gradient(circle at 86% 72%, rgba(239, 0, 1, 0.08), transparent 34%),
+    linear-gradient(180deg, #020817, #020817) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-pro main,
+body.dark .qc-team-chat-pro main,
+.theme-dark .qc-team-chat-pro main,
+[data-theme="dark"] .qc-team-chat-pro main,
+[data-appearance="dark"] .qc-team-chat-pro main {
+  background:
+    radial-gradient(circle at 50% 20%, rgba(34, 211, 238, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(3, 12, 30, 0.96), rgba(2, 8, 20, 0.99)) !important;
+}
+
+@media (max-width: 1024px) {
+  .qc-team-chat-pro {
+    height: calc(100dvh - 76px) !important;
+    max-height: calc(100dvh - 76px) !important;
+  }
+
+  .qc-team-chat-pro section {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-team-chat-pro aside {
+    display: none !important;
+  }
+}
+
+/* FIX: QC Work Chat theme inspired by Slack */
+
+.qc-team-chat-slack {
+  height: calc(100dvh - 84px) !important;
+  max-height: calc(100dvh - 84px) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.qc-team-chat-slack,
+.qc-team-chat-slack * {
+  box-sizing: border-box;
+}
+
+.qc-team-chat-slack section {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  grid-template-columns: 280px minmax(0, 1fr) !important;
+  gap: 0 !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+/* Sidebar estilo workspace */
+.qc-team-chat-slack aside {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  border-right: 1px solid rgba(255,255,255,0.06) !important;
+  background:
+    linear-gradient(180deg, #0b1733 0%, #081327 100%) !important;
+  box-shadow: none !important;
+}
+
+.qc-team-chat-slack aside > div:first-child {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.qc-team-chat-slack aside input {
+  height: 38px !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+.qc-team-chat-slack aside .rounded-\[24px\],
+.qc-team-chat-slack aside .rounded-\[28px\],
+.qc-team-chat-slack aside .rounded-\[32px\] {
+  border-radius: 10px !important;
+}
+
+/* Painel principal */
+.qc-team-chat-slack main {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #f8f8fb !important;
+}
+
+/* Header mais simples */
+.qc-team-chat-slack main > header {
+  flex: 0 0 auto !important;
+  min-height: 72px !important;
+  padding: 14px 18px !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Remove fundo pesado dos ícones de topo */
+.qc-team-chat-slack main > header button {
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+/* Área de mensagens */
+.qc-team-chat-slack main > div {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 24px 28px !important;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%) !important;
+}
+
+.qc-team-chat-slack main > div > div {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Estado vazio mais Slack-like */
+.qc-team-chat-slack main h3 {
+  font-size: 2rem !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.04em !important;
+  color: #111827 !important;
+}
+
+.qc-team-chat-slack main p {
+  color: #475569 !important;
+}
+
+/* Composer fixo embaixo */
+.qc-team-chat-slack form {
+  flex: 0 0 auto !important;
+  padding: 14px 20px !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.08) !important;
+  background: #ffffff !important;
+}
+
+.qc-team-chat-slack form > div {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Remove sensação de card dentro de card */
+.qc-team-chat-slack form .rounded-\[24px\],
+.qc-team-chat-slack form .rounded-\[28px\],
+.qc-team-chat-slack form .rounded-\[32px\] {
+  border-radius: 10px !important;
+}
+
+.qc-team-chat-slack form textarea {
+  min-height: 42px !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+}
+
+.qc-team-chat-slack form textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* GIF/figurinha como ferramenta secundária */
+.qc-team-chat-slack form .mb-3 {
+  margin-bottom: 10px !important;
+}
+
+.qc-team-chat-slack form .mb-3 > button,
+.qc-team-chat-slack form .mb-3 .inline-flex {
+  border-radius: 999px !important;
+}
+
+/* Esconde visual pesado de quick chips soltos, se ainda existir */
+.qc-team-chat-slack .overflow-x-auto {
+  scrollbar-width: thin;
+}
+
+/* Bolhas */
+.qc-team-chat-slack [class*="message"],
+.qc-team-chat-slack [class*="bubble"] {
+  border-radius: 12px !important;
+}
+
+/* FAB vermelho fora do padrão -> reduz impacto */
+.qc-team-chat-slack .fixed.bottom-6.right-6,
+.qc-team-chat-slack [class*="bottom-6"][class*="right-6"] {
+  transform: scale(0.82);
+  opacity: 0.82;
+}
+
+/* Modo escuro */
+html.dark .qc-team-chat-slack,
+body.dark .qc-team-chat-slack,
+.theme-dark .qc-team-chat-slack,
+[data-theme="dark"] .qc-team-chat-slack,
+[data-appearance="dark"] .qc-team-chat-slack {
+  background: #0f172a !important;
+}
+
+html.dark .qc-team-chat-slack main,
+body.dark .qc-team-chat-slack main,
+.theme-dark .qc-team-chat-slack main,
+[data-theme="dark"] .qc-team-chat-slack main,
+[data-appearance="dark"] .qc-team-chat-slack main {
+  background: #111827 !important;
+}
+
+html.dark .qc-team-chat-slack main > header,
+body.dark .qc-team-chat-slack main > header,
+.theme-dark .qc-team-chat-slack main > header,
+[data-theme="dark"] .qc-team-chat-slack main > header,
+[data-appearance="dark"] .qc-team-chat-slack main > header {
+  background: #111827 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+html.dark .qc-team-chat-slack main > div,
+body.dark .qc-team-chat-slack main > div,
+.theme-dark .qc-team-chat-slack main > div,
+[data-theme="dark"] .qc-team-chat-slack main > div,
+[data-appearance="dark"] .qc-team-chat-slack main > div {
+  background: #161b22 !important;
+}
+
+html.dark .qc-team-chat-slack form,
+body.dark .qc-team-chat-slack form,
+.theme-dark .qc-team-chat-slack form,
+[data-theme="dark"] .qc-team-chat-slack form,
+[data-appearance="dark"] .qc-team-chat-slack form {
+  background: #111827 !important;
+  border-top: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+html.dark .qc-team-chat-slack form textarea,
+body.dark .qc-team-chat-slack form textarea,
+.theme-dark .qc-team-chat-slack form textarea,
+[data-theme="dark"] .qc-team-chat-slack form textarea,
+[data-appearance="dark"] .qc-team-chat-slack form textarea {
+  background: #0f172a !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-slack main h3,
+body.dark .qc-team-chat-slack main h3,
+.theme-dark .qc-team-chat-slack main h3,
+[data-theme="dark"] .qc-team-chat-slack main h3,
+[data-appearance="dark"] .qc-team-chat-slack main h3 {
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-slack main p,
+body.dark .qc-team-chat-slack main p,
+.theme-dark .qc-team-chat-slack main p,
+[data-theme="dark"] .qc-team-chat-slack main p,
+[data-appearance="dark"] .qc-team-chat-slack main p {
+  color: #cbd5e1 !important;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .qc-team-chat-slack {
+    height: calc(100dvh - 76px) !important;
+    max-height: calc(100dvh - 76px) !important;
+  }
+
+  .qc-team-chat-slack section {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-team-chat-slack aside {
+    display: none !important;
+  }
+
+  .qc-team-chat-slack main > div {
+    padding: 18px !important;
+  }
+
+  .qc-team-chat-slack form {
+    padding: 12px !important;
+  }
+}
+
+/* FIX: QC Work Chat Slack V2 */
+
+.qc-team-chat-slack-v2 {
+  height: calc(100dvh - 82px) !important;
+  max-height: calc(100dvh - 82px) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  color: #1d1c1d !important;
+  background: #f8f8f8 !important;
+}
+
+.qc-team-chat-slack-v2,
+.qc-team-chat-slack-v2 * {
+  box-sizing: border-box;
+}
+
+/* estrutura sem scroll externo */
+.qc-team-chat-slack-v2 section {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  grid-template-columns: 300px minmax(0, 1fr) !important;
+  gap: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+/* sidebar estilo workspace */
+.qc-team-chat-slack-v2 aside {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: #19171d !important;
+  color: #ffffff !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.qc-team-chat-slack-v2 aside > div:first-child {
+  padding: 14px 14px 12px !important;
+  background: #19171d !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.qc-team-chat-slack-v2 aside input {
+  height: 36px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+}
+
+.qc-team-chat-slack-v2 aside input::placeholder {
+  color: rgba(255, 255, 255, 0.56) !important;
+}
+
+.qc-team-chat-slack-v2 aside [class*="rounded-full"] {
+  border-radius: 999px !important;
+}
+
+.qc-team-chat-slack-v2 aside button {
+  border-radius: 8px !important;
+}
+
+/* lista lateral mais parecida com Slack */
+.qc-team-chat-slack-v2 aside .space-y-1\.5 > button,
+.qc-team-chat-slack-v2 aside button.group {
+  min-height: 42px !important;
+  padding: 7px 9px !important;
+  border-radius: 8px !important;
+  color: rgba(255,255,255,0.78) !important;
+}
+
+.qc-team-chat-slack-v2 aside .space-y-1\.5 > button:hover,
+.qc-team-chat-slack-v2 aside button.group:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: #ffffff !important;
+}
+
+.qc-team-chat-slack-v2 aside .space-y-1\.5 > button[class*="bg-white"],
+.qc-team-chat-slack-v2 aside button.group[class*="bg-white"] {
+  background: #1264a3 !important;
+  color: #ffffff !important;
+}
+
+/* remove excesso de card nos vazios */
+.qc-team-chat-slack-v2 aside .border-dashed {
+  border-color: rgba(255,255,255,0.10) !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+
+/* painel principal */
+.qc-team-chat-slack-v2 main {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #ffffff !important;
+  color: #1d1c1d !important;
+}
+
+/* header tipo canal */
+.qc-team-chat-slack-v2 main > header {
+  flex: 0 0 auto !important;
+  min-height: 66px !important;
+  padding: 10px 18px !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #ddd !important;
+  box-shadow: none !important;
+}
+
+.qc-team-chat-slack-v2 main > header h1 {
+  font-size: 1.35rem !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+  color: #1d1c1d !important;
+}
+
+.qc-team-chat-slack-v2 main > header button {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+/* esconde ações soltas do header se ainda existirem */
+.qc-team-chat-slack-v2 main > header .hidden,
+.qc-team-chat-slack-v2 main > header button:has(svg + span),
+.qc-team-chat-slack-v2 main > header button:has(svg) {
+  box-shadow: none !important;
+}
+
+/* área de mensagens ocupando espaço */
+.qc-team-chat-slack-v2 main > div {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 22px 24px !important;
+  background: #ffffff !important;
+}
+
+.qc-team-chat-slack-v2 main > div > div {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* estado vazio minimalista */
+.qc-team-chat-slack-v2 main h3 {
+  font-size: 1.65rem !important;
+  color: #1d1c1d !important;
+  letter-spacing: -0.035em !important;
+}
+
+.qc-team-chat-slack-v2 main p {
+  color: #616061 !important;
+}
+
+/* composer slack-like */
+.qc-team-chat-slack-v2 form {
+  flex: 0 0 auto !important;
+  padding: 12px 20px 14px !important;
+  background: #ffffff !important;
+  border-top: 1px solid #ddd !important;
+}
+
+.qc-team-chat-slack-v2 form > div {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.qc-team-chat-slack-v2 form > div > div:last-child {
+  border-radius: 10px !important;
+  border: 1px solid #c9c9c9 !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03) !important;
+}
+
+.qc-team-chat-slack-v2 form textarea {
+  min-height: 42px !important;
+  max-height: 140px !important;
+  background: transparent !important;
+  color: #1d1c1d !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.qc-team-chat-slack-v2 form textarea::placeholder {
+  color: #616061 !important;
+}
+
+.qc-team-chat-slack-v2 form button {
+  border-radius: 8px !important;
+}
+
+/* Reações como gaveta compacta */
+.qc-team-chat-slack-v2 form .mb-3.flex.flex-col,
+.qc-team-chat-slack-v2 [data-qc-chat-tools-panel] {
+  margin-bottom: 8px !important;
+}
+
+.qc-team-chat-slack-v2 [data-qc-chat-tools-panel] {
+  max-height: 150px !important;
+  border-radius: 10px !important;
+  border: 1px solid #ddd !important;
+  background: #f8f8f8 !important;
+  box-shadow: none !important;
+}
+
+.qc-team-chat-slack-v2 [data-qc-chat-tools-panel] button {
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid #ddd !important;
+}
+
+/* esconde chips antigos soltos */
+.qc-team-chat-slack-v2 form .mb-3.flex.gap-2.overflow-x-auto {
+  display: none !important;
+}
+
+/* bolhas mais simples */
+.qc-team-chat-slack-v2 main [class*="rounded-\[28px\]"] {
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+/* dark */
+html.dark .qc-team-chat-slack-v2,
+body.dark .qc-team-chat-slack-v2,
+.theme-dark .qc-team-chat-slack-v2,
+[data-theme="dark"] .qc-team-chat-slack-v2,
+[data-appearance="dark"] .qc-team-chat-slack-v2 {
+  background: #1a1d21 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-slack-v2 main,
+body.dark .qc-team-chat-slack-v2 main,
+.theme-dark .qc-team-chat-slack-v2 main,
+[data-theme="dark"] .qc-team-chat-slack-v2 main,
+[data-appearance="dark"] .qc-team-chat-slack-v2 main {
+  background: #1a1d21 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-slack-v2 main > header,
+body.dark .qc-team-chat-slack-v2 main > header,
+.theme-dark .qc-team-chat-slack-v2 main > header,
+[data-theme="dark"] .qc-team-chat-slack-v2 main > header,
+[data-appearance="dark"] .qc-team-chat-slack-v2 main > header {
+  background: #1a1d21 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-team-chat-slack-v2 main > header h1,
+body.dark .qc-team-chat-slack-v2 main > header h1,
+html.dark .qc-team-chat-slack-v2 main h3,
+body.dark .qc-team-chat-slack-v2 main h3 {
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-slack-v2 main > div,
+body.dark .qc-team-chat-slack-v2 main > div,
+.theme-dark .qc-team-chat-slack-v2 main > div,
+[data-theme="dark"] .qc-team-chat-slack-v2 main > div,
+[data-appearance="dark"] .qc-team-chat-slack-v2 main > div {
+  background: #1a1d21 !important;
+}
+
+html.dark .qc-team-chat-slack-v2 form,
+body.dark .qc-team-chat-slack-v2 form,
+.theme-dark .qc-team-chat-slack-v2 form,
+[data-theme="dark"] .qc-team-chat-slack-v2 form,
+[data-appearance="dark"] .qc-team-chat-slack-v2 form {
+  background: #1a1d21 !important;
+  border-top: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-team-chat-slack-v2 form > div > div:last-child,
+body.dark .qc-team-chat-slack-v2 form > div > div:last-child {
+  background: #22252b !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+}
+
+html.dark .qc-team-chat-slack-v2 form textarea,
+body.dark .qc-team-chat-slack-v2 form textarea {
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-slack-v2 [data-qc-chat-tools-panel],
+body.dark .qc-team-chat-slack-v2 [data-qc-chat-tools-panel] {
+  background: #22252b !important;
+  border-color: rgba(255,255,255,0.14) !important;
+}
+
+html.dark .qc-team-chat-slack-v2 [data-qc-chat-tools-panel] button,
+body.dark .qc-team-chat-slack-v2 [data-qc-chat-tools-panel] button {
+  background: #1a1d21 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: #f8fafc !important;
+}
+
+@media (max-width: 1024px) {
+  .qc-team-chat-slack-v2 {
+    height: calc(100dvh - 76px) !important;
+    max-height: calc(100dvh - 76px) !important;
+  }
+
+  .qc-team-chat-slack-v2 section {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-team-chat-slack-v2 aside {
+    display: none !important;
+  }
+}
+
+/* FIX: Chat sidebar redimensionavel e cores refinadas */
+
+.qc-team-chat-slack-v3 section {
+  position: relative !important;
+}
+
+.qc-team-chat-slack-v3 aside {
+  background:
+    linear-gradient(180deg, #16151d 0%, #12141b 100%) !important;
+  color: #f8fafc !important;
+  border-right: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+.qc-team-chat-slack-v3 aside button.group {
+  border-radius: 9px !important;
+  background: transparent !important;
+  color: rgba(248,250,252,0.82) !important;
+  border: 1px solid transparent !important;
+}
+
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+.qc-team-chat-slack-v3 aside button.group:hover {
+  background: rgba(255,255,255,0.07) !important;
+  color: #ffffff !important;
+}
+
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+.qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+.qc-team-chat-slack-v3 aside button[aria-current="true"],
+.qc-team-chat-slack-v3 aside button[data-active="true"] {
+  background:
+    linear-gradient(135deg, rgba(126, 34, 206, 0.74), rgba(14, 116, 144, 0.62)) !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+.qc-chat-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--qc-chat-sidebar-width, 304px);
+  z-index: 40;
+  width: 14px;
+  transform: translateX(-7px);
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qc-chat-sidebar-resizer::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+  transition: 160ms ease;
+}
+
+.qc-chat-sidebar-resizer span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.94);
+  color: #334155;
+  border: 1px solid rgba(15,23,42,0.12);
+  box-shadow: 0 10px 24px rgba(15,23,42,0.14);
+  font-size: 12px;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: 160ms ease;
+}
+
+.qc-chat-sidebar-resizer:hover::before {
+  width: 3px;
+  background: rgba(14, 165, 233, 0.66);
+}
+
+.qc-chat-sidebar-resizer:hover span {
+  opacity: 1;
+  transform: scale(1);
+}
+
+html:not(.dark) .qc-team-chat-slack-v3 main,
+body:not(.dark) .qc-team-chat-slack-v3 main,
+[data-theme="light"] .qc-team-chat-slack-v3 main,
+[data-appearance="light"] .qc-team-chat-slack-v3 main {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+html:not(.dark) .qc-team-chat-slack-v3 main > header,
+body:not(.dark) .qc-team-chat-slack-v3 main > header,
+[data-theme="light"] .qc-team-chat-slack-v3 main > header,
+[data-appearance="light"] .qc-team-chat-slack-v3 main > header {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+html:not(.dark) .qc-team-chat-slack-v3 main > div,
+body:not(.dark) .qc-team-chat-slack-v3 main > div,
+[data-theme="light"] .qc-team-chat-slack-v3 main > div,
+[data-appearance="light"] .qc-team-chat-slack-v3 main > div {
+  background:
+    radial-gradient(circle at 52% 18%, rgba(14, 165, 233, 0.06), transparent 34%),
+    #ffffff !important;
+  color: #111827 !important;
+}
+
+html:not(.dark) .qc-team-chat-slack-v3 form,
+body:not(.dark) .qc-team-chat-slack-v3 form,
+[data-theme="light"] .qc-team-chat-slack-v3 form,
+[data-appearance="light"] .qc-team-chat-slack-v3 form {
+  background: #ffffff !important;
+  border-top: 1px solid #e5e7eb !important;
+}
+
+html.dark .qc-team-chat-slack-v3 main,
+body.dark .qc-team-chat-slack-v3 main,
+[data-theme="dark"] .qc-team-chat-slack-v3 main,
+[data-appearance="dark"] .qc-team-chat-slack-v3 main {
+  background: #1a1d21 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-slack-v3 main > header,
+body.dark .qc-team-chat-slack-v3 main > header,
+[data-theme="dark"] .qc-team-chat-slack-v3 main > header,
+[data-appearance="dark"] .qc-team-chat-slack-v3 main > header {
+  background: #1a1d21 !important;
+  color: #f8fafc !important;
+  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-team-chat-slack-v3 form,
+body.dark .qc-team-chat-slack-v3 form,
+[data-theme="dark"] .qc-team-chat-slack-v3 form,
+[data-appearance="dark"] .qc-team-chat-slack-v3 form {
+  background: #1a1d21 !important;
+  border-top: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-chat-sidebar-resizer span,
+body.dark .qc-chat-sidebar-resizer span,
+[data-theme="dark"] .qc-chat-sidebar-resizer span,
+[data-appearance="dark"] .qc-chat-sidebar-resizer span {
+  background: #22252b;
+  color: #e5e7eb;
+  border-color: rgba(255,255,255,0.14);
+}
+
+@media (max-width: 1024px) {
+  .qc-chat-sidebar-resizer {
+    display: none !important;
+  }
+}
+
+/* FIX: Chat Testing Company full theme */
+
+.qc-team-chat-testing-company {
+  --qc-tc-red: #c8102e;
+  --qc-tc-red-soft: #e11d48;
+  --qc-tc-navy: #071a4a;
+  --qc-tc-navy-2: #0b2c6f;
+  --qc-tc-blue: #0ea5e9;
+  --qc-tc-white: #ffffff;
+  --qc-tc-border-light: rgba(15, 23, 42, 0.08);
+  --qc-tc-border-dark: rgba(255,255,255,0.10);
+
+  height: calc(100dvh - 82px) !important;
+  max-height: calc(100dvh - 82px) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+
+/* ocupa a tela de verdade */
+.qc-team-chat-testing-company section {
+  position: relative !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  gap: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* sidebar com as cores da Testing Company */
+.qc-team-chat-testing-company aside {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background:
+    linear-gradient(180deg, var(--qc-tc-navy) 0%, #0a2158 48%, #6d0f3a 100%) !important;
+  color: #f8fafc !important;
+  border-right: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: none !important;
+}
+
+.qc-team-chat-testing-company aside > div:first-child {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+.qc-team-chat-testing-company aside input {
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  color: #f8fafc !important;
+  border-radius: 10px !important;
+}
+
+.qc-team-chat-testing-company aside input::placeholder {
+  color: rgba(248,250,252,0.62) !important;
+}
+
+/* remove azul feio dos cards da lista */
+.qc-team-chat-testing-company aside .space-y-1\.5 > button,
+.qc-team-chat-testing-company aside button.group {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 10px !important;
+  color: rgba(248,250,252,0.88) !important;
+  box-shadow: none !important;
+}
+
+.qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+.qc-team-chat-testing-company aside button.group:hover {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  color: #ffffff !important;
+}
+
+.qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+.qc-team-chat-testing-company aside button.group[class*="bg-white"],
+.qc-team-chat-testing-company aside button[aria-current="true"],
+.qc-team-chat-testing-company aside button[data-active="true"] {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.92), rgba(11,44,111,0.94)) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+  color: #ffffff !important;
+}
+
+/* alça de ajuste da coluna */
+.qc-team-chat-testing-company .qc-chat-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--qc-chat-sidebar-width, 304px);
+  z-index: 40;
+  width: 14px;
+  transform: translateX(-7px);
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qc-team-chat-testing-company .qc-chat-sidebar-resizer::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+  transition: 160ms ease;
+}
+
+.qc-team-chat-testing-company .qc-chat-sidebar-resizer span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.96);
+  color: #334155;
+  border: 1px solid rgba(15,23,42,0.10);
+  box-shadow: 0 10px 24px rgba(15,23,42,0.12);
+  font-size: 12px;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: 160ms ease;
+}
+
+.qc-team-chat-testing-company .qc-chat-sidebar-resizer:hover::before {
+  width: 3px;
+  background: rgba(14, 165, 233, 0.66);
+}
+
+.qc-team-chat-testing-company .qc-chat-sidebar-resizer:hover span {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ÁREA PRINCIPAL: sem card atrás */
+.qc-team-chat-testing-company main {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* claro */
+html:not(.dark) .qc-team-chat-testing-company main,
+body:not(.dark) .qc-team-chat-testing-company main,
+[data-theme="light"] .qc-team-chat-testing-company main,
+[data-appearance="light"] .qc-team-chat-testing-company main {
+  background:
+    radial-gradient(circle at 56% 14%, rgba(14,165,233,0.06), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #fbfcff 100%) !important;
+  color: #111827 !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company main > header,
+body:not(.dark) .qc-team-chat-testing-company main > header,
+[data-theme="light"] .qc-team-chat-testing-company main > header,
+[data-appearance="light"] .qc-team-chat-testing-company main > header {
+  background: rgba(255,255,255,0.96) !important;
+  border-bottom: 1px solid var(--qc-tc-border-light) !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company main > div,
+body:not(.dark) .qc-team-chat-testing-company main > div,
+[data-theme="light"] .qc-team-chat-testing-company main > div,
+[data-appearance="light"] .qc-team-chat-testing-company main > div {
+  background: transparent !important;
+  color: #111827 !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company main > div > div,
+body:not(.dark) .qc-team-chat-testing-company main > div > div,
+[data-theme="light"] .qc-team-chat-testing-company main > div > div,
+[data-appearance="light"] .qc-team-chat-testing-company main > div > div {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company form,
+body:not(.dark) .qc-team-chat-testing-company form,
+[data-theme="light"] .qc-team-chat-testing-company form,
+[data-appearance="light"] .qc-team-chat-testing-company form {
+  background: #ffffff !important;
+  border-top: 1px solid var(--qc-tc-border-light) !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company form > div > div:last-child,
+body:not(.dark) .qc-team-chat-testing-company form > div > div:last-child,
+[data-theme="light"] .qc-team-chat-testing-company form > div > div:last-child,
+[data-appearance="light"] .qc-team-chat-testing-company form > div > div:last-child {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+}
+
+/* escuro */
+html.dark .qc-team-chat-testing-company main,
+body.dark .qc-team-chat-testing-company main,
+[data-theme="dark"] .qc-team-chat-testing-company main,
+[data-appearance="dark"] .qc-team-chat-testing-company main {
+  background:
+    radial-gradient(circle at 56% 14%, rgba(14,165,233,0.08), transparent 28%),
+    linear-gradient(180deg, #161b22 0%, #131820 100%) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-testing-company main > header,
+body.dark .qc-team-chat-testing-company main > header,
+[data-theme="dark"] .qc-team-chat-testing-company main > header,
+[data-appearance="dark"] .qc-team-chat-testing-company main > header {
+  background: rgba(19,24,32,0.96) !important;
+  border-bottom: 1px solid var(--qc-tc-border-dark) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html.dark .qc-team-chat-testing-company main > div,
+body.dark .qc-team-chat-testing-company main > div,
+[data-theme="dark"] .qc-team-chat-testing-company main > div,
+[data-appearance="dark"] .qc-team-chat-testing-company main > div {
+  background: transparent !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-testing-company main > div > div,
+body.dark .qc-team-chat-testing-company main > div > div,
+[data-theme="dark"] .qc-team-chat-testing-company main > div > div,
+[data-appearance="dark"] .qc-team-chat-testing-company main > div > div {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+html.dark .qc-team-chat-testing-company form,
+body.dark .qc-team-chat-testing-company form,
+[data-theme="dark"] .qc-team-chat-testing-company form,
+[data-appearance="dark"] .qc-team-chat-testing-company form {
+  background: #131820 !important;
+  border-top: 1px solid var(--qc-tc-border-dark) !important;
+}
+
+html.dark .qc-team-chat-testing-company form > div > div:last-child,
+body.dark .qc-team-chat-testing-company form > div > div:last-child,
+[data-theme="dark"] .qc-team-chat-testing-company form > div > div:last-child,
+[data-appearance="dark"] .qc-team-chat-testing-company form > div > div:last-child {
+  background: #0f172a !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+}
+
+/* ocupa espaço e tira visual de card no corpo */
+.qc-team-chat-testing-company main > div {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
+}
+
+.qc-team-chat-testing-company form {
+  flex: 0 0 auto !important;
+  padding: 10px 16px 12px !important;
+}
+
+.qc-team-chat-testing-company textarea {
+  min-height: 42px !important;
+}
+
+.qc-team-chat-testing-company form .mb-3.flex.gap-2.overflow-x-auto {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .qc-team-chat-testing-company {
+    height: calc(100dvh - 76px) !important;
+    max-height: calc(100dvh - 76px) !important;
+  }
+
+  .qc-team-chat-testing-company .qc-chat-sidebar-resizer {
+    display: none !important;
+  }
+}
+
+/* FIX: Chat modo claro degrade e interacao visual */
+
+.qc-team-chat-testing-company,
+.qc-team-chat-slack-v3 {
+  --qc-tc-red: #c8102e;
+  --qc-tc-red-soft: #e11d48;
+  --qc-tc-navy: #071a4a;
+  --qc-tc-blue: #0ea5e9;
+  --qc-tc-focus: rgba(14, 165, 233, 0.22);
+  --qc-tc-red-focus: rgba(200, 16, 46, 0.18);
+}
+
+/* MODO CLARO: branco com degradê, não branco chapado */
+html:not(.dark) .qc-team-chat-testing-company,
+body:not(.dark) .qc-team-chat-testing-company,
+[data-theme="light"] .qc-team-chat-testing-company,
+[data-appearance="light"] .qc-team-chat-testing-company,
+html:not(.dark) .qc-team-chat-slack-v3,
+body:not(.dark) .qc-team-chat-slack-v3,
+[data-theme="light"] .qc-team-chat-slack-v3,
+[data-appearance="light"] .qc-team-chat-slack-v3 {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.13), transparent 32%),
+    radial-gradient(circle at 86% 78%, rgba(200, 16, 46, 0.07), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #fbfdff 42%, #f1f7ff 72%, #ffffff 100%) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company main,
+body:not(.dark) .qc-team-chat-testing-company main,
+[data-theme="light"] .qc-team-chat-testing-company main,
+[data-appearance="light"] .qc-team-chat-testing-company main,
+html:not(.dark) .qc-team-chat-slack-v3 main,
+body:not(.dark) .qc-team-chat-slack-v3 main,
+[data-theme="light"] .qc-team-chat-slack-v3 main,
+[data-appearance="light"] .qc-team-chat-slack-v3 main {
+  background:
+    radial-gradient(circle at 50% 16%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 96% 92%, rgba(200, 16, 46, 0.06), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f9fbff 100%) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company main > header,
+body:not(.dark) .qc-team-chat-testing-company main > header,
+[data-theme="light"] .qc-team-chat-testing-company main > header,
+[data-appearance="light"] .qc-team-chat-testing-company main > header,
+html:not(.dark) .qc-team-chat-slack-v3 main > header,
+body:not(.dark) .qc-team-chat-slack-v3 main > header,
+[data-theme="light"] .qc-team-chat-slack-v3 main > header,
+[data-appearance="light"] .qc-team-chat-slack-v3 main > header {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(246,250,255,0.94)) !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.09) !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Área de conversa: ocupa espaço, sem card atrás */
+html:not(.dark) .qc-team-chat-testing-company main > div,
+body:not(.dark) .qc-team-chat-testing-company main > div,
+[data-theme="light"] .qc-team-chat-testing-company main > div,
+[data-appearance="light"] .qc-team-chat-testing-company main > div,
+html:not(.dark) .qc-team-chat-slack-v3 main > div,
+body:not(.dark) .qc-team-chat-slack-v3 main > div,
+[data-theme="light"] .qc-team-chat-slack-v3 main > div,
+[data-appearance="light"] .qc-team-chat-slack-v3 main > div {
+  background: transparent !important;
+  color: #0f172a !important;
+}
+
+/* Composer claro com destaque ao focar */
+html:not(.dark) .qc-team-chat-testing-company form,
+body:not(.dark) .qc-team-chat-testing-company form,
+[data-theme="light"] .qc-team-chat-testing-company form,
+[data-appearance="light"] .qc-team-chat-testing-company form,
+html:not(.dark) .qc-team-chat-slack-v3 form,
+body:not(.dark) .qc-team-chat-slack-v3 form,
+[data-theme="light"] .qc-team-chat-slack-v3 form,
+[data-appearance="light"] .qc-team-chat-slack-v3 form {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(247,250,255,0.96)) !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.09) !important;
+  box-shadow: 0 -16px 34px rgba(15, 23, 42, 0.05) !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company form > div > div:last-child,
+body:not(.dark) .qc-team-chat-testing-company form > div > div:last-child,
+[data-theme="light"] .qc-team-chat-testing-company form > div > div:last-child,
+[data-appearance="light"] .qc-team-chat-testing-company form > div > div:last-child,
+html:not(.dark) .qc-team-chat-slack-v3 form > div > div:last-child,
+body:not(.dark) .qc-team-chat-slack-v3 form > div > div:last-child,
+[data-theme="light"] .qc-team-chat-slack-v3 form > div > div:last-child,
+[data-appearance="light"] .qc-team-chat-slack-v3 form > div > div:last-child {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.14) !important;
+  border-radius: 14px !important;
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255,255,255,0.92) !important;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+html:not(.dark) .qc-team-chat-testing-company form > div > div:last-child:focus-within,
+body:not(.dark) .qc-team-chat-testing-company form > div > div:last-child:focus-within,
+[data-theme="light"] .qc-team-chat-testing-company form > div > div:last-child:focus-within,
+[data-appearance="light"] .qc-team-chat-testing-company form > div > div:last-child:focus-within,
+html:not(.dark) .qc-team-chat-slack-v3 form > div > div:last-child:focus-within,
+body:not(.dark) .qc-team-chat-slack-v3 form > div > div:last-child:focus-within,
+[data-theme="light"] .qc-team-chat-slack-v3 form > div > div:last-child:focus-within,
+[data-appearance="light"] .qc-team-chat-slack-v3 form > div > div:last-child:focus-within {
+  border-color: rgba(14, 165, 233, 0.72) !important;
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.12),
+    0 14px 28px rgba(15, 23, 42, 0.08) !important;
+  transform: translateY(-1px);
+}
+
+html:not(.dark) .qc-team-chat-testing-company textarea,
+body:not(.dark) .qc-team-chat-testing-company textarea,
+[data-theme="light"] .qc-team-chat-testing-company textarea,
+[data-appearance="light"] .qc-team-chat-testing-company textarea,
+html:not(.dark) .qc-team-chat-slack-v3 textarea,
+body:not(.dark) .qc-team-chat-slack-v3 textarea,
+[data-theme="light"] .qc-team-chat-slack-v3 textarea,
+[data-appearance="light"] .qc-team-chat-slack-v3 textarea {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company textarea::placeholder,
+body:not(.dark) .qc-team-chat-testing-company textarea::placeholder,
+[data-theme="light"] .qc-team-chat-testing-company textarea::placeholder,
+[data-appearance="light"] .qc-team-chat-testing-company textarea::placeholder,
+html:not(.dark) .qc-team-chat-slack-v3 textarea::placeholder,
+body:not(.dark) .qc-team-chat-slack-v3 textarea::placeholder,
+[data-theme="light"] .qc-team-chat-slack-v3 textarea::placeholder,
+[data-appearance="light"] .qc-team-chat-slack-v3 textarea::placeholder {
+  color: rgba(71, 85, 105, 0.74) !important;
+}
+
+/* Interação na lista lateral */
+.qc-team-chat-testing-company aside .space-y-1\.5 > button,
+.qc-team-chat-testing-company aside button.group,
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+.qc-team-chat-slack-v3 aside button.group {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.qc-team-chat-testing-company aside .space-y-1\.5 > button::before,
+.qc-team-chat-testing-company aside button.group::before,
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button::before,
+.qc-team-chat-slack-v3 aside button.group::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto 8px 0;
+  width: 3px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 160ms ease, opacity 160ms ease;
+  opacity: 0;
+}
+
+.qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+.qc-team-chat-testing-company aside button.group:hover,
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+.qc-team-chat-slack-v3 aside button.group:hover {
+  transform: translateX(2px);
+  background: rgba(255,255,255,0.09) !important;
+  border-color: rgba(255,255,255,0.14) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.14) !important;
+}
+
+.qc-team-chat-testing-company aside .space-y-1\.5 > button:hover::before,
+.qc-team-chat-testing-company aside button.group:hover::before,
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover::before,
+.qc-team-chat-slack-v3 aside button.group:hover::before {
+  background: var(--qc-tc-blue);
+  opacity: 1;
+}
+
+.qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+.qc-team-chat-testing-company aside button.group[class*="bg-white"],
+.qc-team-chat-testing-company aside button[aria-current="true"],
+.qc-team-chat-testing-company aside button[data-active="true"],
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+.qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+.qc-team-chat-slack-v3 aside button[aria-current="true"],
+.qc-team-chat-slack-v3 aside button[data-active="true"] {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.92), rgba(7,26,74,0.94)) !important;
+  border-color: rgba(255,255,255,0.18) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(200, 16, 46, 0.18) !important;
+}
+
+.qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"]::before,
+.qc-team-chat-testing-company aside button.group[class*="bg-white"]::before,
+.qc-team-chat-testing-company aside button[aria-current="true"]::before,
+.qc-team-chat-testing-company aside button[data-active="true"]::before,
+.qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"]::before,
+.qc-team-chat-slack-v3 aside button.group[class*="bg-white"]::before,
+.qc-team-chat-slack-v3 aside button[aria-current="true"]::before,
+.qc-team-chat-slack-v3 aside button[data-active="true"]::before {
+  background: #ffffff;
+  opacity: 1;
+}
+
+/* Botões: feedback visual */
+.qc-team-chat-testing-company button,
+.qc-team-chat-slack-v3 button {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease,
+    opacity 150ms ease;
+}
+
+.qc-team-chat-testing-company button:hover:not(:disabled),
+.qc-team-chat-slack-v3 button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.qc-team-chat-testing-company button:active:not(:disabled),
+.qc-team-chat-slack-v3 button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Botão enviar no claro com destaque Testing Company */
+html:not(.dark) .qc-team-chat-testing-company button[type="submit"],
+body:not(.dark) .qc-team-chat-testing-company button[type="submit"],
+[data-theme="light"] .qc-team-chat-testing-company button[type="submit"],
+[data-appearance="light"] .qc-team-chat-testing-company button[type="submit"],
+html:not(.dark) .qc-team-chat-slack-v3 button[type="submit"],
+body:not(.dark) .qc-team-chat-slack-v3 button[type="submit"],
+[data-theme="light"] .qc-team-chat-slack-v3 button[type="submit"],
+[data-appearance="light"] .qc-team-chat-slack-v3 button[type="submit"] {
+  background:
+    linear-gradient(135deg, var(--qc-tc-red), #ef4444) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(200, 16, 46, 0.20) !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company button[type="submit"]:hover:not(:disabled),
+body:not(.dark) .qc-team-chat-testing-company button[type="submit"]:hover:not(:disabled),
+[data-theme="light"] .qc-team-chat-testing-company button[type="submit"]:hover:not(:disabled),
+[data-appearance="light"] .qc-team-chat-testing-company button[type="submit"]:hover:not(:disabled),
+html:not(.dark) .qc-team-chat-slack-v3 button[type="submit"]:hover:not(:disabled),
+body:not(.dark) .qc-team-chat-slack-v3 button[type="submit"]:hover:not(:disabled),
+[data-theme="light"] .qc-team-chat-slack-v3 button[type="submit"]:hover:not(:disabled),
+[data-appearance="light"] .qc-team-chat-slack-v3 button[type="submit"]:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 4px rgba(200, 16, 46, 0.12),
+    0 14px 30px rgba(200, 16, 46, 0.24) !important;
+}
+
+/* Gaveta de reações no claro */
+html:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel],
+body:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel],
+[data-theme="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel],
+[data-appearance="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel],
+html:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel],
+body:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel],
+[data-theme="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel],
+[data-appearance="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,251,255,0.96)) !important;
+  border: 1px solid rgba(15,23,42,0.10) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08) !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:hover,
+body:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:hover,
+[data-theme="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:hover,
+[data-appearance="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:hover,
+html:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:hover,
+body:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:hover {
+  background: rgba(14, 165, 233, 0.08) !important;
+  border-color: rgba(14, 165, 233, 0.22) !important;
+}
+
+/* Alça de redimensionamento mais visível ao interagir */
+.qc-team-chat-testing-company .qc-chat-sidebar-resizer:hover span,
+.qc-team-chat-slack-v3 .qc-chat-sidebar-resizer:hover span {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.12),
+    0 14px 28px rgba(15, 23, 42, 0.18) !important;
+}
+
+/* FIX: Chat cards brancos e degrade apenas no hover */
+
+/* Fundo geral pode ter degradê */
+html:not(.dark) .qc-team-chat-testing-company,
+body:not(.dark) .qc-team-chat-testing-company,
+[data-theme="light"] .qc-team-chat-testing-company,
+[data-appearance="light"] .qc-team-chat-testing-company,
+html:not(.dark) .qc-team-chat-slack-v3,
+body:not(.dark) .qc-team-chat-slack-v3,
+[data-theme="light"] .qc-team-chat-slack-v3,
+[data-appearance="light"] .qc-team-chat-slack-v3 {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.12), transparent 32%),
+    radial-gradient(circle at 88% 78%, rgba(200, 16, 46, 0.06), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #fbfdff 42%, #f3f8ff 72%, #ffffff 100%) !important;
+}
+
+/* Cards da lista no modo claro: branco limpo, sem degradê parado */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+html:not(.dark) .qc-team-chat-testing-company aside button.group,
+body:not(.dark) .qc-team-chat-testing-company aside button.group,
+[data-theme="light"] .qc-team-chat-testing-company aside button.group,
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group,
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group,
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(15, 23, 42, 0.10) !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.045) !important;
+}
+
+/* Hover/interação: aí sim entra degradê */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+html:not(.dark) .qc-team-chat-testing-company aside button.group:hover,
+body:not(.dark) .qc-team-chat-testing-company aside button.group:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside button.group:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group:hover {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(239, 247, 255, 0.98)) !important;
+  border-color: rgba(14, 165, 233, 0.32) !important;
+  color: #0f172a !important;
+  box-shadow:
+    0 0 0 3px rgba(14, 165, 233, 0.08),
+    0 12px 24px rgba(15, 23, 42, 0.08) !important;
+  transform: translateX(2px);
+}
+
+/* Selecionado no claro: branco com detalhe lateral, sem card todo colorido */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+html:not(.dark) .qc-team-chat-testing-company aside button.group[class*="bg-white"],
+body:not(.dark) .qc-team-chat-testing-company aside button.group[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-testing-company aside button.group[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group[class*="bg-white"],
+html:not(.dark) .qc-team-chat-testing-company aside button[aria-current="true"],
+body:not(.dark) .qc-team-chat-testing-company aside button[aria-current="true"],
+[data-theme="light"] .qc-team-chat-testing-company aside button[aria-current="true"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button[aria-current="true"],
+html:not(.dark) .qc-team-chat-testing-company aside button[data-active="true"],
+body:not(.dark) .qc-team-chat-testing-company aside button[data-active="true"],
+[data-theme="light"] .qc-team-chat-testing-company aside button[data-active="true"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button[data-active="true"],
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button[aria-current="true"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button[aria-current="true"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[aria-current="true"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[aria-current="true"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button[data-active="true"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button[data-active="true"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[data-active="true"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[data-active="true"] {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: rgba(200, 16, 46, 0.24) !important;
+  box-shadow:
+    inset 4px 0 0 #c8102e,
+    0 10px 22px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Hover do selecionado: degradê suave apenas na interação */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"]:hover,
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"]:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"]:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"]:hover,
+html:not(.dark) .qc-team-chat-testing-company aside button.group[class*="bg-white"]:hover,
+body:not(.dark) .qc-team-chat-testing-company aside button.group[class*="bg-white"]:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside button.group[class*="bg-white"]:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group[class*="bg-white"]:hover,
+html:not(.dark) .qc-team-chat-testing-company aside button[aria-current="true"]:hover,
+body:not(.dark) .qc-team-chat-testing-company aside button[aria-current="true"]:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside button[aria-current="true"]:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside button[aria-current="true"]:hover,
+html:not(.dark) .qc-team-chat-testing-company aside button[data-active="true"]:hover,
+body:not(.dark) .qc-team-chat-testing-company aside button[data-active="true"]:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside button[data-active="true"]:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside button[data-active="true"]:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"]:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"]:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"]:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"]:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group[class*="bg-white"]:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group[class*="bg-white"]:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group[class*="bg-white"]:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group[class*="bg-white"]:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside button[aria-current="true"]:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside button[aria-current="true"]:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[aria-current="true"]:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[aria-current="true"]:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside button[data-active="true"]:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside button[data-active="true"]:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[data-active="true"]:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[data-active="true"]:hover {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255, 241, 245, 0.96), rgba(239, 247, 255, 0.98)) !important;
+}
+
+/* Escuro: sem degradê berrante parado nos cards */
+html.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+body.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-theme="dark"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-appearance="dark"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+html.dark .qc-team-chat-testing-company aside button.group,
+body.dark .qc-team-chat-testing-company aside button.group,
+[data-theme="dark"] .qc-team-chat-testing-company aside button.group,
+[data-appearance="dark"] .qc-team-chat-testing-company aside button.group,
+html.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+body.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+html.dark .qc-team-chat-slack-v3 aside button.group,
+body.dark .qc-team-chat-slack-v3 aside button.group,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside button.group,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside button.group {
+  background: rgba(255,255,255,0.045) !important;
+  border-color: rgba(255,255,255,0.07) !important;
+  color: rgba(248,250,252,0.86) !important;
+}
+
+/* Escuro hover: degradê só ao interagir */
+html.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+body.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-theme="dark"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-appearance="dark"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+html.dark .qc-team-chat-testing-company aside button.group:hover,
+body.dark .qc-team-chat-testing-company aside button.group:hover,
+[data-theme="dark"] .qc-team-chat-testing-company aside button.group:hover,
+[data-appearance="dark"] .qc-team-chat-testing-company aside button.group:hover,
+html.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+body.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+html.dark .qc-team-chat-slack-v3 aside button.group:hover,
+body.dark .qc-team-chat-slack-v3 aside button.group:hover,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside button.group:hover,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside button.group:hover {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.20), rgba(14,165,233,0.14)) !important;
+  border-color: rgba(255,255,255,0.13) !important;
+}
+
+/* FIX: Chat badge e destaque somente interacao */
+
+/* badge do Chat no menu lateral */
+.qc-sidebar-chat-badge {
+  display: inline-grid;
+  min-width: 1.35rem;
+  height: 1.15rem;
+  place-items: center;
+  border-radius: 999px;
+  padding: 0 0.35rem;
+  background: linear-gradient(135deg, #c8102e, #ef4444);
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow:
+    0 0 0 2px rgba(7, 26, 74, 0.72),
+    0 8px 16px rgba(200, 16, 46, 0.22);
+}
+
+.qc-sidebar-chat-badge--mini {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  font-size: 0.58rem;
+}
+
+/* fundo geral claro com degradê suave */
+html:not(.dark) .qc-team-chat-testing-company,
+body:not(.dark) .qc-team-chat-testing-company,
+[data-theme="light"] .qc-team-chat-testing-company,
+[data-appearance="light"] .qc-team-chat-testing-company,
+html:not(.dark) .qc-team-chat-slack-v3,
+body:not(.dark) .qc-team-chat-slack-v3,
+[data-theme="light"] .qc-team-chat-slack-v3,
+[data-appearance="light"] .qc-team-chat-slack-v3 {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.12), transparent 32%),
+    radial-gradient(circle at 88% 78%, rgba(200, 16, 46, 0.06), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #fbfdff 42%, #f3f8ff 72%, #ffffff 100%) !important;
+}
+
+/* cards de conversa: sem destaque parado */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+html:not(.dark) .qc-team-chat-testing-company aside button.group,
+body:not(.dark) .qc-team-chat-testing-company aside button.group,
+[data-theme="light"] .qc-team-chat-testing-company aside button.group,
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group,
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group,
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(15, 23, 42, 0.10) !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.045) !important;
+}
+
+/* hover/focus/click: aí sim tem destaque */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button:focus-visible,
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button:focus-visible,
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:focus-visible,
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:focus-visible,
+html:not(.dark) .qc-team-chat-testing-company aside button.group:hover,
+html:not(.dark) .qc-team-chat-testing-company aside button.group:focus-visible,
+body:not(.dark) .qc-team-chat-testing-company aside button.group:hover,
+body:not(.dark) .qc-team-chat-testing-company aside button.group:focus-visible,
+[data-theme="light"] .qc-team-chat-testing-company aside button.group:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside button.group:focus-visible,
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group:focus-visible,
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:focus-visible,
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:focus-visible,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:focus-visible,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:focus-visible,
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group:focus-visible,
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group:focus-visible,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group:focus-visible,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group:focus-visible {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(239, 247, 255, 0.98)) !important;
+  border-color: rgba(14, 165, 233, 0.32) !important;
+  color: #0f172a !important;
+  box-shadow:
+    0 0 0 3px rgba(14, 165, 233, 0.08),
+    0 12px 24px rgba(15, 23, 42, 0.08) !important;
+  transform: translateX(2px);
+}
+
+/* selecionado: branco com detalhe lateral, sem bloco colorido */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button[class*="bg-white"],
+html:not(.dark) .qc-team-chat-testing-company aside button.group[class*="bg-white"],
+body:not(.dark) .qc-team-chat-testing-company aside button.group[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-testing-company aside button.group[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group[class*="bg-white"],
+html:not(.dark) .qc-team-chat-testing-company aside button[aria-current="true"],
+body:not(.dark) .qc-team-chat-testing-company aside button[aria-current="true"],
+[data-theme="light"] .qc-team-chat-testing-company aside button[aria-current="true"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button[aria-current="true"],
+html:not(.dark) .qc-team-chat-testing-company aside button[data-active="true"],
+body:not(.dark) .qc-team-chat-testing-company aside button[data-active="true"],
+[data-theme="light"] .qc-team-chat-testing-company aside button[data-active="true"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button[data-active="true"],
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button[class*="bg-white"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group[class*="bg-white"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button[aria-current="true"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button[aria-current="true"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[aria-current="true"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[aria-current="true"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button[data-active="true"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button[data-active="true"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[data-active="true"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[data-active="true"] {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: rgba(200, 16, 46, 0.24) !important;
+  box-shadow:
+    inset 4px 0 0 #c8102e,
+    0 10px 22px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* reações: sem destaque parado; destaque só hover/click */
+html:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button,
+body:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button,
+[data-theme="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel] button,
+[data-appearance="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel] button,
+html:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button,
+body:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button,
+[data-theme="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button,
+[data-appearance="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button,
+html:not(.dark) .qc-team-chat-testing-company form button,
+body:not(.dark) .qc-team-chat-testing-company form button,
+[data-theme="light"] .qc-team-chat-testing-company form button,
+[data-appearance="light"] .qc-team-chat-testing-company form button,
+html:not(.dark) .qc-team-chat-slack-v3 form button,
+body:not(.dark) .qc-team-chat-slack-v3 form button,
+[data-theme="light"] .qc-team-chat-slack-v3 form button,
+[data-appearance="light"] .qc-team-chat-slack-v3 form button {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:hover,
+html:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:focus-visible,
+body:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:hover,
+body:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:focus-visible,
+[data-theme="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:hover,
+[data-theme="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:focus-visible,
+[data-appearance="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:hover,
+[data-appearance="light"] .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:focus-visible,
+html:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:hover,
+html:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:focus-visible,
+body:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:hover,
+body:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:focus-visible,
+[data-theme="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:focus-visible,
+[data-appearance="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:focus-visible {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(239, 247, 255, 0.98)) !important;
+  border-color: rgba(14, 165, 233, 0.32) !important;
+  box-shadow:
+    0 0 0 3px rgba(14, 165, 233, 0.08),
+    0 8px 18px rgba(15, 23, 42, 0.08) !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company [data-qc-chat-tools-panel] button:active,
+html:not(.dark) .qc-team-chat-slack-v3 [data-qc-chat-tools-panel] button:active {
+  transform: scale(0.98);
+}
+
+/* FIX: Chat coluna branca no modo claro */
+
+/* Coluna interna do chat branca no modo claro */
+html:not(.dark) .qc-team-chat-testing-company aside,
+body:not(.dark) .qc-team-chat-testing-company aside,
+[data-theme="light"] .qc-team-chat-testing-company aside,
+[data-appearance="light"] .qc-team-chat-testing-company aside,
+html:not(.dark) .qc-team-chat-slack-v3 aside,
+body:not(.dark) .qc-team-chat-slack-v3 aside,
+[data-theme="light"] .qc-team-chat-slack-v3 aside,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(14, 165, 233, 0.08), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+  color: #0f172a !important;
+  border-right: 1px solid rgba(15, 23, 42, 0.10) !important;
+}
+
+/* Topo da coluna */
+html:not(.dark) .qc-team-chat-testing-company aside > div:first-child,
+body:not(.dark) .qc-team-chat-testing-company aside > div:first-child,
+[data-theme="light"] .qc-team-chat-testing-company aside > div:first-child,
+[data-appearance="light"] .qc-team-chat-testing-company aside > div:first-child,
+html:not(.dark) .qc-team-chat-slack-v3 aside > div:first-child,
+body:not(.dark) .qc-team-chat-slack-v3 aside > div:first-child,
+[data-theme="light"] .qc-team-chat-slack-v3 aside > div:first-child,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside > div:first-child {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+  color: #0f172a !important;
+}
+
+/* Textos da coluna */
+html:not(.dark) .qc-team-chat-testing-company aside *,
+body:not(.dark) .qc-team-chat-testing-company aside *,
+[data-theme="light"] .qc-team-chat-testing-company aside *,
+[data-appearance="light"] .qc-team-chat-testing-company aside *,
+html:not(.dark) .qc-team-chat-slack-v3 aside *,
+body:not(.dark) .qc-team-chat-slack-v3 aside *,
+[data-theme="light"] .qc-team-chat-slack-v3 aside *,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside * {
+  color: inherit;
+}
+
+/* Busca no modo claro */
+html:not(.dark) .qc-team-chat-testing-company aside input,
+body:not(.dark) .qc-team-chat-testing-company aside input,
+[data-theme="light"] .qc-team-chat-testing-company aside input,
+[data-appearance="light"] .qc-team-chat-testing-company aside input,
+html:not(.dark) .qc-team-chat-slack-v3 aside input,
+body:not(.dark) .qc-team-chat-slack-v3 aside input,
+[data-theme="light"] .qc-team-chat-slack-v3 aside input,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(15, 23, 42, 0.13) !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05) !important;
+}
+
+html:not(.dark) .qc-team-chat-testing-company aside input::placeholder,
+body:not(.dark) .qc-team-chat-testing-company aside input::placeholder,
+[data-theme="light"] .qc-team-chat-testing-company aside input::placeholder,
+[data-appearance="light"] .qc-team-chat-testing-company aside input::placeholder,
+html:not(.dark) .qc-team-chat-slack-v3 aside input::placeholder,
+body:not(.dark) .qc-team-chat-slack-v3 aside input::placeholder,
+[data-theme="light"] .qc-team-chat-slack-v3 aside input::placeholder,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside input::placeholder {
+  color: rgba(71, 85, 105, 0.70) !important;
+}
+
+/* Badges contatos/ativos */
+html:not(.dark) .qc-team-chat-testing-company aside .rounded-full,
+body:not(.dark) .qc-team-chat-testing-company aside .rounded-full,
+[data-theme="light"] .qc-team-chat-testing-company aside .rounded-full,
+[data-appearance="light"] .qc-team-chat-testing-company aside .rounded-full,
+html:not(.dark) .qc-team-chat-slack-v3 aside .rounded-full,
+body:not(.dark) .qc-team-chat-slack-v3 aside .rounded-full,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .rounded-full,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .rounded-full {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Cards normais: branco */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+html:not(.dark) .qc-team-chat-testing-company aside button.group,
+body:not(.dark) .qc-team-chat-testing-company aside button.group,
+[data-theme="light"] .qc-team-chat-testing-company aside button.group,
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group,
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group,
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(15, 23, 42, 0.10) !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.045) !important;
+}
+
+/* Selecionado: branco com linha vermelha lateral, sem bloco colorido */
+html:not(.dark) .qc-team-chat-testing-company aside button[class*="bg-white"],
+body:not(.dark) .qc-team-chat-testing-company aside button[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-testing-company aside button[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button[class*="bg-white"],
+html:not(.dark) .qc-team-chat-testing-company aside button[aria-current="true"],
+body:not(.dark) .qc-team-chat-testing-company aside button[aria-current="true"],
+[data-theme="light"] .qc-team-chat-testing-company aside button[aria-current="true"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button[aria-current="true"],
+html:not(.dark) .qc-team-chat-testing-company aside button[data-active="true"],
+body:not(.dark) .qc-team-chat-testing-company aside button[data-active="true"],
+[data-theme="light"] .qc-team-chat-testing-company aside button[data-active="true"],
+[data-appearance="light"] .qc-team-chat-testing-company aside button[data-active="true"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button[class*="bg-white"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button[class*="bg-white"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[class*="bg-white"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[class*="bg-white"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button[aria-current="true"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button[aria-current="true"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[aria-current="true"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[aria-current="true"],
+html:not(.dark) .qc-team-chat-slack-v3 aside button[data-active="true"],
+body:not(.dark) .qc-team-chat-slack-v3 aside button[data-active="true"],
+[data-theme="light"] .qc-team-chat-slack-v3 aside button[data-active="true"],
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button[data-active="true"] {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: rgba(200, 16, 46, 0.24) !important;
+  box-shadow:
+    inset 4px 0 0 #c8102e,
+    0 10px 22px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Hover: degradê só ao interagir */
+html:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+body:not(.dark) .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+html:not(.dark) .qc-team-chat-testing-company aside button.group:hover,
+body:not(.dark) .qc-team-chat-testing-company aside button.group:hover,
+[data-theme="light"] .qc-team-chat-testing-company aside button.group:hover,
+[data-appearance="light"] .qc-team-chat-testing-company aside button.group:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+html:not(.dark) .qc-team-chat-slack-v3 aside button.group:hover,
+body:not(.dark) .qc-team-chat-slack-v3 aside button.group:hover,
+[data-theme="light"] .qc-team-chat-slack-v3 aside button.group:hover,
+[data-appearance="light"] .qc-team-chat-slack-v3 aside button.group:hover {
+  background:
+    linear-gradient(135deg, #ffffff, #eef7ff) !important;
+  border-color: rgba(14, 165, 233, 0.32) !important;
+  color: #0f172a !important;
+}
+
+/* FIX: Chat reaction modal */
+
+/* esconde grid/régua solta de reações antigas; fica só o botão Reações */
+.qc-team-chat-testing-company [data-qc-chat-tools-panel],
+.qc-team-chat-slack-v3 [data-qc-chat-tools-panel] {
+  display: none !important;
+}
+
+/* modal estilo troca de perfil */
+.qc-chat-reaction-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.qc-chat-reaction-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(14, 165, 233, 0.14), transparent 30%),
+    rgba(2, 6, 23, 0.50);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.qc-chat-reaction-modal__panel {
+  position: relative;
+  width: min(760px, calc(100vw - 2rem));
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,251,255,0.96));
+  color: #0f172a;
+  box-shadow:
+    0 28px 90px rgba(2, 6, 23, 0.32),
+    inset 0 1px 0 rgba(255,255,255,0.90);
+}
+
+.qc-chat-reaction-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem 1.35rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(200, 16, 46, 0.08), transparent 32%),
+    radial-gradient(circle at 90% 0%, rgba(14, 165, 233, 0.12), transparent 32%),
+    linear-gradient(135deg, #ffffff, #f8fbff);
+}
+
+.qc-chat-reaction-modal__eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.45rem;
+  color: #c8102e;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.qc-chat-reaction-modal__header h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 950;
+  letter-spacing: -0.045em;
+}
+
+.qc-chat-reaction-modal__header p {
+  margin: 0.35rem 0 0;
+  color: rgba(71, 85, 105, 0.82);
+  font-size: 0.9rem;
+}
+
+.qc-chat-reaction-modal__header > button {
+  display: inline-grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  color: #0f172a;
+  transition: 160ms ease;
+}
+
+.qc-chat-reaction-modal__header > button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(200, 16, 46, 0.22);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10);
+}
+
+.qc-chat-reaction-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 1rem 1.35rem 1.25rem;
+}
+
+.qc-chat-reaction-modal__grid button {
+  display: flex;
+  min-height: 84px;
+  align-items: center;
+  gap: 0.85rem;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  padding: 0.9rem;
+  text-align: left;
+  color: #0f172a;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.045);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.qc-chat-reaction-modal__grid button:hover:not(:disabled),
+.qc-chat-reaction-modal__grid button:focus-visible:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(14, 165, 233, 0.30);
+  background:
+    linear-gradient(135deg, #ffffff, #eef7ff);
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.08),
+    0 16px 32px rgba(15, 23, 42, 0.10);
+}
+
+.qc-chat-reaction-modal__grid button:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.qc-chat-reaction-modal__emoji {
+  display: grid;
+  width: 3.05rem;
+  height: 3.05rem;
+  place-items: center;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(200, 16, 46, 0.09), rgba(14, 165, 233, 0.10));
+  font-size: 1.55rem;
+}
+
+.qc-chat-reaction-modal__content {
+  min-width: 0;
+}
+
+.qc-chat-reaction-modal__content strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 950;
+}
+
+.qc-chat-reaction-modal__content small {
+  display: block;
+  margin-top: 0.2rem;
+  color: rgba(71, 85, 105, 0.78);
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.qc-chat-reaction-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1.35rem 1.2rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  color: rgba(71, 85, 105, 0.78);
+  font-size: 0.78rem;
+}
+
+.qc-chat-reaction-modal__footer button {
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  padding: 0.55rem 0.9rem;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* dark */
+html.dark .qc-chat-reaction-modal__panel,
+body.dark .qc-chat-reaction-modal__panel,
+[data-theme="dark"] .qc-chat-reaction-modal__panel,
+[data-appearance="dark"] .qc-chat-reaction-modal__panel {
+  border-color: rgba(255,255,255,0.12);
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96));
+  color: #f8fafc;
+}
+
+html.dark .qc-chat-reaction-modal__header,
+body.dark .qc-chat-reaction-modal__header,
+[data-theme="dark"] .qc-chat-reaction-modal__header,
+[data-appearance="dark"] .qc-chat-reaction-modal__header {
+  border-bottom-color: rgba(255,255,255,0.10);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(200, 16, 46, 0.18), transparent 32%),
+    radial-gradient(circle at 90% 0%, rgba(14, 165, 233, 0.18), transparent 32%),
+    linear-gradient(135deg, #111827, #0f172a);
+}
+
+html.dark .qc-chat-reaction-modal__header p,
+body.dark .qc-chat-reaction-modal__header p,
+[data-theme="dark"] .qc-chat-reaction-modal__header p,
+[data-appearance="dark"] .qc-chat-reaction-modal__header p,
+html.dark .qc-chat-reaction-modal__content small,
+body.dark .qc-chat-reaction-modal__content small,
+[data-theme="dark"] .qc-chat-reaction-modal__content small,
+[data-appearance="dark"] .qc-chat-reaction-modal__content small,
+html.dark .qc-chat-reaction-modal__footer,
+body.dark .qc-chat-reaction-modal__footer,
+[data-theme="dark"] .qc-chat-reaction-modal__footer,
+[data-appearance="dark"] .qc-chat-reaction-modal__footer {
+  color: rgba(203, 213, 225, 0.72);
+}
+
+html.dark .qc-chat-reaction-modal__header > button,
+body.dark .qc-chat-reaction-modal__header > button,
+[data-theme="dark"] .qc-chat-reaction-modal__header > button,
+[data-appearance="dark"] .qc-chat-reaction-modal__header > button,
+html.dark .qc-chat-reaction-modal__footer button,
+body.dark .qc-chat-reaction-modal__footer button,
+[data-theme="dark"] .qc-chat-reaction-modal__footer button,
+[data-appearance="dark"] .qc-chat-reaction-modal__footer button {
+  border-color: rgba(255,255,255,0.12);
+  background: #1f2937;
+  color: #f8fafc;
+}
+
+html.dark .qc-chat-reaction-modal__grid button,
+body.dark .qc-chat-reaction-modal__grid button,
+[data-theme="dark"] .qc-chat-reaction-modal__grid button,
+[data-appearance="dark"] .qc-chat-reaction-modal__grid button {
+  border-color: rgba(255,255,255,0.10);
+  background: #111827;
+  color: #f8fafc;
+}
+
+html.dark .qc-chat-reaction-modal__grid button:hover:not(:disabled),
+body.dark .qc-chat-reaction-modal__grid button:hover:not(:disabled),
+[data-theme="dark"] .qc-chat-reaction-modal__grid button:hover:not(:disabled),
+[data-appearance="dark"] .qc-chat-reaction-modal__grid button:hover:not(:disabled) {
+  border-color: rgba(14, 165, 233, 0.30);
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.18), rgba(14,165,233,0.14));
+}
+
+@media (max-width: 720px) {
+  .qc-chat-reaction-modal {
+    padding: 1rem;
+  }
+
+  .qc-chat-reaction-modal__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* FIX: Chat fundo escuro real no modo escuro */
+
+/* Root do chat no modo escuro */
+
+html.dark .qc-team-chat-testing-company,
+body.dark .qc-team-chat-testing-company,
+.dark .qc-team-chat-testing-company,
+.theme-dark .qc-team-chat-testing-company,
+[data-theme="dark"] .qc-team-chat-testing-company,
+[data-appearance="dark"] .qc-team-chat-testing-company,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company,
+html.dark .qc-team-chat-slack-v3,
+body.dark .qc-team-chat-slack-v3,
+.dark .qc-team-chat-slack-v3,
+.theme-dark .qc-team-chat-slack-v3,
+[data-theme="dark"] .qc-team-chat-slack-v3,
+[data-appearance="dark"] .qc-team-chat-slack-v3,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3
+ {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 92% 82%, rgba(200, 16, 46, 0.10), transparent 36%),
+    linear-gradient(135deg, #020817 0%, #071225 48%, #10071a 100%) !important;
+  color: #f8fafc !important;
+}
+
+/* Coluna interna do chat escura */
+html.dark .qc-team-chat-testing-company aside,
+body.dark .qc-team-chat-testing-company aside,
+.dark .qc-team-chat-testing-company aside,
+.theme-dark .qc-team-chat-testing-company aside,
+[data-theme="dark"] .qc-team-chat-testing-company aside,
+[data-appearance="dark"] .qc-team-chat-testing-company aside,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company aside,
+html.dark .qc-team-chat-slack-v3 aside,
+body.dark .qc-team-chat-slack-v3 aside,
+.dark .qc-team-chat-slack-v3 aside,
+.theme-dark .qc-team-chat-slack-v3 aside,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 aside {
+  background:
+    linear-gradient(180deg, #061225 0%, #071a4a 46%, #5b0f35 100%) !important;
+  color: #f8fafc !important;
+  border-right: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+/* Área principal escura */
+html.dark .qc-team-chat-testing-company main,
+body.dark .qc-team-chat-testing-company main,
+.dark .qc-team-chat-testing-company main,
+.theme-dark .qc-team-chat-testing-company main,
+[data-theme="dark"] .qc-team-chat-testing-company main,
+[data-appearance="dark"] .qc-team-chat-testing-company main,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company main,
+html.dark .qc-team-chat-slack-v3 main,
+body.dark .qc-team-chat-slack-v3 main,
+.dark .qc-team-chat-slack-v3 main,
+.theme-dark .qc-team-chat-slack-v3 main,
+[data-theme="dark"] .qc-team-chat-slack-v3 main,
+[data-appearance="dark"] .qc-team-chat-slack-v3 main,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 main {
+  background:
+    radial-gradient(circle at 52% 18%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 90% 90%, rgba(200, 16, 46, 0.08), transparent 36%),
+    linear-gradient(180deg, #08111f 0%, #101820 100%) !important;
+  color: #f8fafc !important;
+}
+
+/* Header escuro */
+html.dark .qc-team-chat-testing-company main > header,
+body.dark .qc-team-chat-testing-company main > header,
+.dark .qc-team-chat-testing-company main > header,
+.theme-dark .qc-team-chat-testing-company main > header,
+[data-theme="dark"] .qc-team-chat-testing-company main > header,
+[data-appearance="dark"] .qc-team-chat-testing-company main > header,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company main > header,
+html.dark .qc-team-chat-slack-v3 main > header,
+body.dark .qc-team-chat-slack-v3 main > header,
+.dark .qc-team-chat-slack-v3 main > header,
+.theme-dark .qc-team-chat-slack-v3 main > header,
+[data-theme="dark"] .qc-team-chat-slack-v3 main > header,
+[data-appearance="dark"] .qc-team-chat-slack-v3 main > header,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 main > header {
+  background:
+    linear-gradient(135deg, rgba(8,17,31,0.98), rgba(16,24,32,0.96)) !important;
+  color: #f8fafc !important;
+  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: none !important;
+}
+
+/* Corpo da conversa escuro */
+html.dark .qc-team-chat-testing-company main > div,
+body.dark .qc-team-chat-testing-company main > div,
+.dark .qc-team-chat-testing-company main > div,
+.theme-dark .qc-team-chat-testing-company main > div,
+[data-theme="dark"] .qc-team-chat-testing-company main > div,
+[data-appearance="dark"] .qc-team-chat-testing-company main > div,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company main > div,
+html.dark .qc-team-chat-slack-v3 main > div,
+body.dark .qc-team-chat-slack-v3 main > div,
+.dark .qc-team-chat-slack-v3 main > div,
+.theme-dark .qc-team-chat-slack-v3 main > div,
+[data-theme="dark"] .qc-team-chat-slack-v3 main > div,
+[data-appearance="dark"] .qc-team-chat-slack-v3 main > div,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 main > div {
+  background: transparent !important;
+  color: #f8fafc !important;
+}
+
+/* Composer escuro */
+html.dark .qc-team-chat-testing-company form,
+body.dark .qc-team-chat-testing-company form,
+.dark .qc-team-chat-testing-company form,
+.theme-dark .qc-team-chat-testing-company form,
+[data-theme="dark"] .qc-team-chat-testing-company form,
+[data-appearance="dark"] .qc-team-chat-testing-company form,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company form,
+html.dark .qc-team-chat-slack-v3 form,
+body.dark .qc-team-chat-slack-v3 form,
+.dark .qc-team-chat-slack-v3 form,
+.theme-dark .qc-team-chat-slack-v3 form,
+[data-theme="dark"] .qc-team-chat-slack-v3 form,
+[data-appearance="dark"] .qc-team-chat-slack-v3 form,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 form {
+  background:
+    linear-gradient(180deg, rgba(8,17,31,0.96), rgba(6,18,37,0.98)) !important;
+  color: #f8fafc !important;
+  border-top: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: 0 -18px 36px rgba(0,0,0,0.18) !important;
+}
+
+/* Campo de mensagem escuro */
+html.dark .qc-team-chat-testing-company form > div > div:last-child,
+body.dark .qc-team-chat-testing-company form > div > div:last-child,
+.dark .qc-team-chat-testing-company form > div > div:last-child,
+.theme-dark .qc-team-chat-testing-company form > div > div:last-child,
+[data-theme="dark"] .qc-team-chat-testing-company form > div > div:last-child,
+[data-appearance="dark"] .qc-team-chat-testing-company form > div > div:last-child,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company form > div > div:last-child,
+html.dark .qc-team-chat-slack-v3 form > div > div:last-child,
+body.dark .qc-team-chat-slack-v3 form > div > div:last-child,
+.dark .qc-team-chat-slack-v3 form > div > div:last-child,
+.theme-dark .qc-team-chat-slack-v3 form > div > div:last-child,
+[data-theme="dark"] .qc-team-chat-slack-v3 form > div > div:last-child,
+[data-appearance="dark"] .qc-team-chat-slack-v3 form > div > div:last-child,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 form > div > div:last-child {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255,255,255,0.13) !important;
+  box-shadow: none !important;
+}
+
+html.dark .qc-team-chat-testing-company textarea,
+body.dark .qc-team-chat-testing-company textarea,
+.dark .qc-team-chat-testing-company textarea,
+.theme-dark .qc-team-chat-testing-company textarea,
+[data-theme="dark"] .qc-team-chat-testing-company textarea,
+[data-appearance="dark"] .qc-team-chat-testing-company textarea,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company textarea,
+html.dark .qc-team-chat-slack-v3 textarea,
+body.dark .qc-team-chat-slack-v3 textarea,
+.dark .qc-team-chat-slack-v3 textarea,
+.theme-dark .qc-team-chat-slack-v3 textarea,
+[data-theme="dark"] .qc-team-chat-slack-v3 textarea,
+[data-appearance="dark"] .qc-team-chat-slack-v3 textarea,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 textarea {
+  color: #f8fafc !important;
+}
+
+html.dark .qc-team-chat-testing-company textarea::placeholder,
+body.dark .qc-team-chat-testing-company textarea::placeholder,
+.dark .qc-team-chat-testing-company textarea::placeholder,
+.theme-dark .qc-team-chat-testing-company textarea::placeholder,
+[data-theme="dark"] .qc-team-chat-testing-company textarea::placeholder,
+[data-appearance="dark"] .qc-team-chat-testing-company textarea::placeholder,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company textarea::placeholder,
+html.dark .qc-team-chat-slack-v3 textarea::placeholder,
+body.dark .qc-team-chat-slack-v3 textarea::placeholder,
+.dark .qc-team-chat-slack-v3 textarea::placeholder,
+.theme-dark .qc-team-chat-slack-v3 textarea::placeholder,
+[data-theme="dark"] .qc-team-chat-slack-v3 textarea::placeholder,
+[data-appearance="dark"] .qc-team-chat-slack-v3 textarea::placeholder,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 textarea::placeholder {
+  color: rgba(203, 213, 225, 0.62) !important;
+}
+
+/* Cards da lista no escuro */
+html.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+body.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+.theme-dark .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-theme="dark"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+[data-appearance="dark"] .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company aside .space-y-1\.5 > button,
+html.dark .qc-team-chat-testing-company aside button.group,
+body.dark .qc-team-chat-testing-company aside button.group,
+.dark .qc-team-chat-testing-company aside button.group,
+.theme-dark .qc-team-chat-testing-company aside button.group,
+[data-theme="dark"] .qc-team-chat-testing-company aside button.group,
+[data-appearance="dark"] .qc-team-chat-testing-company aside button.group,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company aside button.group,
+html.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+body.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+.theme-dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button,
+html.dark .qc-team-chat-slack-v3 aside button.group,
+body.dark .qc-team-chat-slack-v3 aside button.group,
+.dark .qc-team-chat-slack-v3 aside button.group,
+.theme-dark .qc-team-chat-slack-v3 aside button.group,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside button.group,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside button.group,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 aside button.group {
+  background: rgba(255,255,255,0.05) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: none !important;
+}
+
+/* Hover escuro */
+html.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+body.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+.dark .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+.theme-dark .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-theme="dark"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+[data-appearance="dark"] .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company aside .space-y-1\.5 > button:hover,
+html.dark .qc-team-chat-testing-company aside button.group:hover,
+body.dark .qc-team-chat-testing-company aside button.group:hover,
+.dark .qc-team-chat-testing-company aside button.group:hover,
+.theme-dark .qc-team-chat-testing-company aside button.group:hover,
+[data-theme="dark"] .qc-team-chat-testing-company aside button.group:hover,
+[data-appearance="dark"] .qc-team-chat-testing-company aside button.group:hover,
+body:has([title="Ativar modo claro"]) .qc-team-chat-testing-company aside button.group:hover,
+html.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+body.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+.dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+.theme-dark .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 aside .space-y-1\.5 > button:hover,
+html.dark .qc-team-chat-slack-v3 aside button.group:hover,
+body.dark .qc-team-chat-slack-v3 aside button.group:hover,
+.dark .qc-team-chat-slack-v3 aside button.group:hover,
+.theme-dark .qc-team-chat-slack-v3 aside button.group:hover,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside button.group:hover,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside button.group:hover,
+body:has([title="Ativar modo claro"]) .qc-team-chat-slack-v3 aside button.group:hover {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.18), rgba(14,165,233,0.14)) !important;
+  border-color: rgba(255,255,255,0.14) !important;
+}
+
+/* FIX: Chat dark real dois modais e scroll fino */
+
+/* Scroll fino, sem barra grosseira */
+.qc-chat-shell,
+.qc-chat-shell * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+}
+
+.qc-chat-shell *::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.qc-chat-shell *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.qc-chat-shell *::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.28);
+}
+
+.qc-chat-shell *::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.42);
+}
+
+/* Força dark real quando o app está em modo escuro */
+html.dark .qc-chat-shell,
+body.dark .qc-chat-shell,
+.dark .qc-chat-shell,
+.theme-dark .qc-chat-shell,
+[data-theme="dark"] .qc-chat-shell,
+[data-appearance="dark"] .qc-chat-shell,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 92% 82%, rgba(200, 16, 46, 0.10), transparent 36%),
+    linear-gradient(135deg, #020817 0%, #071225 48%, #10071a 100%) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-chat-shell aside,
+body.dark .qc-chat-shell aside,
+.dark .qc-chat-shell aside,
+.theme-dark .qc-chat-shell aside,
+[data-theme="dark"] .qc-chat-shell aside,
+[data-appearance="dark"] .qc-chat-shell aside,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside {
+  background:
+    linear-gradient(180deg, #061225 0%, #071a4a 46%, #5b0f35 100%) !important;
+  color: #f8fafc !important;
+  border-right: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-chat-shell main,
+body.dark .qc-chat-shell main,
+.dark .qc-chat-shell main,
+.theme-dark .qc-chat-shell main,
+[data-theme="dark"] .qc-chat-shell main,
+[data-appearance="dark"] .qc-chat-shell main,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell main,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell main {
+  background:
+    radial-gradient(circle at 52% 18%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 90% 90%, rgba(200, 16, 46, 0.08), transparent 36%),
+    linear-gradient(180deg, #08111f 0%, #101820 100%) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-chat-shell main > header,
+body.dark .qc-chat-shell main > header,
+.dark .qc-chat-shell main > header,
+.theme-dark .qc-chat-shell main > header,
+[data-theme="dark"] .qc-chat-shell main > header,
+[data-appearance="dark"] .qc-chat-shell main > header,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell main > header,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell main > header,
+html.dark .qc-chat-shell form,
+body.dark .qc-chat-shell form,
+.dark .qc-chat-shell form,
+.theme-dark .qc-chat-shell form,
+[data-theme="dark"] .qc-chat-shell form,
+[data-appearance="dark"] .qc-chat-shell form,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell form,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell form {
+  background:
+    linear-gradient(180deg, rgba(8,17,31,0.98), rgba(6,18,37,0.98)) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-chat-shell aside input,
+body.dark .qc-chat-shell aside input,
+.dark .qc-chat-shell aside input,
+.theme-dark .qc-chat-shell aside input,
+[data-theme="dark"] .qc-chat-shell aside input,
+[data-appearance="dark"] .qc-chat-shell aside input,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside input,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside input,
+html.dark .qc-chat-shell textarea,
+body.dark .qc-chat-shell textarea,
+.dark .qc-chat-shell textarea,
+.theme-dark .qc-chat-shell textarea,
+[data-theme="dark"] .qc-chat-shell textarea,
+[data-appearance="dark"] .qc-chat-shell textarea,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell textarea,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell textarea {
+  background: rgba(15, 23, 42, 0.86) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+/* Cards no dark não ficam brancos */
+html.dark .qc-chat-shell aside button,
+body.dark .qc-chat-shell aside button,
+.dark .qc-chat-shell aside button,
+.theme-dark .qc-chat-shell aside button,
+[data-theme="dark"] .qc-chat-shell aside button,
+[data-appearance="dark"] .qc-chat-shell aside button,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside button {
+  background: rgba(255,255,255,0.055) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.09) !important;
+  box-shadow: none !important;
+}
+
+html.dark .qc-chat-shell aside button:hover,
+body.dark .qc-chat-shell aside button:hover,
+.dark .qc-chat-shell aside button:hover,
+.theme-dark .qc-chat-shell aside button:hover,
+[data-theme="dark"] .qc-chat-shell aside button:hover,
+[data-appearance="dark"] .qc-chat-shell aside button:hover,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside button:hover,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside button:hover {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.20), rgba(14,165,233,0.16)) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
+/* Esconde régua antiga solta */
+.qc-chat-composer-modal-actions + .mb-3,
+.qc-chat-shell [data-qc-chat-tools-panel] {
+  display: none !important;
+}
+
+/* Botões novos do composer */
+.qc-chat-composer-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.qc-chat-composer-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(255,255,255,0.92);
+  color: #0f172a;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 850;
+  transition: 160ms ease;
+}
+
+.qc-chat-composer-modal-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(14, 165, 233, 0.32);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+html.dark .qc-chat-composer-modal-actions button,
+body.dark .qc-chat-composer-modal-actions button,
+.dark .qc-chat-composer-modal-actions button,
+.theme-dark .qc-chat-composer-modal-actions button,
+[data-theme="dark"] .qc-chat-composer-modal-actions button,
+[data-appearance="dark"] .qc-chat-composer-modal-actions button,
+body:has([title*="Ativar modo claro"]) .qc-chat-composer-modal-actions button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-composer-modal-actions button {
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  border-color: rgba(255,255,255,0.12);
+}
+
+/* Modal base para GIF/Figuras e Reagir */
+.qc-chat-message-tools-modal,
+.qc-chat-reaction-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.qc-chat-modal-backdrop,
+.qc-chat-reaction-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.12), transparent 32%),
+    rgba(2, 6, 23, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.qc-chat-modal-panel,
+.qc-chat-reaction-modal__panel {
+  position: relative;
+  width: min(800px, calc(100vw - 2rem));
+  max-height: min(82dvh, 760px);
+  overflow-y: auto;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,251,255,0.96));
+  color: #0f172a;
+  box-shadow:
+    0 28px 90px rgba(2, 6, 23, 0.32),
+    inset 0 1px 0 rgba(255,255,255,0.90);
+}
+
+.qc-chat-modal-header,
+.qc-chat-reaction-modal__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.qc-chat-modal-eyebrow,
+.qc-chat-reaction-modal__eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  color: #c8102e;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.qc-chat-modal-header h2,
+.qc-chat-reaction-modal__header h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 950;
+  letter-spacing: -0.045em;
+}
+
+.qc-chat-modal-header p,
+.qc-chat-reaction-modal__header p {
+  margin: 0.35rem 0 0;
+  color: rgba(71, 85, 105, 0.82);
+  font-size: 0.9rem;
+}
+
+.qc-chat-modal-header > button,
+.qc-chat-reaction-modal__header > button {
+  display: inline-grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.qc-chat-modal-section {
+  padding: 1rem 1.35rem;
+}
+
+.qc-chat-modal-section + .qc-chat-modal-section {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.qc-chat-modal-section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(71, 85, 105, 0.82);
+}
+
+.qc-chat-modal-grid,
+.qc-chat-reaction-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 1rem 1.35rem 1.25rem;
+}
+
+.qc-chat-modal-section .qc-chat-modal-grid {
+  padding: 0;
+}
+
+.qc-chat-modal-grid button,
+.qc-chat-reaction-modal__grid button {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  gap: 0.8rem;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  padding: 0.85rem;
+  text-align: left;
+  color: #0f172a;
+  transition: 160ms ease;
+}
+
+.qc-chat-modal-grid button:hover:not(:disabled),
+.qc-chat-reaction-modal__grid button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(14, 165, 233, 0.30);
+  background:
+    linear-gradient(135deg, #ffffff, #eef7ff);
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.08),
+    0 16px 32px rgba(15, 23, 42, 0.10);
+}
+
+.qc-chat-modal-emoji,
+.qc-chat-reaction-modal__emoji {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(200, 16, 46, 0.09), rgba(14, 165, 233, 0.10));
+  font-size: 1.45rem;
+}
+
+.qc-chat-modal-grid strong,
+.qc-chat-reaction-modal__content strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.qc-chat-modal-grid small,
+.qc-chat-reaction-modal__content small {
+  display: block;
+  margin-top: 0.15rem;
+  color: rgba(71, 85, 105, 0.78);
+  font-size: 0.74rem;
+}
+
+/* dark dos modais */
+html.dark .qc-chat-modal-panel,
+body.dark .qc-chat-modal-panel,
+.dark .qc-chat-modal-panel,
+.theme-dark .qc-chat-modal-panel,
+[data-theme="dark"] .qc-chat-modal-panel,
+[data-appearance="dark"] .qc-chat-modal-panel,
+body:has([title*="Ativar modo claro"]) .qc-chat-modal-panel,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-modal-panel,
+html.dark .qc-chat-reaction-modal__panel,
+body.dark .qc-chat-reaction-modal__panel,
+.dark .qc-chat-reaction-modal__panel,
+.theme-dark .qc-chat-reaction-modal__panel,
+[data-theme="dark"] .qc-chat-reaction-modal__panel,
+[data-appearance="dark"] .qc-chat-reaction-modal__panel,
+body:has([title*="Ativar modo claro"]) .qc-chat-reaction-modal__panel,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-reaction-modal__panel {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96)) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+html.dark .qc-chat-modal-grid button,
+body.dark .qc-chat-modal-grid button,
+.dark .qc-chat-modal-grid button,
+.theme-dark .qc-chat-modal-grid button,
+[data-theme="dark"] .qc-chat-modal-grid button,
+[data-appearance="dark"] .qc-chat-modal-grid button,
+body:has([title*="Ativar modo claro"]) .qc-chat-modal-grid button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-modal-grid button,
+html.dark .qc-chat-reaction-modal__grid button,
+body.dark .qc-chat-reaction-modal__grid button,
+.dark .qc-chat-reaction-modal__grid button,
+.theme-dark .qc-chat-reaction-modal__grid button,
+[data-theme="dark"] .qc-chat-reaction-modal__grid button,
+[data-appearance="dark"] .qc-chat-reaction-modal__grid button,
+body:has([title*="Ativar modo claro"]) .qc-chat-reaction-modal__grid button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-reaction-modal__grid button {
+  background: #111827 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+@media (max-width: 720px) {
+  .qc-chat-modal-grid,
+  .qc-chat-reaction-modal__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* FIX: Chat message reaction plus */
+
+.qc-chat-message-row {
+  position: relative;
+}
+
+.qc-chat-message-bubble {
+  overflow: visible !important;
+}
+
+.qc-chat-message-reaction-plus {
+  position: absolute;
+  right: -0.65rem;
+  bottom: -0.65rem;
+  z-index: 4;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.qc-chat-message-row:hover .qc-chat-message-reaction-plus,
+.qc-chat-message-reaction-plus:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.qc-chat-message-reaction-plus:hover {
+  border-color: rgba(14, 165, 233, 0.32);
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.10),
+    0 14px 28px rgba(15, 23, 42, 0.20);
+}
+
+.qc-chat-message-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.qc-chat-message-reactions span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255,255,255,0.84);
+  color: #0f172a;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.qc-chat-message-reactions strong {
+  font-size: 0.65rem;
+  font-weight: 950;
+}
+
+.qc-chat-message-reaction-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.qc-chat-message-reaction-modal__panel {
+  width: min(720px, calc(100vw - 2rem)) !important;
+}
+
+.qc-chat-message-reaction-preview {
+  margin: 1rem 1.35rem 0;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,251,255,0.96));
+  padding: 0.9rem 1rem;
+  color: #0f172a;
+}
+
+.qc-chat-message-reaction-preview strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 950;
+  color: #c8102e;
+}
+
+.qc-chat-message-reaction-preview span {
+  display: -webkit-box;
+  max-height: 4.5rem;
+  overflow: hidden;
+  color: rgba(51, 65, 85, 0.88);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+html.dark .qc-chat-message-reaction-plus,
+body.dark .qc-chat-message-reaction-plus,
+.dark .qc-chat-message-reaction-plus,
+.theme-dark .qc-chat-message-reaction-plus,
+[data-theme="dark"] .qc-chat-message-reaction-plus,
+[data-appearance="dark"] .qc-chat-message-reaction-plus,
+body:has([title*="Ativar modo claro"]) .qc-chat-message-reaction-plus,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-message-reaction-plus {
+  background: #111827;
+  color: #f8fafc;
+  border-color: rgba(255,255,255,0.14);
+}
+
+html.dark .qc-chat-message-reactions span,
+body.dark .qc-chat-message-reactions span,
+.dark .qc-chat-message-reactions span,
+.theme-dark .qc-chat-message-reactions span,
+[data-theme="dark"] .qc-chat-message-reactions span,
+[data-appearance="dark"] .qc-chat-message-reactions span,
+body:has([title*="Ativar modo claro"]) .qc-chat-message-reactions span,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-message-reactions span {
+  background: rgba(15, 23, 42, 0.86);
+  color: #f8fafc;
+  border-color: rgba(255,255,255,0.14);
+}
+
+html.dark .qc-chat-message-reaction-preview,
+body.dark .qc-chat-message-reaction-preview,
+.dark .qc-chat-message-reaction-preview,
+.theme-dark .qc-chat-message-reaction-preview,
+[data-theme="dark"] .qc-chat-message-reaction-preview,
+[data-appearance="dark"] .qc-chat-message-reaction-preview,
+body:has([title*="Ativar modo claro"]) .qc-chat-message-reaction-preview,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-message-reaction-preview {
+  background: #111827;
+  color: #f8fafc;
+  border-color: rgba(255,255,255,0.12);
+}
+
+html.dark .qc-chat-message-reaction-preview span,
+body.dark .qc-chat-message-reaction-preview span,
+.dark .qc-chat-message-reaction-preview span,
+.theme-dark .qc-chat-message-reaction-preview span,
+[data-theme="dark"] .qc-chat-message-reaction-preview span,
+[data-appearance="dark"] .qc-chat-message-reaction-preview span,
+body:has([title*="Ativar modo claro"]) .qc-chat-message-reaction-preview span,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-message-reaction-preview span {
+  color: rgba(203, 213, 225, 0.80);
+}
+
+@media (max-width: 720px) {
+  .qc-chat-message-reaction-plus {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* FIX: Chat listagem escura no dark mode */
+
+/*
+  Quando aparece "Ativar modo claro", o sistema está em modo escuro.
+  Esse bloco força a listagem interna do chat a ficar escura.
+*/
+
+html.dark .qc-chat-shell aside .min-h-0.flex-1 button,
+body.dark .qc-chat-shell aside .min-h-0.flex-1 button,
+.dark .qc-chat-shell aside .min-h-0.flex-1 button,
+.theme-dark .qc-chat-shell aside .min-h-0.flex-1 button,
+[data-theme="dark"] .qc-chat-shell aside .min-h-0.flex-1 button,
+[data-appearance="dark"] .qc-chat-shell aside .min-h-0.flex-1 button,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button,
+html.dark .qc-team-chat-testing-company aside .min-h-0.flex-1 button,
+body.dark .qc-team-chat-testing-company aside .min-h-0.flex-1 button,
+.dark .qc-team-chat-testing-company aside .min-h-0.flex-1 button,
+.theme-dark .qc-team-chat-testing-company aside .min-h-0.flex-1 button,
+[data-theme="dark"] .qc-team-chat-testing-company aside .min-h-0.flex-1 button,
+[data-appearance="dark"] .qc-team-chat-testing-company aside .min-h-0.flex-1 button,
+body:has([title*="Ativar modo claro"]) .qc-team-chat-testing-company aside .min-h-0.flex-1 button,
+body:has([aria-label*="Ativar modo claro"]) .qc-team-chat-testing-company aside .min-h-0.flex-1 button,
+html.dark .qc-team-chat-slack-v3 aside .min-h-0.flex-1 button,
+body.dark .qc-team-chat-slack-v3 aside .min-h-0.flex-1 button,
+.dark .qc-team-chat-slack-v3 aside .min-h-0.flex-1 button,
+.theme-dark .qc-team-chat-slack-v3 aside .min-h-0.flex-1 button,
+[data-theme="dark"] .qc-team-chat-slack-v3 aside .min-h-0.flex-1 button,
+[data-appearance="dark"] .qc-team-chat-slack-v3 aside .min-h-0.flex-1 button,
+body:has([title*="Ativar modo claro"]) .qc-team-chat-slack-v3 aside .min-h-0.flex-1 button,
+body:has([aria-label*="Ativar modo claro"]) .qc-team-chat-slack-v3 aside .min-h-0.flex-1 button {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(7, 26, 74, 0.72)) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: none !important;
+}
+
+/* contato selecionado no escuro */
+html.dark .qc-chat-shell aside .min-h-0.flex-1 button[class*="bg-white"],
+body.dark .qc-chat-shell aside .min-h-0.flex-1 button[class*="bg-white"],
+.dark .qc-chat-shell aside .min-h-0.flex-1 button[class*="bg-white"],
+.theme-dark .qc-chat-shell aside .min-h-0.flex-1 button[class*="bg-white"],
+[data-theme="dark"] .qc-chat-shell aside .min-h-0.flex-1 button[class*="bg-white"],
+[data-appearance="dark"] .qc-chat-shell aside .min-h-0.flex-1 button[class*="bg-white"],
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button[class*="bg-white"],
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button[class*="bg-white"],
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button[aria-current="true"],
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button[data-active="true"],
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button[aria-current="true"],
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button[data-active="true"] {
+  background:
+    linear-gradient(135deg, rgba(200, 16, 46, 0.28), rgba(14, 165, 233, 0.18)) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow:
+    inset 4px 0 0 #c8102e,
+    0 12px 26px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* textos dentro dos cards no escuro */
+html.dark .qc-chat-shell aside .min-h-0.flex-1 button *,
+body.dark .qc-chat-shell aside .min-h-0.flex-1 button *,
+.dark .qc-chat-shell aside .min-h-0.flex-1 button *,
+.theme-dark .qc-chat-shell aside .min-h-0.flex-1 button *,
+[data-theme="dark"] .qc-chat-shell aside .min-h-0.flex-1 button *,
+[data-appearance="dark"] .qc-chat-shell aside .min-h-0.flex-1 button *,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button *,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button *,
+html.dark .qc-team-chat-testing-company aside .min-h-0.flex-1 button *,
+body.dark .qc-team-chat-testing-company aside .min-h-0.flex-1 button *,
+.dark .qc-team-chat-testing-company aside .min-h-0.flex-1 button *,
+.theme-dark .qc-team-chat-testing-company aside .min-h-0.flex-1 button *,
+[data-theme="dark"] .qc-team-chat-testing-company aside .min-h-0.flex-1 button *,
+[data-appearance="dark"] .qc-team-chat-testing-company aside .min-h-0.flex-1 button *,
+body:has([title*="Ativar modo claro"]) .qc-team-chat-testing-company aside .min-h-0.flex-1 button *,
+body:has([aria-label*="Ativar modo claro"]) .qc-team-chat-testing-company aside .min-h-0.flex-1 button * {
+  color: inherit !important;
+}
+
+/* avatar dentro da listagem escura */
+html.dark .qc-chat-shell aside .min-h-0.flex-1 button [class*="rounded-full"],
+body.dark .qc-chat-shell aside .min-h-0.flex-1 button [class*="rounded-full"],
+.dark .qc-chat-shell aside .min-h-0.flex-1 button [class*="rounded-full"],
+.theme-dark .qc-chat-shell aside .min-h-0.flex-1 button [class*="rounded-full"],
+[data-theme="dark"] .qc-chat-shell aside .min-h-0.flex-1 button [class*="rounded-full"],
+[data-appearance="dark"] .qc-chat-shell aside .min-h-0.flex-1 button [class*="rounded-full"],
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button [class*="rounded-full"],
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button [class*="rounded-full"] {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* hover da listagem no escuro */
+html.dark .qc-chat-shell aside .min-h-0.flex-1 button:hover,
+body.dark .qc-chat-shell aside .min-h-0.flex-1 button:hover,
+.dark .qc-chat-shell aside .min-h-0.flex-1 button:hover,
+.theme-dark .qc-chat-shell aside .min-h-0.flex-1 button:hover,
+[data-theme="dark"] .qc-chat-shell aside .min-h-0.flex-1 button:hover,
+[data-appearance="dark"] .qc-chat-shell aside .min-h-0.flex-1 button:hover,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button:hover,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside .min-h-0.flex-1 button:hover {
+  background:
+    linear-gradient(135deg, rgba(200, 16, 46, 0.22), rgba(14, 165, 233, 0.18)) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  transform: translateX(2px);
+}
+
+/* botões do composer também escuros no dark */
+html.dark .qc-chat-composer-modal-actions button,
+body.dark .qc-chat-composer-modal-actions button,
+.dark .qc-chat-composer-modal-actions button,
+.theme-dark .qc-chat-composer-modal-actions button,
+[data-theme="dark"] .qc-chat-composer-modal-actions button,
+[data-appearance="dark"] .qc-chat-composer-modal-actions button,
+body:has([title*="Ativar modo claro"]) .qc-chat-composer-modal-actions button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-composer-modal-actions button,
+html.dark .qc-chat-shell form button,
+body.dark .qc-chat-shell form button,
+.dark .qc-chat-shell form button,
+.theme-dark .qc-chat-shell form button,
+[data-theme="dark"] .qc-chat-shell form button,
+[data-appearance="dark"] .qc-chat-shell form button,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell form button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell form button {
+  background: rgba(15, 23, 42, 0.92) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+}
+
+/* mas o enviar mantém destaque */
+html.dark .qc-chat-shell form button[type="submit"],
+body.dark .qc-chat-shell form button[type="submit"],
+.dark .qc-chat-shell form button[type="submit"],
+.theme-dark .qc-chat-shell form button[type="submit"],
+[data-theme="dark"] .qc-chat-shell form button[type="submit"],
+[data-appearance="dark"] .qc-chat-shell form button[type="submit"],
+body:has([title*="Ativar modo claro"]) .qc-chat-shell form button[type="submit"],
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell form button[type="submit"] {
+  background:
+    linear-gradient(135deg, #c8102e, #ef4444) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* FIX: Chat modal unico e message plus */
+
+/* esconde botões antigos: GIFs/Reagir/Reações soltos */
+.qc-chat-composer-modal-actions,
+.qc-chat-shell [data-qc-chat-tools-panel],
+.qc-chat-shell form .mb-3.flex.gap-2.overflow-x-auto.pb-1,
+.qc-chat-message-tools-modal,
+.qc-chat-reaction-modal,
+.qc-chat-message-reaction-modal {
+  display: none !important;
+}
+
+/* botão único + no composer */
+.qc-chat-composer-one-plus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.qc-chat-composer-one-plus button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.48rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  transition: 160ms ease;
+}
+
+.qc-chat-composer-one-plus button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(14, 165, 233, 0.34);
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.10),
+    0 12px 24px rgba(15, 23, 42, 0.10);
+}
+
+/* + na bolha da mensagem */
+.qc-chat-message-row {
+  position: relative;
+}
+
+.qc-chat-message-bubble {
+  overflow: visible !important;
+}
+
+.qc-chat-message-reaction-plus {
+  position: absolute;
+  right: -0.65rem;
+  bottom: -0.65rem;
+  z-index: 4;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: 150ms ease;
+}
+
+.qc-chat-message-row:hover .qc-chat-message-reaction-plus,
+.qc-chat-message-reaction-plus:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.qc-chat-message-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.qc-chat-message-reactions span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255,255,255,0.84);
+  color: #0f172a;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+/* modal único */
+.qc-chat-unified-action-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.qc-chat-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.12), transparent 32%),
+    rgba(2, 6, 23, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.qc-chat-unified-action-modal__panel {
+  position: relative;
+  width: min(820px, calc(100vw - 2rem));
+  max-height: min(82dvh, 760px);
+  overflow-y: auto;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,251,255,0.96));
+  color: #0f172a;
+  box-shadow:
+    0 28px 90px rgba(2, 6, 23, 0.32),
+    inset 0 1px 0 rgba(255,255,255,0.90);
+}
+
+.qc-chat-unified-action-modal__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.qc-chat-unified-action-modal__header span {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  color: #c8102e;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.qc-chat-unified-action-modal__header h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 950;
+  letter-spacing: -0.045em;
+}
+
+.qc-chat-unified-action-modal__header p {
+  margin: 0.35rem 0 0;
+  color: rgba(71, 85, 105, 0.82);
+  font-size: 0.9rem;
+}
+
+.qc-chat-unified-action-modal__header > button {
+  display: inline-grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.qc-chat-unified-action-modal__preview {
+  margin: 1rem 1.35rem 0;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  padding: 0.9rem 1rem;
+  color: #0f172a;
+}
+
+.qc-chat-unified-action-modal__preview strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #c8102e;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.qc-chat-unified-action-modal__preview span {
+  display: -webkit-box;
+  max-height: 4.5rem;
+  overflow: hidden;
+  color: rgba(51, 65, 85, 0.88);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.qc-chat-unified-action-modal__section {
+  padding: 1rem 1.35rem;
+}
+
+.qc-chat-unified-action-modal__section + .qc-chat-unified-action-modal__section {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.qc-chat-unified-action-modal__section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(71, 85, 105, 0.82);
+}
+
+.qc-chat-unified-action-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.qc-chat-unified-action-modal__grid button {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  gap: 0.8rem;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  padding: 0.85rem;
+  text-align: left;
+  color: #0f172a;
+  transition: 160ms ease;
+}
+
+.qc-chat-unified-action-modal__grid button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(14, 165, 233, 0.30);
+  background:
+    linear-gradient(135deg, #ffffff, #eef7ff);
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.08),
+    0 16px 32px rgba(15, 23, 42, 0.10);
+}
+
+.qc-chat-unified-action-modal__emoji {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(200, 16, 46, 0.09), rgba(14, 165, 233, 0.10));
+  font-size: 1.45rem;
+}
+
+.qc-chat-unified-action-modal__grid strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.qc-chat-unified-action-modal__grid small {
+  display: block;
+  margin-top: 0.15rem;
+  color: rgba(71, 85, 105, 0.78);
+  font-size: 0.74rem;
+}
+
+/* dark: emoji e modal com fundo escuro */
+html.dark .qc-chat-composer-one-plus button,
+body.dark .qc-chat-composer-one-plus button,
+.dark .qc-chat-composer-one-plus button,
+.theme-dark .qc-chat-composer-one-plus button,
+[data-theme="dark"] .qc-chat-composer-one-plus button,
+[data-appearance="dark"] .qc-chat-composer-one-plus button,
+body:has([title*="Ativar modo claro"]) .qc-chat-composer-one-plus button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-composer-one-plus button,
+html.dark .qc-chat-message-reaction-plus,
+body.dark .qc-chat-message-reaction-plus,
+.dark .qc-chat-message-reaction-plus,
+.theme-dark .qc-chat-message-reaction-plus,
+[data-theme="dark"] .qc-chat-message-reaction-plus,
+[data-appearance="dark"] .qc-chat-message-reaction-plus,
+body:has([title*="Ativar modo claro"]) .qc-chat-message-reaction-plus,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-message-reaction-plus {
+  background: #111827 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.14) !important;
+}
+
+html.dark .qc-chat-unified-action-modal__panel,
+body.dark .qc-chat-unified-action-modal__panel,
+.dark .qc-chat-unified-action-modal__panel,
+.theme-dark .qc-chat-unified-action-modal__panel,
+[data-theme="dark"] .qc-chat-unified-action-modal__panel,
+[data-appearance="dark"] .qc-chat-unified-action-modal__panel,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__panel,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__panel {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96)) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+html.dark .qc-chat-unified-action-modal__header,
+body.dark .qc-chat-unified-action-modal__header,
+.dark .qc-chat-unified-action-modal__header,
+.theme-dark .qc-chat-unified-action-modal__header,
+[data-theme="dark"] .qc-chat-unified-action-modal__header,
+[data-appearance="dark"] .qc-chat-unified-action-modal__header,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__header,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__header,
+html.dark .qc-chat-unified-action-modal__section + .qc-chat-unified-action-modal__section,
+body.dark .qc-chat-unified-action-modal__section + .qc-chat-unified-action-modal__section,
+.dark .qc-chat-unified-action-modal__section + .qc-chat-unified-action-modal__section,
+.theme-dark .qc-chat-unified-action-modal__section + .qc-chat-unified-action-modal__section,
+[data-theme="dark"] .qc-chat-unified-action-modal__section + .qc-chat-unified-action-modal__section,
+[data-appearance="dark"] .qc-chat-unified-action-modal__section + .qc-chat-unified-action-modal__section {
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-chat-unified-action-modal__header > button,
+body.dark .qc-chat-unified-action-modal__header > button,
+.dark .qc-chat-unified-action-modal__header > button,
+.theme-dark .qc-chat-unified-action-modal__header > button,
+[data-theme="dark"] .qc-chat-unified-action-modal__header > button,
+[data-appearance="dark"] .qc-chat-unified-action-modal__header > button,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__header > button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__header > button,
+html.dark .qc-chat-unified-action-modal__preview,
+body.dark .qc-chat-unified-action-modal__preview,
+.dark .qc-chat-unified-action-modal__preview,
+.theme-dark .qc-chat-unified-action-modal__preview,
+[data-theme="dark"] .qc-chat-unified-action-modal__preview,
+[data-appearance="dark"] .qc-chat-unified-action-modal__preview,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__preview,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__preview,
+html.dark .qc-chat-unified-action-modal__grid button,
+body.dark .qc-chat-unified-action-modal__grid button,
+.dark .qc-chat-unified-action-modal__grid button,
+.theme-dark .qc-chat-unified-action-modal__grid button,
+[data-theme="dark"] .qc-chat-unified-action-modal__grid button,
+[data-appearance="dark"] .qc-chat-unified-action-modal__grid button,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__grid button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__grid button {
+  background: #111827 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-chat-unified-action-modal__emoji,
+body.dark .qc-chat-unified-action-modal__emoji,
+.dark .qc-chat-unified-action-modal__emoji,
+.theme-dark .qc-chat-unified-action-modal__emoji,
+[data-theme="dark"] .qc-chat-unified-action-modal__emoji,
+[data-appearance="dark"] .qc-chat-unified-action-modal__emoji,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__emoji,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__emoji {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.20), rgba(14,165,233,0.16)) !important;
+}
+
+html.dark .qc-chat-unified-action-modal__header p,
+body.dark .qc-chat-unified-action-modal__header p,
+.dark .qc-chat-unified-action-modal__header p,
+.theme-dark .qc-chat-unified-action-modal__header p,
+[data-theme="dark"] .qc-chat-unified-action-modal__header p,
+[data-appearance="dark"] .qc-chat-unified-action-modal__header p,
+html.dark .qc-chat-unified-action-modal__grid small,
+body.dark .qc-chat-unified-action-modal__grid small,
+.dark .qc-chat-unified-action-modal__grid small,
+.theme-dark .qc-chat-unified-action-modal__grid small,
+[data-theme="dark"] .qc-chat-unified-action-modal__grid small,
+[data-appearance="dark"] .qc-chat-unified-action-modal__grid small,
+html.dark .qc-chat-unified-action-modal__preview span,
+body.dark .qc-chat-unified-action-modal__preview span,
+.dark .qc-chat-unified-action-modal__preview span,
+.theme-dark .qc-chat-unified-action-modal__preview span,
+[data-theme="dark"] .qc-chat-unified-action-modal__preview span,
+[data-appearance="dark"] .qc-chat-unified-action-modal__preview span {
+  color: rgba(203, 213, 225, 0.74) !important;
+}
+
+@media (max-width: 720px) {
+  .qc-chat-unified-action-modal__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qc-chat-message-reaction-plus {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* FIX: Chat plus unico modal e dark lista */
+
+/* Remove botões antigos soltos */
+.qc-chat-composer-modal-actions,
+.qc-chat-shell [data-qc-chat-tools-panel],
+.qc-chat-shell form .mb-3.flex.gap-2.overflow-x-auto.pb-1,
+.qc-chat-shell form > .mb-3,
+.qc-chat-message-tools-modal,
+.qc-chat-reaction-modal,
+.qc-chat-message-reaction-modal {
+  display: none !important;
+}
+
+/* Composer fica só com um + */
+.qc-chat-composer-one-plus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.qc-chat-composer-one-plus button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.48rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  transition: 160ms ease;
+}
+
+/* + na mensagem */
+.qc-chat-message-row {
+  position: relative;
+}
+
+.qc-chat-message-bubble {
+  overflow: visible !important;
+}
+
+.qc-chat-message-reaction-plus {
+  position: absolute;
+  right: -0.65rem;
+  bottom: -0.65rem;
+  z-index: 4;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: 150ms ease;
+}
+
+.qc-chat-message-row:hover .qc-chat-message-reaction-plus,
+.qc-chat-message-reaction-plus:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.qc-chat-message-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.qc-chat-message-reactions span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255,255,255,0.84);
+  color: #0f172a;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+/* Modal único */
+.qc-chat-unified-action-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.qc-chat-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.12), transparent 32%),
+    rgba(2, 6, 23, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.qc-chat-unified-action-modal__panel {
+  position: relative;
+  width: min(820px, calc(100vw - 2rem));
+  max-height: min(82dvh, 760px);
+  overflow-y: auto;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,251,255,0.96));
+  color: #0f172a;
+  box-shadow:
+    0 28px 90px rgba(2, 6, 23, 0.32),
+    inset 0 1px 0 rgba(255,255,255,0.90);
+}
+
+.qc-chat-unified-action-modal__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.qc-chat-unified-action-modal__header span {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  color: #c8102e;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.qc-chat-unified-action-modal__header h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 950;
+  letter-spacing: -0.045em;
+}
+
+.qc-chat-unified-action-modal__header p {
+  margin: 0.35rem 0 0;
+  color: rgba(71, 85, 105, 0.82);
+  font-size: 0.9rem;
+}
+
+.qc-chat-unified-action-modal__header > button {
+  display: inline-grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.qc-chat-unified-action-modal__preview {
+  margin: 1rem 1.35rem 0;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  padding: 0.9rem 1rem;
+  color: #0f172a;
+}
+
+.qc-chat-unified-action-modal__preview strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #c8102e;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.qc-chat-unified-action-modal__preview span {
+  display: -webkit-box;
+  max-height: 4.5rem;
+  overflow: hidden;
+  color: rgba(51, 65, 85, 0.88);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.qc-chat-unified-action-modal__section {
+  padding: 1rem 1.35rem;
+}
+
+.qc-chat-unified-action-modal__section + .qc-chat-unified-action-modal__section {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.qc-chat-unified-action-modal__section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(71, 85, 105, 0.82);
+}
+
+.qc-chat-unified-action-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.qc-chat-unified-action-modal__grid button {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  gap: 0.8rem;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  padding: 0.85rem;
+  text-align: left;
+  color: #0f172a;
+  transition: 160ms ease;
+}
+
+.qc-chat-unified-action-modal__grid button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(14, 165, 233, 0.30);
+  background:
+    linear-gradient(135deg, #ffffff, #eef7ff);
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.08),
+    0 16px 32px rgba(15, 23, 42, 0.10);
+}
+
+.qc-chat-unified-action-modal__emoji {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(200, 16, 46, 0.09), rgba(14, 165, 233, 0.10));
+  font-size: 1.45rem;
+}
+
+.qc-chat-unified-action-modal__grid strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.qc-chat-unified-action-modal__grid small {
+  display: block;
+  margin-top: 0.15rem;
+  color: rgba(71, 85, 105, 0.78);
+  font-size: 0.74rem;
+}
+
+/* Dark hard override */
+html.dark .qc-chat-shell,
+body.dark .qc-chat-shell,
+.dark .qc-chat-shell,
+.theme-dark .qc-chat-shell,
+[data-theme="dark"] .qc-chat-shell,
+[data-appearance="dark"] .qc-chat-shell,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 92% 82%, rgba(200, 16, 46, 0.10), transparent 36%),
+    linear-gradient(135deg, #020817 0%, #071225 48%, #10071a 100%) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-chat-shell aside,
+body.dark .qc-chat-shell aside,
+.dark .qc-chat-shell aside,
+.theme-dark .qc-chat-shell aside,
+[data-theme="dark"] .qc-chat-shell aside,
+[data-appearance="dark"] .qc-chat-shell aside,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside {
+  background:
+    linear-gradient(180deg, #061225 0%, #071a4a 46%, #5b0f35 100%) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-chat-shell aside button,
+body.dark .qc-chat-shell aside button,
+.dark .qc-chat-shell aside button,
+.theme-dark .qc-chat-shell aside button,
+[data-theme="dark"] .qc-chat-shell aside button,
+[data-appearance="dark"] .qc-chat-shell aside button,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside button {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(7, 26, 74, 0.72)) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  box-shadow: none !important;
+}
+
+html.dark .qc-chat-shell aside button *,
+body.dark .qc-chat-shell aside button *,
+.dark .qc-chat-shell aside button *,
+.theme-dark .qc-chat-shell aside button *,
+[data-theme="dark"] .qc-chat-shell aside button *,
+[data-appearance="dark"] .qc-chat-shell aside button *,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell aside button *,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell aside button * {
+  color: inherit !important;
+}
+
+html.dark .qc-chat-shell main,
+body.dark .qc-chat-shell main,
+.dark .qc-chat-shell main,
+.theme-dark .qc-chat-shell main,
+[data-theme="dark"] .qc-chat-shell main,
+[data-appearance="dark"] .qc-chat-shell main,
+body:has([title*="Ativar modo claro"]) .qc-chat-shell main,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell main {
+  background:
+    radial-gradient(circle at 52% 18%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 90% 90%, rgba(200, 16, 46, 0.08), transparent 36%),
+    linear-gradient(180deg, #08111f 0%, #101820 100%) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .qc-chat-composer-one-plus button,
+body.dark .qc-chat-composer-one-plus button,
+.dark .qc-chat-composer-one-plus button,
+.theme-dark .qc-chat-composer-one-plus button,
+[data-theme="dark"] .qc-chat-composer-one-plus button,
+[data-appearance="dark"] .qc-chat-composer-one-plus button,
+body:has([title*="Ativar modo claro"]) .qc-chat-composer-one-plus button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-composer-one-plus button,
+html.dark .qc-chat-message-reaction-plus,
+body.dark .qc-chat-message-reaction-plus,
+.dark .qc-chat-message-reaction-plus,
+.theme-dark .qc-chat-message-reaction-plus,
+[data-theme="dark"] .qc-chat-message-reaction-plus,
+[data-appearance="dark"] .qc-chat-message-reaction-plus,
+body:has([title*="Ativar modo claro"]) .qc-chat-message-reaction-plus,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-message-reaction-plus {
+  background: #111827 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.14) !important;
+}
+
+html.dark .qc-chat-unified-action-modal__panel,
+body.dark .qc-chat-unified-action-modal__panel,
+.dark .qc-chat-unified-action-modal__panel,
+.theme-dark .qc-chat-unified-action-modal__panel,
+[data-theme="dark"] .qc-chat-unified-action-modal__panel,
+[data-appearance="dark"] .qc-chat-unified-action-modal__panel,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__panel,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__panel,
+html.dark .qc-chat-unified-action-modal__grid button,
+body.dark .qc-chat-unified-action-modal__grid button,
+.dark .qc-chat-unified-action-modal__grid button,
+.theme-dark .qc-chat-unified-action-modal__grid button,
+[data-theme="dark"] .qc-chat-unified-action-modal__grid button,
+[data-appearance="dark"] .qc-chat-unified-action-modal__grid button,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__grid button,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__grid button,
+html.dark .qc-chat-unified-action-modal__preview,
+body.dark .qc-chat-unified-action-modal__preview,
+.dark .qc-chat-unified-action-modal__preview,
+.theme-dark .qc-chat-unified-action-modal__preview,
+[data-theme="dark"] .qc-chat-unified-action-modal__preview,
+[data-appearance="dark"] .qc-chat-unified-action-modal__preview,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__preview,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__preview {
+  background: #111827 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+html.dark .qc-chat-unified-action-modal__emoji,
+body.dark .qc-chat-unified-action-modal__emoji,
+.dark .qc-chat-unified-action-modal__emoji,
+.theme-dark .qc-chat-unified-action-modal__emoji,
+[data-theme="dark"] .qc-chat-unified-action-modal__emoji,
+[data-appearance="dark"] .qc-chat-unified-action-modal__emoji,
+body:has([title*="Ativar modo claro"]) .qc-chat-unified-action-modal__emoji,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-unified-action-modal__emoji {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.20), rgba(14,165,233,0.16)) !important;
+}
+
+@media (max-width: 720px) {
+  .qc-chat-unified-action-modal__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qc-chat-message-reaction-plus {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* FIX: brain filtro largo inteligente */
+
+/* HUD ocupa a área útil do Brain, sem empurrar o grafo */
+.brain-filter-hud {
+  top: 16px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(1040px, calc(100% - 96px)) !important;
+  max-width: 1040px !important;
+  z-index: 90 !important;
+  pointer-events: none !important;
+}
+
+.brain-filter-hud > * {
+  pointer-events: auto !important;
+}
+
+/* força o filtro a usar toda a largura do HUD */
+.qc-brain-filter-panel-compact {
+  width: 100% !important;
+  min-width: 0 !important;
+  border-radius: 18px !important;
+  padding: 9px !important;
+  min-height: 62px !important;
+  overflow: visible !important;
+}
+
+/* dark clean, mais legível */
+html.dark .qc-brain-filter-panel-compact,
+body.dark .qc-brain-filter-panel-compact,
+[data-theme="dark"] .qc-brain-filter-panel-compact {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+    rgba(4, 13, 31, 0.94) !important;
+  border: 1px solid rgba(148, 163, 184, 0.26) !important;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+/* claro continua limpo */
+html:not(.dark) .qc-brain-filter-panel-compact,
+body:not(.dark) .qc-brain-filter-panel-compact {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96)) !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  box-shadow:
+    0 16px 42px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255,255,255,0.80) !important;
+}
+
+/* grid do filtro: logo + filtros + busca + métricas + atualizar */
+.qc-brain-filter-compact-bar {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: auto auto minmax(360px, 1fr) auto auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+/* logo Brain mais visível */
+.qc-brain-filter-brand {
+  height: 44px !important;
+  min-width: 112px !important;
+  border-radius: 15px !important;
+  padding: 0 16px 0 10px !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.qc-brain-filter-brand-logo {
+  width: 31px !important;
+  height: 31px !important;
+  flex: 0 0 31px !important;
+}
+
+.qc-brain-filter-brand strong {
+  display: inline !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* botões quadradinhos, não grudados */
+.qc-brain-filter-main-button,
+.qc-brain-filter-icon-button,
+.qc-brain-filter-chip {
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 15px !important;
+  padding: 0 15px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+/* busca maior, estilo cockpit */
+.qc-brain-filter-compact-search {
+  width: 100% !important;
+  min-width: 320px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 15px !important;
+  padding: 0 15px !important;
+}
+
+.qc-brain-filter-compact-search input {
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+/* métricas agrupadas e espaçadas */
+.qc-brain-filter-compact-stats {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+}
+
+.qc-brain-filter-compact-stats span,
+.qc-brain-filter-compact-stats::after {
+  height: 38px !important;
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border-radius: 13px !important;
+  padding: 0 12px !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+}
+
+/* botão atualizar */
+.qc-brain-filter-icon-button {
+  width: 44px !important;
+  min-width: 44px !important;
+  padding: 0 !important;
+  flex: 0 0 44px !important;
+}
+
+/* dark dos itens internos */
+html.dark .qc-brain-filter-brand,
+html.dark .qc-brain-filter-main-button,
+html.dark .qc-brain-filter-icon-button,
+html.dark .qc-brain-filter-chip,
+html.dark .qc-brain-filter-compact-search,
+html.dark .qc-brain-filter-compact-stats span,
+html.dark .qc-brain-filter-compact-stats::after,
+body.dark .qc-brain-filter-brand,
+body.dark .qc-brain-filter-main-button,
+body.dark .qc-brain-filter-icon-button,
+body.dark .qc-brain-filter-chip,
+body.dark .qc-brain-filter-compact-search,
+body.dark .qc-brain-filter-compact-stats span,
+body.dark .qc-brain-filter-compact-stats::after,
+[data-theme="dark"] .qc-brain-filter-brand,
+[data-theme="dark"] .qc-brain-filter-main-button,
+[data-theme="dark"] .qc-brain-filter-icon-button,
+[data-theme="dark"] .qc-brain-filter-chip,
+[data-theme="dark"] .qc-brain-filter-compact-search,
+[data-theme="dark"] .qc-brain-filter-compact-stats span,
+[data-theme="dark"] .qc-brain-filter-compact-stats::after {
+  background: rgba(8, 18, 40, 0.96) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18) !important;
+}
+
+html.dark .qc-brain-filter-compact-search input,
+body.dark .qc-brain-filter-compact-search input,
+[data-theme="dark"] .qc-brain-filter-compact-search input {
+  color: #f8fafc !important;
+}
+
+html.dark .qc-brain-filter-compact-search input::placeholder,
+body.dark .qc-brain-filter-compact-search input::placeholder,
+[data-theme="dark"] .qc-brain-filter-compact-search input::placeholder {
+  color: rgba(226, 232, 240, 0.58) !important;
+}
+
+/* painel expandido: não ocupa layout, abre por cima como dropdown moderno */
+.qc-brain-filter-popover {
+  position: absolute !important;
+  top: calc(100% + 12px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(920px, calc(100vw - 96px)) !important;
+  max-height: min(72vh, 650px) !important;
+  overflow: auto !important;
+  border-radius: 22px !important;
+  padding: 20px !important;
+  z-index: 100 !important;
+}
+
+html.dark .qc-brain-filter-popover,
+body.dark .qc-brain-filter-popover,
+[data-theme="dark"] .qc-brain-filter-popover {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+    rgba(4, 13, 30, 0.98) !important;
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.48),
+    inset 0 1px 0 rgba(255,255,255,0.04) !important;
+}
+
+/* campos do painel expandido */
+.qc-brain-filter-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.qc-brain-filter-field {
+  border-radius: 16px !important;
+  padding: 12px !important;
+}
+
+.qc-brain-filter-field select {
+  min-height: 34px !important;
+}
+
+/* controla responsividade sem esmagar tudo */
+@media (max-width: 1280px) {
+  .brain-filter-hud {
+    width: min(900px, calc(100% - 60px)) !important;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto auto minmax(280px, 1fr) auto auto !important;
+  }
+
+  .qc-brain-filter-compact-stats span:nth-child(n+3) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .brain-filter-hud {
+    width: calc(100% - 24px) !important;
+    top: 12px !important;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto auto minmax(160px, 1fr) auto !important;
+    gap: 8px !important;
+  }
+
+  .qc-brain-filter-brand strong,
+  .qc-brain-filter-compact-stats {
+    display: none !important;
+  }
+
+  .qc-brain-filter-compact-search {
+    min-width: 0 !important;
+  }
+
+  .qc-brain-filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-brain-filter-popover {
+    width: calc(100vw - 24px) !important;
+    padding: 14px !important;
+  }
+}
+
+/* FIX: Chat full bleed sem espacos */
+
+/* /chat não pode parecer tela colada dentro de outra */
+.qc-chat-page-shell {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.qc-chat-page-loading {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  place-items: center;
+  background: #020817;
+  color: #f8fafc;
+  font-weight: 800;
+}
+
+/* trava scroll externo só quando está na tela do chat */
+body:has(.qc-chat-page-shell) {
+  overflow: hidden !important;
+}
+
+/* remove alturas calculadas que criavam respiro em cima/baixo */
+.qc-chat-page-shell .qc-chat-shell,
+.qc-chat-page-shell .qc-team-chat-testing-company,
+.qc-chat-page-shell .qc-team-chat-slack-v3,
+.qc-chat-page-shell > div {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* estrutura interna sem borda/margem/card externo */
+.qc-chat-page-shell section,
+.qc-chat-page-shell main,
+.qc-chat-page-shell aside {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* tira qualquer “cartão” externo do chat */
+.qc-chat-page-shell section {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* conteúdo da conversa ocupa a altura toda entre header e composer */
+.qc-chat-page-shell main {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.qc-chat-page-shell main > header {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+.qc-chat-page-shell main > div {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+.qc-chat-page-shell form {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* modo escuro full */
+html.dark .qc-chat-page-shell,
+body.dark .qc-chat-page-shell,
+.dark .qc-chat-page-shell,
+.theme-dark .qc-chat-page-shell,
+[data-theme="dark"] .qc-chat-page-shell,
+[data-appearance="dark"] .qc-chat-page-shell,
+body:has([title*="Ativar modo claro"]) .qc-chat-page-shell,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-page-shell {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 92% 82%, rgba(200, 16, 46, 0.10), transparent 36%),
+    linear-gradient(135deg, #020817 0%, #071225 48%, #10071a 100%) !important;
+  color: #f8fafc !important;
+}
+
+/* modo claro full */
+html:not(.dark) .qc-chat-page-shell,
+body:not(.dark) .qc-chat-page-shell,
+[data-theme="light"] .qc-chat-page-shell,
+[data-appearance="light"] .qc-chat-page-shell {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 88% 78%, rgba(200, 16, 46, 0.05), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #fbfdff 48%, #f3f8ff 100%) !important;
+  color: #0f172a !important;
 }

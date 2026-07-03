@@ -10,6 +10,7 @@ type SidebarFlyoutProps = {
   isActive: boolean;
   isItemActive: (item: NavItemDef) => boolean;
   onClose?: () => void;
+  badgeLabel?: string;
 };
 
 function resolveSidebarHref(href: string) {
@@ -23,7 +24,7 @@ const miniBaseClass =
 const flyoutItemClass =
   "flex w-full min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
-export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: SidebarFlyoutProps) {
+export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, badgeLabel = "" }: SidebarFlyoutProps) {
   const [open, setOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,9 +64,10 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
         data-active={isActive ? "true" : undefined}
         aria-current={isActive ? "page" : undefined}
         onClick={onClose}
-        className={baseClassName}
+        className={`${baseClassName} relative`}
       >
         {createElement(getIcon(mod.iconKey), { size: 17, className: "text-current" })}
+        {badgeLabel ? <span className="qc-sidebar-chat-badge qc-sidebar-chat-badge--mini">{badgeLabel}</span> : null}
       </Link>
     );
   }
@@ -79,9 +81,10 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
         title={mod.label}
         aria-label={mod.label}
         data-active={isActive ? "true" : undefined}
-        className={baseClassName}
+        className={`${baseClassName} relative`}
       >
         {createElement(getIcon(mod.iconKey), { size: 17, className: "text-current" })}
+        {badgeLabel ? <span className="qc-sidebar-chat-badge qc-sidebar-chat-badge--mini">{badgeLabel}</span> : null}
       </button>
 
       {open && (

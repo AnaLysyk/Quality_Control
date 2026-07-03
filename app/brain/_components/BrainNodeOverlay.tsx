@@ -1,9 +1,48 @@
 ﻿"use client";
 
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiActivity, FiExternalLink, FiRefreshCw, FiX, FiZap } from "react-icons/fi";
 import type { BrainEdge, BrainNode } from "../_types/brain.types";
 import { nodeStatusLabel, nodeTypeLabel } from "../_utils/brainGraphFormatters";
+
+type BrainRagContext = {
+  source?: string;
+  summary?: {
+    nodeCount?: number;
+    edgeCount?: number;
+    memoryCount?: number;
+    moduleCount?: number;
+  };
+  nodes?: Array<{
+    id: string;
+    label: string;
+    type?: string;
+    module?: string;
+    score?: number;
+  }>;
+  memory?: Array<{
+    id: string;
+    kind?: string;
+    title?: string;
+    status?: string | null;
+    route?: string | null;
+    updatedAt?: string | null;
+  }>;
+  events?: Array<{
+    id: string;
+    kind?: string;
+    title?: string;
+    label?: string;
+    module?: string;
+  }>;
+  documents?: Array<{
+    id: string;
+    title?: string;
+    route?: string | null;
+  }>;
+  availableActions?: string[];
+};
 
 type BrainNodeOverlayProps = {
   node: BrainNode;
@@ -117,6 +156,211 @@ export function BrainNodeOverlay({
   ];
   const areaCounts = groupCounts([node, ...relatedNodes]);
 
+  function askBrainChatAboutNode() {
+    const payload = {
+      source: "brain-node",
+      route: "/brain",
+      nodeId: node.id,
+      nodeLabel: node.label,
+      nodeType: node.type,
+      nodeStatus: node.status,
+      module: node.module,
+      description: memoryText(node),
+      metadata: node.metadata ?? {},
+      relations: relations.slice(0, 12).map(({ edge, related, direction }) => ({
+        edgeId: edge.id,
+        edgeLabel: edge.label,
+        direction,
+        relatedNodeId: related.id,
+        relatedNodeLabel: related.label,
+        relatedNodeType: related.type,
+        relatedNodeStatus: related.status,
+        relatedModule: related.module,
+      })),
+      missingKnowledge: pendingItems,
+      suggestedPrompt: `Me explica o nó "${node.label}" no Brain. Usa contexto do banco, logs, histórico, relações, permissões e memórias RAG disponíveis.`,
+    };
+
+    window.dispatchEvent(
+      new CustomEvent("assistant:context", {
+        detail: {
+          source: "brain",
+          route: "/brain",
+          entityId: node.id,
+          entityType: node.type,
+          nodeId: node.id,
+          nodeLabel: node.label,
+          agentMode: "qa",
+          context: {
+            route: "/brain",
+            module: "brain",
+            screenLabel: "Brain",
+            screenSummary: payload.suggestedPrompt,
+            entityType: node.type,
+            entityId: node.id,
+            metadata: payload,
+          },
+          metadata: payload,
+        },
+      }),
+    );
+
+    window.dispatchEvent(
+      new CustomEvent("assistant:open", {
+        detail: {
+          source: "brain-node",
+          prompt: payload.suggestedPrompt,
+          metadata: payload,
+        },
+      }),
+    );
+
+    window.dispatchEvent(
+      new CustomEvent("brain:ask-chat", {
+        detail: payload,
+      }),
+    );
+  }
+
+  async function saveQuickNodeMemory() {
+    const title = window.prompt("Título da memória para este neurônio:");
+
+    if (!title?.trim()) return;
+
+    const summary = window.prompt("Contexto que o Brain deve lembrar:");
+
+    if (!summary?.trim()) return;
+
+    try {
+      const response = await fetch("/api/brain/memory", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          title: title.trim(),
+          summary: summary.trim(),
+          memoryType: "CONTEXT",
+          nodeId: node.id,
+          sourceType: "MANUAL",
+          importance: 3,
+          metadata: {
+            nodeLabel: node.label,
+            nodeModule: node.module,
+            nodeType: node.type,
+            origin: "brain-footer-quick-teach",
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Não foi possível salvar a memória.");
+      }
+
+      window.dispatchEvent(new CustomEvent("brain:memory-created", {
+        detail: {
+          nodeId: node.id,
+          nodeLabel: node.label,
+        },
+      }));
+
+      window.alert("Memória salva no Brain.");
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Erro ao salvar memória.");
+    }
+  }
+  const [memoryTitle, setMemoryTitle] = useState("");
+  const [memorySummary, setMemorySummary] = useState("");
+  const [memoryType, setMemoryType] = useState("CONTEXT");
+  const [savingMemory, setSavingMemory] = useState(false);
+  const [memoryFeedback, setMemoryFeedback] = useState<string | null>(null);
+
+  async function saveNodeMemory() {
+    const title = memoryTitle.trim();
+    const summary = memorySummary.trim();
+
+    if (!title || !summary) {
+      setMemoryFeedback("Informe título e contexto para salvar a memória.");
+      return;
+    }
+
+    setSavingMemory(true);
+    setMemoryFeedback(null);
+
+    try {
+      const response = await fetch("/api/brain/memory", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          title,
+          summary,
+          memoryType,
+          nodeId: node.id,
+          sourceType: "MANUAL",
+          importance: 3,
+          metadata: {
+            nodeLabel: node.label,
+            nodeModule: node.module,
+            nodeType: node.type,
+            origin: "brain-node-overlay",
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Não foi possível salvar a memória.");
+      }
+
+      setMemoryTitle("");
+      setMemorySummary("");
+      setMemoryType("CONTEXT");
+      setMemoryFeedback("Memória salva no Brain.");
+    } catch (error) {
+      setMemoryFeedback(error instanceof Error ? error.message : "Erro ao salvar memória.");
+    } finally {
+      setSavingMemory(false);
+    }
+  }
+  const [ragContext, setRagContext] = useState<BrainRagContext | null>(null);
+  const [ragLoading, setRagLoading] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+
+    params.set("q", node.label);
+    params.set("module", node.module);
+    params.set("limit", "8");
+
+    setRagLoading(true);
+
+    fetch(`/api/brain/rag/context?${params.toString()}`, {
+      credentials: "include",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: BrainRagContext | null) => {
+        setRagContext(data);
+      })
+      .catch((error) => {
+        if ((error as Error).name !== "AbortError") {
+          setRagContext(null);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setRagLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [node.id, node.label, node.module]);
+
   return createPortal(
     <div className="pointer-events-none fixed inset-0 z-[9999] text-white">
       <article className="qc-brain-memory-panel pointer-events-auto fixed right-6 top-20 flex max-h-[calc(100dvh-112px)] w-[min(560px,calc(100vw-32px))] flex-col overflow-hidden rounded-[26px] border border-cyan-100/18 bg-[linear-gradient(145deg,rgba(4,13,29,0.98),rgba(8,23,42,0.98))] text-white shadow-[0_28px_100px_rgba(0,0,0,0.68)]">
@@ -166,6 +410,74 @@ export function BrainNodeOverlay({
               <p className="mt-1 text-2xl font-black text-white">{areaCounts.length}</p>
             </div>
           </div>
+
+          <section className="qc-brain-rag-context-card mt-3 rounded-2xl border border-cyan-100/14 bg-cyan-100/[0.055] p-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/55">
+                  Contexto RAG recuperado
+                </p>
+                <h3 className="mt-1 text-sm font-black text-white">
+                  Memória viva deste neurônio
+                </h3>
+              </div>
+
+              <span className="rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100">
+                {ragLoading ? "buscando" : ragContext?.source ?? "contexto"}
+              </span>
+            </div>
+
+            {ragLoading ? (
+              <p className="mt-3 text-xs font-bold text-slate-200/78">
+                Consultando cérebro, permissões, eventos, notas e documentos vinculados...
+              </p>
+            ) : ragContext ? (
+              <div className="mt-3 grid gap-3">
+                <div className="grid gap-2 sm:grid-cols-4">
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Nós</p>
+                    <p className="mt-1 text-lg font-black text-white">{ragContext.summary?.nodeCount ?? ragContext.nodes?.length ?? 0}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Conexões</p>
+                    <p className="mt-1 text-lg font-black text-white">{ragContext.summary?.edgeCount ?? 0}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Memórias</p>
+                    <p className="mt-1 text-lg font-black text-white">{ragContext.summary?.memoryCount ?? ragContext.memory?.length ?? 0}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Ações</p>
+                    <p className="mt-1 text-lg font-black text-white">{ragContext.availableActions?.length ?? 0}</p>
+                  </div>
+                </div>
+
+                {ragContext.memory?.length ? (
+                  <div className="rounded-xl border border-white/10 bg-black/18 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Memórias encontradas</p>
+                    <div className="mt-2 grid gap-2">
+                      {ragContext.memory.slice(0, 4).map((item) => (
+                        <div key={item.id} className="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2">
+                          <p className="text-xs font-black text-slate-50">{item.title ?? item.kind ?? "Memória"}</p>
+                          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                            {item.kind ?? "contexto"}{item.status ? ` · ${item.status}` : ""}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-white/10 bg-black/18 p-3 text-xs font-bold text-slate-200/72">
+                    Nenhuma memória adicional retornou ainda. O Brain deve completar este contexto automaticamente com logs, histórico, documentos, eventos e relações do sistema.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="mt-3 text-xs font-bold text-slate-200/78">
+                Contexto RAG ainda não respondeu para este nó.
+              </p>
+            )}
+          </section>
 
           {metadata.length ? (
             <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3">
@@ -251,7 +563,7 @@ export function BrainNodeOverlay({
 
           {pendingItems.length ? (
             <section className="mt-3 rounded-2xl border border-amber-200/16 bg-amber-200/[0.06] p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-100/70">Conhecimento faltante</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-100/70">Contexto que o Brain deve completar</p>
               <ul className="mt-2 grid gap-2">
                 {Array.from(new Set(pendingItems)).slice(0, 8).map((item) => (
                   <li key={item} className="rounded-xl border border-amber-200/12 bg-black/16 px-3 py-2 text-xs font-bold leading-5 text-amber-50/88">
@@ -261,12 +573,17 @@ export function BrainNodeOverlay({
               </ul>
             </section>
           ) : null}
-        </div>
+</div>
 
         <footer className="flex items-center justify-between gap-2 border-t border-white/10 bg-slate-950/72 p-3">
           <button type="button" onClick={onResetFocus} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-white/70 hover:border-cyan-100/35 hover:text-white">
             <FiRefreshCw className="h-3.5 w-3.5" />
             Limpar foco
+          </button>
+
+          <button type="button" onClick={askBrainChatAboutNode} className="qc-brain-ask-chat-button inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60">
+            <FiZap className="h-3.5 w-3.5" />
+            Perguntar ao Brain Chat
           </button>
 
           <button type="button" onClick={() => onOpenRelatedModule(node.module)} className="inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60">

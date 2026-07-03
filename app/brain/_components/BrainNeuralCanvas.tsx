@@ -309,7 +309,7 @@ export function BrainNeuralCanvas({
     <section
       ref={containerRef}
       data-brain-universe
-      className="brain-universe-canvas relative w-full overflow-hidden text-white"
+      className="brain-universe-canvas brain-universe-canvas-strong brain-cortex-canvas relative w-full overflow-hidden text-white"
       style={{
         width: "100%",
         height: "100%",
@@ -318,6 +318,18 @@ export function BrainNeuralCanvas({
         position: "relative",
       }}
     >
+      <div className="brain-cortex-layer" aria-hidden="true">
+        <span className="brain-cortex-lobe brain-cortex-lobe-left" />
+        <span className="brain-cortex-lobe brain-cortex-lobe-right" />
+        <span className="brain-cortex-bridge" />
+        <span className="brain-cortex-pulse brain-cortex-pulse-a" />
+        <span className="brain-cortex-pulse brain-cortex-pulse-b" />
+        <span className="brain-cortex-pulse brain-cortex-pulse-c" />
+        <span className="brain-cortex-thread brain-cortex-thread-a" />
+        <span className="brain-cortex-thread brain-cortex-thread-b" />
+        <span className="brain-cortex-thread brain-cortex-thread-c" />
+      </div>
+
       {canRenderFlow ? (
         <ReactFlow
           key={`brain-flow-${canvasSize.width}x${canvasSize.height}-${flowSignature}`}
@@ -354,7 +366,7 @@ export function BrainNeuralCanvas({
           className="h-full w-full"
           style={{ width: "100%", height: "100%" }}
         >
-          <Background color="rgba(103,232,249,0.12)" gap={34} />
+          <Background color="rgba(1,24,72,0.18)" gap={34} />
           <Controls className="!bottom-5 !left-5 !rounded-2xl backdrop-blur-xl" />
         </ReactFlow>
       ) : (
@@ -370,8 +382,9 @@ export function BrainNeuralCanvas({
       ) : null}
 
       {loading ? (
-        <div className="pointer-events-none absolute left-1/2 top-24 z-30 -translate-x-1/2 rounded-full border border-cyan-100/10 bg-black/32 px-4 py-2 text-xs font-black text-cyan-50/80 backdrop-blur-xl">
-          Atualizando cérebro neural...
+        <div className="brain-synapse-loading pointer-events-none absolute left-1/2 top-[74px] z-30 -translate-x-1/2">
+          <span className="brain-synapse-loading-dot" />
+          <span>Sinapses atualizando</span>
         </div>
       ) : null}
 

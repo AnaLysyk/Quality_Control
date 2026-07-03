@@ -56,10 +56,10 @@ export const SYSTEM_ROUTES = [
     moduleId: "empresas",
     path: "/admin/clients?focus=search",
     label: "Buscar empresa",
-    description: "Rota legada removida do menu. A busca fica dentro da listagem de empresas.",
+    description: "Abre a listagem administrativa com foco na busca.",
     requiredPermission: { moduleId: "applications", action: "view" },
     expectedProfiles: ADMIN_PROFILES,
-    status: "inativo",
+    status: "ativo",
     mainFile: "app/admin/clients/page.tsx",
   },
   {

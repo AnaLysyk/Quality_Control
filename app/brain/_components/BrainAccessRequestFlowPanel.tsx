@@ -1,8 +1,5 @@
-﻿"use client";
-
-import { BrainAccessRequestEmailFlowPanel } from "./BrainAccessRequestEmailFlowPanel";
+"use client";
 
 export function BrainAccessRequestFlowPanel() {
-  return <BrainAccessRequestEmailFlowPanel />;
+  return null;
 }
-

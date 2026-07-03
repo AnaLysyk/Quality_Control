@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contracts/auth";
@@ -17,7 +17,7 @@ type AuthContextValue = {
   companies: AuthCompany[];
   loading: boolean;
   error: string | null;
-  refreshUser: (showSpinner?: boolean) => Promise<void>;
+  refreshUser: (showSpinner?: boolean) => Promise<MeResult>;
   logout: () => Promise<void>;
   normalizedUser: NormalizedAuthenticatedUser | null;
 };
@@ -228,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const initialHadCacheRef = useRef(cached !== null);
 
-  const refreshUser = useCallback(async (showSpinner = true) => {
+  const refreshUser = useCallback(async (showSpinner = true): Promise<MeResult> => {
     if (showSpinner) setLoading(true);
     setError(null);
     try {
@@ -237,13 +237,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCompanies(me.companies);
       writeAuthCache(me.user, me.companies);
       publishAuthUser(me.user);
+      return me;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao carregar usuario";
+      const empty: MeResult = { user: null, companies: [] };
       setError(msg);
       setUser(null);
       setCompanies([]);
       clearAuthCache();
       publishAuthUser(null);
+      return empty;
     } finally {
       if (showSpinner) setLoading(false);
     }
@@ -308,4 +311,3 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth deve ser usado dentro de AuthProvider");
   return ctx;
 }
-

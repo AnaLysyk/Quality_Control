@@ -22,6 +22,11 @@ const OPTIONAL_COLLECTIONS = [
   { key: "accessRequest", kind: "access_request" },
 ];
 
+const DEFAULT_RAG_LIMIT = 12;
+const MAX_RAG_LIMIT = 24;
+const MAX_BRAIN_NODE_SCAN = 350;
+const MAX_BRAIN_EDGE_SCAN = 700;
+const OPTIONAL_ROW_TAKE = 6;
 
 function readBrainMetadata(value: unknown): Record<string, unknown> {
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -99,7 +104,8 @@ function pickText(row: LooseRecord) {
     row.email,
   ]
     .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-    .join(" Â· ");
+    .join(" · ")
+    .slice(0, 600);
 }
 
 function pickDate(row: LooseRecord) {
@@ -131,11 +137,12 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const query = normalizeBrainText(url.searchParams.get("q") ?? "");
   const moduleFilter = url.searchParams.get("module");
-  const limit = Math.min(80, Math.max(8, Number(url.searchParams.get("limit") ?? 40)));
+  const requestedLimit = Number(url.searchParams.get("limit") ?? DEFAULT_RAG_LIMIT);
+  const limit = Math.min(MAX_RAG_LIMIT, Math.max(4, Number.isFinite(requestedLimit) ? requestedLimit : DEFAULT_RAG_LIMIT));
 
   const [brainNodes, brainEdges] = await Promise.all([
-    prisma.brainNode.findMany({ orderBy: { updatedAt: "desc" }, take: 900 }).catch(() => []),
-    prisma.brainEdge.findMany({ take: 1800 }).catch(() => []),
+    prisma.brainNode.findMany({ orderBy: { updatedAt: "desc" }, take: MAX_BRAIN_NODE_SCAN }).catch(() => []),
+    prisma.brainEdge.findMany({ take: MAX_BRAIN_EDGE_SCAN }).catch(() => []),
   ]);
 
   const visibleNodes = brainNodes.filter((node) => {
@@ -152,12 +159,15 @@ export async function GET(req: NextRequest) {
     ? searchBrainIndex(index, query, { limit })
     : index.slice(0, limit).map((entry) => ({ ...entry, score: 1, matchedBy: ["recent"] }));
 
-  const optionalRows = await Promise.all(
-    OPTIONAL_COLLECTIONS.map(async (collection) => ({
-      kind: collection.kind,
-      rows: await tryFindMany(collection.key, 20),
-    })),
-  );
+  const shouldLoadOptionalMemory = Boolean(query || moduleFilter || url.searchParams.get("includeMemory") === "true");
+  const optionalRows = shouldLoadOptionalMemory
+    ? await Promise.all(
+        OPTIONAL_COLLECTIONS.map(async (collection) => ({
+          kind: collection.kind,
+          rows: await tryFindMany(collection.key, OPTIONAL_ROW_TAKE),
+        })),
+      )
+    : [];
 
   const memory = optionalRows.flatMap((collection) =>
     collection.rows
@@ -174,25 +184,32 @@ export async function GET(req: NextRequest) {
         if (!query) return true;
         return normalizeBrainText([item.title, item.status, item.route, item.kind].filter(Boolean).join(" ")).includes(query);
       })
-      .slice(0, 12),
+      .slice(0, 6),
   );
 
-  const modules = Array.from(new Set(visibleNodes.map((node) => readBrainNodeModule(node)).filter(Boolean))).sort();
+  const modules = Array.from(new Set(visibleNodes.map((node) => readBrainNodeModule(node)).filter(Boolean))).sort().slice(0, 80);
   const companies = Array.from(new Map(
     visibleNodes
       .filter((node) => readBrainNodeCompanyId(node))
       .map((node) => [readBrainNodeCompanyId(node), { id: readBrainNodeCompanyId(node), label: readBrainNodeCompanyName(node) ?? readBrainNodeCompanyId(node) }]),
-  ).values());
+  ).values()).slice(0, 60);
 
   const projects = Array.from(new Map(
     visibleNodes
       .filter((node) => readBrainNodeProjectId(node))
       .map((node) => [readBrainNodeProjectId(node), { id: readBrainNodeProjectId(node), label: readBrainNodeProjectName(node) ?? readBrainNodeProjectId(node), companyId: readBrainNodeCompanyId(node) ?? null }]),
-  ).values());
+  ).values()).slice(0, 80);
 
   return NextResponse.json({
     source: "brain-rag-context",
     query,
+    capped: {
+      requestedLimit,
+      limit,
+      nodeScan: MAX_BRAIN_NODE_SCAN,
+      edgeScan: MAX_BRAIN_EDGE_SCAN,
+      memoryLoaded: shouldLoadOptionalMemory,
+    },
     userContext: {
       role: readBrainAccessRole(accessResult.context),
       userId: readBrainAccessUserId(accessResult.context),
@@ -203,8 +220,8 @@ export async function GET(req: NextRequest) {
       modules: modules.map((moduleName) => ({ id: moduleName, label: moduleName })),
       companies,
       projects,
-      types: Array.from(new Set(visibleNodes.map((node) => node.type))).sort(),
-      statuses: Array.from(new Set(visibleNodes.map((node) => readBrainNodeStatus(node)))).sort(),
+      types: Array.from(new Set(visibleNodes.map((node) => node.type))).sort().slice(0, 50),
+      statuses: Array.from(new Set(visibleNodes.map((node) => readBrainNodeStatus(node)))).sort().slice(0, 50),
     },
     nodes: ranked.map((node) => ({
       id: node.nodeId,
@@ -243,4 +260,3 @@ export async function GET(req: NextRequest) {
     },
   });
 }
-

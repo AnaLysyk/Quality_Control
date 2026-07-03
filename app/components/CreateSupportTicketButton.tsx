@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
@@ -11,6 +11,7 @@ export default function CreateSupportTicketButton() {
   const { user, can, normalizedUser } = usePermissionAccess();
   const { activeClientSlug, activeClientId } = useClientContext();
   const router = useRouter();
+  const [, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +21,12 @@ export default function CreateSupportTicketButton() {
   });
   const [supportOperators, setSupportOperators] = useState<Array<{ id: string; name: string }>>([]);
   const [assignedTo, setAssignedTo] = useState<string | null>(null);
+
+  const refreshInBackground = () => {
+    startTransition(() => {
+      router.refresh();
+    });
+  };
 
   const handleSubmit = async () => {
     if (!form.title.trim()) return;
@@ -47,7 +54,7 @@ export default function CreateSupportTicketButton() {
       setOpen(false);
       setForm({ title: "", description: "" });
       setSaving(false);
-      router.refresh();
+      refreshInBackground();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao criar chamado");
       setSaving(false);
@@ -156,4 +163,3 @@ export default function CreateSupportTicketButton() {
     </div>
   );
 }
-

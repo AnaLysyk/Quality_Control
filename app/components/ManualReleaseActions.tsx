@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FiEdit3, FiLayers, FiX } from "react-icons/fi";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -85,9 +85,9 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
   const { user, loading: authLoading } = useAuthUser();
   const { activeClientSlug } = useClientContext();
   const router = useRouter();
+  const [, startTransition] = useTransition();
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
   const canEdit = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support" || role === "empresa");
-  const finalized = isFinalStatus(status);
   const gateBlocked = gateStatus === "failed";
 
   const [loading, setLoading] = useState(false);
@@ -115,12 +115,26 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
   const [editTitle, setEditTitle] = useState("");
   const [editCases, setEditCases] = useState<ManualCaseItem[]>([]);
   const [editCasesDirty, setEditCasesDirty] = useState(false);
+  const [statusOverride, setStatusOverride] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStatusOverride(null);
+  }, [status]);
+
+  const effectiveStatus = statusOverride ?? status;
+  const finalized = isFinalStatus(effectiveStatus);
 
   const responsibleChanged = responsibleDraft !== responsibleSaved;
   const selectedEditApplication = editApplications.find((item) => item.id === editApplicationId) ?? null;
   const selectedEditPlan = useMemo(() => editPlans.find((item) => makePlanKey(item.source, item.id) === editPlanKey) ?? null, [editPlanKey, editPlans]);
 
   if (authLoading || !canEdit) return null;
+
+  function refreshInBackground() {
+    startTransition(() => {
+      refreshInBackground();
+    });
+  }
 
   async function openResponsibleEditor() {
     setResponsibleOpen(true);
@@ -161,7 +175,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
       setResponsibleSaved(currentId);
       setResponsibleLabel(payload.assignedToName?.trim() || payload.createdByName?.trim() || null);
       setResponsibleOpen(false);
-      router.refresh();
+      refreshInBackground();
     } catch (error) {
       console.error("Erro ao salvar responsável da run manual", error);
       setResponsibleError(error instanceof Error ? error.message : "Não foi possível atualizar o responsável.");
@@ -175,7 +189,8 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
     setLoading(true);
     try {
       await fetchApi(`/api/releases-manual/${slug}`, { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "FINALIZADA" }) });
-      router.refresh();
+      setStatusOverride("FINALIZADA");
+      refreshInBackground();
     } catch (error) {
       console.error("Erro ao finalizar run manual", error);
     } finally {
@@ -187,7 +202,8 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
     setLoading(true);
     try {
       await fetchApi(`/api/releases-manual/${slug}`, { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "ACTIVE" }) });
-      router.refresh();
+      setStatusOverride("ACTIVE");
+      refreshInBackground();
     } catch (error) {
       console.error("Erro ao reabrir run manual", error);
     } finally {
@@ -322,7 +338,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
 
       setEditOpen(false);
       setEditCasesDirty(false);
-      router.refresh();
+      refreshInBackground();
     } catch (error) {
       console.error("Erro ao salvar a edição da run", error);
       setEditError(error instanceof Error ? error.message : "Não foi possível salvar a run.");

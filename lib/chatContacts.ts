@@ -1,9 +1,10 @@
-﻿import "server-only";
+import "server-only";
 
 import type { AccessContext } from "@/lib/auth/session";
 import { listAdminUserItems, type AdminUserItem } from "@/lib/adminUsers";
 import { listLocalCompanies } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { enrichChatContactsPresence, type ChatPresenceStatus } from "@/lib/chatPresenceStore";
 
 export type ChatContact = {
   id: string;
@@ -17,6 +18,11 @@ export type ChatContact = {
   company_names: string[];
   active: boolean;
   status: string | null;
+  presence_status?: ChatPresenceStatus;
+  presence_label?: string;
+  presence_last_seen_at?: string | null;
+  presence_busy_until?: string | null;
+  presence_busy_title?: string | null;
   job_title: string | null;
   linkedin_url: string | null;
   origin_label: string | null;
@@ -158,10 +164,11 @@ export async function listChatContacts(
       })();
 
   const normalizedSearch = normalizeSearch(search);
-  return visibleItems
+  const contacts = visibleItems
     .filter((item) => item.id !== access.userId)
     .map(mapContact)
     .filter((contact) => contactMatches(contact, normalizedSearch))
     .sort((left, right) => left.name.localeCompare(right.name, "pt-BR", { sensitivity: "base" }));
-}
 
+  return enrichChatContactsPresence(contacts);
+}

@@ -1,0 +1,87 @@
+[
+  {
+    "id": "e2ab2646-c82d-4781-9168-1d4b1d203e3b",
+    "title": "Reunião com Ana 1",
+    "type": "meeting",
+    "startAt": "2026-07-03T13:01:00.000Z",
+    "endAt": "2026-07-03T13:31:00.000Z",
+    "userIds": [
+      "usr_dev",
+      "usr_admin_ana1"
+    ],
+    "companyName": "Griaule",
+    "projectName": null,
+    "notes": null,
+    "meet": true,
+    "createdById": "usr_dev",
+    "createdAt": "2026-07-03T12:31:56.228Z"
+  },
+  {
+    "id": "e6dc5ffd-731b-4b58-ab5e-7c55a50c6b15",
+    "title": "Reunião com Ana 1",
+    "type": "meeting",
+    "startAt": "2026-07-03T13:01:00.000Z",
+    "endAt": "2026-07-03T13:31:00.000Z",
+    "userIds": [
+      "usr_dev",
+      "usr_admin_ana1"
+    ],
+    "companyName": "Griaule",
+    "projectName": null,
+    "notes": null,
+    "meet": true,
+    "createdById": "usr_dev",
+    "createdAt": "2026-07-03T12:31:56.263Z"
+  },
+  {
+    "id": "96b3ae0a-da05-459b-8659-cbcf6a918b73",
+    "title": "Reunião com Ana 1",
+    "type": "meeting",
+    "startAt": "2026-07-03T13:09:00.000Z",
+    "endAt": "2026-07-03T13:39:00.000Z",
+    "userIds": [
+      "usr_dev",
+      "usr_admin_ana1"
+    ],
+    "companyName": "Griaule",
+    "projectName": null,
+    "notes": null,
+    "meet": true,
+    "createdById": "usr_dev",
+    "createdAt": "2026-07-03T12:40:00.728Z"
+  },
+  {
+    "id": "4eae49a7-71eb-49de-b2d4-c3a3be741455",
+    "title": "Reunião com Ana 1",
+    "type": "meeting",
+    "startAt": "2026-07-03T13:09:00.000Z",
+    "endAt": "2026-07-03T13:39:00.000Z",
+    "userIds": [
+      "usr_dev",
+      "usr_admin_ana1"
+    ],
+    "companyName": "Griaule",
+    "projectName": null,
+    "notes": null,
+    "meet": true,
+    "createdById": "usr_dev",
+    "createdAt": "2026-07-03T12:40:01.243Z"
+  },
+  {
+    "id": "bab25b9d-71c5-493c-9ad3-07906c806db3",
+    "title": "Ligação com Ana 1",
+    "type": "meeting",
+    "startAt": "2026-07-03T12:57:18.714Z",
+    "endAt": "2026-07-03T13:27:18.714Z",
+    "userIds": [
+      "usr_dev",
+      "usr_admin_ana1"
+    ],
+    "companyName": "Griaule",
+    "projectName": null,
+    "notes": "Ligação iniciada agora pelo chat.",
+    "meet": true,
+    "createdById": "usr_dev",
+    "createdAt": "2026-07-03T12:57:32.332Z"
+  }
+]

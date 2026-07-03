@@ -1,117 +1,81 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { FiArrowRight } from "react-icons/fi";
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { FiArrowRight, FiChevronRight, FiGrid, FiHome, FiLayers } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { useClientContext, type ClientAccess } from "@/context/ClientContext";
-import type { AuthUser } from "@/contracts/auth";
+import { useClientContext } from "@/context/ClientContext";
 import { CompanySelector } from "@/components/CompanySelector";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
 
-const cards = [
-  {
-    title: "Empresa ativa",
-    description: "Entenda onde você está trabalhando agora e acesse o hub da empresa.",
-    href: "/empresas",
-    badge: "Empresa",
-  },
-  {
-    title: "Meus defeitos",
-    description: "Selecione uma empresa para ver e criar defeitos no contexto certo.",
-    href: "/empresas",
-    badge: "Trabalho",
-  },
-];
-
-function resolveCompanySlug(
-  user: AuthUser | null,
-  clients: ClientAccess[],
-  activeClientSlug: string | null,
-  normalizedUser: { primaryCompanySlug: string | null; defaultCompanySlug: string | null },
-) {
-  if (activeClientSlug) return activeClientSlug;
-  if (clients.length) return clients[0].slug;
-  if (normalizedUser.primaryCompanySlug) return normalizedUser.primaryCompanySlug;
-  if (normalizedUser.defaultCompanySlug) return normalizedUser.defaultCompanySlug;
-  return null;
+function resolveModuleDescription(label: string, itemCount: number) {
+  if (itemCount > 0) {
+    return `${itemCount} opção${itemCount === 1 ? "" : "ões"} disponível${itemCount === 1 ? "" : "eis"} conforme suas permissões.`;
+  }
+  return `Acesso direto disponível conforme suas permissões.`;
 }
 
-function decideLandingRoute(
-  user: AuthUser | null,
-  clients: ClientAccess[],
-  activeClientSlug: string | null,
-  normalizedUser: { primaryCompanySlug: string | null; defaultCompanySlug: string | null; companyCount: number },
-) {
-  if (!user) return null;
-  const role = (user.role ?? "").toLowerCase();
-  if (role === "admin") return "/admin";
-  if (role === "company" || role === "user" || role === "viewer") {
-    const slug = resolveCompanySlug(user, clients, activeClientSlug, normalizedUser);
-    return slug
-      ? buildCompanyPathForAccess(slug, "home", {
-          isGlobalAdmin: user.isGlobalAdmin === true,
-          permissionRole: user.permissionRole ?? null,
-          role: user.role ?? null,
-          companyRole: user.companyRole ?? null,
-          userOrigin:
-            (user as { userOrigin?: string | null }).userOrigin ??
-            (user as { user_origin?: string | null }).user_origin ??
-            null,
-          companyCount: clients.length,
-          clientSlug: slug,
-        })
-      : "/empresas";
-  }
-  return "/empresas";
+function resolveModuleBadge(index: number) {
+  if (index === 0) return "Principal";
+  if (index === 1) return "Atalho";
+  return "Menu";
 }
 
 export default function HomeContent() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { user, loading: authLoading, normalizedUser } = useAuthUser();
-  const { clients, activeClientSlug, loading: clientsLoading } = useClientContext();
+  const { user, loading: authLoading } = useAuthUser();
+  const { clients, loading: clientsLoading } = useClientContext();
+  const { modules, loading: navLoading, companySlug, effectiveRole } = useNavigationItems();
   const isLoggedOut = !user;
+  const loading = authLoading || clientsLoading || navLoading;
+  const visibleModules = modules.filter((module) => module.href || module.items.length > 0);
+  const totalOptions = visibleModules.reduce((total, module) => total + (module.href ? 1 : 0) + module.items.length, 0);
 
-  useEffect(() => {
-    if (authLoading || clientsLoading) return;
-    if (!user) return;
-    if ((!clients || clients.length === 0) && (user.role ?? "").toLowerCase() !== "admin") {
-      router.replace("/empresas");
-      return;
-    }
-    const nextRoute = decideLandingRoute(user, clients, activeClientSlug, normalizedUser);
-    if (!nextRoute) {
-      router.replace("/empresas");
-      return;
-    }
-    if (pathname !== nextRoute) {
-      router.replace(nextRoute);
-    }
-  }, [user, clients, activeClientSlug, normalizedUser, authLoading, clientsLoading, router, pathname]);
-
-  if (authLoading || clientsLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl text-[var(--tc-text-muted,#6b7280)]">
-        Carregando...
+      <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff) text-xl text-[var(--tc-text-muted,#6b7280)]">
+        Carregando painel...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff)">
-      <div className="max-w-6xl mx-auto px-4 py-12 space-y-10">
-        <header className="rounded-[28px] bg-white/80 p-8 shadow-xl text-center">
-          <div className="text-sm uppercase tracking-[0.6em] text-[var(--tc-accent,#ef0001)] flex items-center justify-center gap-2">
-            <span>Testing Company</span>
+    <div className="min-h-screen bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff) text-(--page-text,#0b1a3c)">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+        <header className="overflow-hidden rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-white/85 p-6 shadow-xl backdrop-blur md:p-8 dark:border-white/10 dark:bg-slate-950/80">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-white/5">
+                <FiHome size={14} />
+                Home
+              </div>
+              <h1 className="mt-5 text-3xl font-black tracking-tight md:text-5xl">
+                Painel das opções disponíveis
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)] dark:text-white/70">
+                Esta tela espelha o menu lateral: aparece aqui somente o que está liberado para seu perfil, empresa e contexto atual.
+              </p>
+            </div>
+
+            {!isLoggedOut && (
+              <div className="grid min-w-64 gap-3 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-white/70 p-4 text-sm shadow-sm dark:border-white/10 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[var(--tc-text-muted,#6b7280)] dark:text-white/50">Perfil</span>
+                  <strong className="text-right uppercase tracking-[0.16em]">{effectiveRole ?? user?.role ?? "usuário"}</strong>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[var(--tc-text-muted,#6b7280)] dark:text-white/50">Empresa ativa</span>
+                  <strong className="text-right">{companySlug ?? "sem empresa"}</strong>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[var(--tc-text-muted,#6b7280)] dark:text-white/50">Opções</span>
+                  <strong>{totalOptions}</strong>
+                </div>
+              </div>
+            )}
           </div>
-          <h1 className="mt-4 text-4xl font-extrabold text-(--page-text,#0b1a3c)">Quality Control</h1>
-          <p className="mt-3 text-sm text-[var(--tc-text-secondary,#4b5563)] max-w-3xl mx-auto">
-            Esta tela não administra o sistema. Ela mostra quem você é, onde está e no que está trabalhando agora.
-          </p>
+
           {isLoggedOut && (
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center rounded-xl bg-[var(--tc-accent,#ef0001)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.32em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.25)] transition hover:-translate-y-0.5 hover:bg-[var(--tc-accent-hover,#c80001)]"
@@ -128,58 +92,122 @@ export default function HomeContent() {
           )}
         </header>
 
-        {isLoggedOut ? (
-          <section className="rounded-[28px] bg-white/90 p-8 shadow-xl text-center">
-            <h2 className="text-2xl font-semibold text-(--page-text,#0b1a3c)">Acesse sua conta</h2>
-            <p className="mt-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-              Faca login para ver empresas, dashboards e acompanhar as entregas em tempo real.
-            </p>
+        {!isLoggedOut && clients.length > 1 && (
+          <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-white/85 p-6 shadow-xl dark:border-white/10 dark:bg-slate-950/80">
+            <CompanySelector
+              title="Trocar empresa ativa"
+              description="A home muda junto com o contexto selecionado e mostra as opções disponíveis para aquela empresa."
+              buildHref={(company) =>
+                buildCompanyPathForAccess(company.clientSlug, "home", {
+                  isGlobalAdmin: user?.isGlobalAdmin === true,
+                  permissionRole: user?.permissionRole ?? null,
+                  role: user?.role ?? null,
+                  companyRole: user?.companyRole ?? null,
+                  userOrigin:
+                    (user as { userOrigin?: string | null } | null)?.userOrigin ??
+                    (user as { user_origin?: string | null } | null)?.user_origin ??
+                    null,
+                  companyCount: clients.length,
+                  clientSlug: company.clientSlug,
+                })
+              }
+              ctaLabel={() => "Usar contexto"}
+            />
           </section>
-        ) : (
-          <>
-            <section className="rounded-[28px] bg-white/90 p-8 shadow-xl">
-              <CompanySelector
-                title="Empresas vinculadas"
-                description="Selecione a empresa para ver dashboards, relatórios e executar ações específicas."
-                buildHref={(company) =>
-                  buildCompanyPathForAccess(company.clientSlug, "home", {
-                    isGlobalAdmin: user?.isGlobalAdmin === true,
-                    permissionRole: user?.permissionRole ?? null,
-                    role: user?.role ?? null,
-                    companyRole: user?.companyRole ?? null,
-                    userOrigin:
-                      (user as { userOrigin?: string | null } | null)?.userOrigin ??
-                      (user as { user_origin?: string | null } | null)?.user_origin ??
-                      null,
-                    companyCount: clients.length,
-                    clientSlug: company.clientSlug,
-                  })
-                }
-                ctaLabel={(company) => (company.role === "ADMIN" ? "Entrar como admin" : "Acessar hub")}
-              />
-            </section>
+        )}
 
-            <section className="grid gap-6 md:grid-cols-3">
-              {cards.map((card) => (
+        <section className="grid gap-5 lg:grid-cols-3">
+          <div className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-white/85 p-6 shadow-xl dark:border-white/10 dark:bg-slate-950/80 lg:col-span-1">
+            <div className="flex items-center gap-3">
+              <span className="grid size-11 place-items-center rounded-2xl bg-[var(--tc-accent,#ef0001)] text-white shadow-lg">
+                <FiGrid size={20} />
+              </span>
+              <div>
+                <h2 className="text-lg font-bold">Resumo do menu</h2>
+                <p className="text-sm text-[var(--tc-text-muted,#6b7280)] dark:text-white/55">Tudo que aparece ao lado aparece aqui.</p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3">
+              {visibleModules.map((module) => (
                 <Link
-                  key={card.title}
-                  href={card.href}
-                  className="group flex flex-col gap-4 rounded-3xl border border-[var(--tc-border)] bg-white/90 p-6 shadow-xl transition hover:-translate-y-1 hover:shadow-[0_30px_60px_rgba(15,23,42,0.25)]"
+                  key={module.id}
+                  href={module.href ?? module.items[0]?.href ?? "#"}
+                  className="group flex items-center justify-between rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white/75 px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-white/5"
                 >
-                  <span className="text-xs uppercase tracking-[0.4em] text-[var(--tc-text-muted,#6b7280)]">{card.badge}</span>
-                  <h2 className="text-xl font-semibold text-(--page-text,#0b1a3c)">{card.title}</h2>
-                  <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">{card.description}</p>
-                  <span className="mt-auto inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.4em] text-[var(--tc-accent,#ef0001)]">
-                    Ir para
-                    <FiArrowRight size={14} />
-                  </span>
+                  <span>{module.label}</span>
+                  <FiChevronRight className="transition group-hover:translate-x-1" size={16} />
                 </Link>
               ))}
-            </section>
-          </>
+            </div>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 lg:col-span-2">
+            {visibleModules.map((module, index) => {
+              const primaryHref = module.href ?? module.items[0]?.href ?? "#";
+              return (
+                <article
+                  key={module.id}
+                  className="flex min-h-72 flex-col rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-white/90 p-6 shadow-xl transition hover:-translate-y-1 hover:shadow-[0_30px_60px_rgba(15,23,42,0.18)] dark:border-white/10 dark:bg-slate-950/80"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-[0.35em] text-[var(--tc-accent,#ef0001)]">
+                        {resolveModuleBadge(index)}
+                      </span>
+                      <h2 className="mt-3 text-2xl font-black tracking-tight">{module.label}</h2>
+                    </div>
+                    <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-white/5">
+                      <FiLayers size={20} />
+                    </span>
+                  </div>
+
+                  <p className="mt-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)] dark:text-white/65">
+                    {resolveModuleDescription(module.label, module.items.length)}
+                  </p>
+
+                  {module.items.length > 0 && (
+                    <div className="mt-5 grid gap-2">
+                      {module.items.slice(0, 5).map((item) => (
+                        <Link
+                          key={item.id}
+                          href={item.href ?? primaryHref}
+                          className="group flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:bg-[var(--tc-accent,#ef0001)] hover:text-white dark:bg-white/5 dark:text-white/70"
+                        >
+                          <span>{item.label}</span>
+                          <FiArrowRight className="transition group-hover:translate-x-1" size={15} />
+                        </Link>
+                      ))}
+                      {module.items.length > 5 && (
+                        <span className="px-4 pt-1 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)] dark:text-white/45">
+                          + {module.items.length - 5} opção{module.items.length - 5 === 1 ? "" : "ões"} no menu lateral
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <Link
+                    href={primaryHref}
+                    className="mt-auto inline-flex items-center gap-2 pt-6 text-xs font-black uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)] transition hover:gap-3"
+                  >
+                    Abrir módulo
+                    <FiArrowRight size={15} />
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        {!isLoggedOut && visibleModules.length === 0 && (
+          <section className="rounded-4xl border border-dashed border-[var(--tc-border,#e5e7eb)] bg-white/85 p-8 text-center shadow-xl dark:border-white/10 dark:bg-slate-950/80">
+            <h2 className="text-2xl font-bold">Nenhuma opção liberada</h2>
+            <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)] dark:text-white/65">
+              Assim que a Gestão de Perfis liberar módulos para seu usuário, eles aparecerão aqui e no menu lateral.
+            </p>
+          </section>
         )}
       </div>
     </div>
   );
 }
-

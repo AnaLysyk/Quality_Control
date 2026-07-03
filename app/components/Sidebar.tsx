@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { useSidebarState } from "@/hooks/navigation/useSidebarState";
 import { useMenuLateral } from "@/features/menu-lateral/hooks/useMenuLateral";
 import { useActiveNavigation } from "@/hooks/navigation/useActiveNavigation";
@@ -21,6 +19,7 @@ import type { NavModuleDef } from "@/lib/navigation/navigationCatalog";
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const REMOVED_MODULE_IDS = new Set<string>();
 const SUPPORT_MENU_ITEM_IDS = new Set(["support-create", "support-kanban"]);
+const HOME_HREF = "/";
 
 type SidebarChatThreadSummary = {
   key: string;
@@ -72,7 +71,7 @@ function simplifySupportMenu(mod: NavModuleDef): NavModuleDef {
 
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const { collapsed, toggleCollapsed, openSections, toggleSection, openSection } = useSidebarState();
-  const { modules: navigationModules, loading, companySlug } = useMenuLateral();
+  const { modules: navigationModules, loading } = useMenuLateral();
   const modules = useMemo(
     () => navigationModules.filter((mod) => !REMOVED_MODULE_IDS.has(mod.id)).map(simplifySupportMenu),
     [navigationModules],
@@ -105,42 +104,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
   const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
   const logoSrc = dbLogo || menuLogoEnv || "/images/tc.png";
-
-  const normalizedRole = useMemo(
-    () =>
-      normalizeLegacyRole(typeof user?.permissionRole === "string" ? user.permissionRole : null) ??
-      normalizeLegacyRole(typeof user?.role === "string" ? user.role : null) ??
-      normalizeLegacyRole(typeof user?.companyRole === "string" ? user.companyRole : null),
-    [user],
-  );
-
-  const isGlobalAdmin =
-    user?.isGlobalAdmin === true ||
-    (user as { is_global_admin?: boolean } | null)?.is_global_admin === true ||
-    normalizedRole === SYSTEM_ROLES.LEADER_TC;
-
-  const companyRouteInput = useMemo(
-    () => ({
-      isGlobalAdmin,
-      permissionRole: typeof user?.permissionRole === "string" ? user.permissionRole : null,
-      role: typeof user?.role === "string" ? user.role : null,
-      companyRole: typeof user?.companyRole === "string" ? user.companyRole : null,
-      userOrigin:
-        typeof (user as { userOrigin?: string | null } | null)?.userOrigin === "string"
-          ? (user as { userOrigin?: string | null }).userOrigin
-          : typeof (user as { user_origin?: string | null } | null)?.user_origin === "string"
-            ? (user as { user_origin?: string | null }).user_origin
-            : null,
-      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : activeClientSlug ?? null,
-    }),
-    [activeClientSlug, isGlobalAdmin, user],
-  );
-
-  const logoHref = useMemo(() => {
-    if (isGlobalAdmin) return "/admin/dashboard";
-    if (companySlug) return buildCompanyPathForAccess(companySlug, "home", companyRouteInput);
-    return "/home";
-  }, [isGlobalAdmin, companySlug, companyRouteInput]);
+  const logoHref = HOME_HREF;
 
   const visibleFavoriteHrefs = useMemo(() => {
     const hrefs = new Set<string>();
@@ -333,6 +297,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                     mod={mod}
                     isActive={isModuleActive(mod)}
                     isItemActive={isItemActive}
+                    badgeCount={moduleBadgeCounts[mod.id as keyof typeof moduleBadgeCounts] ?? 0}
                     open={openSections.has(mod.id) || Boolean(navSearch.trim())}
                     onToggle={() => toggleSection(mod.id)}
                     onClose={onClose}
@@ -357,6 +322,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                     mod={mod}
                     isActive={isModuleActive(mod)}
                     isItemActive={isItemActive}
+                    badgeCount={moduleBadgeCounts[mod.id as keyof typeof moduleBadgeCounts] ?? 0}
                     onClose={onClose}
                   />
                 ))}

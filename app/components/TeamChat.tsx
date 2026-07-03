@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
@@ -65,19 +65,19 @@ type ChatMessage = {
   createdAt: string;
 };
 
-const QUICK_REACTIONS = ["✅", "🐞", "🔥", "👀", "🙌", "⚠️", "🎉", "🤔"];
+const QUICK_REACTIONS = ["âœ…", "ðŸž", "ðŸ”¥", "ðŸ‘€", "ðŸ™Œ", "âš ï¸", "ðŸŽ‰", "ðŸ¤”"];
 
 const CHAT_MESSAGE_REACTION_OPTIONS = [
-  { emoji: "👍", label: "Curtir", description: "Curtir essa mensagem" },
-  { emoji: "❤️", label: "Amei", description: "Gostei muito dessa mensagem" },
-  { emoji: "✅", label: "Resolvido", description: "Essa mensagem resolveu" },
-  { emoji: "👀", label: "Visto", description: "Estou acompanhando" },
-  { emoji: "🔥", label: "Destaque", description: "Mensagem importante" },
-  { emoji: "🎉", label: "Celebrar", description: "Comemorar avanço" },
-  { emoji: "🐞", label: "Bug", description: "Marcar como ponto técnico" },
-  { emoji: "⚠️", label: "Atenção", description: "Precisa de cuidado" },
-  { emoji: "🤔", label: "Revisar", description: "Precisa revisar" },
-  { emoji: "🙌", label: "Aprovado", description: "Está aprovado" },
+  { emoji: "ðŸ‘", label: "Curtir", description: "Curtir essa mensagem" },
+  { emoji: "â¤ï¸", label: "Amei", description: "Gostei muito dessa mensagem" },
+  { emoji: "âœ…", label: "Resolvido", description: "Essa mensagem resolveu" },
+  { emoji: "ðŸ‘€", label: "Visto", description: "Estou acompanhando" },
+  { emoji: "ðŸ”¥", label: "Destaque", description: "Mensagem importante" },
+  { emoji: "ðŸŽ‰", label: "Celebrar", description: "Comemorar avanÃ§o" },
+  { emoji: "ðŸž", label: "Bug", description: "Marcar como ponto tÃ©cnico" },
+  { emoji: "âš ï¸", label: "AtenÃ§Ã£o", description: "Precisa de cuidado" },
+  { emoji: "ðŸ¤”", label: "Revisar", description: "Precisa revisar" },
+  { emoji: "ðŸ™Œ", label: "Aprovado", description: "EstÃ¡ aprovado" },
 ];
 const QUICK_GIFS = [
   { label: "Digitando", url: "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" },
@@ -86,40 +86,40 @@ const QUICK_GIFS = [
 ];
 
 const CHAT_UNIFIED_ACTION_OPTIONS = [
-  { emoji: "👍", label: "Curtir", description: "Curtir ou enviar curtida" },
-  { emoji: "❤️", label: "Amei", description: "Reação positiva" },
-  { emoji: "✅", label: "Resolvido", description: "Marcar como resolvido" },
-  { emoji: "👀", label: "Visto", description: "Estou acompanhando" },
-  { emoji: "🔥", label: "Destaque", description: "Mensagem importante" },
-  { emoji: "🎉", label: "Celebrar", description: "Comemorar avanço" },
-  { emoji: "🐞", label: "Bug", description: "Sinalizar problema" },
-  { emoji: "⚠️", label: "Atenção", description: "Marcar risco ou cuidado" },
-  { emoji: "🤔", label: "Revisar", description: "Pedir revisão" },
-  { emoji: "🙌", label: "Aprovado", description: "Aprovar mensagem" },
+  { emoji: "ðŸ‘", label: "Curtir", description: "Curtir ou enviar curtida" },
+  { emoji: "â¤ï¸", label: "Amei", description: "ReaÃ§Ã£o positiva" },
+  { emoji: "âœ…", label: "Resolvido", description: "Marcar como resolvido" },
+  { emoji: "ðŸ‘€", label: "Visto", description: "Estou acompanhando" },
+  { emoji: "ðŸ”¥", label: "Destaque", description: "Mensagem importante" },
+  { emoji: "ðŸŽ‰", label: "Celebrar", description: "Comemorar avanÃ§o" },
+  { emoji: "ðŸž", label: "Bug", description: "Sinalizar problema" },
+  { emoji: "âš ï¸", label: "AtenÃ§Ã£o", description: "Marcar risco ou cuidado" },
+  { emoji: "ðŸ¤”", label: "Revisar", description: "Pedir revisÃ£o" },
+  { emoji: "ðŸ™Œ", label: "Aprovado", description: "Aprovar mensagem" },
 ];
 
 const CHAT_MESSAGE_EMOJI_OPTIONS = [
-  { emoji: "👍", label: "Curtir", description: "Enviar curtida na conversa" },
-  { emoji: "❤️", label: "Amei", description: "Enviar reação positiva" },
-  { emoji: "✅", label: "Feito", description: "Confirmar que foi resolvido" },
-  { emoji: "👀", label: "Vendo", description: "Avisar que está acompanhando" },
-  { emoji: "🔥", label: "Destaque", description: "Marcar algo importante" },
-  { emoji: "🎉", label: "Celebrar", description: "Comemorar avanço" },
-  { emoji: "🐞", label: "Bug", description: "Sinalizar problema" },
-  { emoji: "⚠️", label: "Atenção", description: "Marcar risco ou cuidado" },
+  { emoji: "ðŸ‘", label: "Curtir", description: "Enviar curtida na conversa" },
+  { emoji: "â¤ï¸", label: "Amei", description: "Enviar reaÃ§Ã£o positiva" },
+  { emoji: "âœ…", label: "Feito", description: "Confirmar que foi resolvido" },
+  { emoji: "ðŸ‘€", label: "Vendo", description: "Avisar que estÃ¡ acompanhando" },
+  { emoji: "ðŸ”¥", label: "Destaque", description: "Marcar algo importante" },
+  { emoji: "ðŸŽ‰", label: "Celebrar", description: "Comemorar avanÃ§o" },
+  { emoji: "ðŸž", label: "Bug", description: "Sinalizar problema" },
+  { emoji: "âš ï¸", label: "AtenÃ§Ã£o", description: "Marcar risco ou cuidado" },
 ];
 
 const CHAT_REACTION_OPTIONS = [
-  { emoji: "👍", label: "Curtir", description: "Marcar que você gostou da conversa" },
-  { emoji: "❤️", label: "Amei", description: "Reação positiva com mais destaque" },
-  { emoji: "✅", label: "Resolvido", description: "Indicar que ficou certo" },
-  { emoji: "👀", label: "Estou vendo", description: "Mostrar que está acompanhando" },
-  { emoji: "🔥", label: "Muito bom", description: "Dar destaque para algo importante" },
-  { emoji: "🎉", label: "Celebrar", description: "Comemorar avanço ou entrega" },
-  { emoji: "🐞", label: "Bug", description: "Marcar ponto de atenção técnico" },
-  { emoji: "⚠️", label: "Atenção", description: "Sinalizar cuidado ou risco" },
-  { emoji: "🤔", label: "Revisar", description: "Pedir análise com calma" },
-  { emoji: "🙌", label: "Aprovado", description: "Confirmar que está bom" },
+  { emoji: "ðŸ‘", label: "Curtir", description: "Marcar que vocÃª gostou da conversa" },
+  { emoji: "â¤ï¸", label: "Amei", description: "ReaÃ§Ã£o positiva com mais destaque" },
+  { emoji: "âœ…", label: "Resolvido", description: "Indicar que ficou certo" },
+  { emoji: "ðŸ‘€", label: "Estou vendo", description: "Mostrar que estÃ¡ acompanhando" },
+  { emoji: "ðŸ”¥", label: "Muito bom", description: "Dar destaque para algo importante" },
+  { emoji: "ðŸŽ‰", label: "Celebrar", description: "Comemorar avanÃ§o ou entrega" },
+  { emoji: "ðŸž", label: "Bug", description: "Marcar ponto de atenÃ§Ã£o tÃ©cnico" },
+  { emoji: "âš ï¸", label: "AtenÃ§Ã£o", description: "Sinalizar cuidado ou risco" },
+  { emoji: "ðŸ¤”", label: "Revisar", description: "Pedir anÃ¡lise com calma" },
+  { emoji: "ðŸ™Œ", label: "Aprovado", description: "Confirmar que estÃ¡ bom" },
 ];
 
 function normalizeSearch(value: string) {
@@ -158,19 +158,19 @@ function formatRelative(value: string) {
   if (Number.isNaN(date.getTime())) return "";
   const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
   if (minutes < 1) return "agora";
-  if (minutes < 60) return `há ${minutes} min`;
+  if (minutes < 60) return `hÃ¡ ${minutes} min`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `há ${hours}h`;
+  if (hours < 24) return `hÃ¡ ${hours}h`;
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
 }
 
 function getRoleLabel(contact: ChatContact) {
   const value = (contact.profile_kind ?? contact.permission_role ?? "").toLowerCase();
-  if (value === "leader_tc") return "Líder TC";
-  if (value === "technical_support") return "Suporte técnico";
+  if (value === "leader_tc") return "LÃ­der TC";
+  if (value === "technical_support") return "Suporte tÃ©cnico";
   if (value === "empresa") return "Empresa";
-  if (value === "company_user") return "Usuário empresa";
-  if (value === "testing_company_user") return "Usuário TC";
+  if (value === "company_user") return "UsuÃ¡rio empresa";
+  if (value === "testing_company_user") return "UsuÃ¡rio TC";
   return contact.origin_label ?? "Contato";
 }
 
@@ -220,7 +220,7 @@ function AttachmentView({ attachment, mine, removable, onRemove }: { attachment:
       <FiFile size={15} className="shrink-0" />
       {attachment.url ? <a href={attachment.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate">{attachment.label}</a> : <span className="min-w-0 flex-1 truncate">{attachment.label}</span>}
       {attachment.sizeLabel ? <span className="shrink-0 opacity-60">{attachment.sizeLabel}</span> : null}
-      {removable && onRemove ? <button type="button" onClick={onRemove} className="rounded-full p-1 opacity-70 hover:bg-black/10"><FiX size={12} /></button> : null}
+      {removable && onRemove ? <button type="button" onClick={onRemove} aria-label={`Remover anexo ${attachment.label}`} title={`Remover anexo ${attachment.label}`} className="rounded-full p-1 opacity-70 hover:bg-black/10"><FiX size={12} /></button> : null}
     </div>
   );
 }
@@ -239,7 +239,7 @@ function ContactRow({ contact, active, recent, onSelect }: { contact: ChatContac
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2"><span className="truncate text-sm font-bold">{contact.name}</span>{recent ? <span className="h-2 w-2 rounded-full bg-(--tc-accent)" /> : null}</span>
         <span className="block truncate text-[11px] text-white/48">{contact.user ? `@${contact.user}` : contact.email}</span>
-        <span className="mt-1 flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/50"><span>{getRoleLabel(contact)}</span>{getCompanyLabel(contact) ? <span>• {getCompanyLabel(contact)}</span> : null}</span>
+        <span className="mt-1 flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/50"><span>{getRoleLabel(contact)}</span>{getCompanyLabel(contact) ? <span>â€¢ {getCompanyLabel(contact)}</span> : null}</span>
       </span>
       <FiChevronRight size={14} className="text-white/32 group-hover:text-white/70" />
     </button>
@@ -265,7 +265,7 @@ function MessageBubble({
     <div className={`qc-chat-message-row group flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
       {!mine ? <UserAvatar src={avatar} name={name} size="sm" frameClassName="border border-(--tc-border)" /> : null}
       <div className={`qc-chat-message-bubble relative max-w-[min(52rem,86%)] rounded-[28px] px-4 py-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] ${mine ? "rounded-br-md bg-[linear-gradient(135deg,#011848,#0b2b66)] text-white" : "rounded-bl-md bg-white text-slate-900 dark:bg-white/10 dark:text-white"}`}>
-        <div className={`flex items-center justify-between gap-3 text-[11px] font-bold ${mine ? "text-white/65" : "text-slate-500 dark:text-white/50"}`}><span>{mine ? "Você" : message.senderName}</span><span>{formatClock(message.createdAt)}</span></div>
+        <div className={`flex items-center justify-between gap-3 text-[11px] font-bold ${mine ? "text-white/65" : "text-slate-500 dark:text-white/50"}`}><span>{mine ? "VocÃª" : message.senderName}</span><span>{formatClock(message.createdAt)}</span></div>
         {message.text ? <p className="mt-1 whitespace-pre-wrap text-sm leading-6">{message.text}</p> : null}
         {(message.attachments ?? []).map((attachment) => <AttachmentView key={attachment.id ?? `${attachment.label}-${attachment.url}`} attachment={attachment} mine={mine} />)}
 
@@ -381,10 +381,10 @@ export default function TeamChat() {
       const response = await fetchApi("/api/chat/contacts", { cache: "no-store" });
       if (response.status === 401) return router.replace("/login");
       const payload = (await response.json().catch(() => ({ items: [] }))) as { items?: ChatContact[]; error?: string };
-      if (!response.ok) throw new Error(payload.error || "Não foi possível carregar os contatos.");
+      if (!response.ok) throw new Error(payload.error || "NÃ£o foi possÃ­vel carregar os contatos.");
       setContacts(Array.isArray(payload.items) ? payload.items : []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível carregar os contatos.");
+      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar os contatos.");
       setContacts([]);
     } finally {
       setLoadingContacts(false);
@@ -413,11 +413,11 @@ export default function TeamChat() {
       const response = await fetchApi(`/api/chat/messages?peerId=${encodeURIComponent(peerId)}`, { cache: "no-store" });
       if (response.status === 401) return router.replace("/login");
       const payload = (await response.json().catch(() => ({ messages: [] }))) as { messages?: ChatMessage[]; error?: string };
-      if (!response.ok) throw new Error(payload.error || "Não foi possível carregar a conversa.");
+      if (!response.ok) throw new Error(payload.error || "NÃ£o foi possÃ­vel carregar a conversa.");
       setMessages(Array.isArray(payload.messages) ? payload.messages : []);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível carregar a conversa.");
+      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar a conversa.");
       setMessages([]);
     } finally {
       setLoadingMessages(false);
@@ -541,10 +541,10 @@ export default function TeamChat() {
       const response = await fetchApi("/api/chat/attachments", { method: "POST", body: form });
       if (response.status === 401) return router.replace("/login");
       const payload = (await response.json().catch(() => ({}))) as { attachments?: ChatAttachment[]; error?: string };
-      if (!response.ok) throw new Error(payload.error || "Não foi possível anexar.");
+      if (!response.ok) throw new Error(payload.error || "NÃ£o foi possÃ­vel anexar.");
       setPendingAttachments((current) => [...current, ...(payload.attachments ?? [])].slice(0, 8));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível anexar.");
+      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel anexar.");
     } finally {
       setUploading(false);
     }
@@ -557,12 +557,12 @@ export default function TeamChat() {
       const response = await fetchApi("/api/chat/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ peerId, text: text.trim(), attachments }) });
       if (response.status === 401) return router.replace("/login"), false;
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) throw new Error(payload.error || "Não foi possível enviar a mensagem.");
+      if (!response.ok) throw new Error(payload.error || "NÃ£o foi possÃ­vel enviar a mensagem.");
       openConversation(peerId);
       await Promise.all([loadMessages(peerId), loadThreads()]);
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível enviar a mensagem.");
+      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel enviar a mensagem.");
       return false;
     } finally {
       setSending(false);
@@ -632,7 +632,7 @@ export default function TeamChat() {
       oscillator.start();
       oscillator.stop(audio.currentTime + 0.38);
     } catch {
-      // Som é opcional.
+      // Som Ã© opcional.
     }
   }, []);
 
@@ -661,13 +661,13 @@ export default function TeamChat() {
 
     const callNote = [
       "[LIGACAO_QC]",
-      `Título: ${title}`,
+      `TÃ­tulo: ${title}`,
       `Quando: ${formatScheduleDate(start)}`,
-      "Tipo: ligação iniciada agora",
-      "Duração prevista: 30 minutos",
+      "Tipo: ligaÃ§Ã£o iniciada agora",
+      "DuraÃ§Ã£o prevista: 30 minutos",
       `Pessoa vinculada: ${selectedName}`,
-      `Contato: ${participantEmail || "não informado"}`,
-      `Empresa/contexto: ${selectedCompany || "não informado"}`,
+      `Contato: ${participantEmail || "nÃ£o informado"}`,
+      `Empresa/contexto: ${selectedCompany || "nÃ£o informado"}`,
       "Google Meet: Sim",
       "[/LIGACAO_QC]",
     ].join("\n");
@@ -829,7 +829,7 @@ export default function TeamChat() {
       };
 
       if (!response.ok || !Array.isArray(payload.attachments)) {
-        throw new Error(payload.error || "Não foi possível enviar o áudio.");
+        throw new Error(payload.error || "NÃ£o foi possÃ­vel enviar o áudio.");
       }
 
       const ok = await sendToPeer(
@@ -843,7 +843,7 @@ export default function TeamChat() {
 
       if (ok) discardRecordedAudio();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível enviar o áudio.");
+      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel enviar o áudio.");
     } finally {
       setUploading(false);
     }
@@ -875,7 +875,7 @@ export default function TeamChat() {
     }
 
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError("Este navegador não permitiu gravação de áudio.");
+      setError("Este navegador nÃ£o permitiu gravação de áudio.");
       return;
     }
 
@@ -925,7 +925,7 @@ export default function TeamChat() {
       stopAudioStream();
       setRecordingAudio(false);
       setRecordingStartedAt(null);
-      setError("Não foi possível acessar o microfone.");
+      setError("NÃ£o foi possÃ­vel acessar o microfone.");
     }
   }, [
     discardRecordedAudio,
@@ -954,22 +954,22 @@ export default function TeamChat() {
     const duration = Number(scheduleDurationMinutes) || 30;
 
     if (Number.isNaN(start.getTime())) {
-      setError("Informe uma data válida para o agendamento.");
+      setError("Informe uma data vÃ¡lida para o agendamento.");
       return;
     }
 
     const end = new Date(start.getTime() + duration * 60 * 1000);
     const participantEmail = selectedContact?.email ?? selectedThread?.peerHandle ?? "";
-    const meetText = scheduleWithMeet ? "Sim" : "Não";
+    const meetText = scheduleWithMeet ? "Sim" : "NÃ£o";
 
     const brainScheduleNote = [
       "[AGENDA_QC]",
-      `Título: ${scheduleTitle || `Reunião com ${selectedName}`}`,
+      `TÃ­tulo: ${scheduleTitle || `Reunião com ${selectedName}`}`,
       `Quando: ${formatScheduleDate(start)}`,
-      `Duração: ${duration} minutos`,
+      `DuraÃ§Ã£o: ${duration} minutos`,
       `Pessoa vinculada: ${selectedName}`,
-      `Contato: ${participantEmail || "não informado"}`,
-      `Empresa/contexto: ${selectedCompany || "não informado"}`,
+      `Contato: ${participantEmail || "nÃ£o informado"}`,
+      `Empresa/contexto: ${selectedCompany || "nÃ£o informado"}`,
       `Google Meet: ${meetText}`,
       `Nota/descrição: ${scheduleNotes.trim() || "sem nota"}`,
       "[/AGENDA_QC]",
@@ -1025,14 +1025,14 @@ export default function TeamChat() {
 
       if (reminderDelay > 0 && reminderDelay < 24 * 60 * 60 * 1000) {
         const timeoutId = window.setTimeout(() => {
-          showScheduleNotification("Reunião chegando", `${scheduleTitle || selectedName} começa em 5 minutos.`);
+          showScheduleNotification("Reunião chegando", `${scheduleTitle || selectedName} comeÃ§a em 5 minutos.`);
         }, reminderDelay);
 
         scheduleReminderTimeoutsRef.current.push(timeoutId);
       }
     }
 
-    showScheduleNotification("Agendamento preparado", `${scheduleTitle || selectedName} foi registrado no chat e aberto no calendário.`);
+    showScheduleNotification("Agendamento preparado", `${scheduleTitle || selectedName} foi registrado no chat e aberto no calendÃ¡rio.`);
 
     setScheduleModalOpen(false);
   }, [
@@ -1109,7 +1109,7 @@ export default function TeamChat() {
     const action = button.getAttribute("data-qc-chat-action");
     const label = button.textContent?.trim().toLowerCase() ?? "";
 
-    if (action === "open-message-tools" || label.includes("gif") || label.includes("figura") || label.includes("ícone") || label.includes("icone")) {
+    if (action === "open-message-tools" || label.includes("gif") || label.includes("figura") || label.includes("Ã­cone") || label.includes("icone")) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -1118,7 +1118,7 @@ export default function TeamChat() {
       return;
     }
 
-    if (action === "open-reaction-tools" || label.includes("reações") || label.includes("reacoes") || label.includes("reagir")) {
+    if (action === "open-reaction-tools" || label.includes("reaÃ§Ãµes") || label.includes("reacoes") || label.includes("reagir")) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -1134,7 +1134,7 @@ export default function TeamChat() {
     if (!button) return;
 
     const label = button.textContent?.trim().toLowerCase() ?? "";
-    const opensReactionModal = label.includes("reações") || label.includes("reacoes");
+    const opensReactionModal = label.includes("reaÃ§Ãµes") || label.includes("reacoes");
 
     if (!opensReactionModal) return;
 
@@ -1205,7 +1205,7 @@ export default function TeamChat() {
               <div>
                 <span>Ligação e agenda</span>
                 <h2>Ligação / Meet</h2>
-                <p>Inicie uma ligação agora ou agende para mais tarde com registro no chat.</p>
+                <p>Inicie uma ligaÃ§Ã£o agora ou agende para mais tarde com registro no chat.</p>
               </div>
               <button type="button" onClick={() => setScheduleModalOpen(false)} aria-label="Fechar">
                 <FiX size={18} />
@@ -1217,30 +1217,30 @@ export default function TeamChat() {
                 <FiVideo size={18} />
                 <span>
                   <strong>Iniciar agora</strong>
-                  <small>Abre o Meet e registra a ligação no chat automaticamente.</small>
+                  <small>Abre o Meet e registra a ligaÃ§Ã£o no chat automaticamente.</small>
                 </span>
               </button>
 
               <div>
                 <strong>Agendar para mais tarde</strong>
-                <small>Informe data e horário abaixo para criar o registro de agenda.</small>
+                <small>Informe data e horÃ¡rio abaixo para criar o registro de agenda.</small>
               </div>
             </div>
 
             <div className="qc-chat-schedule-modal__body">
               <label>
-                <span>Título</span>
+                <span>TÃ­tulo</span>
                 <input value={scheduleTitle} onChange={(event) => setScheduleTitle(event.target.value)} placeholder="Reunião com..." />
               </label>
 
               <div className="qc-chat-schedule-modal__row">
                 <label>
-                  <span>Data e horário para mais tarde</span>
+                  <span>Data e horÃ¡rio para mais tarde</span>
                   <input type="datetime-local" value={scheduleDateTime} onChange={(event) => setScheduleDateTime(event.target.value)} />
                 </label>
 
                 <label>
-                  <span>Duração</span>
+                  <span>DuraÃ§Ã£o</span>
                   <select value={scheduleDurationMinutes} onChange={(event) => setScheduleDurationMinutes(event.target.value)}>
                     <option value="15">15 minutos</option>
                     <option value="30">30 minutos</option>
@@ -1252,8 +1252,8 @@ export default function TeamChat() {
               </div>
 
               <label>
-                <span>Contexto da ligação</span>
-                <textarea value={scheduleNotes} onChange={(event) => setScheduleNotes(event.target.value)} rows={4} placeholder="Descrição, pauta, contexto, pendências e pessoas vinculadas..." />
+                <span>Contexto da ligaÃ§Ã£o</span>
+                <textarea value={scheduleNotes} onChange={(event) => setScheduleNotes(event.target.value)} rows={4} placeholder="DescriÃ§Ã£o, pauta, contexto, pendÃªncias e pessoas vinculadas..." />
               </label>
 
               <label className="qc-chat-schedule-modal__check">
@@ -1273,21 +1273,21 @@ export default function TeamChat() {
               <button type="button" onClick={() => setScheduleModalOpen(false)}>Cancelar</button>
               <button type="button" onClick={() => void submitSchedule()}>
                 <FiCalendar size={15} />
-                Agendar e abrir calendário
+                Agendar e abrir calendÃ¡rio
               </button>
             </div>
           </div>
         </div>
       ) : null}
       {chatActionTarget ? (
-        <div className="qc-chat-unified-action-modal" role="dialog" aria-modal="true" aria-label={isComposerAction ? "Enviar na conversa" : "Reagir à mensagem"}>
+        <div className="qc-chat-unified-action-modal" role="dialog" aria-modal="true" aria-label={isComposerAction ? "Enviar na conversa" : "Reagir Ã  mensagem"}>
           <div className="qc-chat-modal-backdrop" onClick={() => setChatActionTarget(null)} />
           <div className="qc-chat-unified-action-modal__panel">
             <div className="qc-chat-unified-action-modal__header">
               <div>
-                <span>{isComposerAction ? "Enviar na conversa" : "Reagir à mensagem"}</span>
-                <h2>{isComposerAction ? "GIFs, ícones e figuras" : "Curtir comentário"}</h2>
-                <p>{isComposerAction ? "Escolha uma opção para enviar na conversa." : "Escolha uma reação para essa mensagem."}</p>
+                <span>{isComposerAction ? "Enviar na conversa" : "Reagir Ã  mensagem"}</span>
+                <h2>{isComposerAction ? "GIFs, Ã­cones e figuras" : "Curtir comentÃ¡rio"}</h2>
+                <p>{isComposerAction ? "Escolha uma opÃ§Ã£o para enviar na conversa." : "Escolha uma reaÃ§Ã£o para essa mensagem."}</p>
               </div>
               <button type="button" onClick={() => setChatActionTarget(null)} aria-label="Fechar">
                 <FiX size={18} />
@@ -1302,7 +1302,7 @@ export default function TeamChat() {
             ) : null}
 
             <div className="qc-chat-unified-action-modal__section">
-              <h3>{isComposerAction ? "Ícones e figurinhas" : "Reações"}</h3>
+              <h3>{isComposerAction ? "Ãcones e figurinhas" : "ReaÃ§Ãµes"}</h3>
               <div className="qc-chat-unified-action-modal__grid">
                 {CHAT_UNIFIED_ACTION_OPTIONS.map((option) => (
                   <button
@@ -1322,7 +1322,7 @@ export default function TeamChat() {
 
             {isComposerAction ? (
               <div className="qc-chat-unified-action-modal__section">
-                <h3>GIFs rápidos</h3>
+                <h3>GIFs rÃ¡pidos</h3>
                 <div className="qc-chat-unified-action-modal__grid qc-chat-unified-action-modal__grid--compact">
                   {QUICK_GIFS.map((gif) => (
                     <button
@@ -1330,7 +1330,7 @@ export default function TeamChat() {
                       type="button"
                       onClick={() => handleUnifiedGifAction(gif)}
                     >
-                      <span className="qc-chat-unified-action-modal__emoji">🎞️</span>
+                      <span className="qc-chat-unified-action-modal__emoji">ðŸŽžï¸</span>
                       <span>
                         <strong>{gif.label}</strong>
                         <small>Enviar GIF na conversa</small>
@@ -1344,14 +1344,14 @@ export default function TeamChat() {
         </div>
       ) : null}
       {messageReactionTarget ? (
-        <div className="qc-chat-message-reaction-modal" role="dialog" aria-modal="true" aria-label="Reagir à mensagem">
+        <div className="qc-chat-message-reaction-modal" role="dialog" aria-modal="true" aria-label="Reagir Ã  mensagem">
           <div className="qc-chat-modal-backdrop" onClick={() => setMessageReactionTarget(null)} />
           <div className="qc-chat-modal-panel qc-chat-message-reaction-modal__panel">
             <div className="qc-chat-modal-header">
               <div>
-                <span className="qc-chat-modal-eyebrow">Reagir à mensagem</span>
-                <h2>Curtir comentário</h2>
-                <p>Escolha uma reação para marcar essa mensagem. Pode ter várias reações na mesma mensagem.</p>
+                <span className="qc-chat-modal-eyebrow">Reagir Ã  mensagem</span>
+                <h2>Curtir comentÃ¡rio</h2>
+                <p>Escolha uma reaÃ§Ã£o para marcar essa mensagem. Pode ter vÃ¡rias reaÃ§Ãµes na mesma mensagem.</p>
               </div>
               <button type="button" onClick={() => setMessageReactionTarget(null)} aria-label="Fechar">
                 <FiX size={18} />
@@ -1382,16 +1382,16 @@ export default function TeamChat() {
         </div>
       ) : null}
       {reactionModalOpen ? (
-        <div className="qc-chat-reaction-modal" role="dialog" aria-modal="true" aria-label="Reagir à conversa">
+        <div className="qc-chat-reaction-modal" role="dialog" aria-modal="true" aria-label="Reagir Ã  conversa">
           <div className="qc-chat-reaction-modal__backdrop" onClick={() => setReactionModalOpen(false)} />
           <div className="qc-chat-reaction-modal__panel">
             <div className="qc-chat-reaction-modal__header">
               <div>
-                <span className="qc-chat-reaction-modal__eyebrow">Reação rápida</span>
+                <span className="qc-chat-reaction-modal__eyebrow">ReaÃ§Ã£o rÃ¡pida</span>
                 <h2>Curtir conversa</h2>
-                <p>Escolha uma opção para reagir à mensagem/conversa atual.</p>
+                <p>Escolha uma opÃ§Ã£o para reagir Ã  mensagem/conversa atual.</p>
               </div>
-              <button type="button" onClick={() => setReactionModalOpen(false)} aria-label="Fechar reações">
+              <button type="button" onClick={() => setReactionModalOpen(false)} aria-label="Fechar reaÃ§Ãµes">
                 <FiX size={18} />
               </button>
             </div>
@@ -1414,7 +1414,7 @@ export default function TeamChat() {
             </div>
 
             <div className="qc-chat-reaction-modal__footer">
-              <span>Essa reação entra na conversa como mensagem rápida.</span>
+              <span>Essa reaÃ§Ã£o entra na conversa como mensagem rÃ¡pida.</span>
               <button type="button" onClick={() => setReactionModalOpen(false)}>Cancelar</button>
             </div>
           </div>
@@ -1432,15 +1432,15 @@ export default function TeamChat() {
             <div className="flex items-center gap-3">
               <UserAvatar src={activeIdentity.avatarUrl} name={activeIdentity.displayName} size="md" frameClassName="border border-white/15" />
               <div className="min-w-0 flex-1"><div className="truncate text-sm font-black">{activeIdentity.displayName}</div><div className="truncate text-xs text-white/52">{activeIdentity.username ? `@${activeIdentity.username}` : activeIdentity.email ?? "Conta autenticada"}</div></div>
-              <button type="button" onClick={() => void loadThreads()} className="rounded-full border border-white/10 bg-white/8 p-2 text-white/70 hover:text-white"><FiRefreshCw size={14} className={loadingThreads ? "animate-spin" : ""} /></button>
+              <button type="button" onClick={() => void loadThreads()} aria-label="Atualizar conversas" title="Atualizar conversas" className="rounded-full border border-white/10 bg-white/8 p-2 text-white/70 hover:text-white"><FiRefreshCw size={14} className={loadingThreads ? "animate-spin" : ""} /></button>
             </div>
-            <div className="relative mt-4"><FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35" size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Enter" && filteredContacts[0]) openConversation(filteredContacts[0].id); }} placeholder="Buscar usuário pelo nome" className="w-full rounded-2xl border border-white/10 bg-white/8 py-3 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/38" /></div>
+            <div className="relative mt-4"><FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35" size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Enter" && filteredContacts[0]) openConversation(filteredContacts[0].id); }} placeholder="Buscar usuÃ¡rio pelo nome" className="w-full rounded-2xl border border-white/10 bg-white/8 py-3 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/38" /></div>
             <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]"><span className="rounded-full border border-white/10 px-2.5 py-1 text-white/62">{contacts.length} contatos</span><span className="rounded-full border border-white/10 px-2.5 py-1 text-white/62">{contacts.filter((c) => c.presence_status === "online").length} ativos</span>{noticePermission === "granted" ? <span className="rounded-full border border-emerald-400/30 px-2.5 py-1 text-emerald-300">notifica</span> : null}</div>
           </div>
           {error ? <div className="m-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
-            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiInbox size={12} /> Recentes</span><span>{threads.length}</span></div><div className="space-y-1.5">{threads.slice(0, 6).map((thread) => <button key={thread.key} type="button" onClick={() => openConversation(thread.peerId)} className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left ${thread.peerId === selectedPeerId ? "bg-white/12" : "hover:bg-white/8"}`}><UserAvatar src={contactsById.get(thread.peerId)?.avatar_url ?? thread.peerAvatarUrl} name={thread.peerName} size="sm" frameClassName="border border-white/15" /><span className="min-w-0 flex-1"><span className="flex justify-between gap-2"><span className="truncate text-sm font-bold">{thread.peerName}</span><span className="text-[10px] text-white/40">{formatRelative(thread.lastMessageAt)}</span></span><span className="block truncate text-xs text-white/52">{thread.lastSenderId === currentUserId ? "Você" : thread.lastSenderName}: {thread.lastMessage}</span></span></button>)}{threads.length === 0 ? <div className="rounded-2xl border border-dashed border-white/10 px-4 py-4 text-sm text-white/48">Ainda não há conversas recentes.</div> : null}</div></div>
-            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiUsers size={12} /> Conversas</span><span className="qc-chat-sidebar-presence-label">{contacts.filter((c) => c.presence_status === "online").length} online</span></div><div className="space-y-1.5">{loadingContacts ? <div className="px-4 py-4 text-sm text-white/48">Digite pelo menos 2 caracteres para buscar usuários.</div> : filteredContacts.map((contact) => <ContactRow key={contact.id} contact={contact} active={contact.id === selectedPeerId} recent={recentIds.has(contact.id)} onSelect={openConversation} />)}</div></div>
+            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiInbox size={12} /> Recentes</span><span>{threads.length}</span></div><div className="space-y-1.5">{threads.slice(0, 6).map((thread) => <button key={thread.key} type="button" onClick={() => openConversation(thread.peerId)} className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left ${thread.peerId === selectedPeerId ? "bg-white/12" : "hover:bg-white/8"}`}><UserAvatar src={contactsById.get(thread.peerId)?.avatar_url ?? thread.peerAvatarUrl} name={thread.peerName} size="sm" frameClassName="border border-white/15" /><span className="min-w-0 flex-1"><span className="flex justify-between gap-2"><span className="truncate text-sm font-bold">{thread.peerName}</span><span className="text-[10px] text-white/40">{formatRelative(thread.lastMessageAt)}</span></span><span className="block truncate text-xs text-white/52">{thread.lastSenderId === currentUserId ? "VocÃª" : thread.lastSenderName}: {thread.lastMessage}</span></span></button>)}{threads.length === 0 ? <div className="rounded-2xl border border-dashed border-white/10 px-4 py-4 text-sm text-white/48">Ainda nÃ£o hÃ¡ conversas recentes.</div> : null}</div></div>
+            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiUsers size={12} /> Conversas</span><span className="qc-chat-sidebar-presence-label">{contacts.filter((c) => c.presence_status === "online").length} online</span></div><div className="space-y-1.5">{loadingContacts ? <div className="px-4 py-4 text-sm text-white/48">Digite pelo menos 2 caracteres para buscar usuÃ¡rios.</div> : filteredContacts.map((contact) => <ContactRow key={contact.id} contact={contact} active={contact.id === selectedPeerId} recent={recentIds.has(contact.id)} onSelect={openConversation} />)}</div></div>
           </div>
         </aside>
 
@@ -1451,13 +1451,13 @@ export default function TeamChat() {
           className="qc-chat-sidebar-resizer"
           onPointerDown={startChatSidebarResize}
         >
-          <span>↔</span>
+          <span>â†”</span>
         </button>
 
         <main className="relative flex min-h-0 flex-col" onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={handleDrop}>
-          {dragging ? <div className="pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-[32px] border-2 border-dashed border-(--tc-accent) bg-slate-950/70 text-white"><div className="text-center"><FiUploadCloud size={42} className="mx-auto mb-3" /><div className="text-lg font-black">Solte aqui para anexar</div><div className="text-sm text-white/70">Imagem, GIF, PDF, TXT ou áudio até 10 MB</div></div></div> : null}
-          <header className="flex min-h-[88px] items-center justify-between gap-4 border-b border-(--tc-border) bg-(--tc-surface)/90 px-5 py-4">
-            <div className="flex min-w-0 items-center gap-4"><UserAvatar src={selectedAvatar} name={selectedName} size="lg" frameClassName="border border-(--tc-border)" /><div className="min-w-0"><h1 className="truncate text-2xl font-black tracking-[-0.04em]">{selectedName}</h1><div className="mt-1 truncate text-xs text-(--tc-text-muted)">{selectedContact?.user ? `@${selectedContact.user}` : selectedThread?.peerHandle ? `@${selectedThread.peerHandle}` : "Busque uma pessoa na lateral para começar"}{selectedCompany ? ` • ${selectedCompany}` : ""}</div></div></div>
+          {dragging ? <div className="pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-4xl border-2 border-dashed border-(--tc-accent) bg-slate-950/70 text-white"><div className="text-center"><FiUploadCloud size={42} className="mx-auto mb-3" /><div className="text-lg font-black">Solte aqui para anexar</div><div className="text-sm text-white/70">Imagem, GIF, PDF, TXT ou áudio atÃ© 10 MB</div></div></div> : null}
+          <header className="flex min-h-22 items-center justify-between gap-4 border-b border-(--tc-border) bg-(--tc-surface)/90 px-5 py-4">
+            <div className="flex min-w-0 items-center gap-4"><UserAvatar src={selectedAvatar} name={selectedName} size="lg" frameClassName="border border-(--tc-border)" /><div className="min-w-0"><h1 className="truncate text-2xl font-black tracking-[-0.04em]">{selectedName}</h1><div className="mt-1 truncate text-xs text-(--tc-text-muted)">{selectedContact?.user ? `@${selectedContact.user}` : selectedThread?.peerHandle ? `@${selectedThread.peerHandle}` : "Busque uma pessoa na lateral para comeÃ§ar"}{selectedCompany ? ` â€¢ ${selectedCompany}` : ""}</div></div></div>
             <div className="hidden" aria-hidden />
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><div className="flex min-h-full w-full flex-col justify-end gap-4">{selectedPeerId ? loadingMessages && messages.length === 0 ? <div className="h-24 animate-pulse rounded-[28px] bg-white/50 dark:bg-white/8" /> : messages.length > 0 ? messages.map((item) => { const mine = item.senderId === currentUserId; return <MessageBubble
@@ -1468,7 +1468,7 @@ export default function TeamChat() {
                       name={mine ? activeIdentity.displayName : selectedName}
                       reactions={messageReactions[item.id] ?? {}}
                       onOpenMessageReaction={setChatActionTarget}
-                    />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Use mensagens, arquivos, GIFs e reações para conversar.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-[-0.05em]">Selecione uma conversa</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaço inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
+                    />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Use mensagens, arquivos, GIFs e reaÃ§Ãµes para conversar.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-tighter">Selecione uma conversa</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaÃ§o inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
           <form onSubmit={sendMessage} className="border-t border-(--tc-border) bg-(--tc-surface)/94 px-5 py-4">
               <div className="qc-chat-composer-action-bar">
                 <button
@@ -1476,8 +1476,8 @@ export default function TeamChat() {
                   className="qc-chat-action-pill qc-chat-action-pill--primary"
                   onClick={() => setChatActionTarget("composer")}
                   disabled={!selectedPeerId || sending}
-                  aria-label="Abrir opções da conversa"
-                  title="Abrir opções"
+                  aria-label="Abrir opÃ§Ãµes da conversa"
+                  title="Abrir opÃ§Ãµes"
                 >
                   <FiPlus size={15} />
                   <span>Opções</span>
@@ -1516,23 +1516,23 @@ export default function TeamChat() {
                   <span>Agenda</span>
                 </button>
               </div>
-            <input ref={fileInputRef} type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,audio/mpeg,audio/wav,audio/webm,audio/ogg" className="hidden" onChange={handleFileChange} />
+            <input ref={fileInputRef} type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,audio/mpeg,audio/wav,audio/webm,audio/ogg" aria-label="Selecionar arquivos para anexar" title="Selecionar arquivos" className="hidden" onChange={handleFileChange} />
             <div className="w-full">{pendingAttachments.length > 0 ? <div className="mb-3 flex gap-2 overflow-x-auto">{pendingAttachments.map((attachment, index) => <AttachmentView key={attachment.id ?? index} attachment={attachment} removable onRemove={() => setPendingAttachments((items) => items.filter((_, i) => i !== index))} />)}</div> : null}
 {typingUserName ? (
                 <div className="qc-chat-typing-indicator">
-                  {typingUserName} está digitando...
+                  {typingUserName} estÃ¡ digitando...
                 </div>
               ) : null}
 
               
               {recordingAudio || recordedAudioUrl ? (
-                <div className="qc-chat-audio-recorder-card">
+                <div className="qc-chat-audio-recorder-card !border-white/10 !bg-slate-950/95 !text-white shadow-2xl">
                   <div className="qc-chat-audio-recorder-head">
                     <div>
                       <strong>{recordingAudio ? "Gravando áudio" : "Prévia do áudio"}</strong>
-                      <span>{recordingAudio ? "Fale agora. Clique em Gravando para parar." : "Ouça antes de enviar."}</span>
+                      <span className="text-white/70">{recordingAudio ? "Fale agora. Clique em Gravando para parar." : "Ouça antes de enviar."}</span>
                     </div>
-                    <span className="qc-chat-audio-recorder-time">{formatRecordingTime(recordingSeconds)}</span>
+                    <span className="qc-chat-audio-recorder-time text-white/80">{formatRecordingTime(recordingSeconds)}</span>
                   </div>
 
                   <div className="qc-chat-audio-visualizer" aria-hidden="true">
@@ -1563,7 +1563,7 @@ export default function TeamChat() {
                 </div>
               ) : null}
 
-              <div className="flex items-end gap-3 rounded-[28px] border border-(--tc-border) bg-(--tc-surface-2) p-2"><button type="button" onClick={() => fileInputRef.current?.click()} disabled={!selectedPeerId || uploading} className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface)">{uploading ? <FiRefreshCw className="animate-spin" /> : <FiPaperclip />}</button><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={selectedPeerId ? `Enviar mensagem para ${selectedName}...` : "Escolha uma pessoa para começar"} rows={1} disabled={!selectedPeerId || sending} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-1 py-3 text-sm leading-6 outline-none placeholder:text-(--tc-text-muted)" /><button type="submit" disabled={!selectedPeerId || sending || uploading || (!message.trim() && pendingAttachments.length === 0)} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 text-sm font-black text-white disabled:opacity-50"><FiSend size={16} /> Enviar</button></div>
+              <div className="flex items-end gap-3 rounded-[28px] border border-(--tc-border) bg-(--tc-surface-2) p-2"><button type="button" onClick={() => fileInputRef.current?.click()} disabled={!selectedPeerId || uploading} className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface)">{uploading ? <FiRefreshCw className="animate-spin" /> : <FiPaperclip />}</button><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={selectedPeerId ? `Enviar mensagem para ${selectedName}...` : "Escolha uma pessoa para comeÃ§ar"} rows={1} disabled={!selectedPeerId || sending} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-1 py-3 text-sm leading-6 outline-none placeholder:text-(--tc-text-muted)" /><button type="submit" disabled={!selectedPeerId || sending || uploading || (!message.trim() && pendingAttachments.length === 0)} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 text-sm font-black text-white disabled:opacity-50"><FiSend size={16} /> Enviar</button></div>
               <div className="mt-2 flex justify-between px-2 text-[11px] text-(--tc-text-muted)"><span>Enter envia, Shift+Enter quebra linha. Arraste arquivos para anexar.</span><span>{uploading ? "Anexando..." : "Imagem, GIF, PDF, TXT ou áudio"}</span></div></div>
           </form>
         </main>
@@ -1571,3 +1571,5 @@ export default function TeamChat() {
     </div>
   );
 }
+
+

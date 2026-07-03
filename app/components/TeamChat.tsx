@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type KeyboardEvent } from "react";
 import { FiBell, FiChevronRight, FiFile, FiImage, FiInbox, FiPaperclip, FiRefreshCw, FiSearch, FiSend, FiSmile, FiUploadCloud, FiUsers, FiX } from "react-icons/fi";
 
@@ -167,7 +167,9 @@ function MessageBubble({ message, mine, avatar, name }: { message: ChatMessage; 
 
 export default function TeamChat() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isChatRoute = pathname === "/chat" || pathname.startsWith("/chat/");
   const { user, loading } = useAuthUser();
   const { activeClient } = useClientContext();
   const activeIdentity = resolveActiveIdentity({ user, activeCompany: activeClient });
@@ -189,12 +191,14 @@ export default function TeamChat() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noticePermission, setNoticePermission] = useState<NotificationPermission | "unsupported">("default");
 
   useEffect(() => {
+    if (!isChatRoute) return;
     if (!loading && !user) router.replace("/login");
-  }, [loading, router, user]);
+  }, [isChatRoute, loading, router, user]);
 
   useEffect(() => {
     if (typeof window !== "undefined") setNoticePermission("Notification" in window ? Notification.permission : "unsupported");
@@ -251,29 +255,33 @@ export default function TeamChat() {
   }, [router]);
 
   useEffect(() => {
+    if (!isChatRoute) return;
     void loadContacts();
     void loadThreads();
-  }, [loadContacts, loadThreads]);
+  }, [isChatRoute, loadContacts, loadThreads]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!isChatRoute || !user) return;
     const interval = window.setInterval(() => {
       void loadThreads();
       if (selectedPeerId) void loadMessages(selectedPeerId);
     }, 15000);
     return () => window.clearInterval(interval);
-  }, [loadMessages, loadThreads, selectedPeerId, user]);
+  }, [isChatRoute, loadMessages, loadThreads, selectedPeerId, user]);
 
   useEffect(() => {
+    if (!isChatRoute) return;
     const peerId = searchParams.get("peer")?.trim() || null;
     if (peerId !== selectedPeerId) setSelectedPeerId(peerId);
-  }, [searchParams, selectedPeerId]);
+  }, [isChatRoute, searchParams, selectedPeerId]);
 
   useEffect(() => {
+    if (!isChatRoute) return;
     void loadMessages(selectedPeerId);
     setMessage("");
     setPendingAttachments([]);
-  }, [loadMessages, selectedPeerId]);
+    setToolsOpen(false);
+  }, [isChatRoute, loadMessages, selectedPeerId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -283,7 +291,7 @@ export default function TeamChat() {
   const threadsByPeer = useMemo(() => new Map(threads.map((thread) => [thread.peerId, thread])), [threads]);
   const selectedContact = selectedPeerId ? contactsById.get(selectedPeerId) ?? null : null;
   const selectedThread = selectedPeerId ? threadsByPeer.get(selectedPeerId) ?? null : null;
-  const selectedName = selectedContact?.name ?? selectedThread?.peerName ?? "Digite o nome de um usuário";
+  const selectedName = selectedContact?.name ?? selectedThread?.peerName ?? "Escolha uma conversa";
   const selectedAvatar = selectedContact?.avatar_url ?? selectedThread?.peerAvatarUrl ?? null;
   const selectedCompany = selectedContact ? getCompanyLabel(selectedContact) : "";
   const currentUserId = user?.id ?? "";
@@ -396,11 +404,12 @@ export default function TeamChat() {
     event.target.value = "";
   }, [uploadFiles]);
 
+  if (!isChatRoute) return null;
   if (loading && !user) return <div className="h-screen animate-pulse bg-[#061225]" />;
   if (!user) return null;
 
   return (
-    <div className="h-[calc(100vh-0.5rem)] min-h-[720px] overflow-hidden bg-[linear-gradient(180deg,var(--page-bg),var(--tc-bg))] text-(--tc-text-primary)">
+    <div className="qc-team-chat-clean h-[calc(100vh-0.5rem)] min-h-[720px] overflow-hidden bg-[linear-gradient(180deg,var(--page-bg),var(--tc-bg))] text-(--tc-text-primary)">
       <section className="grid h-full min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-[360px_minmax(0,1fr)]">
         <aside className="flex min-h-0 flex-col border-r border-white/10 bg-[#061225]/95 text-white">
           <div className="border-b border-white/10 p-4">
@@ -421,14 +430,35 @@ export default function TeamChat() {
         <main className="relative flex min-h-0 flex-col" onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={handleDrop}>
           {dragging ? <div className="pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-[32px] border-2 border-dashed border-(--tc-accent) bg-slate-950/70 text-white"><div className="text-center"><FiUploadCloud size={42} className="mx-auto mb-3" /><div className="text-lg font-black">Solte aqui para anexar</div><div className="text-sm text-white/70">Imagem, GIF, PDF ou TXT até 10 MB</div></div></div> : null}
           <header className="flex min-h-[88px] items-center justify-between gap-4 border-b border-(--tc-border) bg-(--tc-surface)/90 px-5 py-4">
-            <div className="flex min-w-0 items-center gap-4"><UserAvatar src={selectedAvatar} name={selectedName} size="lg" frameClassName="border border-(--tc-border)" /><div className="min-w-0"><h1 className="truncate text-2xl font-black tracking-[-0.04em]">{selectedName}</h1><div className="mt-1 truncate text-xs text-(--tc-text-muted)">{selectedContact?.user ? `@${selectedContact.user}` : selectedThread?.peerHandle ? `@${selectedThread.peerHandle}` : "Selecione alguém para começar"}{selectedCompany ? ` • ${selectedCompany}` : ""}</div></div></div>
-            <div className="flex gap-2"><button type="button" onClick={requestNotifications} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-sm font-bold"><FiBell size={14} /> {noticePermission === "granted" ? "Notificações on" : "Ativar notificações"}</button><button type="button" onClick={() => { setSelectedPeerId(null); router.replace("/chat", { scroll: false }); }} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-sm font-bold"><FiX size={14} /> Trocar</button></div>
+            <div className="flex min-w-0 items-center gap-4"><UserAvatar src={selectedAvatar} name={selectedName} size="lg" frameClassName="border border-(--tc-border)" /><div className="min-w-0"><h1 className="truncate text-2xl font-black tracking-[-0.04em]">{selectedName}</h1><div className="mt-1 truncate text-xs text-(--tc-text-muted)">{selectedContact?.user ? `@${selectedContact.user}` : selectedThread?.peerHandle ? `@${selectedThread.peerHandle}` : "Busque uma pessoa na lateral para começar"}{selectedCompany ? ` • ${selectedCompany}` : ""}</div></div></div>
+            <div className="hidden" aria-hidden />
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><div className="mx-auto flex min-h-full max-w-5xl flex-col justify-end gap-4">{selectedPeerId ? loadingMessages && messages.length === 0 ? <div className="h-24 animate-pulse rounded-[28px] bg-white/50 dark:bg-white/8" /> : messages.length > 0 ? messages.map((item) => { const mine = item.senderId === currentUserId; return <MessageBubble key={item.id} message={item} mine={mine} avatar={mine ? activeIdentity.avatarUrl : selectedAvatar} name={mine ? activeIdentity.displayName : selectedName} />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa pronta</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Escreva, envie uma figurinha ou arraste um arquivo.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-[-0.05em]">Digite o nome de um usuário</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaço inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><div className="flex min-h-full w-full flex-col justify-end gap-4">{selectedPeerId ? loadingMessages && messages.length === 0 ? <div className="h-24 animate-pulse rounded-[28px] bg-white/50 dark:bg-white/8" /> : messages.length > 0 ? messages.map((item) => { const mine = item.senderId === currentUserId; return <MessageBubble key={item.id} message={item} mine={mine} avatar={mine ? activeIdentity.avatarUrl : selectedAvatar} name={mine ? activeIdentity.displayName : selectedName} />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa pronta</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Escreva, envie uma figurinha ou arraste um arquivo.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-[-0.05em]">Escolha uma conversa</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaço inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
           <form onSubmit={sendMessage} className="border-t border-(--tc-border) bg-(--tc-surface)/94 px-5 py-4">
             <input ref={fileInputRef} type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain" className="hidden" onChange={handleFileChange} />
-            <div className="mx-auto max-w-5xl">{pendingAttachments.length > 0 ? <div className="mb-3 flex gap-2 overflow-x-auto">{pendingAttachments.map((attachment, index) => <AttachmentView key={attachment.id ?? index} attachment={attachment} removable onRemove={() => setPendingAttachments((items) => items.filter((_, i) => i !== index))} />)}</div> : null}
-              <div className="mb-3 flex gap-2 overflow-x-auto pb-1">{QUICK_REACTIONS.map((reaction) => <button key={reaction} type="button" disabled={!selectedPeerId || sending} onClick={() => void sendSticker(reaction)} className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-base disabled:opacity-50">{reaction}</button>)}{QUICK_GIFS.map((gif) => <button key={gif.label} type="button" disabled={!selectedPeerId || sending} onClick={() => void sendGif(gif)} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2 text-xs font-bold disabled:opacity-50"><FiImage size={12} />{gif.label}</button>)}</div>
+            <div className="w-full">{pendingAttachments.length > 0 ? <div className="mb-3 flex gap-2 overflow-x-auto">{pendingAttachments.map((attachment, index) => <AttachmentView key={attachment.id ?? index} attachment={attachment} removable onRemove={() => setPendingAttachments((items) => items.filter((_, i) => i !== index))} />)}</div> : null}
+              <div className="mb-3 flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <button type="button" disabled={!selectedPeerId || sending} onClick={() => setToolsOpen((value) => !value)} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-xs font-black text-(--tc-text-primary) disabled:opacity-50">
+                    <FiSmile size={14} /> GIFs e figurinhas
+                  </button>
+                  <span className="text-[11px] text-(--tc-text-muted)">Anexe arquivos no clipe ou arraste para a conversa.</span>
+                </div>
+                {toolsOpen ? (
+                  <div data-qc-chat-tools-panel className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto rounded-[24px] border border-(--tc-border) bg-(--tc-surface-2) p-3 sm:grid-cols-6 lg:grid-cols-8">
+                    {QUICK_REACTIONS.map((reaction) => (
+                      <button key={reaction} type="button" disabled={!selectedPeerId || sending} onClick={() => void sendSticker(reaction)} className="flex h-12 items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-lg transition hover:scale-[1.03] disabled:opacity-50">
+                        {reaction}
+                      </button>
+                    ))}
+                    {QUICK_GIFS.map((gif) => (
+                      <button key={gif.label} type="button" disabled={!selectedPeerId || sending} onClick={() => void sendGif(gif)} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-3 text-xs font-bold transition hover:scale-[1.03] disabled:opacity-50">
+                        <FiImage size={12} /> {gif.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
               <div className="flex items-end gap-3 rounded-[28px] border border-(--tc-border) bg-(--tc-surface-2) p-2"><button type="button" onClick={() => fileInputRef.current?.click()} disabled={!selectedPeerId || uploading} className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface)">{uploading ? <FiRefreshCw className="animate-spin" /> : <FiPaperclip />}</button><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={selectedPeerId ? `Mensagem para ${selectedName}...` : "Escolha uma pessoa para começar"} rows={1} disabled={!selectedPeerId || sending} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-1 py-3 text-sm leading-6 outline-none placeholder:text-(--tc-text-muted)" /><button type="submit" disabled={!selectedPeerId || sending || uploading || (!message.trim() && pendingAttachments.length === 0)} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 text-sm font-black text-white disabled:opacity-50"><FiSend size={16} /> Enviar</button></div>
               <div className="mt-2 flex justify-between px-2 text-[11px] text-(--tc-text-muted)"><span>Enter envia, Shift+Enter quebra linha. Arraste arquivos para anexar.</span><span>{uploading ? "Anexando..." : "Imagem, GIF, PDF ou TXT"}</span></div></div>
           </form>

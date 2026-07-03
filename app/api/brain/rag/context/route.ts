@@ -1,7 +1,15 @@
 ﻿import { type NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
 import { isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
+import {
+  auditBrainQuery,
+  isBrainOptionalRowVisible,
+  sanitizeBrainMetadata,
+  sanitizeBrainOptionalMemoryItem,
+  sanitizeBrainText,
+} from "@/lib/brain/security";
 import { buildBrainSearchIndex, searchBrainIndex } from "@/lib/brain/searchIndex";
 import { prisma } from "@/lib/prismaClient";
 
@@ -154,7 +162,13 @@ export async function GET(req: NextRequest) {
   const visibleNodeIds = new Set(visibleNodes.map((node) => node.id));
   const visibleEdges = brainEdges.filter((edge) => visibleNodeIds.has(edge.fromId) && visibleNodeIds.has(edge.toId));
 
-  const index = buildBrainSearchIndex(visibleNodes, visibleEdges);
+  const safeVisibleNodes = visibleNodes.map((node) => ({
+    ...node,
+    description: sanitizeBrainText(node.description),
+    metadata: sanitizeBrainMetadata(node.metadata) as Prisma.JsonObject,
+  }));
+
+  const index = buildBrainSearchIndex(safeVisibleNodes, visibleEdges);
   const ranked = query
     ? searchBrainIndex(index, query, { limit })
     : index.slice(0, limit).map((entry) => ({ ...entry, score: 1, matchedBy: ["recent"] }));
@@ -164,7 +178,9 @@ export async function GET(req: NextRequest) {
     ? await Promise.all(
         OPTIONAL_COLLECTIONS.map(async (collection) => ({
           kind: collection.kind,
-          rows: await tryFindMany(collection.key, OPTIONAL_ROW_TAKE),
+          rows: (await tryFindMany(collection.key, OPTIONAL_ROW_TAKE * 4))
+            .filter((row) => isBrainOptionalRowVisible(row, accessResult.context))
+            .slice(0, OPTIONAL_ROW_TAKE),
         })),
       )
     : [];
@@ -172,6 +188,7 @@ export async function GET(req: NextRequest) {
   const memory = optionalRows.flatMap((collection) =>
     collection.rows
       .map(asRecord)
+      .map(sanitizeBrainOptionalMemoryItem)
       .map((row) => ({
         id: String(row.id ?? row.slug ?? row.key ?? crypto.randomUUID()),
         kind: collection.kind,
@@ -187,18 +204,29 @@ export async function GET(req: NextRequest) {
       .slice(0, 6),
   );
 
-  const modules = Array.from(new Set(visibleNodes.map((node) => readBrainNodeModule(node)).filter(Boolean))).sort().slice(0, 80);
+  const modules = Array.from(new Set(safeVisibleNodes.map((node) => readBrainNodeModule(node)).filter(Boolean))).sort().slice(0, 80);
   const companies = Array.from(new Map(
-    visibleNodes
+    safeVisibleNodes
       .filter((node) => readBrainNodeCompanyId(node))
       .map((node) => [readBrainNodeCompanyId(node), { id: readBrainNodeCompanyId(node), label: readBrainNodeCompanyName(node) ?? readBrainNodeCompanyId(node) }]),
   ).values()).slice(0, 60);
 
   const projects = Array.from(new Map(
-    visibleNodes
+    safeVisibleNodes
       .filter((node) => readBrainNodeProjectId(node))
       .map((node) => [readBrainNodeProjectId(node), { id: readBrainNodeProjectId(node), label: readBrainNodeProjectName(node) ?? readBrainNodeProjectId(node), companyId: readBrainNodeCompanyId(node) ?? null }]),
   ).values()).slice(0, 80);
+
+  await auditBrainQuery({
+    prisma,
+    access: accessResult.context,
+    action: "BRAIN_RAG_CONTEXT_QUERY",
+    entityType: "BrainRagContext",
+    resultCount: ranked.length,
+    memoryCount: memory.length,
+    moduleFilter,
+    hasQuery: Boolean(query),
+  });
 
   return NextResponse.json({
     source: "brain-rag-context",
@@ -220,8 +248,8 @@ export async function GET(req: NextRequest) {
       modules: modules.map((moduleName) => ({ id: moduleName, label: moduleName })),
       companies,
       projects,
-      types: Array.from(new Set(visibleNodes.map((node) => node.type))).sort().slice(0, 50),
-      statuses: Array.from(new Set(visibleNodes.map((node) => readBrainNodeStatus(node)))).sort().slice(0, 50),
+      types: Array.from(new Set(safeVisibleNodes.map((node) => node.type))).sort().slice(0, 50),
+      statuses: Array.from(new Set(safeVisibleNodes.map((node) => readBrainNodeStatus(node)))).sort().slice(0, 50),
     },
     nodes: ranked.map((node) => ({
       id: node.nodeId,
@@ -253,10 +281,11 @@ export async function GET(req: NextRequest) {
       "summarize_context",
     ],
     summary: {
-      nodeCount: visibleNodes.length,
+      nodeCount: safeVisibleNodes.length,
       edgeCount: visibleEdges.length,
       memoryCount: memory.length,
       moduleCount: modules.length,
     },
   });
 }
+

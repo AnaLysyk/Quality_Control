@@ -190,6 +190,18 @@ function AttachmentView({ attachment, mine, removable, onRemove }: { attachment:
     return <div className="mt-2 text-5xl leading-none">{attachment.label}</div>;
   }
 
+  if ((attachment.mimeType?.startsWith("audio/") || attachment.sourceLabel === "Áudio") && attachment.url) {
+    return (
+      <div className={`qc-chat-audio-attachment mt-2 rounded-2xl border px-3 py-3 ${mine ? "border-white/15 bg-white/10" : "border-(--tc-border) bg-(--tc-surface-2)"}`}>
+        <div className={`mb-2 flex items-center justify-between gap-3 text-xs font-black ${mine ? "text-white/80" : "text-slate-600 dark:text-white/70"}`}>
+          <span>Áudio</span>
+          {attachment.sizeLabel ? <span>{attachment.sizeLabel}</span> : null}
+        </div>
+        <audio controls src={attachment.url} className="w-full" preload="metadata" />
+      </div>
+    );
+  }
+
   if (isImage(attachment) && attachment.url) {
     return (
       <a href={attachment.url} target="_blank" rel="noreferrer" className="mt-2 block max-w-sm overflow-hidden rounded-[22px] border border-white/15 bg-black/10">
@@ -297,6 +309,9 @@ export default function TeamChat() {
   const notificationBootstrappedRef = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioAnimationRef = useRef<number | null>(null);
   const scheduleReminderTimeoutsRef = useRef<number[]>([]);
 
   const [contacts, setContacts] = useState<ChatContact[]>([]);
@@ -308,6 +323,11 @@ export default function TeamChat() {
   const [message, setMessage] = useState("");
   const [typingUserName, setTypingUserName] = useState<string | null>(null);
   const [recordingAudio, setRecordingAudio] = useState(false);
+  const [recordedAudioFile, setRecordedAudioFile] = useState<File | null>(null);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
+  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [audioLevels, setAudioLevels] = useState<number[]>(() => Array.from({ length: 18 }, () => 12));
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [scheduleTitle, setScheduleTitle] = useState("");
   const [scheduleDateTime, setScheduleDateTime] = useState(getDefaultMeetingDateTime);
@@ -338,6 +358,17 @@ export default function TeamChat() {
   useEffect(() => {
     if (typeof window !== "undefined") setNoticePermission("Notification" in window ? Notification.permission : "unsupported");
   }, []);
+
+  // qc-chat-recording-timer-effect
+  useEffect(() => {
+    if (!recordingAudio || !recordingStartedAt) return;
+
+    const interval = window.setInterval(() => {
+      setRecordingSeconds(Math.max(0, Math.floor((Date.now() - recordingStartedAt) / 1000)));
+    }, 250);
+
+    return () => window.clearInterval(interval);
+  }, [recordingAudio, recordingStartedAt]);
 
   useEffect(() => {
     setChatActionTarget(null);
@@ -457,9 +488,9 @@ export default function TeamChat() {
         return [
           contact.name,
           contact.email,
-          contact.handle,
+          contact.user,
           contact.company_name,
-          contact.role_label,
+          (contact.origin_label ?? contact.permission_role ?? contact.profile_kind ?? ''),
         ]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(normalizedSearch));
@@ -701,15 +732,86 @@ export default function TeamChat() {
     input.click();
   }, [uploadFiles, uploading]);
 
-  const uploadRecordedAudioAndSend = useCallback(async (file: File) => {
-    if (!selectedPeerId) return;
+
+  const formatRecordingTime = useCallback((seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return String(minutes).padStart(2, "0") + ":" + String(rest).padStart(2, "0");
+  }, []);
+
+  const stopAudioMeter = useCallback(() => {
+    if (audioAnimationRef.current) {
+      cancelAnimationFrame(audioAnimationRef.current);
+      audioAnimationRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      void audioContextRef.current.close().catch(() => null);
+      audioContextRef.current = null;
+    }
+  }, []);
+
+  const stopAudioStream = useCallback(() => {
+    audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+    audioStreamRef.current = null;
+  }, []);
+
+  const startAudioMeter = useCallback((stream: MediaStream) => {
+    stopAudioMeter();
+
+    try {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+      if (!AudioContextClass) return;
+
+      const audioContext = new AudioContextClass();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+
+      const tick = () => {
+        analyser.getByteFrequencyData(data);
+
+        const next = Array.from({ length: 18 }, (_, index) => {
+          const value = data[index % data.length] ?? 0;
+          return Math.max(8, Math.min(46, 8 + (value / 255) * 42));
+        });
+
+        setAudioLevels(next);
+        audioAnimationRef.current = requestAnimationFrame(tick);
+      };
+
+      tick();
+    } catch {
+      setAudioLevels(Array.from({ length: 18 }, () => 16));
+    }
+  }, [stopAudioMeter]);
+
+  const discardRecordedAudio = useCallback(() => {
+    if (recordedAudioUrl) URL.revokeObjectURL(recordedAudioUrl);
+
+    setRecordedAudioFile(null);
+    setRecordedAudioUrl(null);
+    setRecordingSeconds(0);
+    setRecordingStartedAt(null);
+    setAudioLevels(Array.from({ length: 18 }, () => 12));
+  }, [recordedAudioUrl]);
+
+  const sendRecordedAudio = useCallback(async () => {
+    if (!recordedAudioFile || !selectedPeerId) return;
 
     setUploading(true);
     setError(null);
 
     try {
       const form = new FormData();
-      form.append("files", file);
+      form.append("files", recordedAudioFile, recordedAudioFile.name);
 
       const response = await fetchApi("/api/chat/attachments", {
         method: "POST",
@@ -730,7 +832,7 @@ export default function TeamChat() {
         throw new Error(payload.error || "Não foi possível enviar o áudio.");
       }
 
-      await sendToPeer(
+      const ok = await sendToPeer(
         selectedPeerId,
         "",
         payload.attachments.map((attachment) => ({
@@ -738,16 +840,28 @@ export default function TeamChat() {
           sourceLabel: attachment.sourceLabel || "Áudio",
         })),
       );
+
+      if (ok) discardRecordedAudio();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível enviar o áudio.");
     } finally {
       setUploading(false);
     }
-  }, [router, selectedPeerId, sendToPeer]);
+  }, [discardRecordedAudio, recordedAudioFile, router, selectedPeerId, sendToPeer]);
 
   const stopAudioRecording = useCallback(() => {
     mediaRecorderRef.current?.stop();
   }, []);
+
+  const cancelAudioRecording = useCallback(() => {
+    audioChunksRef.current = [];
+    mediaRecorderRef.current?.stop();
+    stopAudioMeter();
+    stopAudioStream();
+    setRecordingAudio(false);
+    setRecordingStartedAt(null);
+    setRecordingSeconds(0);
+  }, [stopAudioMeter, stopAudioStream]);
 
   const startAudioRecording = useCallback(async () => {
     if (recordingAudio) {
@@ -765,16 +879,16 @@ export default function TeamChat() {
       return;
     }
 
+    discardRecordedAudio();
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType =
-        MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : MediaRecorder.isTypeSupported("audio/webm")
-            ? "audio/webm"
-            : "";
+      const recorder = new MediaRecorder(
+        stream,
+        MediaRecorder.isTypeSupported("audio/webm") ? { mimeType: "audio/webm" } : undefined,
+      );
 
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      audioStreamRef.current = stream;
       audioChunksRef.current = [];
 
       recorder.ondataavailable = (event) => {
@@ -782,27 +896,47 @@ export default function TeamChat() {
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        const file = new File([blob], `audio-chat-${Date.now()}.webm`, { type: blob.type || "audio/webm" });
+        stopAudioMeter();
+        stopAudioStream();
 
-        stream.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        audioChunksRef.current = [];
+
         mediaRecorderRef.current = null;
         setRecordingAudio(false);
+        setRecordingStartedAt(null);
 
         if (blob.size > 0) {
-          void uploadRecordedAudioAndSend(file);
+          const file = new File([blob], "audio-chat-" + Date.now() + ".webm", { type: "audio/webm" });
+          setRecordedAudioFile(file);
+          setRecordedAudioUrl(URL.createObjectURL(blob));
         }
       };
 
       mediaRecorderRef.current = recorder;
       recorder.start();
       setRecordingAudio(true);
+      setRecordingStartedAt(Date.now());
+      setRecordingSeconds(0);
+      startAudioMeter(stream);
       setError(null);
     } catch {
+      stopAudioMeter();
+      stopAudioStream();
       setRecordingAudio(false);
+      setRecordingStartedAt(null);
       setError("Não foi possível acessar o microfone.");
     }
-  }, [recordingAudio, selectedPeerId, stopAudioRecording, uploadRecordedAudioAndSend]);
+  }, [
+    discardRecordedAudio,
+    recordingAudio,
+    selectedPeerId,
+    startAudioMeter,
+    stopAudioMeter,
+    stopAudioRecording,
+    stopAudioStream,
+  ]);
+
 
   const openScheduleModal = useCallback(() => {
     setScheduleTitle(selectedPeerId ? `Reunião com ${selectedName}` : "Nova reunião");
@@ -1387,6 +1521,45 @@ export default function TeamChat() {
 {typingUserName ? (
                 <div className="qc-chat-typing-indicator">
                   {typingUserName} está digitando...
+                </div>
+              ) : null}
+
+              
+              {recordingAudio || recordedAudioUrl ? (
+                <div className="qc-chat-audio-recorder-card">
+                  <div className="qc-chat-audio-recorder-head">
+                    <div>
+                      <strong>{recordingAudio ? "Gravando áudio" : "Prévia do áudio"}</strong>
+                      <span>{recordingAudio ? "Fale agora. Clique em Gravando para parar." : "Ouça antes de enviar."}</span>
+                    </div>
+                    <span className="qc-chat-audio-recorder-time">{formatRecordingTime(recordingSeconds)}</span>
+                  </div>
+
+                  <div className="qc-chat-audio-visualizer" aria-hidden="true">
+                    {audioLevels.map((level, index) => (
+                      <span key={index} style={{ height: `${level}px` }} />
+                    ))}
+                  </div>
+
+                  {recordedAudioUrl ? (
+                    <audio controls src={recordedAudioUrl} preload="metadata" className="qc-chat-audio-preview-player" />
+                  ) : null}
+
+                  <div className="qc-chat-audio-recorder-actions">
+                    <button type="button" onClick={recordingAudio ? cancelAudioRecording : discardRecordedAudio}>
+                      Descartar
+                    </button>
+
+                    {recordingAudio ? (
+                      <button type="button" onClick={stopAudioRecording} className="is-primary">
+                        Parar gravação
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => void sendRecordedAudio()} disabled={!recordedAudioFile || uploading || sending} className="is-primary">
+                        Enviar áudio
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : null}
 

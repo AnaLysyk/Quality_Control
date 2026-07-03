@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     touchTyping({
       fromUserId: access.userId,
       toUserId: peerId,
-      fromName: access.displayName || access.email || "Usuário",
+      fromName: access.email || access.userId || "Usuário",
     });
   } else {
     clearTyping({

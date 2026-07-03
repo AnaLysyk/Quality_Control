@@ -19148,3 +19148,222 @@ body.dark .qc-chat-input-shell,
   0%, 100% { height: 10px; opacity: .55; }
   50% { height: 40px; opacity: 1; }
 }
+
+/* FIX: chat audio preview modal agenda final */
+
+.qc-chat-message-bubble {
+  max-width: min(760px, 76vw) !important;
+}
+
+.qc-chat-message-row.justify-end .qc-chat-message-bubble {
+  margin-left: auto !important;
+}
+
+.qc-chat-audio-attachment audio {
+  width: 100% !important;
+  height: 40px !important;
+}
+
+.qc-chat-audio-recorder-card {
+  margin-bottom: 10px !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(96, 165, 250, 0.24) !important;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.12), transparent 38%),
+    linear-gradient(135deg, rgba(8, 20, 46, 0.98), rgba(13, 26, 58, 0.96)) !important;
+  padding: 14px !important;
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.24) !important;
+}
+
+.qc-chat-audio-recorder-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+}
+
+.qc-chat-audio-recorder-head strong {
+  display: block !important;
+  color: #f8fafc !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+}
+
+.qc-chat-audio-recorder-head span {
+  display: block !important;
+  margin-top: 3px !important;
+  color: rgba(226, 232, 240, 0.70) !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+
+.qc-chat-audio-recorder-time {
+  border-radius: 999px !important;
+  border: 1px solid rgba(56, 189, 248, 0.26) !important;
+  background: rgba(2, 6, 23, 0.42) !important;
+  color: #bfdbfe !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+}
+
+.qc-chat-audio-visualizer {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  height: 52px !important;
+  margin: 12px 0 !important;
+}
+
+.qc-chat-audio-visualizer span {
+  width: 7px !important;
+  min-height: 8px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, #38bdf8, #22c55e) !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.20) !important;
+  transition: height 90ms linear !important;
+}
+
+.qc-chat-audio-preview-player {
+  width: 100% !important;
+  margin-top: 4px !important;
+}
+
+.qc-chat-audio-recorder-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+}
+
+.qc-chat-audio-recorder-actions button {
+  min-height: 38px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(148, 163, 184, 0.20) !important;
+  background: rgba(15, 23, 42, 0.82) !important;
+  color: #f8fafc !important;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.qc-chat-audio-recorder-actions button.is-primary {
+  border-color: rgba(56, 189, 248, 0.34) !important;
+  background: linear-gradient(135deg, #0f4c81, #0369a1) !important;
+}
+
+.qc-chat-action-pill--recording {
+  background: rgba(239, 0, 1, 0.16) !important;
+  border-color: rgba(239, 0, 1, 0.42) !important;
+  color: #fecaca !important;
+  animation: qcChatRecordingPulse 1.2s ease-in-out infinite;
+}
+
+/* Modal de agenda compacto, sem rolagem visual */
+.qc-chat-schedule-modal,
+.qc-chat-schedule-modal__panel,
+.qc-chat-schedule-modal__content {
+  width: min(780px, calc(100vw - 42px)) !important;
+  max-height: calc(100vh - 72px) !important;
+  overflow: hidden !important;
+  border-radius: 28px !important;
+}
+
+.qc-chat-schedule-modal__header {
+  padding: 18px 22px 12px !important;
+}
+
+.qc-chat-schedule-modal__quick {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  margin: 0 22px 12px !important;
+}
+
+.qc-chat-schedule-modal__quick button,
+.qc-chat-schedule-modal__quick > div {
+  min-height: 74px !important;
+  border-radius: 18px !important;
+  padding: 12px !important;
+}
+
+.qc-chat-schedule-modal__body {
+  display: grid !important;
+  grid-template-columns: 1fr 0.72fr !important;
+  gap: 12px !important;
+  padding: 0 22px 14px !important;
+  overflow: visible !important;
+}
+
+.qc-chat-schedule-modal__body label {
+  margin: 0 !important;
+}
+
+.qc-chat-schedule-modal__body input,
+.qc-chat-schedule-modal__body select,
+.qc-chat-schedule-modal__body textarea {
+  min-height: 42px !important;
+  border-radius: 14px !important;
+}
+
+.qc-chat-schedule-modal__body textarea {
+  min-height: 76px !important;
+  max-height: 90px !important;
+  resize: none !important;
+}
+
+.qc-chat-schedule-modal__footer {
+  padding: 12px 22px 18px !important;
+}
+
+.qc-chat-schedule-modal * {
+  scrollbar-width: none !important;
+}
+
+.qc-chat-schedule-modal *::-webkit-scrollbar {
+  display: none !important;
+}
+
+html:not(.dark) .qc-chat-audio-recorder-card,
+body:not(.dark) .qc-chat-audio-recorder-card {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.08), transparent 38%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html:not(.dark) .qc-chat-audio-recorder-head strong,
+body:not(.dark) .qc-chat-audio-recorder-head strong {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-chat-audio-recorder-head span,
+body:not(.dark) .qc-chat-audio-recorder-head span {
+  color: #475569 !important;
+}
+
+@keyframes qcChatRecordingPulse {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 0 0 3px rgba(239, 0, 1, 0.08), 0 12px 28px rgba(239, 0, 1, 0.16);
+  }
+
+  50% {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 7px rgba(239, 0, 1, 0.08), 0 16px 34px rgba(239, 0, 1, 0.22);
+  }
+}
+
+@media (max-width: 860px) {
+  .qc-chat-schedule-modal__quick,
+  .qc-chat-schedule-modal__body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-chat-schedule-modal,
+  .qc-chat-schedule-modal__panel,
+  .qc-chat-schedule-modal__content {
+    max-height: calc(100vh - 32px) !important;
+    overflow: auto !important;
+  }
+}

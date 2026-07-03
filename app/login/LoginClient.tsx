@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -179,14 +179,11 @@ export default function LoginClient() {
       });
 
       if (res.ok) {
-        const meRes = await fetch("/api/me", { cache: "no-store", credentials: "include" });
-        const meJson = await meRes.json().catch(() => null);
-        const authUser = meJson?.user ?? null;
-        await refreshUser();
+        const me = await refreshUser(false);
+        const authUser = me?.user ?? null;
         const nextParam = searchParams?.get("next") ?? null;
         const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
-        router.push(redirectTo);
-        router.refresh();
+        router.replace(redirectTo);
       } else {
         const data = await res.json().catch(() => null);
         setError((data?.error as string) || (data?.message as string) || "Não foi possível autenticar");
@@ -338,4 +335,3 @@ export default function LoginClient() {
     </div>
   );
 }
-

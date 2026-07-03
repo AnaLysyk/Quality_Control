@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { normalizeLegacyRole } from "@/lib/auth/roles";
 import { getAccessContext } from "@/lib/auth/session";
@@ -11,9 +11,7 @@ import {
 } from "@/lib/store/profilePermissionsStore";
 import { normalizePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
-import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { notifyProfilePermissionsChanged } from "@/lib/notificationService";
 import { invalidateBrainCache } from "@/lib/brain/cache";
 
@@ -42,37 +40,28 @@ async function resolveRole(params: Promise<{ role: string }>) {
 }
 
 async function requirePermissionManager(req: NextRequest) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
+  const accessContext = await getAccessContext(req);
+  if (!accessContext) {
     return {
       admin: null,
       access: null,
       response: NextResponse.json(
-        { error: status === 401 ? "Você precisa estar autenticado para acessar a Gestão de Perfis." : "Você não tem permissão para acessar a Gestão de Perfis." },
-        { status },
+        { error: "Você precisa estar autenticado para acessar a Gestão de Perfis." },
+        { status: 401 },
       ),
     };
   }
 
-  const accessContext = await getAccessContext(req);
-  const access = accessContext
-    ? await validarAcessoUsuariosNoServidor(accessContext)
-    : resolverAcessoUsuarios({
-        permissionRole: admin.role,
-        role: admin.role,
-        companyRole: admin.companyRole,
-        globalRole: admin.globalRole,
-        isGlobalAdmin: admin.isGlobalAdmin,
-      });
+  const access = await validarAcessoUsuariosNoServidor(accessContext);
   if (!access.canViewPermissions) {
     return {
-      admin,
+      admin: accessContext,
       access,
       response: NextResponse.json({ error: "Você não tem permissão para visualizar a matriz de perfis." }, { status: 403 }),
     };
   }
 
-  return { admin, access, response: null };
+  return { admin: accessContext, access, response: null };
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ role: string }> }) {
@@ -132,7 +121,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
     const summary = describeChangedSummary(allow, deny);
 
     await addAuditLogSafe({
-      actorUserId: guard.admin?.id ?? null,
+      actorUserId: guard.admin?.userId ?? null,
       actorEmail: guard.admin?.email ?? null,
       action: "profile.permissions.updated",
       entityType: "profile",
@@ -178,7 +167,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     const updatedAt = new Date().toISOString();
 
     await addAuditLogSafe({
-      actorUserId: guard.admin?.id ?? null,
+      actorUserId: guard.admin?.userId ?? null,
       actorEmail: guard.admin?.email ?? null,
       action: "profile.permissions.reset",
       entityType: "profile",
@@ -205,4 +194,3 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     return NextResponse.json({ error: "Não foi possível restaurar o perfil agora." }, { status: 500 });
   }
 }
-

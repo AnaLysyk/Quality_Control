@@ -1,6 +1,5 @@
-﻿import "server-only";
+import "server-only";
 
-import { getUserOverride, type UserPermissionsOverride } from "./store/permissionsStore";
 import { type Role } from "./permissions/roleDefaults";
 import { listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
 import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
@@ -11,6 +10,10 @@ import {
   resolvePermissionsFromDefaults,
   resolveProfilePermissionDefaults,
 } from "@/lib/store/profilePermissionsStore";
+import {
+  getUserPermissionOverride,
+  type UserPermissionsOverride,
+} from "@/lib/store/userPermissionsStore";
 
 export type RoleKey = Role;
 
@@ -55,7 +58,7 @@ export async function resolveRoleKeyForUser(userId: string): Promise<RoleKey> {
 
 export async function resolvePermissionAccessForUser(userId: string): Promise<ResolvedPermissionAccess> {
   const { roleKey } = await resolvePermissionSourceForUser(userId);
-  const override = await getUserOverride(userId);
+  const override = await getUserPermissionOverride(userId);
   const roleDefaults = await resolveProfilePermissionDefaults(roleKey);
   const permissions = resolvePermissionsFromDefaults(roleDefaults, override ?? undefined);
 
@@ -67,4 +70,3 @@ export async function resolvePermissionAccessForUser(userId: string): Promise<Re
     permissions,
   };
 }
-

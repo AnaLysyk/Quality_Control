@@ -1,4 +1,4 @@
-﻿import { resolveEffectivePermissionMatrix, hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
+import { resolveEffectivePermissionMatrix, hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 
 export type UsuarioComAcesso = {
   permissions?: PermissionMatrix | null;
@@ -13,6 +13,7 @@ export type AcessoUsuarios = {
   canViewUsers: boolean;
   canCreateUsers: boolean;
   canEditUsers: boolean;
+  canDeleteUsers: boolean;
   canViewPermissions: boolean;
   canEditPermissions: boolean;
   canResetPermissions: boolean;
@@ -30,6 +31,7 @@ export function resolverAcessoUsuarios(user: UsuarioComAcesso | null | undefined
       canViewUsers: false,
       canCreateUsers: false,
       canEditUsers: false,
+      canDeleteUsers: false,
       canViewPermissions: false,
       canEditPermissions: false,
       canResetPermissions: false,
@@ -42,6 +44,7 @@ export function resolverAcessoUsuarios(user: UsuarioComAcesso | null | undefined
   const canViewUsers = hasAnyAction(permissions, "users", ["view", "view_company", "view_all"]);
   const canCreateUsers = hasPermissionAccess(permissions, "users", "create");
   const canEditUsers = hasPermissionAccess(permissions, "users", "edit");
+  const canDeleteUsers = hasPermissionAccess(permissions, "users", "delete");
   const canViewPermissions = hasPermissionAccess(permissions, "permissions", "view");
   const canEditPermissions = hasPermissionAccess(permissions, "permissions", "edit");
   const canResetPermissions = hasPermissionAccess(permissions, "permissions", "reset");
@@ -51,6 +54,7 @@ export function resolverAcessoUsuarios(user: UsuarioComAcesso | null | undefined
     canViewUsers,
     canCreateUsers,
     canEditUsers,
+    canDeleteUsers,
     canViewPermissions,
     canEditPermissions,
     canResetPermissions,
@@ -58,4 +62,3 @@ export function resolverAcessoUsuarios(user: UsuarioComAcesso | null | undefined
     canManagePrivilegedProfiles: canEditUsers && canEditPermissions,
   };
 }
-

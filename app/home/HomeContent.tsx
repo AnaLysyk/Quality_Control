@@ -6,7 +6,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
 import { CompanySelector } from "@/components/CompanySelector";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
-import { useNavigationItems } from "@/app/hooks/navigation/useNavigationItems";
+import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
 
 function resolveModuleDescription(label: string, itemCount: number) {
   if (itemCount > 0) {

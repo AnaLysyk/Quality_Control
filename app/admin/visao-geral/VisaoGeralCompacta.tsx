@@ -6,13 +6,12 @@ import {
   FiBriefcase,
   FiCalendar,
   FiClipboard,
-  FiFileText,
   FiSearch,
   FiShield,
+  FiUser,
   FiUsers,
 } from "react-icons/fi";
 
-import UserAvatar from "@/components/UserAvatar";
 import { fetchApi } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import type { CompanyRow, Stats } from "@/lib/quality";
@@ -113,6 +112,10 @@ function nameFromEmail(email?: string | null) {
     .split("@")[0]
     .replace(/[._-]+/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function avatarFromUser(user?: AdminUser | null) {
+  return user?.avatar_url ?? user?.avatarUrl ?? user?.image ?? null;
 }
 
 function daysBetween(start: string, end: string) {
@@ -270,29 +273,37 @@ function StatCard({ icon: Icon, value, label }: { icon: typeof FiActivity; value
   );
 }
 
-function EventAvatar({ email, profile }: { email: string | null; profile?: ActorProfile }) {
-  const name = profile?.name ?? nameFromEmail(email);
+function RoundUserAvatar({ src, name, size = "md" }: { src?: string | null; name: string; size?: "sm" | "md" }) {
+  const boxSize = size === "sm" ? "h-10 w-10" : "h-12 w-12";
+  const iconSize = size === "sm" ? 18 : 21;
+
   return (
-    <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--tc-border)] bg-white p-1 shadow-[0_10px_22px_rgba(1,24,72,.08)] dark:bg-[#07111f]">
-      <UserAvatar
-        src={profile?.avatar ?? null}
-        name={name}
-        size="sm"
-        frameClassName="border-white/70 shadow-none"
-        fallbackClassName="text-[0.62rem] tracking-[.12em]"
-      />
+    <div className={`${boxSize} flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/70 bg-[#e8edf5] text-[#64748b] shadow-[0_10px_22px_rgba(1,24,72,.08)] ring-1 ring-black/5 dark:border-white/20 dark:bg-[#dce3ee] dark:text-[#64748b]`}>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={name} className="h-full w-full rounded-full object-cover" />
+      ) : (
+        <FiUser size={iconSize} strokeWidth={2.6} />
+      )}
     </div>
   );
+}
+
+function EventAvatar({ email, profile }: { email: string | null; profile?: ActorProfile }) {
+  const name = profile?.name ?? nameFromEmail(email);
+  return <RoundUserAvatar src={profile?.avatar ?? null} name={name} size="sm" />;
 }
 
 export default function VisaoGeralCompacta() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [audit, setAudit] = useState<Audit[]>([]);
   const [defects, setDefects] = useState<Defect[]>([]);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [actorProfiles, setActorProfiles] = useState<Record<string, ActorProfile>>({});
   const [period, setPeriod] = useState<(typeof periods)[number]>(30);
   const [mode, setMode] = useState<Mode>("company");
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -360,9 +371,7 @@ export default function VisaoGeralCompacta() {
   }, [effectivePeriod, from, hasRange, selectedCompany, to, visibleEvents]);
 
   useEffect(() => {
-    const emails = Array.from(new Set(audit.map((event) => event.actor_email?.trim()).filter((email): email is string => Boolean(email))));
-    const missing = emails.filter((email) => !actorProfiles[email]);
-    if (!missing.length) return;
+    if (mode !== "user" && !audit.length) return;
 
     let ok = true;
     const id = window.setTimeout(() => {
@@ -372,30 +381,32 @@ export default function VisaoGeralCompacta() {
           if (!ok || !response.ok) return;
           const data = unwrapEnvelopeData<{ items?: AdminUser[] }>(json) ?? json;
           const items = Array.isArray(data?.items) ? data.items : [];
+          setAdminUsers(items);
+
           const next: Record<string, ActorProfile> = {};
           items.forEach((user) => {
             const email = user.email?.trim();
             if (!email) return;
             next[email] = {
               name: user.name?.trim() || nameFromEmail(email),
-              avatar: user.avatar_url ?? user.avatarUrl ?? user.image ?? null,
+              avatar: avatarFromUser(user),
             };
           });
           setActorProfiles((current) => ({ ...current, ...next }));
         })
         .catch(() => undefined);
-    }, 700);
+    }, mode === "user" ? 250 : 700);
 
     return () => {
       ok = false;
       window.clearTimeout(id);
     };
-  }, [actorProfiles, audit]);
+  }, [audit.length, mode]);
 
   useEffect(() => {
     setVisibleCards(FIRST_ITEMS);
     setVisibleEvents(FIRST_EVENTS);
-  }, [mode, query, selectedCompany, effectivePeriod]);
+  }, [mode, query, selectedCompany, selectedUser, effectivePeriod]);
 
   const companies = overview?.companies ?? [];
   const company = selectedCompany ? companies.find((entry) => keyOf(entry) === selectedCompany) ?? null : null;
@@ -403,9 +414,12 @@ export default function VisaoGeralCompacta() {
   const stats = company ? mergeStats(company.releases) : overview?.globalStats ?? null;
   const filteredCompanies = companies.filter((entry) => normalize(`${entry.name} ${entry.slug ?? ""}`).includes(normalize(query)));
   const shownCompanies = filteredCompanies.slice(0, visibleCards);
+  const filteredUsers = adminUsers.filter((user) => normalize(`${user.name ?? ""} ${user.email ?? ""}`).includes(normalize(query)));
+  const shownUsers = filteredUsers.slice(0, visibleCards);
   const filteredEvents = audit
     .filter((event) => isInsidePeriod(event.created_at, effectivePeriod, from, to))
-    .filter((event) => eventMatchesCompany(event, company));
+    .filter((event) => eventMatchesCompany(event, company))
+    .filter((event) => !selectedUser || event.actor_email === selectedUser);
   const shownEvents = filteredEvents.slice(0, visibleEvents);
   const linkedDefects = defects
     .filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to))
@@ -495,7 +509,7 @@ export default function VisaoGeralCompacta() {
                 ) : null}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 border-t border-white/12 pt-4 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="mx-auto grid w-full max-w-5xl grid-cols-2 gap-3 border-t border-white/12 pt-4 sm:grid-cols-4">
               <StatCard icon={FiActivity} value={releases.length} label="Runs" />
               <StatCard icon={FiClipboard} value={planCount} label="Planos de teste" />
               <StatCard icon={FiShield} value={testCaseCount} label="Casos de teste" />
@@ -507,17 +521,17 @@ export default function VisaoGeralCompacta() {
         <section className="tc-panel">
           <div className="flex flex-col gap-4">
             <div className="flex gap-2">
-              <button type="button" onClick={() => setMode("company")} className={`tc-button-${mode === "company" ? "primary" : "secondary"}`}>
+              <button type="button" onClick={() => { setMode("company"); setSelectedUser(null); }} className={`tc-button-${mode === "company" ? "primary" : "secondary"}`}>
                 <FiBriefcase /> Empresa
               </button>
-              <button type="button" onClick={() => setMode("user")} className={`tc-button-${mode === "user" ? "primary" : "secondary"}`}>
+              <button type="button" onClick={() => { setMode("user"); setSelectedCompany(null); }} className={`tc-button-${mode === "user" ? "primary" : "secondary"}`}>
                 <FiUsers /> Usuário
               </button>
             </div>
             <label className="w-full">
               <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-white px-4 py-3 dark:bg-[#07111f]">
                 <FiSearch />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar empresa" className="w-full bg-transparent text-sm outline-none" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mode === "company" ? "Buscar empresa" : "Buscar usuário"} className="w-full bg-transparent text-sm outline-none" />
               </div>
             </label>
           </div>
@@ -552,10 +566,36 @@ export default function VisaoGeralCompacta() {
                   ) : null}
                 </>
               ) : (
-                <button type="button" className={selectedCard}>
-                  <b>Usuários</b>
-                  <p className="text-sm text-[#64748b] dark:text-white/60">Busca e eventos carregam por demanda.</p>
-                </button>
+                <>
+                  <button type="button" onClick={() => setSelectedUser(null)} className={selectedUser === null ? selectedCard : card}>
+                    {selectedUser === null ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[var(--tc-accent)]" /> : null}
+                    <b>Todos os usuários</b>
+                    <p className="text-sm text-[#64748b] dark:text-white/60">Histórico geral dos usuários.</p>
+                  </button>
+                  {shownUsers.map((user) => {
+                    const email = user.email?.trim() ?? user.id ?? "";
+                    const selected = selectedUser === email;
+                    const name = user.name?.trim() || nameFromEmail(email);
+                    return (
+                      <button key={email} type="button" onClick={() => setSelectedUser(email)} className={selected ? selectedCard : card}>
+                        {selected ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[var(--tc-accent)]" /> : null}
+                        <div className="flex min-w-0 items-center gap-3">
+                          <RoundUserAvatar src={avatarFromUser(user)} name={name} />
+                          <div className="min-w-0">
+                            <b className="line-clamp-1">{name}</b>
+                            <p className="truncate text-xs text-[#64748b] dark:text-white/60">{email}</p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {filteredUsers.length > shownUsers.length ? (
+                    <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={card}>
+                      <b>Ver mais usuários</b>
+                      <p className="text-sm text-[#64748b] dark:text-white/60">Carrega mais usuários sem renderizar tudo.</p>
+                    </button>
+                  ) : null}
+                </>
               )}
             </div>
           </div>

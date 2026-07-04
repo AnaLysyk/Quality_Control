@@ -1,6 +1,5 @@
-﻿import { redirect } from "next/navigation";
+import HomeContent from "../../home/HomeContent";
 
-export default function AdminHomeRedirect() {
-  redirect("/admin/dashboard");
+export default function AdminHomePage() {
+  return <HomeContent />;
 }
-

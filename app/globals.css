@@ -10316,6 +10316,7 @@ body.qc-permissions-profile-route .permissions-history-modal::before {
   inset: 0;
   z-index: -1;
   background: rgba(2, 6, 23, 0.72);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 
@@ -10456,6 +10457,7 @@ body.qc-permissions-profile-route .profile-permissions-history::before {
   inset: -100vh -100vw;
   z-index: -1;
   background: rgba(2, 6, 23, 0.72);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 
@@ -10861,6 +10863,7 @@ body.dark .qc-sidebar .sidebar-footer-version,
   border: 1px solid rgba(148, 163, 184, 0.22);
   background: rgba(2, 6, 23, 0.58);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   color: #f8fafc;
   padding: 8px;
@@ -11257,6 +11260,7 @@ body:not(.dark) .brain-orb-node {
   opacity: 1 !important;
   color: #ffffff !important;
   border-width: 2px !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.35) !important;
   backdrop-filter: blur(8px) saturate(1.35) !important;
   box-shadow:
     0 18px 46px rgba(15, 23, 42, 0.22),
@@ -11385,6 +11389,7 @@ body:not(.dark) .brain-orb-node {
   opacity: 1 !important;
   border-width: 2px !important;
   color: #ffffff !important;
+  -webkit-backdrop-filter: blur(6px) saturate(1.55) !important;
   backdrop-filter: blur(6px) saturate(1.55) !important;
   filter: saturate(1.35) contrast(1.08);
 }
@@ -11900,6 +11905,7 @@ body:not(.dark) .qc-brain-memory-input::placeholder {
   font-size: 11px;
   font-weight: 950;
   letter-spacing: .03em;
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
 
@@ -12721,6 +12727,7 @@ body.dark .qc-brain-filter-panel-compact,
 
 /* botão grafo local mais discreto */
 .brain-cortex-canvas button {
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 
@@ -13049,6 +13056,7 @@ body[data-qc-brain-theme="dark"] .qc-brain-dashboard-surface::after,
 
 .qc-team-chat-clean form {
   background: rgba(2, 8, 20, 0.72) !important;
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -13152,6 +13160,7 @@ body.dark,
   padding: 14px 18px !important;
   border-bottom: 1px solid var(--qc-chat-border) !important;
   background: rgba(2, 8, 20, 0.30) !important;
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -13189,6 +13198,7 @@ body.dark,
   border-top: 1px solid var(--qc-chat-border) !important;
   background:
     linear-gradient(180deg, rgba(2, 8, 20, 0.68), rgba(2, 8, 20, 0.92)) !important;
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   padding: 12px 18px !important;
@@ -15373,6 +15383,7 @@ body:not(.dark) .qc-team-chat-slack-v3 aside button.group:hover,
   background:
     radial-gradient(circle at 50% 22%, rgba(14, 165, 233, 0.14), transparent 30%),
     rgba(2, 6, 23, 0.50);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -16078,6 +16089,7 @@ body:has([aria-label*="Ativar modo claro"]) .qc-chat-composer-modal-actions butt
   background:
     radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.12), transparent 32%),
     rgba(2, 6, 23, 0.58);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -16711,6 +16723,7 @@ body:has([aria-label*="Ativar modo claro"]) .qc-chat-shell form button[type="sub
   background:
     radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.12), transparent 32%),
     rgba(2, 6, 23, 0.58);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -17104,6 +17117,7 @@ body.dark .qc-chat-unified-action-modal__preview span,
   background:
     radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.12), transparent 32%),
     rgba(2, 6, 23, 0.58);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -18692,6 +18706,7 @@ body:not(.dark) .qc-chat-page-shell aside,
     rgba(8, 17, 36, 0.98) !important;
   color: #f8fafc !important;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.08) !important;
   backdrop-filter: blur(18px) saturate(1.08) !important;
 }
 
@@ -18952,6 +18967,7 @@ body.dark .qc-chat-bubble--other,
   border-top: 1px solid rgba(148, 163, 184, 0.14) !important;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.94)) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
   backdrop-filter: blur(16px) saturate(1.08);
 }
 

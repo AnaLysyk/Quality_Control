@@ -30,11 +30,11 @@ const OPTIONAL_COLLECTIONS = [
   { key: "accessRequest", kind: "access_request" },
 ];
 
-const DEFAULT_RAG_LIMIT = 12;
-const MAX_RAG_LIMIT = 24;
-const MAX_BRAIN_NODE_SCAN = 350;
-const MAX_BRAIN_EDGE_SCAN = 700;
-const OPTIONAL_ROW_TAKE = 6;
+const DEFAULT_RAG_LIMIT = 6;
+const MAX_RAG_LIMIT = 12;
+const MAX_BRAIN_NODE_SCAN = 180;
+const MAX_BRAIN_EDGE_SCAN = 360;
+const OPTIONAL_ROW_TAKE = 3;
 
 function readBrainMetadata(value: unknown): Record<string, unknown> {
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -243,6 +243,8 @@ export async function GET(req: NextRequest) {
       userId: readBrainAccessUserId(accessResult.context),
       companyIds: Array.from(accessResult.context.allowedCompanyIds ?? []),
       projectIds: [],
+      globalVisibility: accessResult.context.hasGlobalVisibility,
+      scope: accessResult.context.hasGlobalVisibility ? "global" : "company",
     },
     filters: {
       modules: modules.map((moduleName) => ({ id: moduleName, label: moduleName })),
@@ -288,4 +290,6 @@ export async function GET(req: NextRequest) {
     },
   });
 }
+
+
 

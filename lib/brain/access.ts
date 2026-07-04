@@ -204,7 +204,7 @@ const MODULE_PERMISSION_REQUIREMENTS: Record<string, SystemPermission[]> = {
 
 function hasAnyRequirement(access: BrainAccessContext, requirements: SystemPermission[]) {
   if (requirements.length === 0) return true;
-  if (access.user.isGlobalAdmin) return true;
+  if (access.hasGlobalVisibility || access.user.isGlobalAdmin) return true;
   if (isE2eJsonMode() && !hasAnyPermissionAction(access.userAccess.permissions)) return true;
   return requirements.some((permission) => canAccess(access.userAccess, permission));
 }
@@ -272,6 +272,8 @@ function resolveBrainNodePermissionScope(
   node: Pick<BrainNode, "type" | "refType" | "refId" | "metadata">,
   access: BrainAccessContext,
 ): PermissionScope {
+  if (access.hasGlobalVisibility) return "allowed";
+
   const metadata = toRecord(node.metadata);
   const explicitRequirements = requirementsForPermissionNode(node, metadata);
   if (explicitRequirements.length > 0) {
@@ -318,6 +320,8 @@ function isNonSensitiveSystemNode(node: Pick<BrainNode, "type" | "refType">) {
 }
 
 export function canAccessBrainModule(access: BrainAccessContext, moduleName: unknown) {
+  if (access.hasGlobalVisibility) return true;
+
   const requirements = requirementsForModuleKey(moduleName);
   if (!requirements) return true;
   return hasAnyRequirement(access, requirements);
@@ -330,15 +334,17 @@ export async function resolveBrainAccess(req: Request, options?: { requireManage
   const userAccess = getUserAccessContext(user);
   if (!userAccess) return { ok: false, status: 403, error: "Sem contexto de permissao" };
 
+  const hasGlobalVisibility = hasGlobalBrainVisibility(user);
   const canReadBrain =
+    hasGlobalVisibility ||
     canAccess(userAccess, { moduleId: "brain", action: "view" }) ||
     canAccess(userAccess, { moduleId: "brain", action: "read" }) ||
     canAccess(userAccess, { moduleId: "brain", action: "use" });
+
   if (!canReadBrain && !isE2eJsonMode()) {
     return { ok: false, status: 403, error: "Sem permissao para acessar o Brain" };
   }
 
-  const hasGlobalVisibility = hasGlobalBrainVisibility(user);
   const canManage = hasGlobalVisibility;
 
   if (options?.requireManage && !canManage) {

@@ -24,7 +24,7 @@ type AuthUserShape = {
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { refreshUser } = useAuthUser();
+  const { user: authenticatedUser, loading: authUserLoading, refreshUser } = useAuthUser();
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   const [user, setUser] = useState("");
@@ -32,6 +32,38 @@ export default function LoginClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const userFromUrl =
+      url.searchParams.get("user") ||
+      url.searchParams.get("usuario") ||
+      url.searchParams.get("login") ||
+      "";
+
+    const sensitiveKeys = ["password", "senha", "pass", "pwd", "user", "usuario", "login"];
+    const hadSensitiveQuery = sensitiveKeys.some((key) => url.searchParams.has(key));
+
+    if (userFromUrl) {
+      setUser((current) => current || userFromUrl);
+    }
+
+    if (!hadSensitiveQuery) return;
+
+    const next = url.searchParams.get("next");
+    const cleanParams = new URLSearchParams();
+
+    if (next && next.startsWith("/")) {
+      cleanParams.set("next", next);
+    }
+
+    const cleanQuery = cleanParams.toString();
+    const cleanUrl = `${url.pathname}${cleanQuery ? `?${cleanQuery}` : ""}${url.hash}`;
+
+    window.history.replaceState(null, "", cleanUrl);
+  }, []);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -165,6 +197,16 @@ export default function LoginClient() {
     return "/empresas";
   }
 
+  useEffect(() => {
+    if (authUserLoading || !authenticatedUser) return;
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const nextParam = params.get("next");
+
+    router.replace(resolvePostLoginRedirect(nextParam, authenticatedUser as AuthUserShape));
+  }, [authUserLoading, authenticatedUser, router]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -178,14 +220,18 @@ export default function LoginClient() {
         body: JSON.stringify({ user, password }),
       });
 
+      const data = await res.json().catch(() => null);
+
       if (res.ok) {
-        const me = await refreshUser(false);
-        const authUser = me?.user ?? null;
+        const authUser = (data?.user ?? null) as AuthUserShape | null;
         const nextParam = searchParams?.get("next") ?? null;
         const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
+
+        void refreshUser(false);
+
         router.replace(redirectTo);
+        router.refresh();
       } else {
-        const data = await res.json().catch(() => null);
         setError((data?.error as string) || (data?.message as string) || "Não foi possível autenticar");
       }
     } catch (err) {
@@ -268,7 +314,7 @@ export default function LoginClient() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   required
                   className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white pr-11 text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                   placeholder="Senha"

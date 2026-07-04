@@ -208,8 +208,12 @@ export function BrainNodeOverlay({
     window.dispatchEvent(
       new CustomEvent("assistant:open", {
         detail: {
-          source: "brain-node",
+          source: "brain",
+          route: "/brain",
+          initialMessage: payload.suggestedPrompt,
           prompt: payload.suggestedPrompt,
+          panelMode: "side",
+          focusInput: true,
           metadata: payload,
         },
       }),

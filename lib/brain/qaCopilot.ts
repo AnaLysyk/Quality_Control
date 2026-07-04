@@ -13,8 +13,6 @@ type QaIntent =
   | "api_validation"
   | "general";
 
-<<<<<<< HEAD
-=======
 type QaCapability = {
   id: QaIntent;
   label: string;
@@ -34,7 +32,6 @@ const QA_CAPABILITIES: QaCapability[] = [
   { id: "general", label: "Apoio QA geral", description: "Ajuda a investigar, explicar, documentar, validar e decidir próximo passo." },
 ];
 
->>>>>>> origin/main
 function normalize(value: string) {
   return value
     .normalize("NFD")
@@ -59,12 +56,8 @@ function detectIntent(message: string): QaIntent {
 }
 
 function formatNodeContext(nodes: Array<Pick<BrainNode, "label" | "type" | "description">>) {
-<<<<<<< HEAD
   if (!nodes.length) return "- Nenhum nó específico encontrado ainda. Vou trabalhar com a mensagem e o contexto atual.";
 
-=======
-  if (!nodes.length) return "- Nenhum nó específico encontrado ainda. Vou trabalhar com a mensagem e contexto atual.";
->>>>>>> origin/main
   return nodes
     .slice(0, 5)
     .map((node) => `- ${node.label} (${node.type})${node.description ? `: ${node.description}` : ""}`)
@@ -73,10 +66,7 @@ function formatNodeContext(nodes: Array<Pick<BrainNode, "label" | "type" | "desc
 
 function formatAllowedActions(actions: BrainNodeAction[]) {
   if (!actions.length) return "- Nenhuma ação direta liberada para esse contexto.";
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
   return actions
     .slice(0, 6)
     .map((action) => `- ${action.label} [${action.type}]`)
@@ -220,17 +210,11 @@ export function buildQaCopilotAnswer(input: {
   allowedActions: BrainNodeAction[];
 }) {
   const intent = detectIntent(input.message);
-<<<<<<< HEAD
-
-  return [
-    "Modo QA ativado.",
-=======
   const capability = QA_CAPABILITIES.find((item) => item.id === intent) ?? QA_CAPABILITIES.at(-1)!;
 
   return [
     `Modo QA ativado: ${capability.label}.`,
     capability.description,
->>>>>>> origin/main
     "",
     "Contexto encontrado no Brain:",
     formatNodeContext(input.foundNodes),
@@ -243,7 +227,3 @@ export function buildQaCopilotAnswer(input: {
     "Segurança: eu consulto e monto contexto conforme empresa, usuário e permissão. Alteração real precisa permissão e confirmação.",
   ].join("\n");
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main

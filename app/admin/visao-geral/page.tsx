@@ -8,6 +8,7 @@ import {
   FiBarChart2,
   FiBriefcase,
   FiCalendar,
+  FiClock,
   FiRefreshCw,
   FiSearch,
   FiShield,
@@ -44,11 +45,16 @@ type DefectItem = {
   id: string;
   title: string;
   status: string;
+  severity?: string;
   origin?: "manual" | "automatico";
   companyName?: string | null;
   companySlug?: string | null;
   run_id?: string | number | null;
   url?: string;
+  createdBy?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  closedAt?: string | null;
 };
 
 type DefectsResponse = { items: DefectItem[]; total: number };
@@ -69,6 +75,7 @@ type RankingResponse = {
 type ContextMode = "company" | "user";
 type UserFilter = "all" | "tc" | "company";
 type ViewMode = "context" | "compare";
+type PeriodPreset = 7 | 30 | 90;
 
 type UserOption = {
   id: string;
@@ -87,11 +94,25 @@ type MetricCard = {
   icon: typeof FiBarChart2;
 };
 
-const PERIOD_OPTIONS = [
+const PERIOD_OPTIONS: Array<{ value: PeriodPreset; label: string }> = [
   { value: 7, label: "Semana" },
   { value: 30, label: "30 dias" },
   { value: 90, label: "90 dias" },
-] as const;
+];
+
+const DEFECT_STATUS_LABEL: Record<string, string> = {
+  fail: "Em falha",
+  failed: "Em falha",
+  blocked: "Bloqueado",
+  pending: "Aguardando teste",
+  open: "Aberto",
+  opened: "Aberto",
+  in_progress: "Em andamento",
+  progress: "Em andamento",
+  done: "Concluído",
+  closed: "Concluído",
+  resolved: "Resolvido",
+};
 
 const GATE_META: Record<QualityGateStatus, { label: string; tone: "positive" | "warning" | "danger" | "neutral" }> = {
   approved: { label: "Saudável", tone: "positive" },
@@ -167,6 +188,16 @@ function countRuns(company: CompanyRow, statuses: QualityGateStatus | QualityGat
   return company.releases.filter((release) => allowed.includes(release.gate.status)).length;
 }
 
+function defectStatusLabel(status?: string | null) {
+  const key = normalizeText(status).replace(/\s+/g, "_");
+  return DEFECT_STATUS_LABEL[key] ?? status ?? "status";
+}
+
+function defectIsActive(defect: DefectItem) {
+  const status = normalizeText(defect.status).replace(/\s+/g, "_");
+  return !["done", "closed", "resolved", "concluido", "concluído"].includes(status);
+}
+
 function matchCompanyDefect(item: DefectItem, company: CompanyRow | null) {
   if (!company) return true;
   const ref = normalizeText(item.companyName);
@@ -174,6 +205,23 @@ function matchCompanyDefect(item: DefectItem, company: CompanyRow | null) {
   const name = normalizeText(company.name);
   const slug = normalizeText(company.slug);
   return Boolean(ref || itemSlug) && ((ref && name && ref.includes(name)) || (ref && slug && ref.includes(slug)) || (slug && itemSlug === slug));
+}
+
+function matchUserDefect(item: DefectItem, user: UserOption | null) {
+  if (!user) return true;
+  const author = normalizeText(item.createdBy);
+  const title = normalizeText(item.title);
+  const email = normalizeText(user.email);
+  const name = normalizeText(user.name);
+  return Boolean(author || title) && ((author && (author.includes(email) || author.includes(name))) || title.includes(email) || title.includes(name));
+}
+
+function releaseMatchesUser(release: CompanyRow["releases"][number], user: UserOption | null) {
+  if (!user) return true;
+  const haystack = normalizeText([release.assignees?.join(" "), release.assigneeNames?.join(" "), release.title, release.summary].filter(Boolean).join(" "));
+  const email = normalizeText(user.email);
+  const name = normalizeText(user.name);
+  return haystack.includes(email) || haystack.includes(name);
 }
 
 function buildUserName(email: string) {
@@ -191,6 +239,20 @@ function resolveUserTag(email: string): UserOption["tag"] {
   return normalized.includes("testing") || normalized.includes("tc") || normalized.includes("paulalysyk")
     ? "Testing Company"
     : "Empresarial";
+}
+
+function dateOnly(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+function daysBetween(start: string, end: string) {
+  const startDate = new Date(`${start}T00:00:00`);
+  const endDate = new Date(`${end}T23:59:59`);
+  if (!Number.isFinite(startDate.getTime()) || !Number.isFinite(endDate.getTime())) return 30;
+  const diff = Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+  return Math.max(1, Math.min(365, diff));
 }
 
 function CompanyMark({ name, logo, selected = false }: { name: string; logo?: string | null; selected?: boolean }) {
@@ -266,7 +328,10 @@ export default function VisaoGeralPage() {
   const [auditError, setAuditError] = useState<string | null>(null);
   const [rankingError, setRankingError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [period, setPeriod] = useState<7 | 30 | 90>(30);
+  const [period, setPeriod] = useState<PeriodPreset>(30);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [showCustomPeriod, setShowCustomPeriod] = useState(false);
   const [contextMode, setContextMode] = useState<ContextMode>("company");
   const [viewMode, setViewMode] = useState<ViewMode>("context");
   const [userFilter, setUserFilter] = useState<UserFilter>("all");
@@ -275,6 +340,8 @@ export default function VisaoGeralPage() {
   const [query, setQuery] = useState("");
   const [selectedDefect, setSelectedDefect] = useState<DefectItem | null>(null);
 
+  const effectivePeriod = customStart && customEnd ? daysBetween(customStart, customEnd) : period;
+  const periodLabel = customStart && customEnd ? `${formatShortDate(customStart)} até ${formatShortDate(customEnd)}` : `últimos ${period} dias`;
   const firstError = overviewError ?? defectsError ?? auditError ?? rankingError;
 
   useEffect(() => {
@@ -283,7 +350,7 @@ export default function VisaoGeralPage() {
       setLoadingOverview(true);
       setOverviewError(null);
       try {
-        const response = await fetchApi(`/api/admin/quality/overview?period=${period}`, { cache: "no-store" });
+        const response = await fetchApi(`/api/admin/quality/overview?period=${effectivePeriod}`, { cache: "no-store" });
         const raw = await response.json().catch(() => null);
         if (!response.ok) {
           const message = extractMessageFromJson(raw) || "Erro ao carregar Visão Geral";
@@ -304,7 +371,7 @@ export default function VisaoGeralPage() {
     return () => {
       canceled = true;
     };
-  }, [period, refreshKey]);
+  }, [effectivePeriod, refreshKey]);
 
   useEffect(() => {
     let canceled = false;
@@ -317,7 +384,7 @@ export default function VisaoGeralPage() {
 
     const loadSelectedOverview = async () => {
       try {
-        const response = await fetchApi(`/api/admin/quality/overview?period=${period}&company=${encodeURIComponent(selectedCompanySlug)}`, {
+        const response = await fetchApi(`/api/admin/quality/overview?period=${effectivePeriod}&company=${encodeURIComponent(selectedCompanySlug)}`, {
           cache: "no-store",
         });
         const raw = await response.json().catch(() => null);
@@ -334,7 +401,7 @@ export default function VisaoGeralPage() {
     return () => {
       canceled = true;
     };
-  }, [period, refreshKey, selectedCompanySlug]);
+  }, [effectivePeriod, refreshKey, selectedCompanySlug]);
 
   useEffect(() => {
     let canceled = false;
@@ -370,7 +437,7 @@ export default function VisaoGeralPage() {
       setLoadingAudit(true);
       setAuditError(null);
       try {
-        const response = await fetchApi("/api/admin/audit-logs?limit=40", { cache: "no-store" });
+        const response = await fetchApi("/api/admin/audit-logs?limit=80", { cache: "no-store" });
         const raw = await response.json().catch(() => null);
         if (!response.ok) {
           if (!canceled) setAuditLogs([]);
@@ -461,29 +528,63 @@ export default function VisaoGeralPage() {
     });
   }, [query, userFilter, users]);
 
-  const scopedCompanies = selectedCompany ? [selectedCompany] : companies;
-  const scopedReleases = scopedCompanies.flatMap((company) => company.releases);
-  const scopedStats = selectedCompany ? mergeStats(selectedCompany.releases) : overview?.globalStats ?? null;
-  const scopedCaseTotal = totalStats(scopedStats);
-  const scopedRunTotal = selectedCompany ? selectedScopedOverview?.releaseCount ?? selectedCompany.releases.length : overview?.releaseCount ?? scopedReleases.length;
-  const passRate = selectedCompany ? selectedScopedOverview?.globalPassRate ?? selectedCompany.passRate : overview?.globalPassRate ?? null;
-  const allDefects = defectsPayload?.items ?? [];
-  const scopedDefects = allDefects.filter((defect) => matchCompanyDefect(defect, selectedCompany));
-  const activeDefects = scopedDefects.filter((defect) => defect.status !== "done");
-  const failingOrBlockedDefects = scopedDefects.filter((defect) => defect.status === "fail" || defect.status === "blocked");
   const selectedUser = selectedUserEmail ? users.find((user) => user.email === selectedUserEmail) ?? null : null;
+  const scopedCompanies = selectedCompany ? [selectedCompany] : companies;
+  const scopedReleasesBase = scopedCompanies.flatMap((company) => company.releases);
+  const scopedReleases = scopedReleasesBase.filter((release) => releaseMatchesUser(release, selectedUser));
+  const scopedStats = selectedUser ? mergeStats(scopedReleases) : selectedCompany ? mergeStats(selectedCompany.releases) : overview?.globalStats ?? null;
+  const scopedCaseTotal = totalStats(scopedStats);
+  const scopedRunTotal = selectedUser ? scopedReleases.length : selectedCompany ? selectedScopedOverview?.releaseCount ?? selectedCompany.releases.length : overview?.releaseCount ?? scopedReleases.length;
+  const passRate = selectedUser
+    ? scopedCaseTotal > 0
+      ? Math.round(((scopedStats?.pass ?? 0) / scopedCaseTotal) * 100)
+      : null
+    : selectedCompany
+      ? selectedScopedOverview?.globalPassRate ?? selectedCompany.passRate
+      : overview?.globalPassRate ?? null;
+
+  const allDefects = defectsPayload?.items ?? [];
+  const scopedDefects = allDefects.filter((defect) => matchCompanyDefect(defect, selectedCompany) && matchUserDefect(defect, selectedUser));
+  const activeDefects = scopedDefects.filter(defectIsActive);
+  const failingOrBlockedDefects = scopedDefects.filter((defect) => ["fail", "failed", "blocked"].includes(normalizeText(defect.status)));
+
   const scopedAuditLogs = useMemo(() => {
     const base = selectedUser ? auditLogs.filter((log) => log.actor_email === selectedUser.email) : auditLogs;
-    if (!selectedCompany) return base.slice(0, 8);
-    const companyName = normalizeText(selectedCompany.name);
-    const companySlug = normalizeText(selectedCompany.slug);
-    return base
-      .filter((log) => {
-        const haystack = normalizeText(`${log.entity_label ?? ""} ${log.entity_type ?? ""}`);
-        return (companyName && haystack.includes(companyName)) || (companySlug && haystack.includes(companySlug));
-      })
-      .slice(0, 8);
+    const companyFiltered = !selectedCompany
+      ? base
+      : base.filter((log) => {
+          const haystack = normalizeText(`${log.entity_label ?? ""} ${log.entity_type ?? ""}`);
+          const companyName = normalizeText(selectedCompany.name);
+          const companySlug = normalizeText(selectedCompany.slug);
+          return (companyName && haystack.includes(companyName)) || (companySlug && haystack.includes(companySlug));
+        });
+    return companyFiltered.slice(0, 12);
   }, [auditLogs, selectedCompany, selectedUser]);
+
+  const actionCounts = useMemo(() => {
+    const counts = { cases: 0, plans: 0, tickets: 0, deleted: 0 };
+    for (const log of scopedAuditLogs) {
+      const text = normalizeText(`${log.action} ${log.entity_type} ${log.entity_label}`);
+      if (text.includes("case") || text.includes("caso")) counts.cases += 1;
+      if (text.includes("plan") || text.includes("plano")) counts.plans += 1;
+      if (text.includes("ticket") || text.includes("support") || text.includes("chamado")) counts.tickets += 1;
+      if (text.includes("delete") || text.includes("exclu")) counts.deleted += 1;
+    }
+    return counts;
+  }, [scopedAuditLogs]);
+
+  const timelineDays = useMemo(() => {
+    const map = new Map<string, AuditLogItem[]>();
+    for (const item of scopedAuditLogs) {
+      const key = dateOnly(item.created_at);
+      if (!key) continue;
+      map.set(key, [...(map.get(key) ?? []), item]);
+    }
+    return [...map.entries()]
+      .sort(([a], [b]) => b.localeCompare(a))
+      .slice(0, 7)
+      .map(([date, items]) => ({ date, items }));
+  }, [scopedAuditLogs]);
 
   const runStatusData = [
     { id: "pass", label: "Aprovadas", value: scopedStats?.pass ?? 0, className: "bg-emerald-500" },
@@ -499,7 +600,7 @@ export default function VisaoGeralPage() {
         id: "cases",
         label: "Casos no período",
         value: scopedCaseTotal,
-        note: `casos registrados nas execuções dos últimos ${period} dias`,
+        note: `casos registrados nas execuções em ${periodLabel}`,
         icon: FiBarChart2,
         visible: scopedCaseTotal > 0,
       },
@@ -507,7 +608,7 @@ export default function VisaoGeralPage() {
         id: "runs",
         label: "Runs criadas",
         value: scopedRunTotal,
-        note: `runs no contexto selecionado em ${period} dias`,
+        note: `runs no contexto selecionado em ${periodLabel}`,
         icon: FiActivity,
         visible: scopedRunTotal > 0,
       },
@@ -528,14 +629,6 @@ export default function VisaoGeralPage() {
         visible: activeDefects.length > 0,
       },
       {
-        id: "criticalDefects",
-        label: "Defeitos críticos",
-        value: failingOrBlockedDefects.length,
-        note: "falhas ou bloqueios que pedem atenção",
-        icon: FiShield,
-        visible: failingOrBlockedDefects.length > 0,
-      },
-      {
         id: "actions",
         label: "Ações executadas",
         value: scopedAuditLogs.length,
@@ -543,9 +636,17 @@ export default function VisaoGeralPage() {
         icon: FiUsers,
         visible: scopedAuditLogs.length > 0,
       },
+      {
+        id: "plans",
+        label: "Planos/casos criados",
+        value: actionCounts.plans + actionCounts.cases,
+        note: "derivado das movimentações registradas",
+        icon: FiCalendar,
+        visible: actionCounts.plans + actionCounts.cases > 0,
+      },
     ];
     return cards.filter((card) => card.visible);
-  }, [activeDefects.length, failingOrBlockedDefects.length, passRate, period, scopedAuditLogs.length, scopedCaseTotal, scopedRunTotal]);
+  }, [actionCounts.cases, actionCounts.plans, activeDefects.length, passRate, periodLabel, scopedAuditLogs.length, scopedCaseTotal, scopedRunTotal]);
 
   const attentionItems = useMemo(() => {
     const items: Array<{ id: string; title: string; detail: string; tone: "danger" | "warning" | "neutral" }> = [];
@@ -588,6 +689,19 @@ export default function VisaoGeralPage() {
     setQuery("");
   }
 
+  function applyCustomPeriod() {
+    if (!customStart || !customEnd) return;
+    setShowCustomPeriod(false);
+    setRefreshKey((value) => value + 1);
+  }
+
+  function clearCustomPeriod() {
+    setCustomStart("");
+    setCustomEnd("");
+    setShowCustomPeriod(false);
+    setRefreshKey((value) => value + 1);
+  }
+
   return (
     <div className="min-h-screen bg-(--page-bg,#eef3fb) text-[var(--tc-text-primary)]">
       <div className="w-full flex flex-col gap-4 px-3 py-4 sm:px-4 sm:py-5 lg:px-8 lg:py-7">
@@ -600,24 +714,56 @@ export default function VisaoGeralPage() {
                 <div>
                   <h1 className="tc-hero-title">Visão Geral</h1>
                   <p className="mt-1 text-sm font-semibold text-white/72">
-                    {selectedCompany ? selectedCompany.name : selectedUser ? selectedUser.name : "Operação geral"} · últimos {period} dias
+                    {selectedCompany ? selectedCompany.name : selectedUser ? selectedUser.name : "Operação geral"} · {periodLabel}
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap items-stretch gap-3">
                 {loadingOverview ? <p className="self-center text-xs font-semibold uppercase tracking-[0.24em] text-white/72">Atualizando...</p> : null}
                 {firstError ? <p className="self-center text-sm font-semibold text-white">{firstError}</p> : null}
-                <div className="flex items-center gap-1 rounded-2xl border border-white/14 bg-white/10 p-1 text-white backdrop-blur-sm">
-                  {PERIOD_OPTIONS.map((option) => (
+                <div className="relative">
+                  <div className="flex items-center gap-1 rounded-2xl border border-white/14 bg-white/10 p-1 text-white backdrop-blur-sm">
+                    {PERIOD_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setPeriod(option.value);
+                          setCustomStart("");
+                          setCustomEnd("");
+                        }}
+                        className={`rounded-xl px-3 py-2 text-xs font-black transition ${period === option.value && !customStart ? "bg-white text-[var(--tc-primary)]" : "text-white/72 hover:text-white"}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
                     <button
-                      key={option.value}
                       type="button"
-                      onClick={() => setPeriod(option.value)}
-                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${period === option.value ? "bg-white text-[var(--tc-primary)]" : "text-white/72 hover:text-white"}`}
+                      onClick={() => setShowCustomPeriod((value) => !value)}
+                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${customStart && customEnd ? "bg-white text-[var(--tc-primary)]" : "text-white/72 hover:text-white"}`}
                     >
-                      {option.label}
+                      Calendário
                     </button>
-                  ))}
+                  </div>
+                  {showCustomPeriod ? (
+                    <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 w-80 rounded-3xl border border-white/14 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur">
+                      <p className="text-xs font-black uppercase tracking-[0.22em] text-white/58">Selecionar período</p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label className="text-xs font-bold text-white/68">
+                          Início
+                          <input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="mt-1 w-full rounded-xl border border-white/12 bg-white/10 px-3 py-2 text-sm text-white outline-none" />
+                        </label>
+                        <label className="text-xs font-bold text-white/68">
+                          Fim
+                          <input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="mt-1 w-full rounded-xl border border-white/12 bg-white/10 px-3 py-2 text-sm text-white outline-none" />
+                        </label>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button type="button" onClick={applyCustomPeriod} className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-950">Aplicar</button>
+                        <button type="button" onClick={clearCustomPeriod} className="rounded-xl border border-white/14 px-3 py-2 text-xs font-black text-white/75">Limpar</button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
                 <button
                   type="button"
@@ -649,7 +795,7 @@ export default function VisaoGeralPage() {
               <div className="space-y-2">
                 <h2 className="text-[1.3rem] font-black tracking-[-0.04em] text-[var(--tc-text-primary)] sm:text-[1.65rem]">Selecionar contexto</h2>
                 <p className="max-w-180 text-[0.98rem] leading-7 text-[var(--tc-text-muted)]">
-                  Escolha se a leitura será por empresa ou por usuário. O período padrão é de últimos 30 dias e só muda quando você selecionar outro filtro.
+                  Escolha a leitura por empresa ou por usuário. O padrão é últimos 30 dias; use o calendário para selecionar um período específico.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -905,7 +1051,7 @@ export default function VisaoGeralPage() {
                         <button key={defect.id} type="button" onClick={() => setSelectedDefect(defect)} className="w-full rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] p-3 text-left transition hover:border-[rgba(239,0,1,0.25)]">
                           <div className="flex items-center justify-between gap-3">
                             <span className="line-clamp-1 text-sm font-black text-[var(--tc-text-primary)]">{defect.title}</span>
-                            <span className="text-xs font-bold text-[var(--tc-accent)]">{defect.status}</span>
+                            <span className="text-xs font-bold text-[var(--tc-accent)]">{defectStatusLabel(defect.status)}</span>
                           </div>
                           <p className="mt-1 text-xs text-[var(--tc-text-muted)]">{defect.companyName ?? selectedCompany?.name ?? "Contexto geral"}</p>
                         </button>
@@ -913,6 +1059,29 @@ export default function VisaoGeralPage() {
                     </div>
                   ) : (
                     <p className="mt-4 text-sm font-semibold text-[var(--tc-text-muted)]">Sem defeitos ativos para este contexto.</p>
+                  )}
+                </div>
+
+                <div className="tc-panel-muted lg:col-span-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-black text-[var(--tc-text-primary)]">Calendário do período</h3>
+                      <p className="mt-1 text-sm text-[var(--tc-text-muted)]">Linha do tempo curta do que aconteceu por dia.</p>
+                    </div>
+                    <FiClock className="text-[var(--tc-accent)]" />
+                  </div>
+                  {timelineDays.length > 0 ? (
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {timelineDays.map((day) => (
+                        <div key={day.date} className="rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] p-3">
+                          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted)]">{formatShortDate(day.date)}</p>
+                          <p className="mt-2 text-lg font-black text-[var(--tc-text-primary)]">{day.items.length} ações</p>
+                          <p className="mt-1 line-clamp-2 text-xs text-[var(--tc-text-muted)]">{day.items[0]?.entity_label ?? day.items[0]?.action ?? "Movimentação registrada"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm font-semibold text-[var(--tc-text-muted)]">Sem linha do tempo para o período selecionado.</p>
                   )}
                 </div>
               </div>
@@ -1001,10 +1170,13 @@ export default function VisaoGeralPage() {
               <button type="button" onClick={() => setSelectedDefect(null)} className="rounded-full border border-[var(--tc-border)] p-2 text-[var(--tc-text-muted)]"><FiX /></button>
             </div>
             <div className="mt-4 grid gap-3 text-sm text-[var(--tc-text-muted)]">
-              <p><strong>Status:</strong> {selectedDefect.status}</p>
+              <p><strong>Status:</strong> {defectStatusLabel(selectedDefect.status)}</p>
               <p><strong>Empresa:</strong> {selectedDefect.companyName ?? selectedCompany?.name ?? "--"}</p>
               <p><strong>Origem:</strong> {selectedDefect.origin ?? "--"}</p>
               <p><strong>Run:</strong> {selectedDefect.run_id ?? "--"}</p>
+              <p><strong>Criado por:</strong> {selectedDefect.createdBy ?? "--"}</p>
+              <p><strong>Criado em:</strong> {formatDate(selectedDefect.created_at)}</p>
+              <p><strong>Atualizado em:</strong> {formatDate(selectedDefect.updated_at)}</p>
             </div>
             {selectedDefect.url ? (
               <a href={selectedDefect.url} className="mt-5 inline-flex items-center gap-2 text-sm font-black text-[var(--tc-accent)]" target="_blank" rel="noreferrer">

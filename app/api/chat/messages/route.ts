@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
@@ -14,6 +14,42 @@ import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
+
+const CHAT_MESSAGES_CACHE_TTL_MS = 8_000;
+
+type ChatMessagesCacheEntry = {
+  expiresAt: number;
+  payload: unknown;
+};
+
+type ChatMessagesGlobalState = typeof globalThis & {
+  __qcChatMessagesCache?: Map<string, ChatMessagesCacheEntry>;
+};
+
+function getChatMessagesCache() {
+  const state = globalThis as ChatMessagesGlobalState;
+  if (!state.__qcChatMessagesCache) {
+    state.__qcChatMessagesCache = new Map();
+  }
+  return state.__qcChatMessagesCache;
+}
+
+function readChatMessagesCache<T>(key: string): T | null {
+  const cached = getChatMessagesCache().get(key);
+  if (!cached || cached.expiresAt <= Date.now()) return null;
+  return cached.payload as T;
+}
+
+function writeChatMessagesCache(key: string, payload: unknown) {
+  getChatMessagesCache().set(key, {
+    payload,
+    expiresAt: Date.now() + CHAT_MESSAGES_CACHE_TTL_MS,
+  });
+}
+
+function clearChatMessagesCache() {
+  getChatMessagesCache().clear();
+}
 
 function readPeerId(url: URL) {
   return (url.searchParams.get("peerId") ?? url.searchParams.get("peer_id") ?? "").trim();
@@ -39,9 +75,19 @@ export async function GET(req: NextRequest) {
 
   const url = new URL(req.url);
   const peerId = readPeerId(url);
+  const cacheKey = `${access.userId}:${peerId || "threads"}`;
+  const cached = readChatMessagesCache<Record<string, unknown>>(cacheKey);
+  if (cached) {
+    return NextResponse.json(cached, {
+      headers: { ...NO_STORE_HEADERS, "x-qc-cache": "hit" },
+    });
+  }
+
   if (!peerId) {
     const threads = await listChatInboxSummaries(access.userId);
-    return NextResponse.json({ threads }, { headers: NO_STORE_HEADERS });
+    const payload = { threads };
+    writeChatMessagesCache(cacheKey, payload);
+    return NextResponse.json(payload, { headers: { ...NO_STORE_HEADERS, "x-qc-cache": "miss" } });
   }
 
   if (peerId === access.userId) {
@@ -58,13 +104,12 @@ export async function GET(req: NextRequest) {
   }
 
   const messages = await listChatThreadMessages(access.userId, peerId);
-  return NextResponse.json(
-    {
-      peer: peerContact,
-      messages,
-    },
-    { headers: NO_STORE_HEADERS },
-  );
+  const payload = {
+    peer: peerContact,
+    messages,
+  };
+  writeChatMessagesCache(cacheKey, payload);
+  return NextResponse.json(payload, { headers: { ...NO_STORE_HEADERS, "x-qc-cache": "miss" } });
 }
 
 export async function POST(req: NextRequest) {
@@ -123,6 +168,8 @@ export async function POST(req: NextRequest) {
     attachments,
   });
 
+  clearChatMessagesCache();
+
   const accessRecord = access as unknown as Record<string, unknown>;
   const companyName = firstNonEmpty(
     readOptionalString(payload, "companyName"),
@@ -156,4 +203,3 @@ export async function POST(req: NextRequest) {
     { headers: NO_STORE_HEADERS },
   );
 }
-

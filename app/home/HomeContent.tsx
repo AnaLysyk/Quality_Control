@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FiArrowRight,
-  FiCpu,
   FiGrid,
   FiMessageCircle,
-  FiZap,
 } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
@@ -223,54 +221,63 @@ function resolveQuickAccess(modules: HomeNavModule[]): QuickAccess[] {
       };
     })
     .filter((module) => Boolean(module.href))
-    .slice(0, 6);
+    .slice(0, 8);
 }
 
-function FocusChip({ children }: { children: ReactNode }) {
+function QuickAccessList({ modules }: { modules: QuickAccess[] }) {
   return (
-    <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-black text-slate-800 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.06] dark:text-white">
-      <FiZap className="shrink-0 text-[var(--tc-accent,#ef0001)]" size={13} />
-      <span className="truncate">{children}</span>
-    </div>
-  );
-}
+    <section className="rounded-[2rem] border border-slate-200/80 bg-white/66 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.045] lg:p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">
+            Atalhos do menu
+          </p>
+          <h2 className="text-lg font-black text-slate-950 dark:text-white">
+            Mesmas opções liberadas no menu lateral
+          </h2>
+        </div>
+      </div>
 
-function QuickAccessCard({ module }: { module: QuickAccess }) {
-  return (
-    <article className="group min-h-[138px] rounded-[1.75rem] border border-slate-200/80 bg-white/78 p-4 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-[var(--tc-accent,#ef0001)] hover:bg-white dark:border-white/10 dark:bg-white/[0.055] dark:hover:bg-white/[0.085]">
-      <Link href={module.href} className="flex items-start justify-between gap-3">
-        <span className="min-w-0">
-          <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--tc-accent,#ef0001)]">
-            <FiGrid size={13} />
-            Menu rápido
-          </span>
-          <span className="mt-2 block truncate text-base font-black text-slate-950 dark:text-white">
-            {module.label}
-          </span>
-        </span>
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--tc-accent,#ef0001)]/10 text-[var(--tc-accent,#ef0001)] transition group-hover:translate-x-1">
-          <FiArrowRight size={15} />
-        </span>
-      </Link>
-
-      {module.items.length > 0 ? (
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          {module.items.map((item) => (
-            <Link
-              key={`${module.id}-${item.href}-${item.label}`}
-              href={item.href ?? module.href}
-              className="truncate rounded-2xl border border-slate-200/70 bg-white/65 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-black/12 dark:text-white/62"
+      {modules.length > 0 ? (
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          {modules.map((module) => (
+            <div
+              key={module.id}
+              className="rounded-2xl border border-slate-200/70 bg-white/48 p-3 dark:border-white/10 dark:bg-black/12"
             >
-              {item.label}
-            </Link>
+              <Link
+                href={module.href}
+                className="group flex items-center justify-between gap-3 text-sm font-black text-slate-950 transition hover:text-[var(--tc-accent,#ef0001)] dark:text-white"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <FiGrid className="shrink-0 text-[var(--tc-accent,#ef0001)]" size={13} />
+                  <span className="truncate">{module.label}</span>
+                </span>
+                <FiArrowRight className="shrink-0 text-[var(--tc-accent,#ef0001)] transition group-hover:translate-x-1" size={14} />
+              </Link>
+
+              {module.items.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {module.items.map((item) => (
+                    <Link
+                      key={`${module.id}-${item.href}-${item.label}`}
+                      href={item.href ?? module.href}
+                      className="rounded-full border border-slate-200/70 bg-white/55 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-white/[0.045] dark:text-white/62"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-xs leading-5 text-slate-500 dark:text-white/55">
-          Acesso direto pelo menu lateral.
-        </p>
+        <div className="rounded-2xl border border-dashed border-slate-200/80 bg-white/40 p-5 text-sm font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.035] dark:text-white/62">
+          Nenhum atalho disponível para este perfil ainda.
+        </div>
       )}
-    </article>
+    </section>
   );
 }
 
@@ -290,7 +297,7 @@ function BrainConsole({
       fixMojibake(`${greeting}, ${userName}. Eu sou o Brain. Seu contexto de ${profile.label} já está organizado.`),
       fixMojibake(`Minha sugestão agora: olhar ${profile.focus.slice(0, 2).join(" e ")}.`),
       fixMojibake("Use o chat flutuante para perguntar qualquer coisa."),
-      fixMojibake("Os atalhos abaixo são caminhos rápidos do menu lateral."),
+      fixMojibake("Os atalhos abaixo são os mesmos caminhos liberados no menu lateral."),
     ],
     [greeting, profile, userName],
   );
@@ -320,37 +327,10 @@ function BrainConsole({
             Conversar com o Brain
             <FiMessageCircle size={15} />
           </button>
-
-          <div className="flex flex-wrap gap-2">
-            {profile.focus.map((item) => (
-              <FocusChip key={item}>{item}</FocusChip>
-            ))}
-          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-auto pr-1">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">
-                Atalhos do menu
-              </p>
-              <h2 className="text-lg font-black text-slate-950 dark:text-white">
-                Acesse rápido o que já existe no sistema
-              </h2>
-            </div>
-          </div>
-
-          {quickAccess.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {quickAccess.map((module) => (
-                <QuickAccessCard key={module.id} module={module} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-[1.75rem] border border-dashed border-slate-200/80 bg-white/60 p-6 text-sm font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.045] dark:text-white/62">
-              Nenhum atalho disponível para este perfil ainda.
-            </div>
-          )}
+          <QuickAccessList modules={quickAccess} />
         </div>
       </div>
     </section>

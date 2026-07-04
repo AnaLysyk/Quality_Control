@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import {
   FiActivity,
-  FiAlertTriangle,
   FiBriefcase,
   FiCalendar,
+  FiClipboard,
+  FiFileText,
   FiSearch,
   FiShield,
   FiUsers,
 } from "react-icons/fi";
 
+import UserAvatar from "@/components/UserAvatar";
 import { fetchApi } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import type { CompanyRow, Stats } from "@/lib/quality";
@@ -21,6 +23,7 @@ type Overview = {
   releaseCount: number;
   globalStats: Stats;
   globalPassRate: number | null;
+  projectRows?: Array<{ id: string; name: string; releaseCount: number }>;
 };
 
 type Audit = {
@@ -39,6 +42,20 @@ type Defect = {
   run_id?: string | number | null;
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+type AdminUser = {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  avatar_url?: string | null;
+  avatarUrl?: string | null;
+  image?: string | null;
+};
+
+type ActorProfile = {
+  name: string;
+  avatar: string | null;
 };
 
 type Mode = "company" | "user";
@@ -88,6 +105,14 @@ function initials(value: string) {
     .map((part) => part[0])
     .join("")
     .toUpperCase();
+}
+
+function nameFromEmail(email?: string | null) {
+  if (!email) return "Sistema";
+  return email
+    .split("@")[0]
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function daysBetween(start: string, end: string) {
@@ -245,10 +270,26 @@ function StatCard({ icon: Icon, value, label }: { icon: typeof FiActivity; value
   );
 }
 
+function EventAvatar({ email, profile }: { email: string | null; profile?: ActorProfile }) {
+  const name = profile?.name ?? nameFromEmail(email);
+  return (
+    <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--tc-border)] bg-white p-1 shadow-[0_10px_22px_rgba(1,24,72,.08)] dark:bg-[#07111f]">
+      <UserAvatar
+        src={profile?.avatar ?? null}
+        name={name}
+        size="sm"
+        frameClassName="border-white/70 shadow-none"
+        fallbackClassName="text-[0.62rem] tracking-[.12em]"
+      />
+    </div>
+  );
+}
+
 export default function VisaoGeralCompacta() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [audit, setAudit] = useState<Audit[]>([]);
   const [defects, setDefects] = useState<Defect[]>([]);
+  const [actorProfiles, setActorProfiles] = useState<Record<string, ActorProfile>>({});
   const [period, setPeriod] = useState<(typeof periods)[number]>(30);
   const [mode, setMode] = useState<Mode>("company");
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
@@ -319,6 +360,39 @@ export default function VisaoGeralCompacta() {
   }, [effectivePeriod, from, hasRange, selectedCompany, to, visibleEvents]);
 
   useEffect(() => {
+    const emails = Array.from(new Set(audit.map((event) => event.actor_email?.trim()).filter((email): email is string => Boolean(email))));
+    const missing = emails.filter((email) => !actorProfiles[email]);
+    if (!missing.length) return;
+
+    let ok = true;
+    const id = window.setTimeout(() => {
+      fetchApi("/api/admin/users", { cache: "no-store" })
+        .then((response) => response.json().then((json) => ({ response, json })).catch(() => ({ response, json: null })))
+        .then(({ response, json }) => {
+          if (!ok || !response.ok) return;
+          const data = unwrapEnvelopeData<{ items?: AdminUser[] }>(json) ?? json;
+          const items = Array.isArray(data?.items) ? data.items : [];
+          const next: Record<string, ActorProfile> = {};
+          items.forEach((user) => {
+            const email = user.email?.trim();
+            if (!email) return;
+            next[email] = {
+              name: user.name?.trim() || nameFromEmail(email),
+              avatar: user.avatar_url ?? user.avatarUrl ?? user.image ?? null,
+            };
+          });
+          setActorProfiles((current) => ({ ...current, ...next }));
+        })
+        .catch(() => undefined);
+    }, 700);
+
+    return () => {
+      ok = false;
+      window.clearTimeout(id);
+    };
+  }, [actorProfiles, audit]);
+
+  useEffect(() => {
     setVisibleCards(FIRST_ITEMS);
     setVisibleEvents(FIRST_EVENTS);
   }, [mode, query, selectedCompany, effectivePeriod]);
@@ -337,7 +411,8 @@ export default function VisaoGeralCompacta() {
     .filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to))
     .filter((defect) => defect.run_id !== null && defect.run_id !== undefined && String(defect.run_id).trim()).length;
   const defectsInPeriod = defects.filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to));
-  const passRate = stats ? Math.round((stats.pass / Math.max(1, total(stats))) * 100) : 0;
+  const testCaseCount = total(stats);
+  const planCount = company ? Math.max(0, new Set(company.releases.map((release) => release.project || release.app || release.qaseProject || release.title).filter(Boolean)).size) : overview?.projectRows?.length ?? 0;
 
   return (
     <div className="min-h-screen bg-white text-[#011848] dark:bg-[#07111f] dark:text-white">
@@ -422,9 +497,9 @@ export default function VisaoGeralCompacta() {
             </div>
             <div className="grid grid-cols-2 gap-3 border-t border-white/12 pt-4 sm:grid-cols-3 lg:grid-cols-5">
               <StatCard icon={FiActivity} value={releases.length} label="Runs" />
-              <StatCard icon={FiShield} value={`${passRate}%`} label="Aprovação" />
-              <StatCard icon={FiAlertTriangle} value={defectsInPeriod.length} label="Defeitos" />
-              <StatCard icon={FiUsers} value={filteredEvents.length} label="Ações" />
+              <StatCard icon={FiClipboard} value={planCount} label="Planos de teste" />
+              <StatCard icon={FiShield} value={testCaseCount} label="Casos de teste" />
+              <StatCard icon={FiUsers} value={filteredEvents.length} label="Histórico" />
             </div>
           </div>
         </section>
@@ -516,14 +591,18 @@ export default function VisaoGeralCompacta() {
               {shownEvents.length ? (
                 shownEvents.map((event) => {
                   const meta = eventKind(event);
+                  const profile = event.actor_email ? actorProfiles[event.actor_email] : undefined;
                   return (
                     <div key={event.id} className="flex gap-3">
-                      <span className={`mt-1 h-9 w-9 rounded-2xl ${meta.color}`} />
+                      <EventAvatar email={event.actor_email} profile={profile} />
                       <div className="flex-1 rounded-3xl border border-[var(--tc-border)] bg-white p-4 dark:bg-[#0b1628]">
-                        <b>{meta.title}</b>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <b>{meta.title}</b>
+                          <span className={`h-2.5 w-2.5 rounded-full ${meta.color}`} aria-hidden />
+                        </div>
                         <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{meta.detail}</p>
                         <p className="mt-2 text-sm text-[#64748b] dark:text-white/60">{event.entity_label ?? humanizeAction(event.action)}</p>
-                        <small>{shortDate(event.created_at)} · {event.actor_email ?? "Sistema"}</small>
+                        <small>{shortDate(event.created_at)} · {profile?.name ?? event.actor_email ?? "Sistema"}</small>
                       </div>
                     </div>
                   );

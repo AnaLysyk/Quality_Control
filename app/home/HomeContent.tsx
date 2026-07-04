@@ -17,6 +17,7 @@ import {
   FiUser,
   FiUsers,
 } from "react-icons/fi";
+
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
 
@@ -46,6 +47,9 @@ type HomeEntityOption = {
   value?: string;
 };
 
+type RangeKey = "24h" | "7d" | "30d";
+type BrainMode = "company" | "user" | "screen" | "flow" | "pending" | "continue";
+
 type HomeContext = {
   greeting: string;
   userName: string;
@@ -72,9 +76,6 @@ type HomeContext = {
     adminOverview?: string;
   };
 };
-
-type BrainMode = "company" | "user" | "screen" | "flow" | "pending" | "continue";
-type RangeKey = "24h" | "7d" | "30d";
 
 type QuickModule = {
   id: string;
@@ -134,8 +135,7 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
   if (role.includes("leader") || role.includes("lider")) {
     return {
       label: "Líder TC",
-      summary:
-        "O Brain cruza empresas, usuários, solicitações, fluxos e pendências recentes para orientar a próxima ação.",
+      summary: "O Brain cruza empresas, usuários, solicitações, fluxos e pendências recentes para orientar a próxima ação.",
       prompts: ["Analisar por empresa", "Analisar por usuário", "Ver pendências do dia"],
     };
   }
@@ -143,8 +143,7 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
   if (role.includes("support") || role.includes("suporte") || role.includes("technical")) {
     return {
       label: "Suporte Técnico",
-      summary:
-        "O Brain organiza chamados, integrações, usuários bloqueados e alertas técnicos para acelerar o atendimento.",
+      summary: "O Brain organiza chamados, integrações, usuários bloqueados e alertas técnicos para acelerar o atendimento.",
       prompts: ["Ver incidentes", "Analisar integrações", "Checar usuários"],
     };
   }
@@ -152,16 +151,14 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
   if (role.includes("empresa") || role.includes("company")) {
     return {
       label: "Empresa",
-      summary:
-        "O Brain organiza projeto, pendências, próximas entregas e movimentações recentes da empresa.",
+      summary: "O Brain organiza projeto, pendências, próximas entregas e movimentações recentes da empresa.",
       prompts: ["Ver saúde do projeto", "Listar pendências", "Abrir visão geral"],
     };
   }
 
   return {
     label: "QA",
-    summary:
-      "O Brain conecta runs, evidências, bugs e plano atual para você continuar sem procurar no menu.",
+    summary: "O Brain conecta runs, evidências, bugs e plano atual para você continuar sem procurar no menu.",
     prompts: ["Continuar meu trabalho", "Ver meus runs", "Revisar bugs"],
   };
 }
@@ -274,13 +271,13 @@ function BrainOrb({ active }: { active: boolean }) {
 
 function StatCard({ icon: Icon, value, label }: { icon: typeof FiBarChart2; value: number; label: string }) {
   return (
-    <div className="flex min-w-0 items-center gap-3 border-white/10 px-4 py-3 first:pl-0 lg:border-r lg:last:border-r-0">
-      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--tc-accent,#ef0001)]/55 bg-[var(--tc-accent,#ef0001)]/8 text-[var(--tc-accent,#ef0001)] shadow-[0_0_26px_rgba(239,0,1,0.18)]">
-        <Icon size={19} />
+    <div className="flex min-w-0 items-center gap-3 border-white/10 px-3 py-3 first:pl-0 md:border-r md:last:border-r-0">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--tc-accent,#ef0001)]/55 bg-[var(--tc-accent,#ef0001)]/8 text-[var(--tc-accent,#ef0001)] shadow-[0_0_22px_rgba(239,0,1,0.15)]">
+        <Icon size={17} />
       </div>
       <div className="min-w-0">
-        <p className="text-2xl font-black leading-none text-white">{value}</p>
-        <p className="mt-1 text-xs font-semibold leading-tight text-white/64">{label}</p>
+        <p className="text-xl font-black leading-none text-white">{value}</p>
+        <p className="mt-1 text-[11px] font-semibold leading-tight text-white/64">{label}</p>
       </div>
     </div>
   );
@@ -348,7 +345,7 @@ function ContextSelector({
         {mode === "company" ? "Selecione a empresa" : "Selecione o usuário"}
       </p>
       {options.length > 0 ? (
-        <div className="grid max-h-[118px] gap-2 overflow-auto pr-1 lg:grid-cols-2">
+        <div className="grid max-h-[118px] gap-2 overflow-auto pr-1 md:grid-cols-2">
           {options.map((option) => (
             <button
               key={option.id}
@@ -447,27 +444,27 @@ function BrainConsole({
   }
 
   return (
-    <section className="relative h-full min-h-0 overflow-hidden rounded-[2.25rem] border border-white/10 bg-[radial-gradient(circle_at_18%_18%,rgba(239,0,1,0.10),transparent_24%),radial-gradient(circle_at_75%_18%,rgba(37,99,235,0.12),transparent_28%),linear-gradient(135deg,#070b16_0%,#080f20_48%,#0b1428_100%)] p-4 text-white shadow-[0_30px_120px_rgba(0,0,0,0.38)] lg:p-6">
+    <section className="relative mx-auto w-full max-w-[1280px] overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_18%_18%,rgba(239,0,1,0.10),transparent_24%),radial-gradient(circle_at_75%_18%,rgba(37,99,235,0.12),transparent_28%),linear-gradient(135deg,#070b16_0%,#080f20_48%,#0b1428_100%)] p-4 text-white shadow-[0_30px_100px_rgba(0,0,0,0.34)] lg:p-5 xl:p-6">
       <style>{`
-        .brain-orb-wrap { position: relative; width: 315px; height: 315px; display: grid; place-items: center; isolation: isolate; }
-        .brain-orb-aura { position: absolute; width: 252px; height: 252px; border-radius: 999px; background: radial-gradient(circle, rgba(239,0,1,.20), transparent 62%); filter: blur(10px); opacity: .76; animation: brainAura 5.6s ease-in-out infinite; }
-        .brain-orb { position: relative; z-index: 2; width: 190px; height: 190px; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 62% 22%, rgba(255,255,255,.36), transparent 18%), radial-gradient(circle at 44% 48%, #0d1b2f 0%, #07111f 52%, #030710 100%); box-shadow: inset 24px 20px 38px rgba(255,255,255,.11), inset -28px -32px 64px rgba(0,0,0,.74), 0 0 22px rgba(239,0,1,.38), 0 0 58px rgba(239,0,1,.14), 0 0 88px rgba(96,165,250,.08); animation: brainFloat 6s ease-in-out infinite; }
+        .brain-orb-wrap { position: relative; width: clamp(220px, 22vw, 285px); height: clamp(220px, 22vw, 285px); display: grid; place-items: center; isolation: isolate; }
+        .brain-orb-aura { position: absolute; width: 78%; height: 78%; border-radius: 999px; background: radial-gradient(circle, rgba(239,0,1,.20), transparent 62%); filter: blur(10px); opacity: .76; animation: brainAura 5.6s ease-in-out infinite; }
+        .brain-orb { position: relative; z-index: 2; width: 62%; height: 62%; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 62% 22%, rgba(255,255,255,.36), transparent 18%), radial-gradient(circle at 44% 48%, #0d1b2f 0%, #07111f 52%, #030710 100%); box-shadow: inset 24px 20px 38px rgba(255,255,255,.11), inset -28px -32px 64px rgba(0,0,0,.74), 0 0 22px rgba(239,0,1,.38), 0 0 58px rgba(239,0,1,.14), 0 0 88px rgba(96,165,250,.08); animation: brainFloat 6s ease-in-out infinite; }
         .brain-orb-liquid { position: absolute; border-radius: 44%; filter: blur(16px); opacity: .72; mix-blend-mode: screen; }
         .brain-orb-liquid.primary { inset: 18% 43% -18% -24%; background: radial-gradient(circle, rgba(239,0,1,.98), rgba(239,0,1,.42) 44%, transparent 70%); animation: brainLiquid 7.5s ease-in-out infinite; }
         .brain-orb-liquid.secondary { inset: -24% -30% 22% 34%; background: radial-gradient(circle, rgba(147,197,253,.45), rgba(37,99,235,.20) 46%, transparent 72%); animation: brainLiquid 9s ease-in-out infinite reverse; }
-        .brain-orb-red-crescent { position: absolute; left: -14px; bottom: -8px; width: 124px; height: 154px; border-radius: 999px; border-left: 16px solid rgba(255,50,74,.98); border-bottom: 11px solid rgba(255,50,74,.80); filter: blur(.2px) drop-shadow(0 0 18px rgba(239,0,1,.72)); transform: rotate(-18deg); opacity: .94; }
+        .brain-orb-red-crescent { position: absolute; left: -8%; bottom: -5%; width: 66%; height: 80%; border-radius: 999px; border-left: 12px solid rgba(255,50,74,.98); border-bottom: 9px solid rgba(255,50,74,.80); filter: blur(.2px) drop-shadow(0 0 18px rgba(239,0,1,.72)); transform: rotate(-18deg); opacity: .94; }
         .brain-orb-glass { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 64% 22%, rgba(255,255,255,.30), transparent 24%), radial-gradient(circle at 54% 64%, transparent 0%, rgba(255,255,255,.035) 58%, rgba(255,255,255,.10) 100%); border: 1px solid rgba(255,255,255,.10); }
-        .brain-orb-shine { position: absolute; right: 24px; top: 18px; width: 88px; height: 52px; border-radius: 999px; background: linear-gradient(138deg, rgba(255,255,255,.42), rgba(255,255,255,.08) 48%, transparent 76%); transform: rotate(-30deg); opacity: .76; }
-        .brain-face { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: 36px; transform: translateY(5px); }
-        .brain-chevron { position: relative; width: 31px; height: 24px; filter: drop-shadow(0 0 10px rgba(255,255,255,.88)); }
-        .brain-chevron::before, .brain-chevron::after { content: ""; position: absolute; top: 9px; width: 20px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.96); }
+        .brain-orb-shine { position: absolute; right: 13%; top: 10%; width: 46%; height: 28%; border-radius: 999px; background: linear-gradient(138deg, rgba(255,255,255,.42), rgba(255,255,255,.08) 48%, transparent 76%); transform: rotate(-30deg); opacity: .76; }
+        .brain-face { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: clamp(22px, 3vw, 34px); transform: translateY(5px); }
+        .brain-chevron { position: relative; width: 28px; height: 22px; filter: drop-shadow(0 0 10px rgba(255,255,255,.88)); }
+        .brain-chevron::before, .brain-chevron::after { content: ""; position: absolute; top: 8px; width: 18px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.96); }
         .brain-chevron::before { left: 1px; transform: rotate(-54deg); }
         .brain-chevron::after { right: 1px; transform: rotate(54deg); }
-        .brain-dash { display: block; width: 28px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 0 13px rgba(255,255,255,.86); }
+        .brain-dash { display: block; width: 26px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 0 13px rgba(255,255,255,.86); }
         .brain-ring { position: absolute; z-index: 1; border-radius: 999px; border: 1px solid rgba(239,0,1,.23); }
-        .brain-ring.one { width: 248px; height: 248px; animation: brainSpin 15s linear infinite; }
-        .brain-ring.two { width: 292px; height: 292px; border-color: rgba(255,255,255,.09); border-left-color: rgba(239,0,1,.20); animation: brainSpin 22s linear infinite reverse; }
-        .brain-ring-dot { position: absolute; z-index: 3; right: 39px; bottom: 73px; width: 8px; height: 8px; border-radius: 999px; background: var(--tc-accent,#ef0001); box-shadow: 0 0 16px rgba(239,0,1,.92); animation: brainDot 3.6s ease-in-out infinite; }
+        .brain-ring.one { width: 80%; height: 80%; animation: brainSpin 15s linear infinite; }
+        .brain-ring.two { width: 94%; height: 94%; border-color: rgba(255,255,255,.09); border-left-color: rgba(239,0,1,.20); animation: brainSpin 22s linear infinite reverse; }
+        .brain-ring-dot { position: absolute; z-index: 3; right: 12%; bottom: 24%; width: 8px; height: 8px; border-radius: 999px; background: var(--tc-accent,#ef0001); box-shadow: 0 0 16px rgba(239,0,1,.92); animation: brainDot 3.6s ease-in-out infinite; }
         .brain-orb.is-active { box-shadow: inset 24px 20px 38px rgba(255,255,255,.12), inset -28px -32px 64px rgba(0,0,0,.74), 0 0 34px rgba(239,0,1,.58), 0 0 74px rgba(239,0,1,.20), 0 0 106px rgba(96,165,250,.12); }
         .brain-orb.is-active .brain-orb-liquid.primary { opacity: .90; }
         @keyframes brainFloat { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(0,-10px,0) scale(1.025); } }
@@ -478,11 +475,11 @@ function BrainConsole({
         @media (prefers-reduced-motion: reduce) { .brain-orb, .brain-orb-aura, .brain-orb-liquid, .brain-ring, .brain-ring-dot { animation: none; } }
       `}</style>
 
-      <div className="pointer-events-none absolute inset-0 rounded-[2.25rem] border border-white/[0.03]" />
+      <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-white/[0.03]" />
 
-      <div className="relative z-10 flex h-full min-h-0 flex-col gap-4">
+      <div className="relative z-10 flex flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-white/58">
+          <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/58 sm:text-xs sm:tracking-[0.22em]">
             <FiCpu className="text-[var(--tc-accent,#ef0001)]" />
             Brain Command Center
           </div>
@@ -502,63 +499,43 @@ function BrainConsole({
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 gap-5 lg:grid-cols-[335px_1fr] lg:items-start">
-          <div className="hidden justify-center pt-4 lg:flex">
+        <div className="grid gap-5 lg:grid-cols-[minmax(210px,280px)_minmax(0,1fr)] xl:grid-cols-[minmax(240px,300px)_minmax(0,1fr)] xl:items-start">
+          <div className="hidden justify-center pt-2 lg:flex">
             <BrainOrb active={isThinking || Boolean(confirmation)} />
           </div>
 
-          <div className="min-w-0 pt-1 lg:pt-8">
-            <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-              <div className="min-w-0">
-                <h1 className="text-4xl font-black leading-tight tracking-tight text-white lg:text-5xl">
-                  {homeContext.greeting || greeting}, <span className="text-[var(--tc-accent,#ef0001)]">{homeContext.userName || userName}.</span>
-                </h1>
-                <p className="mt-5 min-h-[112px] max-w-3xl text-2xl font-semibold leading-relaxed text-white/78 lg:text-[1.72rem]">
-                  {typed}
-                  <span className="ml-1 inline-block h-8 w-1 translate-y-1 bg-white/84 animate-pulse" />
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-semibold text-white/50">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-[var(--tc-accent,#ef0001)] shadow-[0_0_18px_rgba(239,0,1,0.8)]" />
-                    Brain analisando contexto
-                  </span>
-                  <span className="h-4 w-px bg-white/10" />
-                  <span>{isThinking ? "digitando..." : "contexto pronto"}</span>
-                </div>
-              </div>
-
-              <div className="hidden rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-4 lg:block">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Módulos do sistema</p>
-                <div className="mt-3 grid gap-2">
-                  {quickModules.slice(0, 5).map((module) => (
-                    <a
-                      key={module.id}
-                      href={module.href}
-                      className="flex items-center justify-between rounded-2xl border border-white/8 bg-black/14 px-3 py-2 text-sm font-bold text-white/70 transition hover:border-[var(--tc-accent,#ef0001)]/50 hover:text-white"
-                    >
-                      <span className="truncate">{module.label}</span>
-                      <FiArrowRight className="shrink-0 text-white/35" />
-                    </a>
-                  ))}
-                </div>
-              </div>
+          <div className="min-w-0">
+            <h1 className="text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl xl:text-5xl">
+              {homeContext.greeting || greeting}, <span className="text-[var(--tc-accent,#ef0001)]">{homeContext.userName || userName}.</span>
+            </h1>
+            <p className="mt-4 min-h-[92px] max-w-4xl text-xl font-semibold leading-relaxed text-white/78 sm:text-2xl xl:text-[1.55rem]">
+              {typed}
+              <span className="ml-1 inline-block h-7 w-1 translate-y-1 bg-white/84 animate-pulse" />
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-semibold text-white/50">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-[var(--tc-accent,#ef0001)] shadow-[0_0_18px_rgba(239,0,1,0.8)]" />
+                Brain analisando contexto
+              </span>
+              <span className="h-4 w-px bg-white/10" />
+              <span>{isThinking ? "digitando..." : "contexto pronto"}</span>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-6 flex items-center gap-3 rounded-full border border-[var(--tc-accent,#ef0001)]/55 bg-black/20 px-5 py-4 shadow-[0_0_42px_rgba(59,130,246,0.13)] backdrop-blur">
-              <FiCommand className="shrink-0 text-white/70" size={24} />
+            <form onSubmit={handleSubmit} className="mt-5 flex items-center gap-3 rounded-full border border-[var(--tc-accent,#ef0001)]/55 bg-black/20 px-5 py-4 shadow-[0_0_42px_rgba(59,130,246,0.13)] backdrop-blur">
+              <FiCommand className="shrink-0 text-white/70" size={22} />
               <input
                 value={command}
                 onChange={(event) => setCommand(event.target.value)}
                 placeholder="Pergunte ao Brain ou escolha uma ação..."
                 className="min-w-0 flex-1 bg-transparent text-base font-semibold text-white outline-none placeholder:text-white/36"
               />
-              <FiMic className="hidden shrink-0 text-white/48 sm:block" size={22} />
+              <FiMic className="hidden shrink-0 text-white/48 sm:block" size={21} />
               <button type="submit" className="sr-only">
                 Confirmar contexto
               </button>
             </form>
 
-            <div className="mt-4 flex flex-wrap justify-center gap-3 lg:justify-start">
+            <div className="mt-4 flex flex-wrap gap-3">
               {FILTERS.map((item) => {
                 const Icon = item.icon;
                 const active = selectedMode === item.mode;
@@ -618,8 +595,23 @@ function BrainConsole({
           </div>
         </div>
 
+        {quickModules.length ? (
+          <div className="flex flex-wrap gap-2 border-t border-white/8 pt-2">
+            {quickModules.slice(0, 6).map((module) => (
+              <a
+                key={module.id}
+                href={module.href}
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-black text-white/64 transition hover:border-[var(--tc-accent,#ef0001)]/45 hover:text-white"
+              >
+                {module.label}
+                <FiArrowRight className="text-white/30" />
+              </a>
+            ))}
+          </div>
+        ) : null}
+
         <div className="grid gap-4">
-          <section className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur">
+          <section className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-black text-white">Radar do Brain</h2>
@@ -632,7 +624,7 @@ function BrainConsole({
                 <FiArrowRight />
               </a>
             </div>
-            <div className="grid gap-2 lg:grid-cols-5">
+            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
               <StatCard icon={FiBarChart2} value={homeContext.summary.actions} label="ações registradas" />
               <StatCard icon={FiBriefcase} value={homeContext.summary.companiesUpdated} label="empresas com atualização" />
               <StatCard icon={FiUsers} value={homeContext.summary.usersInvolved} label="usuários envolvidos" />
@@ -641,7 +633,7 @@ function BrainConsole({
             </div>
           </section>
 
-          <section className="rounded-[1.7rem] border border-white/10 bg-white/[0.035] px-5 py-4 backdrop-blur">
+          <section className="rounded-[1.7rem] border border-white/10 bg-white/[0.035] px-4 py-4 backdrop-blur">
             <h2 className="mb-3 text-base font-black text-white">Destaques do contexto</h2>
             <div className="grid gap-3 lg:grid-cols-3">
               {(homeContext.highlights.length > 0 ? homeContext.highlights : [
@@ -700,14 +692,14 @@ export default function HomeContent() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100dvh-170px)] w-full items-center justify-center bg-transparent text-xl font-semibold text-slate-500 dark:text-white/70">
+      <div className="flex min-h-[420px] w-full items-center justify-center bg-transparent text-xl font-semibold text-slate-500 dark:text-white/70">
         Inicializando Brain...
       </div>
     );
   }
 
   return (
-    <main className="h-[calc(100dvh-170px)] min-h-[700px] w-full overflow-hidden bg-transparent px-3 pb-3 text-slate-950 dark:text-white lg:px-5 lg:pb-5">
+    <main className="w-full overflow-x-hidden bg-transparent px-3 pb-4 text-slate-950 dark:text-white lg:px-5 lg:pb-5">
       <BrainConsole
         userName={userName}
         profile={profile}

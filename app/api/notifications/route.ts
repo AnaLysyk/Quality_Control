@@ -1,13 +1,15 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { listUserRequests } from "@/data/requestsStore";
 import { countUnreadUserNotifications, createUserNotification, listUserNotifications } from "@/lib/userNotificationsStore";
 import { canAdminReviewQueue, normalizeRequestProfileType, resolveReviewQueue } from "@/lib/requestRouting";
 
 const PENDING_RESET_SYNC_TTL_MS = 60_000;
+const UNREAD_COUNT_CACHE_TTL_MS = 60_000;
 
 type NotificationsGlobalState = typeof globalThis & {
   __qcPendingResetSync?: Map<string, number>;
+  __qcUnreadCountCache?: Map<string, { unreadCount: number; expiresAt: number }>;
 };
 
 function shouldSyncPendingResets(userId: string) {
@@ -22,6 +24,29 @@ function shouldSyncPendingResets(userId: string) {
   }
   cache.set(userId, Date.now());
   return true;
+}
+
+function getUnreadCountCache() {
+  const globalState = globalThis as NotificationsGlobalState;
+  if (!globalState.__qcUnreadCountCache) {
+    globalState.__qcUnreadCountCache = new Map();
+  }
+  return globalState.__qcUnreadCountCache;
+}
+
+async function getCachedUnreadCount(userId: string) {
+  const cache = getUnreadCountCache();
+  const cached = cache.get(userId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return { unreadCount: cached.unreadCount, cache: "hit" as const };
+  }
+
+  const unreadCount = await countUnreadUserNotifications(userId);
+  cache.set(userId, {
+    unreadCount,
+    expiresAt: Date.now() + UNREAD_COUNT_CACHE_TTL_MS,
+  });
+  return { unreadCount, cache: "miss" as const };
 }
 
 async function syncPendingResetNotifications(userId: string) {
@@ -61,7 +86,11 @@ export async function GET(req: Request) {
   const summary = url.searchParams.get("summary");
 
   if (summary === "count") {
-    return NextResponse.json({ unreadCount: await countUnreadUserNotifications(user.id) }, { status: 200 });
+    const result = await getCachedUnreadCount(user.id);
+    return NextResponse.json(
+      { unreadCount: result.unreadCount },
+      { status: 200, headers: { "x-qc-cache": result.cache } },
+    );
   }
 
   await syncPendingResetNotifications(user.id);
@@ -72,4 +101,3 @@ export async function GET(req: Request) {
   }
   return NextResponse.json({ items }, { status: 200 });
 }
-

@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
 import { hashPasswordSha256 } from "@/lib/passwordHash";
@@ -21,6 +21,7 @@ import {
   findLocalCompanyById,
   findLocalCompanyBySlug,
   listLocalLinksForUser,
+  listLocalMemberships,
   listLocalUsers,
   removeLocalLink,
   updateLocalUser,
@@ -85,6 +86,39 @@ function canManageInstitutionalProfiles(
   return access.isGlobalAdmin === true || role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC;
 }
 
+function wantsLoginSummary(searchParams: URLSearchParams) {
+  const summary = (searchParams.get("summary") ?? searchParams.get("select") ?? "").trim().toLowerCase();
+  return summary === "logins" || summary === "login" || summary === "identity";
+}
+
+async function listUserLoginSummary(options?: { companyId?: string | null }) {
+  const users = await listLocalUsers();
+  const companyId = options?.companyId ?? null;
+
+  if (!companyId) {
+    return users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      user: user.user ?? null,
+    }));
+  }
+
+  const memberships = await listLocalMemberships();
+  const userIds = new Set(
+    memberships
+      .filter((membership) => membership.companyId === companyId)
+      .map((membership) => membership.userId),
+  );
+
+  return users
+    .filter((user) => userIds.has(user.id))
+    .map((user) => ({
+      id: user.id,
+      email: user.email,
+      user: user.user ?? null,
+    }));
+}
+
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
@@ -102,6 +136,7 @@ export async function GET(req: NextRequest) {
     resolvedCompanyRole === SYSTEM_ROLES.EMPRESA;
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("client_id");
+  const loginSummary = wantsLoginSummary(searchParams);
 
   if (!isGlobalAdmin) {
     if (!access.companyId) {
@@ -110,8 +145,17 @@ export async function GET(req: NextRequest) {
     if (!canManageOwnCompanyUsers) {
       return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
     }
+    if (loginSummary) {
+      const items = await listUserLoginSummary({ companyId: access.companyId });
+      return NextResponse.json({ items }, { status: 200, headers: { "x-qc-mode": "logins" } });
+    }
     const items = await listAdminUserItems({ companyId: access.companyId });
     return NextResponse.json({ items }, { status: 200 });
+  }
+
+  if (loginSummary) {
+    const items = await listUserLoginSummary({ companyId: clientId });
+    return NextResponse.json({ items }, { status: 200, headers: { "x-qc-mode": "logins" } });
   }
 
   if (clientId) {
@@ -419,4 +463,3 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

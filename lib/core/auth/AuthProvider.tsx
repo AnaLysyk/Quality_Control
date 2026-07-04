@@ -227,33 +227,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(cached === null); // skip spinner if cache hit
   const [error, setError] = useState<string | null>(null);
   const initialHadCacheRef = useRef(cached !== null);
+  const refreshInFlightRef = useRef<Promise<MeResult> | null>(null);
 
   const refreshUser = useCallback(async (showSpinner = true): Promise<MeResult> => {
-    if (showSpinner) setLoading(true);
-    setError(null);
+    if (refreshInFlightRef.current) {
+      return refreshInFlightRef.current;
+    }
+
+    const refreshPromise = (async () => {
+      if (showSpinner) setLoading(true);
+      setError(null);
+      try {
+        const me = await fetchMe();
+        setUser(me.user);
+        setCompanies(me.companies);
+        writeAuthCache(me.user, me.companies);
+        publishAuthUser(me.user);
+        return me;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erro ao carregar usuario";
+        const empty: MeResult = { user: null, companies: [] };
+        setError(msg);
+        setUser(null);
+        setCompanies([]);
+        clearAuthCache();
+        publishAuthUser(null);
+        return empty;
+      } finally {
+        if (showSpinner) setLoading(false);
+      }
+    })();
+
+    refreshInFlightRef.current = refreshPromise;
     try {
-      const me = await fetchMe();
-      setUser(me.user);
-      setCompanies(me.companies);
-      writeAuthCache(me.user, me.companies);
-      publishAuthUser(me.user);
-      return me;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar usuario";
-      const empty: MeResult = { user: null, companies: [] };
-      setError(msg);
-      setUser(null);
-      setCompanies([]);
-      clearAuthCache();
-      publishAuthUser(null);
-      return empty;
+      return await refreshPromise;
     } finally {
-      if (showSpinner) setLoading(false);
+      if (refreshInFlightRef.current === refreshPromise) {
+        refreshInFlightRef.current = null;
+      }
     }
   }, []);
 
   const logout = useCallback(async () => {
     bootstrapAttempts.clear();
+    refreshInFlightRef.current = null;
     clearAuthCache();
     try {
       await fetch("/api/auth/logout", {

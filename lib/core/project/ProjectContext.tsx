@@ -168,7 +168,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       try {
         const [projectRes, appRes] = await Promise.all([
           fetch(`/api/projects?companySlug=${encodeURIComponent(companySlug)}`),
-          fetch(`/api/applications?companySlug=${encodeURIComponent(companySlug)}`),
+          fetch(`/api/applications?companySlug=${encodeURIComponent(companySlug)}&light=1`),
         ]);
 
         if (!projectRes.ok) throw new Error("Falha ao carregar projetos");
@@ -210,10 +210,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       const cached = readProjectCache(activeClientSlug);
       if (cached) {
         applyProjectList(cached, activeClientSlug);
-        void fetchProjects(activeClientSlug, { force: true }).then((list) => {
-          if (cancelled) return;
-          applyProjectList(list, activeClientSlug);
-        });
         return;
       }
 

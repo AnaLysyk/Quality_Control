@@ -13,6 +13,28 @@ type QaIntent =
   | "api_validation"
   | "general";
 
+<<<<<<< HEAD
+=======
+type QaCapability = {
+  id: QaIntent;
+  label: string;
+  description: string;
+};
+
+const QA_CAPABILITIES: QaCapability[] = [
+  { id: "bug_ticket", label: "Criar ticket de bug", description: "Monta bug estilo Jira com resumo, ambiente, passos, resultado obtido, esperado, evidências, impacto e prioridade." },
+  { id: "test_cases", label: "Gerar casos de teste", description: "Cria cenários positivos, negativos, borda, regressão, permissão e dados obrigatórios." },
+  { id: "regression", label: "Montar checklist de regressão", description: "Gera checklist por tela, módulo, release, perfil, empresa, integração e banco." },
+  { id: "risk_analysis", label: "Analisar risco QA", description: "Mostra impacto, módulos afetados, integrações, permissões, dados e pontos críticos." },
+  { id: "evidence", label: "Organizar evidências", description: "Resume prints, logs, payloads, status HTTP, requestId, rota e comportamento real." },
+  { id: "permissions", label: "Validar perfil e permissão", description: "Confere escopo por usuário, empresa, perfil, módulo, rota e ação permitida." },
+  { id: "automation", label: "Sugerir automação", description: "Transforma fluxo em roteiro Playwright, Postman ou teste automatizável." },
+  { id: "release_support", label: "Apoiar aceite de release", description: "Ajuda com smoke, aceite, pendências, bugs corrigidos e critérios de aprovação." },
+  { id: "api_validation", label: "Validar API", description: "Ajuda com endpoint, payload, status code, contrato, autenticação, erro e regra de negócio." },
+  { id: "general", label: "Apoio QA geral", description: "Ajuda a investigar, explicar, documentar, validar e decidir próximo passo." },
+];
+
+>>>>>>> origin/main
 function normalize(value: string) {
   return value
     .normalize("NFD")
@@ -37,8 +59,12 @@ function detectIntent(message: string): QaIntent {
 }
 
 function formatNodeContext(nodes: Array<Pick<BrainNode, "label" | "type" | "description">>) {
+<<<<<<< HEAD
   if (!nodes.length) return "- Nenhum nó específico encontrado ainda. Vou trabalhar com a mensagem e o contexto atual.";
 
+=======
+  if (!nodes.length) return "- Nenhum nó específico encontrado ainda. Vou trabalhar com a mensagem e contexto atual.";
+>>>>>>> origin/main
   return nodes
     .slice(0, 5)
     .map((node) => `- ${node.label} (${node.type})${node.description ? `: ${node.description}` : ""}`)
@@ -47,7 +73,10 @@ function formatNodeContext(nodes: Array<Pick<BrainNode, "label" | "type" | "desc
 
 function formatAllowedActions(actions: BrainNodeAction[]) {
   if (!actions.length) return "- Nenhuma ação direta liberada para esse contexto.";
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
   return actions
     .slice(0, 6)
     .map((action) => `- ${action.label} [${action.type}]`)
@@ -191,9 +220,17 @@ export function buildQaCopilotAnswer(input: {
   allowedActions: BrainNodeAction[];
 }) {
   const intent = detectIntent(input.message);
+<<<<<<< HEAD
 
   return [
     "Modo QA ativado.",
+=======
+  const capability = QA_CAPABILITIES.find((item) => item.id === intent) ?? QA_CAPABILITIES.at(-1)!;
+
+  return [
+    `Modo QA ativado: ${capability.label}.`,
+    capability.description,
+>>>>>>> origin/main
     "",
     "Contexto encontrado no Brain:",
     formatNodeContext(input.foundNodes),
@@ -206,3 +243,7 @@ export function buildQaCopilotAnswer(input: {
     "Segurança: eu consulto e monto contexto conforme empresa, usuário e permissão. Alteração real precisa permissão e confirmação.",
   ].join("\n");
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main

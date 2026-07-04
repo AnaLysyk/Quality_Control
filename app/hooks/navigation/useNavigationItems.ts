@@ -189,12 +189,12 @@ function resolveModuleHref(
   effectiveRole: SystemRole | null,
 ): string | undefined {
   if (mod.id === "home") {
-    if (companySlug) {
-      return withScopeQuery(buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput), companySlug, projectSlug, true);
-    }
-
     if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
       return "/admin/home";
+    }
+
+    if (companySlug) {
+      return withScopeQuery(buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput), companySlug, projectSlug, true);
     }
 
     if (companySlug && effectiveRole && COMPANY_DASHBOARD_ROLES.has(effectiveRole)) {

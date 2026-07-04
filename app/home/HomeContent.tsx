@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -346,7 +346,7 @@ export default function HomeContent() {
 
   const loading = authLoading || navLoading;
   const userName = resolveFirstName(user);
-  const visibleModules = modules.filter((module) => navModule.href || navModule.items.length > 0);
+  const visibleModules = modules.filter((module) => module.href || module.items.length > 0);
 
   const roleValue = String(
     effectiveRole ??

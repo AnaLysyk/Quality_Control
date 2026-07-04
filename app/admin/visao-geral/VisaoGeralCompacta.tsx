@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { IconType } from "react-icons";
 import {
   FiActivity,
+  FiAlertTriangle,
   FiBriefcase,
   FiCalendar,
   FiClipboard,
@@ -63,10 +64,10 @@ const periods = [7, 30, 90] as const;
 
 const statCard =
   "rounded-[22px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5";
-const carouselItem =
-  "group relative flex min-w-60 shrink-0 items-center gap-3 rounded-2xl border border-transparent px-3 py-3 text-left transition hover:border-[rgba(239,0,1,.18)] hover:bg-white/50 dark:hover:bg-white/5";
-const carouselItemSelected =
-  "group relative flex min-w-60 shrink-0 items-center gap-3 rounded-2xl border border-[rgba(239,0,1,.34)] bg-transparent px-3 py-3 text-left shadow-[inset_3px_0_0_var(--tc-accent)]";
+const contextCard =
+  "group relative flex h-28 w-52 shrink-0 flex-col justify-between overflow-hidden rounded-3xl border border-[var(--tc-border)] bg-white/75 px-4 py-3 text-left transition hover:border-[rgba(239,0,1,.24)] hover:bg-white dark:bg-white/[0.03] dark:hover:bg-white/[0.06]";
+const contextCardSelected =
+  "group relative flex h-28 w-52 shrink-0 flex-col justify-between overflow-hidden rounded-3xl border border-[rgba(239,0,1,.55)] bg-white/90 px-4 py-3 text-left shadow-[inset_4px_0_0_var(--tc-accent),0_18px_32px_rgba(1,24,72,.10)] dark:bg-white/[0.05]";
 
 function normalize(value?: string | null) {
   return (value ?? "")
@@ -154,7 +155,7 @@ function Pie({ title, slices, note }: { title: string; note: string; slices: Sli
   if (!sum) return null;
 
   return (
-    <section className="rounded-[28px] border border-[var(--tc-border)] bg-transparent p-4">
+    <section className="rounded-[28px] border border-[var(--tc-border)] bg-white/60 p-4 dark:bg-white/[0.03]">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black tracking-[-.04em]">{title}</h2>
@@ -166,7 +167,7 @@ function Pie({ title, slices, note }: { title: string; note: string; slices: Sli
           </div>
         </div>
       </div>
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className="mt-4 grid gap-2">
         {slices.filter((slice) => slice.value > 0).map((slice) => (
           <div key={slice.label} className="flex justify-between rounded-2xl border border-[var(--tc-border)] bg-transparent px-3 py-2 text-sm">
             <span className="flex items-center gap-2 text-[#64748b] dark:text-white/60">
@@ -378,10 +379,11 @@ export default function VisaoGeralCompacta() {
   const defectsInPeriod = defects.filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to));
   const testCaseCount = total(stats);
   const planCount = company ? Math.max(0, new Set(company.releases.map((release) => release.project || release.app || release.qaseProject || release.title).filter(Boolean)).size) : overview?.projectRows?.length ?? 0;
+  const hasInsightCards = total(stats) > 0 || defectsInPeriod.length > 0;
 
   return (
-    <div className="min-h-screen bg-white text-[#011848] dark:bg-[#07111f] dark:text-white">
-      <div className="flex flex-col gap-5 px-3 py-4 sm:px-4 lg:px-8">
+    <div className="text-[#011848] dark:text-white">
+      <div className="flex flex-col gap-6 px-3 py-4 sm:px-4 lg:px-8">
         <section className="tc-hero-panel">
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -395,24 +397,11 @@ export default function VisaoGeralCompacta() {
                 {loading ? <span className="self-center text-xs font-black uppercase tracking-[.22em] text-white/70">Atualizando...</span> : null}
                 <div className="flex gap-1 rounded-2xl border border-white/16 bg-white/10 p-1">
                   {periods.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => {
-                        setPeriod(item);
-                        setFrom("");
-                        setTo("");
-                      }}
-                      className={!hasRange && period === item ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}
-                    >
+                    <button key={item} type="button" onClick={() => { setPeriod(item); setFrom(""); setTo(""); }} className={!hasRange && period === item ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}>
                       {item === 7 ? "Semana" : `${item} dias`}
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => setShowCalendar((value) => !value)}
-                    className={hasRange ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}
-                  >
+                  <button type="button" onClick={() => setShowCalendar((value) => !value)} className={hasRange ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}>
                     <FiCalendar className="inline" /> Período
                   </button>
                 </div>
@@ -431,47 +420,48 @@ export default function VisaoGeralCompacta() {
                 ) : null}
               </div>
             </div>
-            <div className="mx-auto grid w-full max-w-5xl grid-cols-2 gap-3 border-t border-white/12 pt-4 sm:grid-cols-4">
+            <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-3 border-t border-white/12 pt-4 sm:grid-cols-5">
               <StatCard icon={FiActivity} value={releases.length} label="Runs" />
               <StatCard icon={FiClipboard} value={planCount} label="Planos de teste" />
               <StatCard icon={FiShield} value={testCaseCount} label="Casos de teste" />
-              <StatCard icon={FiUsers} value={filteredEvents.length} label="Histórico" />
+              <StatCard icon={FiAlertTriangle} value={defectsInPeriod.length} label="Defeitos" />
+              <StatCard icon={FiUsers} value={filteredEvents.length} label="Eventos" />
             </div>
           </div>
         </section>
 
-        <section className="bg-transparent px-1 py-1">
+        <section className="space-y-4">
           <div className="flex flex-col gap-3">
             <div className="flex gap-2">
               <button type="button" onClick={() => { setMode("company"); setSelectedUser(null); }} className={`tc-button-${mode === "company" ? "primary" : "secondary"}`}><FiBriefcase /> Empresa</button>
               <button type="button" onClick={() => { setMode("user"); setSelectedCompany(null); }} className={`tc-button-${mode === "user" ? "primary" : "secondary"}`}><FiUsers /> Usuário</button>
             </div>
             <label className="w-full">
-              <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-transparent px-4 py-3">
+              <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-white/45 px-4 py-3 dark:bg-white/[0.03]">
                 <FiSearch />
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mode === "company" ? "Buscar empresa" : "Buscar usuário"} className="w-full bg-transparent text-sm outline-none" />
               </div>
             </label>
           </div>
-          <div className="mt-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex min-w-max gap-3">
               {mode === "company" ? (
                 <>
-                  <button type="button" onClick={() => setSelectedCompany(null)} className={selectedCompany === null ? carouselItemSelected : carouselItem}>
+                  <button type="button" onClick={() => setSelectedCompany(null)} className={selectedCompany === null ? contextCardSelected : contextCard}>
                     <RoundCompanyAvatar />
-                    <span><b>Todas as empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">{companies.length} empresas liberadas</p></span>
+                    <span className="min-w-0"><b className="line-clamp-1">Todas as empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">{companies.length} empresas</p></span>
                   </button>
                   {shownCompanies.map((entry) => (
-                    <button key={keyOf(entry)} type="button" onClick={() => setSelectedCompany(keyOf(entry))} className={selectedCompany === keyOf(entry) ? carouselItemSelected : carouselItem}>
+                    <button key={keyOf(entry)} type="button" onClick={() => setSelectedCompany(keyOf(entry))} className={selectedCompany === keyOf(entry) ? contextCardSelected : contextCard}>
                       <RoundCompanyAvatar company={entry} />
                       <span className="min-w-0"><b className="line-clamp-1">{entry.name}</b><p className="text-xs text-[#64748b] dark:text-white/60">{entry.releases.length} runs</p></span>
                     </button>
                   ))}
-                  {filteredCompanies.length > shownCompanies.length ? <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={carouselItem}><RoundCompanyAvatar /><span><b>Ver mais empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">Carregar mais</p></span></button> : null}
+                  {filteredCompanies.length > shownCompanies.length ? <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={contextCard}><RoundCompanyAvatar /><span><b>Ver mais empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">Carregar mais</p></span></button> : null}
                 </>
               ) : (
                 <>
-                  <button type="button" onClick={() => setSelectedUser(null)} className={selectedUser === null ? carouselItemSelected : carouselItem}>
+                  <button type="button" onClick={() => setSelectedUser(null)} className={selectedUser === null ? contextCardSelected : contextCard}>
                     <RoundUserAvatar name="Todos os usuários" />
                     <span><b>Todos os usuários</b><p className="text-sm text-[#64748b] dark:text-white/60">Histórico geral</p></span>
                   </button>
@@ -480,25 +470,21 @@ export default function VisaoGeralCompacta() {
                     const selected = selectedUser === email;
                     const name = user.name?.trim() || nameFromEmail(email);
                     return (
-                      <button key={email} type="button" onClick={() => setSelectedUser(email)} className={selected ? carouselItemSelected : carouselItem}>
+                      <button key={email} type="button" onClick={() => setSelectedUser(email)} className={selected ? contextCardSelected : contextCard}>
                         <RoundUserAvatar src={avatarFromUser(user)} name={name} />
                         <span className="min-w-0"><b className="line-clamp-1">{name}</b><p className="truncate text-xs text-[#64748b] dark:text-white/60">{email}</p></span>
                       </button>
                     );
                   })}
-                  {filteredUsers.length > shownUsers.length ? <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={carouselItem}><RoundUserAvatar name="Ver mais usuários" /><span><b>Ver mais usuários</b><p className="text-sm text-[#64748b] dark:text-white/60">Carregar mais</p></span></button> : null}
+                  {filteredUsers.length > shownUsers.length ? <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={contextCard}><RoundUserAvatar name="Ver mais usuários" /><span><b>Ver mais usuários</b><p className="text-sm text-[#64748b] dark:text-white/60">Carregar mais</p></span></button> : null}
                 </>
               )}
             </div>
           </div>
         </section>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,.85fr)_minmax(360px,1.15fr)]">
-          <div className="flex flex-col gap-4">
-            <Pie title="Runs por status" note="Distribuição do contexto filtrado" slices={[{ label: "Aprovados", value: stats?.pass ?? 0, color: "#22c55e" }, { label: "Reprovados", value: stats?.fail ?? 0, color: "#ef4444" }, { label: "Bloqueados", value: stats?.blocked ?? 0, color: "#f59e0b" }, { label: "Em andamento", value: stats?.notRun ?? 0, color: "#60a5fa" }]} />
-            <Pie title="Defeitos" note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`} slices={[{ label: "Com run", value: linkedDefects, color: "#8b5cf6" }, { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" }]} />
-          </div>
-          <section className="bg-transparent px-1 py-1">
+        <div className={hasInsightCards ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]" : "grid gap-6"}>
+          <section className="min-w-0">
             <h2 className="text-xl font-black tracking-[-.04em]">Eventos recentes</h2>
             <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Exibindo ações do período filtrado: criação, status, runs, planos, testes, defeitos, suporte, usuários e permissões.</p>
             <div className="mt-5 space-y-0">
@@ -528,6 +514,13 @@ export default function VisaoGeralCompacta() {
               {filteredEvents.length > shownEvents.length ? <button type="button" onClick={() => setVisibleEvents((value) => value + FIRST_EVENTS)} className="w-full rounded-2xl border border-[var(--tc-border)] px-4 py-3 text-sm font-black">Ver mais eventos</button> : null}
             </div>
           </section>
+
+          {hasInsightCards ? (
+            <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
+              <Pie title="Runs por status" note="Distribuição do contexto filtrado" slices={[{ label: "Aprovados", value: stats?.pass ?? 0, color: "#22c55e" }, { label: "Reprovados", value: stats?.fail ?? 0, color: "#ef4444" }, { label: "Bloqueados", value: stats?.blocked ?? 0, color: "#f59e0b" }, { label: "Em andamento", value: stats?.notRun ?? 0, color: "#60a5fa" }]} />
+              <Pie title="Defeitos" note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`} slices={[{ label: "Com run", value: linkedDefects, color: "#8b5cf6" }, { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" }]} />
+            </aside>
+          ) : null}
         </div>
       </div>
     </div>

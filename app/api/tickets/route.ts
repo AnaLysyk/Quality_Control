@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
@@ -10,6 +10,12 @@ import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
 import { canCreateSupportTickets, canViewSupportBoard } from "@/lib/supportAccess";
 import { brainOnTicketCreated } from "@/lib/brain/autoSync";
+import {
+  buildTicketsListCacheKey,
+  clearTicketsListCache,
+  readTicketsListCache,
+  writeTicketsListCache,
+} from "@/lib/ticketsListResponseCache";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
@@ -25,6 +31,18 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
+  const canUseGlobalScope = canAccessGlobalTicketWorkspace(user);
+  const cacheKey = buildTicketsListCacheKey({
+    userId: user.id,
+    url,
+    globalScope: canUseGlobalScope,
+  });
+  const forceRefresh = url.searchParams.get("force") === "1" || url.searchParams.get("force") === "true";
+  const cached = forceRefresh ? null : readTicketsListCache<{ items: unknown[] }>(cacheKey);
+  if (cached) {
+    return NextResponse.json(cached, { status: 200, headers: { "x-qc-cache": "hit" } });
+  }
+
   const statusFilter = url.searchParams.get("status");
   const companyFilter = url.searchParams.get("companyId") ?? url.searchParams.get("companySlug");
   const assignedTo = url.searchParams.get("assignedTo");
@@ -33,7 +51,7 @@ export async function GET(req: Request) {
   const search = url.searchParams.get("search");
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
 
-  let items = canAccessGlobalTicketWorkspace(user) ? await listAllTickets() : await listTicketsForUser(user.id);
+  let items = canUseGlobalScope ? await listAllTickets() : await listTicketsForUser(user.id);
   if (statusFilter) {
     const statuses = statusFilter.split(",").map((value) => value.trim()).filter(Boolean);
     if (statuses.length) {
@@ -69,7 +87,9 @@ export async function GET(req: Request) {
 
   items = items.slice(0, limit);
   const enriched = await attachAssigneeInfo(items);
-  return NextResponse.json({ items: enriched }, { status: 200 });
+  const payload = { items: enriched };
+  writeTicketsListCache(cacheKey, payload);
+  return NextResponse.json(payload, { status: 200, headers: { "x-qc-cache": "miss" } });
 }
 
 export async function POST(req: Request) {
@@ -87,8 +107,6 @@ export async function POST(req: Request) {
     if (requestedCompanyId) {
       await assertCompanyAccess(user, requestedCompanyId);
     }
-    // Log received payload for debugging when creation fails
-    console.debug("[tickets POST] received body:", body);
     const localUser = await getLocalUserById(user.id);
     const normalizedCompanySlug = resolvePrimaryCompanySlug(user);
     const assignedToUserId =
@@ -114,9 +132,10 @@ export async function POST(req: Request) {
     });
 
     if (!ticket) {
-      console.warn("[tickets POST] createTicket returned null — body:", body);
       return NextResponse.json({ error: "Informe título ou descrição" }, { status: 400 });
     }
+
+    clearTicketsListCache();
 
     appendTicketEvent({
       ticketId: ticket.id,
@@ -142,4 +161,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

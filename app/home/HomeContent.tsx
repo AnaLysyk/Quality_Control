@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import {
   FiAlertTriangle,
   FiArrowRight,
@@ -14,7 +14,6 @@ import {
   FiMessageCircle,
   FiMic,
   FiMonitor,
-  FiSearch,
   FiUser,
   FiUsers,
 } from "react-icons/fi";
@@ -254,16 +253,21 @@ function modeLabel(mode: BrainMode | null) {
 function BrainOrb({ active }: { active: boolean }) {
   return (
     <div className="brain-orb-wrap" aria-hidden="true">
+      <div className="brain-orb-aura" />
       <div className={`brain-orb ${active ? "is-active" : ""}`}>
-        <div className="brain-orb-liquid" />
+        <div className="brain-orb-liquid primary" />
+        <div className="brain-orb-liquid secondary" />
+        <div className="brain-orb-red-crescent" />
+        <div className="brain-orb-glass" />
         <div className="brain-orb-shine" />
         <div className="brain-face">
-          <span className="brain-eye left" />
-          <span className="brain-eye right" />
+          <span className="brain-chevron" />
+          <span className="brain-dash" />
         </div>
       </div>
       <div className="brain-ring one" />
       <div className="brain-ring two" />
+      <div className="brain-ring-dot" />
     </div>
   );
 }
@@ -430,7 +434,7 @@ function BrainConsole({
     );
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = command.trim();
     if (!trimmed) return;
@@ -445,23 +449,33 @@ function BrainConsole({
   return (
     <section className="relative h-full min-h-0 overflow-hidden rounded-[2.25rem] border border-white/10 bg-[radial-gradient(circle_at_18%_18%,rgba(239,0,1,0.10),transparent_24%),radial-gradient(circle_at_75%_18%,rgba(37,99,235,0.12),transparent_28%),linear-gradient(135deg,#070b16_0%,#080f20_48%,#0b1428_100%)] p-4 text-white shadow-[0_30px_120px_rgba(0,0,0,0.38)] lg:p-6">
       <style>{`
-        .brain-orb-wrap { position: relative; width: 250px; height: 250px; display: grid; place-items: center; }
-        .brain-orb { position: relative; width: 172px; height: 172px; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 64% 24%, rgba(255,255,255,.36), transparent 24%), radial-gradient(circle at 42% 72%, rgba(239,0,1,.52), transparent 34%), radial-gradient(circle at 75% 76%, rgba(59,130,246,.32), transparent 30%), #07101f; box-shadow: inset 20px 18px 44px rgba(255,255,255,.11), inset -26px -30px 70px rgba(0,0,0,.68), 0 0 36px rgba(239,0,1,.32), 0 0 90px rgba(59,130,246,.10); animation: brainFloat 6s ease-in-out infinite; }
-        .brain-orb-liquid { position: absolute; inset: -36%; border-radius: 42%; background: conic-gradient(from 90deg, rgba(239,0,1,.78), rgba(37,99,235,.34), rgba(255,255,255,.20), rgba(5,10,25,.78), rgba(239,0,1,.72)); filter: blur(18px); opacity: .64; animation: brainLiquid 8s linear infinite; }
-        .brain-orb-shine { position: absolute; inset: 16px 22px auto auto; width: 82px; height: 54px; border-radius: 999px; background: linear-gradient(135deg, rgba(255,255,255,.42), transparent 72%); transform: rotate(-28deg); }
-        .brain-face { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 38px; }
-        .brain-eye { display: block; width: 23px; height: 7px; border-radius: 999px; background: white; box-shadow: 0 0 16px rgba(255,255,255,.86); }
-        .brain-eye.left { transform: rotate(-56deg); }
-        .brain-eye.right { transform: rotate(0deg); }
-        .brain-ring { position: absolute; border-radius: 999px; border: 1px solid rgba(239,0,1,.26); }
-        .brain-ring.one { width: 220px; height: 220px; animation: brainSpin 14s linear infinite; }
-        .brain-ring.two { width: 252px; height: 252px; border-color: rgba(96,165,250,.14); animation: brainSpin 18s linear infinite reverse; }
-        .brain-ring.one::after { content: ""; position: absolute; right: 18px; bottom: 46px; width: 8px; height: 8px; border-radius: 999px; background: var(--tc-accent,#ef0001); box-shadow: 0 0 18px rgba(239,0,1,.86); }
-        .brain-orb.is-active { box-shadow: inset 20px 18px 44px rgba(255,255,255,.12), inset -26px -30px 70px rgba(0,0,0,.68), 0 0 46px rgba(239,0,1,.48), 0 0 110px rgba(59,130,246,.16); }
-        @keyframes brainFloat { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-9px) scale(1.025); } }
-        @keyframes brainLiquid { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.08); } 100% { transform: rotate(360deg) scale(1); } }
+        .brain-orb-wrap { position: relative; width: 315px; height: 315px; display: grid; place-items: center; isolation: isolate; }
+        .brain-orb-aura { position: absolute; width: 252px; height: 252px; border-radius: 999px; background: radial-gradient(circle, rgba(239,0,1,.20), transparent 62%); filter: blur(10px); opacity: .76; animation: brainAura 5.6s ease-in-out infinite; }
+        .brain-orb { position: relative; z-index: 2; width: 190px; height: 190px; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 62% 22%, rgba(255,255,255,.36), transparent 18%), radial-gradient(circle at 44% 48%, #0d1b2f 0%, #07111f 52%, #030710 100%); box-shadow: inset 24px 20px 38px rgba(255,255,255,.11), inset -28px -32px 64px rgba(0,0,0,.74), 0 0 22px rgba(239,0,1,.38), 0 0 58px rgba(239,0,1,.14), 0 0 88px rgba(96,165,250,.08); animation: brainFloat 6s ease-in-out infinite; }
+        .brain-orb-liquid { position: absolute; border-radius: 44%; filter: blur(16px); opacity: .72; mix-blend-mode: screen; }
+        .brain-orb-liquid.primary { inset: 18% 43% -18% -24%; background: radial-gradient(circle, rgba(239,0,1,.98), rgba(239,0,1,.42) 44%, transparent 70%); animation: brainLiquid 7.5s ease-in-out infinite; }
+        .brain-orb-liquid.secondary { inset: -24% -30% 22% 34%; background: radial-gradient(circle, rgba(147,197,253,.45), rgba(37,99,235,.20) 46%, transparent 72%); animation: brainLiquid 9s ease-in-out infinite reverse; }
+        .brain-orb-red-crescent { position: absolute; left: -14px; bottom: -8px; width: 124px; height: 154px; border-radius: 999px; border-left: 16px solid rgba(255,50,74,.98); border-bottom: 11px solid rgba(255,50,74,.80); filter: blur(.2px) drop-shadow(0 0 18px rgba(239,0,1,.72)); transform: rotate(-18deg); opacity: .94; }
+        .brain-orb-glass { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 64% 22%, rgba(255,255,255,.30), transparent 24%), radial-gradient(circle at 54% 64%, transparent 0%, rgba(255,255,255,.035) 58%, rgba(255,255,255,.10) 100%); border: 1px solid rgba(255,255,255,.10); }
+        .brain-orb-shine { position: absolute; right: 24px; top: 18px; width: 88px; height: 52px; border-radius: 999px; background: linear-gradient(138deg, rgba(255,255,255,.42), rgba(255,255,255,.08) 48%, transparent 76%); transform: rotate(-30deg); opacity: .76; }
+        .brain-face { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: 36px; transform: translateY(5px); }
+        .brain-chevron { position: relative; width: 31px; height: 24px; filter: drop-shadow(0 0 10px rgba(255,255,255,.88)); }
+        .brain-chevron::before, .brain-chevron::after { content: ""; position: absolute; top: 9px; width: 20px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.96); }
+        .brain-chevron::before { left: 1px; transform: rotate(-54deg); }
+        .brain-chevron::after { right: 1px; transform: rotate(54deg); }
+        .brain-dash { display: block; width: 28px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 0 13px rgba(255,255,255,.86); }
+        .brain-ring { position: absolute; z-index: 1; border-radius: 999px; border: 1px solid rgba(239,0,1,.23); }
+        .brain-ring.one { width: 248px; height: 248px; animation: brainSpin 15s linear infinite; }
+        .brain-ring.two { width: 292px; height: 292px; border-color: rgba(255,255,255,.09); border-left-color: rgba(239,0,1,.20); animation: brainSpin 22s linear infinite reverse; }
+        .brain-ring-dot { position: absolute; z-index: 3; right: 39px; bottom: 73px; width: 8px; height: 8px; border-radius: 999px; background: var(--tc-accent,#ef0001); box-shadow: 0 0 16px rgba(239,0,1,.92); animation: brainDot 3.6s ease-in-out infinite; }
+        .brain-orb.is-active { box-shadow: inset 24px 20px 38px rgba(255,255,255,.12), inset -28px -32px 64px rgba(0,0,0,.74), 0 0 34px rgba(239,0,1,.58), 0 0 74px rgba(239,0,1,.20), 0 0 106px rgba(96,165,250,.12); }
+        .brain-orb.is-active .brain-orb-liquid.primary { opacity: .90; }
+        @keyframes brainFloat { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(0,-10px,0) scale(1.025); } }
+        @keyframes brainAura { 0%,100% { transform: scale(.96); opacity: .58; } 50% { transform: scale(1.08); opacity: .88; } }
+        @keyframes brainLiquid { 0%,100% { transform: rotate(0deg) translate3d(0,0,0) scale(1); } 50% { transform: rotate(14deg) translate3d(8px,-10px,0) scale(1.14); } }
         @keyframes brainSpin { to { transform: rotate(360deg); } }
-        @media (prefers-reduced-motion: reduce) { .brain-orb, .brain-orb-liquid, .brain-ring { animation: none; } }
+        @keyframes brainDot { 0%,100% { transform: scale(1); opacity: .76; } 50% { transform: scale(1.55); opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { .brain-orb, .brain-orb-aura, .brain-orb-liquid, .brain-ring, .brain-ring-dot { animation: none; } }
       `}</style>
 
       <div className="pointer-events-none absolute inset-0 rounded-[2.25rem] border border-white/[0.03]" />
@@ -488,8 +502,8 @@ function BrainConsole({
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 gap-5 lg:grid-cols-[300px_1fr] lg:items-start">
-          <div className="hidden justify-center pt-7 lg:flex">
+        <div className="grid min-h-0 flex-1 gap-5 lg:grid-cols-[335px_1fr] lg:items-start">
+          <div className="hidden justify-center pt-4 lg:flex">
             <BrainOrb active={isThinking || Boolean(confirmation)} />
           </div>
 

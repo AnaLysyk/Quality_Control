@@ -446,7 +446,7 @@ function isCompanyDashboardRoute(pathname: string) {
 }
 
 function shouldHideShellCover(pathname: string) {
-  const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
+  const hasAdminHeroCover = /^\/admin\/(?:home|visao-geral|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/operacao") ||
     pathname.startsWith("/operacoes") ||
@@ -794,4 +794,3 @@ export default function AppShell({ children }: AppShellProps) {
     </div>
   );
 }
-

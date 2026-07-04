@@ -608,6 +608,77 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     };
   }, [pathname]);
 
+
+
+  // brain:ask-chat-fast-open
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleBrainAskChatFast(e: Event) {
+      const detail = (e as CustomEvent<Record<string, unknown>>).detail ?? {};
+      const metadata = (detail.metadata && typeof detail.metadata === "object" && !Array.isArray(detail.metadata))
+        ? detail.metadata as Record<string, unknown>
+        : detail;
+
+      const route = typeof detail.route === "string" ? detail.route : typeof metadata.route === "string" ? metadata.route : pathname;
+      const nodeId = typeof detail.nodeId === "string" ? detail.nodeId : typeof metadata.nodeId === "string" ? metadata.nodeId : typeof metadata.entityId === "string" ? metadata.entityId : null;
+      const nodeLabel = typeof detail.nodeLabel === "string" ? detail.nodeLabel : typeof metadata.nodeLabel === "string" ? metadata.nodeLabel : typeof metadata.label === "string" ? metadata.label : null;
+      const nodeType = typeof detail.nodeType === "string" ? detail.nodeType : typeof metadata.nodeType === "string" ? metadata.nodeType : typeof metadata.entityType === "string" ? metadata.entityType : null;
+
+      const suggestedPrompt =
+        (typeof detail.initialMessage === "string" && detail.initialMessage.trim()) ? detail.initialMessage :
+        (typeof detail.prompt === "string" && detail.prompt.trim()) ? detail.prompt :
+        (typeof detail.suggestedPrompt === "string" && detail.suggestedPrompt.trim()) ? detail.suggestedPrompt :
+        (typeof metadata.suggestedPrompt === "string" && metadata.suggestedPrompt.trim()) ? metadata.suggestedPrompt :
+        nodeLabel ? `Me explica "${nodeLabel}" no Brain usando banco, RAG, histórico, permissões e evidências.` :
+        "Me ajuda com esse contexto no Brain.";
+
+      const resolvedContext = resolveAssistantScreenContext(route);
+
+      setBrainOpenContext({
+        source: "brain",
+        route,
+        nodeId,
+        nodeLabel,
+        nodeType,
+        agentMode: "qa",
+        metadata,
+      } as AssistantOpenEventDetail);
+
+      setAssistantContext(
+        mergeAssistantContext(resolvedContext, {
+          route,
+          module: "brain",
+          screenLabel: "Brain",
+          screenSummary: suggestedPrompt,
+          entityType: nodeType ?? undefined,
+          entityId: nodeId ?? undefined,
+          metadata,
+        }),
+      );
+
+      setActiveAgentMode(null);
+      setPanelMode("side");
+      setOpen(true);
+      setInput(suggestedPrompt);
+
+      window.setTimeout(() => {
+        inputRef.current?.focus();
+      }, 30);
+    }
+
+    window.addEventListener("brain:ask-chat", handleBrainAskChatFast);
+    window.addEventListener("brain:open-chat", handleBrainAskChatFast);
+    window.addEventListener("brain:ask", handleBrainAskChatFast);
+
+    return () => {
+      window.removeEventListener("brain:ask-chat", handleBrainAskChatFast);
+      window.removeEventListener("brain:open-chat", handleBrainAskChatFast);
+      window.removeEventListener("brain:ask", handleBrainAskChatFast);
+    };
+  }, [pathname, screenContext]);
+
+
   if (!assistantEnabled) return null;
   if (!user) return null;
   const isGlobalAdmin = user.isGlobalAdmin === true || (user as { is_global_admin?: boolean }).is_global_admin === true;
@@ -831,76 +902,6 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     return null;
   }
-
-
-  // brain:ask-chat-fast-open
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    function handleBrainAskChatFast(e: Event) {
-      const detail = (e as CustomEvent<Record<string, unknown>>).detail ?? {};
-      const metadata = (detail.metadata && typeof detail.metadata === "object" && !Array.isArray(detail.metadata))
-        ? detail.metadata as Record<string, unknown>
-        : detail;
-
-      const route = typeof detail.route === "string" ? detail.route : typeof metadata.route === "string" ? metadata.route : pathname;
-      const nodeId = typeof detail.nodeId === "string" ? detail.nodeId : typeof metadata.nodeId === "string" ? metadata.nodeId : typeof metadata.entityId === "string" ? metadata.entityId : null;
-      const nodeLabel = typeof detail.nodeLabel === "string" ? detail.nodeLabel : typeof metadata.nodeLabel === "string" ? metadata.nodeLabel : typeof metadata.label === "string" ? metadata.label : null;
-      const nodeType = typeof detail.nodeType === "string" ? detail.nodeType : typeof metadata.nodeType === "string" ? metadata.nodeType : typeof metadata.entityType === "string" ? metadata.entityType : null;
-
-      const suggestedPrompt =
-        (typeof detail.initialMessage === "string" && detail.initialMessage.trim()) ? detail.initialMessage :
-        (typeof detail.prompt === "string" && detail.prompt.trim()) ? detail.prompt :
-        (typeof detail.suggestedPrompt === "string" && detail.suggestedPrompt.trim()) ? detail.suggestedPrompt :
-        (typeof metadata.suggestedPrompt === "string" && metadata.suggestedPrompt.trim()) ? metadata.suggestedPrompt :
-        nodeLabel ? `Me explica "${nodeLabel}" no Brain usando banco, RAG, histórico, permissões e evidências.` :
-        "Me ajuda com esse contexto no Brain.";
-
-      const resolvedContext = resolveAssistantScreenContext(route);
-
-      setBrainOpenContext({
-        source: "brain",
-        route,
-        nodeId,
-        nodeLabel,
-        nodeType,
-        agentMode: "qa",
-        metadata,
-      } as AssistantOpenEventDetail);
-
-      setAssistantContext(
-        mergeAssistantContext(resolvedContext, {
-          route,
-          module: "brain",
-          screenLabel: "Brain",
-          screenSummary: suggestedPrompt,
-          entityType: nodeType ?? undefined,
-          entityId: nodeId ?? undefined,
-          metadata,
-        }),
-      );
-
-      setActiveAgentMode(null);
-      setPanelMode("side");
-      setOpen(true);
-      setInput(suggestedPrompt);
-
-      window.setTimeout(() => {
-        inputRef.current?.focus();
-      }, 30);
-    }
-
-    window.addEventListener("brain:ask-chat", handleBrainAskChatFast);
-    window.addEventListener("brain:open-chat", handleBrainAskChatFast);
-    window.addEventListener("brain:ask", handleBrainAskChatFast);
-
-    return () => {
-      window.removeEventListener("brain:ask-chat", handleBrainAskChatFast);
-      window.removeEventListener("brain:open-chat", handleBrainAskChatFast);
-      window.removeEventListener("brain:ask", handleBrainAskChatFast);
-    };
-  }, [pathname, screenContext]);
-
   async function sendMessage(textOverride?: string) {
     const text = (textOverride ?? input).trim();
     if (!text) return;

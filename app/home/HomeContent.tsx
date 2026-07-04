@@ -346,7 +346,7 @@ export default function HomeContent() {
 
   const loading = authLoading || navLoading;
   const userName = resolveFirstName(user);
-  const visibleModules = modules.filter((module) => module.href || module.items.length > 0);
+  const visibleModules = modules.filter((module) => navModule.href || navModule.items.length > 0);
 
   const roleValue = String(
     effectiveRole ??
@@ -370,14 +370,14 @@ export default function HomeContent() {
     return (terms: string[]) => {
       const normalizedTerms = terms.map(normalizeText);
 
-      for (const module of visibleModules) {
-        const moduleLabel = normalizeText(module.label);
+      for (const navModule of visibleModules) {
+        const moduleLabel = normalizeText(navModule.label);
 
         if (normalizedTerms.some((term) => moduleLabel.includes(term))) {
-          return module.href ?? module.items[0]?.href ?? graphHref;
+          return navModule.href ?? navModule.items[0]?.href ?? graphHref;
         }
 
-        const matchedItem = module.items.find((item) => {
+        const matchedItem = navModule.items.find((item) => {
           const label = normalizeText(item.label);
           return normalizedTerms.some((term) => label.includes(term));
         });

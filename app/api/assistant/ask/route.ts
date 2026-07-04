@@ -227,11 +227,7 @@ function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?
 }
 
 function shouldAnswerFromBrain(message: string) {
-<<<<<<< HEAD
   return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cç][aã]o|defeito|bug|usuario|usu[aá]rio|qase|kase|jira|operacional|brain|brian|n[oó]|dashboard|painel|qa|teste|testes|caso|cen[aá]rio|regress[aã]o|evid[eê]ncia|print|v[ií]deo|log|payload|endpoint|api|postman|playwright|release|aceite|homologa[cç][aã]o|ticket|chamado|erro|falha|risco|impacto|status code|internet|web|pesquisa|google|documenta[cç][aã]o oficial)\b/i.test(message);
-=======
-  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cÃ§][aÃ£]o|defeito|bug|usuario|usu[aÃ¡]rio|qase|kase|jira|operacional|brain|brian|n[oÃ³]|dashboard|painel)\b/i.test(message);
->>>>>>> origin/main
 }
 
 function shouldUseBrainFirstContext(brainContext: AssistantOpenEventDetail | null) {
@@ -477,7 +473,3 @@ export async function POST(req: Request) {
   }
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main

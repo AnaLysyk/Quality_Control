@@ -144,8 +144,6 @@ export function BrainNodeOverlay({
   onOpenRelatedModule,
   debugMode = false,
 }: BrainNodeOverlayProps) {
-  if (typeof document === "undefined") return null;
-
   const relations = relationRows(node, nodes, edges);
   const relatedNodes = relations.map((item) => item.related);
   const metadata = compactMetadata(node);
@@ -364,6 +362,7 @@ export function BrainNodeOverlay({
 
     return () => controller.abort();
   }, [node.id, node.label, node.module]);
+  if (typeof document === "undefined") return null;
 
   return createPortal(
     <div className="pointer-events-none fixed inset-0 z-[9999] text-white">

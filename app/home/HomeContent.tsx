@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import {
-  FiArrowRight,
-  FiGrid,
-  FiMessageCircle,
-} from "react-icons/fi";
+import { FiArrowRight, FiGrid, FiMessageCircle } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
 
@@ -43,30 +39,6 @@ function normalizeText(value: string) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-}
-
-function fixMojibake(value: string) {
-  if (!/[ÃÂ]/.test(value)) return value;
-
-  try {
-    const bytes = Array.from(value, (char) =>
-      `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`,
-    ).join("");
-    return decodeURIComponent(bytes);
-  } catch {
-    return value;
-  }
-}
-
-function normalizeProfileExperience(profile: ProfileExperience): ProfileExperience {
-  return {
-    label: fixMojibake(profile.label),
-    eyebrow: fixMojibake(profile.eyebrow),
-    headline: fixMojibake(profile.headline),
-    summary: fixMojibake(profile.summary),
-    focus: profile.focus.map(fixMojibake),
-    prompts: profile.prompts.map(fixMojibake),
-  };
 }
 
 function resolveFirstName(user: unknown) {
@@ -146,20 +118,15 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
 function useTyping(messages: string[]) {
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState("");
-
   const message = messages[index % messages.length];
 
   useEffect(() => {
     setTyped("");
-
     let cursor = 0;
     const typing = window.setInterval(() => {
       cursor += 1;
       setTyped(message.slice(0, cursor));
-
-      if (cursor >= message.length) {
-        window.clearInterval(typing);
-      }
+      if (cursor >= message.length) window.clearInterval(typing);
     }, 17);
 
     const next = window.setTimeout(() => {
@@ -177,7 +144,6 @@ function useTyping(messages: string[]) {
 
 function openAssistantChat(input: { greeting: string; userName: string; profile: ProfileExperience }) {
   if (typeof window === "undefined") return;
-
   const prompt = `${input.greeting}, ${input.userName}. Me ajuda a priorizar meu trabalho como ${input.profile.label}.`;
 
   window.dispatchEvent(
@@ -212,12 +178,9 @@ function resolveQuickAccess(modules: HomeNavModule[]): QuickAccess[] {
       const href = module.href ?? items[0]?.href ?? "";
       return {
         id: String(module.id ?? module.label),
-        label: fixMojibake(module.label),
+        label: module.label,
         href,
-        items: items.slice(0, 4).map((item) => ({
-          ...item,
-          label: fixMojibake(item.label),
-        })),
+        items: items.slice(0, 4),
       };
     })
     .filter((module) => Boolean(module.href))
@@ -226,7 +189,7 @@ function resolveQuickAccess(modules: HomeNavModule[]): QuickAccess[] {
 
 function QuickAccessList({ modules }: { modules: QuickAccess[] }) {
   return (
-    <section className="rounded-[2rem] border border-slate-200/80 bg-white/66 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.045] lg:p-5">
+    <section className="rounded-[2rem] border border-slate-200/80 bg-white/50 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.035] lg:p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">
@@ -239,15 +202,12 @@ function QuickAccessList({ modules }: { modules: QuickAccess[] }) {
       </div>
 
       {modules.length > 0 ? (
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+        <div className="divide-y divide-slate-200/70 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/32 dark:divide-white/10 dark:border-white/10 dark:bg-black/10">
           {modules.map((module) => (
-            <div
-              key={module.id}
-              className="rounded-2xl border border-slate-200/70 bg-white/48 p-3 dark:border-white/10 dark:bg-black/12"
-            >
+            <div key={module.id} className="grid gap-3 px-4 py-3 lg:grid-cols-[220px_1fr] lg:items-start">
               <Link
                 href={module.href}
-                className="group flex items-center justify-between gap-3 text-sm font-black text-slate-950 transition hover:text-[var(--tc-accent,#ef0001)] dark:text-white"
+                className="group flex min-w-0 items-center justify-between gap-3 text-sm font-black text-slate-950 transition hover:text-[var(--tc-accent,#ef0001)] dark:text-white"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <FiGrid className="shrink-0 text-[var(--tc-accent,#ef0001)]" size={13} />
@@ -257,12 +217,12 @@ function QuickAccessList({ modules }: { modules: QuickAccess[] }) {
               </Link>
 
               {module.items.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   {module.items.map((item) => (
                     <Link
                       key={`${module.id}-${item.href}-${item.label}`}
                       href={item.href ?? module.href}
-                      className="rounded-full border border-slate-200/70 bg-white/55 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-white/[0.045] dark:text-white/62"
+                      className="rounded-full border border-slate-200/70 bg-white/45 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-white/[0.045] dark:text-white/62"
                     >
                       {item.label}
                     </Link>
@@ -294,10 +254,10 @@ function BrainConsole({
 }) {
   const messages = useMemo(
     () => [
-      fixMojibake(`${greeting}, ${userName}. Eu sou o Brain. Seu contexto de ${profile.label} já está organizado.`),
-      fixMojibake(`Minha sugestão agora: olhar ${profile.focus.slice(0, 2).join(" e ")}.`),
-      fixMojibake("Use o chat flutuante para perguntar qualquer coisa."),
-      fixMojibake("Os atalhos abaixo são os mesmos caminhos liberados no menu lateral."),
+      `${greeting}, ${userName}. Eu sou o Brain. Seu contexto de ${profile.label} já está organizado.`,
+      `Minha sugestão agora: olhar ${profile.focus.slice(0, 2).join(" e ")}.`,
+      "Use o chat flutuante para perguntar qualquer coisa.",
+      "Os atalhos abaixo são os mesmos caminhos liberados no menu lateral.",
     ],
     [greeting, profile, userName],
   );
@@ -361,7 +321,7 @@ export default function HomeContent() {
       "usuario",
   );
 
-  const profile = useMemo(() => normalizeProfileExperience(resolveProfileExperience(roleValue)), [roleValue]);
+  const profile = useMemo(() => resolveProfileExperience(roleValue), [roleValue]);
 
   if (loading) {
     return (

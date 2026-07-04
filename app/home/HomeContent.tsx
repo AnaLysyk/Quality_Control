@@ -1,14 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import {
-  FiArrowRight,
-  FiCpu,
-  FiGrid,
-  FiMessageCircle,
-  FiZap,
-} from "react-icons/fi";
+import { useEffect, useMemo, useState } from "react";
+import { FiArrowRight, FiGrid, FiMessageCircle } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
 
@@ -45,30 +39,6 @@ function normalizeText(value: string) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-}
-
-function fixMojibake(value: string) {
-  if (!/[ÃÂ]/.test(value)) return value;
-
-  try {
-    const bytes = Array.from(value, (char) =>
-      `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`,
-    ).join("");
-    return decodeURIComponent(bytes);
-  } catch {
-    return value;
-  }
-}
-
-function normalizeProfileExperience(profile: ProfileExperience): ProfileExperience {
-  return {
-    label: fixMojibake(profile.label),
-    eyebrow: fixMojibake(profile.eyebrow),
-    headline: fixMojibake(profile.headline),
-    summary: fixMojibake(profile.summary),
-    focus: profile.focus.map(fixMojibake),
-    prompts: profile.prompts.map(fixMojibake),
-  };
 }
 
 function resolveFirstName(user: unknown) {
@@ -148,20 +118,15 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
 function useTyping(messages: string[]) {
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState("");
-
   const message = messages[index % messages.length];
 
   useEffect(() => {
     setTyped("");
-
     let cursor = 0;
     const typing = window.setInterval(() => {
       cursor += 1;
       setTyped(message.slice(0, cursor));
-
-      if (cursor >= message.length) {
-        window.clearInterval(typing);
-      }
+      if (cursor >= message.length) window.clearInterval(typing);
     }, 17);
 
     const next = window.setTimeout(() => {
@@ -179,7 +144,6 @@ function useTyping(messages: string[]) {
 
 function openAssistantChat(input: { greeting: string; userName: string; profile: ProfileExperience }) {
   if (typeof window === "undefined") return;
-
   const prompt = `${input.greeting}, ${input.userName}. Me ajuda a priorizar meu trabalho como ${input.profile.label}.`;
 
   window.dispatchEvent(
@@ -214,63 +178,66 @@ function resolveQuickAccess(modules: HomeNavModule[]): QuickAccess[] {
       const href = module.href ?? items[0]?.href ?? "";
       return {
         id: String(module.id ?? module.label),
-        label: fixMojibake(module.label),
+        label: module.label,
         href,
-        items: items.slice(0, 4).map((item) => ({
-          ...item,
-          label: fixMojibake(item.label),
-        })),
+        items: items.slice(0, 4),
       };
     })
     .filter((module) => Boolean(module.href))
-    .slice(0, 6);
+    .slice(0, 8);
 }
 
-function FocusChip({ children }: { children: ReactNode }) {
+function QuickAccessList({ modules }: { modules: QuickAccess[] }) {
   return (
-    <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-black text-slate-800 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.06] dark:text-white">
-      <FiZap className="shrink-0 text-[var(--tc-accent,#ef0001)]" size={13} />
-      <span className="truncate">{children}</span>
-    </div>
-  );
-}
+    <section className="rounded-[2rem] border border-slate-200/80 bg-white/50 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.035] lg:p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">
+            Atalhos do menu
+          </p>
+          <h2 className="text-lg font-black text-slate-950 dark:text-white">
+            Mesmas opções liberadas no menu lateral
+          </h2>
+        </div>
+      </div>
 
-function QuickAccessCard({ module }: { module: QuickAccess }) {
-  return (
-    <article className="group min-h-[138px] rounded-[1.75rem] border border-slate-200/80 bg-white/78 p-4 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-[var(--tc-accent,#ef0001)] hover:bg-white dark:border-white/10 dark:bg-white/[0.055] dark:hover:bg-white/[0.085]">
-      <Link href={module.href} className="flex items-start justify-between gap-3">
-        <span className="min-w-0">
-          <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--tc-accent,#ef0001)]">
-            <FiGrid size={13} />
-            Menu rápido
-          </span>
-          <span className="mt-2 block truncate text-base font-black text-slate-950 dark:text-white">
-            {module.label}
-          </span>
-        </span>
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--tc-accent,#ef0001)]/10 text-[var(--tc-accent,#ef0001)] transition group-hover:translate-x-1">
-          <FiArrowRight size={15} />
-        </span>
-      </Link>
+      {modules.length > 0 ? (
+        <div className="divide-y divide-slate-200/70 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/32 dark:divide-white/10 dark:border-white/10 dark:bg-black/10">
+          {modules.map((module) => (
+            <div key={module.id} className="grid gap-3 px-4 py-3 lg:grid-cols-[220px_1fr] lg:items-start">
+              <Link
+                href={module.href}
+                className="group flex min-w-0 items-center justify-between gap-3 text-sm font-black text-slate-950 transition hover:text-[var(--tc-accent,#ef0001)] dark:text-white"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <FiGrid className="shrink-0 text-[var(--tc-accent,#ef0001)]" size={13} />
+                  <span className="truncate">{module.label}</span>
+                </span>
+                <FiArrowRight className="shrink-0 text-[var(--tc-accent,#ef0001)] transition group-hover:translate-x-1" size={14} />
+              </Link>
 
-      {module.items.length > 0 ? (
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          {module.items.map((item) => (
-            <Link
-              key={`${module.id}-${item.href}-${item.label}`}
-              href={item.href ?? module.href}
-              className="truncate rounded-2xl border border-slate-200/70 bg-white/65 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-black/12 dark:text-white/62"
-            >
-              {item.label}
-            </Link>
+              {module.items.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {module.items.map((item) => (
+                    <Link
+                      key={`${module.id}-${item.href}-${item.label}`}
+                      href={item.href ?? module.href}
+                      className="rounded-full border border-slate-200/70 bg-white/45 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-white/[0.045] dark:text-white/62"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-xs leading-5 text-slate-500 dark:text-white/55">
-          Acesso direto pelo menu lateral.
-        </p>
+        <div className="rounded-2xl border border-dashed border-slate-200/80 bg-white/40 p-5 text-sm font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.035] dark:text-white/62">
+          Nenhum atalho disponível para este perfil ainda.
+        </div>
       )}
-    </article>
+    </section>
   );
 }
 
@@ -287,10 +254,10 @@ function BrainConsole({
 }) {
   const messages = useMemo(
     () => [
-      fixMojibake(`${greeting}, ${userName}. Eu sou o Brain. Seu contexto de ${profile.label} já está organizado.`),
-      profile.summary,
-      fixMojibake(`Minha sugestão agora: olhar ${profile.focus.slice(0, 2).join(" e ")}.`),
-      fixMojibake("Use o chat flutuante para perguntar qualquer coisa. Os atalhos abaixo são só caminhos rápidos do menu."),
+      `${greeting}, ${userName}. Eu sou o Brain. Seu contexto de ${profile.label} já está organizado.`,
+      `Minha sugestão agora: olhar ${profile.focus.slice(0, 2).join(" e ")}.`,
+      "Use o chat flutuante para perguntar qualquer coisa.",
+      "Os atalhos abaixo são os mesmos caminhos liberados no menu lateral.",
     ],
     [greeting, profile, userName],
   );
@@ -302,22 +269,7 @@ function BrainConsole({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_18%,rgba(239,0,1,0.18),transparent_26%),radial-gradient(circle_at_18%_12%,rgba(1,24,72,0.10),transparent_30%)] dark:bg-[radial-gradient(circle_at_78%_20%,rgba(239,0,1,0.22),transparent_30%),radial-gradient(circle_at_16%_10%,rgba(37,99,235,0.14),transparent_34%)]" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col gap-5">
-        <header className="grid gap-5 lg:grid-cols-[0.42fr_0.58fr] lg:items-end">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)] shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.055]">
-              <FiCpu size={13} />
-              {profile.eyebrow}
-            </div>
-
-            <h1 className="mt-4 max-w-xl text-4xl font-black leading-[0.98] tracking-tight text-slate-950 dark:text-white lg:text-5xl 2xl:text-6xl">
-              {profile.headline}
-            </h1>
-
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-white/66 lg:text-base">
-              {profile.summary}
-            </p>
-          </div>
-
+        <header>
           <div className="rounded-[2rem] border border-slate-200/80 bg-white/64 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-black/18 lg:p-7">
             <p className="min-h-[132px] text-3xl font-black leading-tight tracking-tight text-slate-950 dark:text-white lg:text-5xl">
               {typed}
@@ -335,37 +287,10 @@ function BrainConsole({
             Conversar com o Brain
             <FiMessageCircle size={15} />
           </button>
-
-          <div className="flex flex-wrap gap-2">
-            {profile.focus.map((item) => (
-              <FocusChip key={item}>{item}</FocusChip>
-            ))}
-          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-auto pr-1">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">
-                Atalhos do menu
-              </p>
-              <h2 className="text-lg font-black text-slate-950 dark:text-white">
-                Acesse rápido o que já existe no sistema
-              </h2>
-            </div>
-          </div>
-
-          {quickAccess.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {quickAccess.map((module) => (
-                <QuickAccessCard key={module.id} module={module} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-[1.75rem] border border-dashed border-slate-200/80 bg-white/60 p-6 text-sm font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.045] dark:text-white/62">
-              Nenhum atalho disponível para este perfil ainda.
-            </div>
-          )}
+          <QuickAccessList modules={quickAccess} />
         </div>
       </div>
     </section>
@@ -396,7 +321,7 @@ export default function HomeContent() {
       "usuario",
   );
 
-  const profile = useMemo(() => normalizeProfileExperience(resolveProfileExperience(roleValue)), [roleValue]);
+  const profile = useMemo(() => resolveProfileExperience(roleValue), [roleValue]);
 
   if (loading) {
     return (

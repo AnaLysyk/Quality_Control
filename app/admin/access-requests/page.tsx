@@ -691,7 +691,7 @@ async function loadAccessRequestsData() {
   const [reqRes, clientsRes, usersRes] = await Promise.all([
     fetchWithToken("/api/admin/access-requests"),
     fetchWithToken("/api/clients"),
-    fetchWithToken("/api/admin/users"),
+    fetchWithToken("/api/admin/users?summary=logins"),
   ]);
 
   const reqRaw = await readJsonBody(reqRes);
@@ -1432,5 +1432,6 @@ export default function AccessRequestsPageWithGuard() {
     </RequireAccessRequestReviewer>
   );
 }
+
 
 

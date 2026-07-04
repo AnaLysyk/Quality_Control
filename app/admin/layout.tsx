@@ -56,6 +56,7 @@ function canOpenAdminPath(pathname: string, permissions: PermissionMatrix) {
   if (
     pathname === "/admin" ||
     pathname.startsWith("/admin/home") ||
+    pathname.startsWith("/admin/visao-geral") ||
     pathname.startsWith("/admin/dashboard")
   ) {
     return hasPermissionAccess(permissions, "dashboard", "view");

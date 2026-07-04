@@ -1,4 +1,4 @@
-﻿import type { SystemRole } from "@/lib/auth/roles";
+import type { SystemRole } from "@/lib/auth/roles";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 import { canAccess } from "@/lib/permissions/can-access";
 import {
@@ -34,7 +34,14 @@ function canSeeNavigationDefinition(
   const allowedRoles = item.allowedRoles;
   if (allowedRoles && !allowedRoles.includes(userRole)) return false;
 
-  if (item.routeId) return visibleRouteIds.has(item.routeId);
+  if (item.routeId) {
+    if (visibleRouteIds.has(item.routeId)) return true;
+    if (item.routeId === "visao-geral.admin") {
+      return canAccess(context, { moduleId: "dashboard", action: "view" });
+    }
+    return false;
+  }
+
   if (item.requiredPermission) return canAccess(context, item.requiredPermission);
   return true;
 }
@@ -92,4 +99,3 @@ export function buildNavigationForUser(
 export function getNavigationRoute(item: NavItemDef | NavModuleDef) {
   return item.routeId ? SYSTEM_ROUTE_BY_ID.get(item.routeId) ?? null : null;
 }
-

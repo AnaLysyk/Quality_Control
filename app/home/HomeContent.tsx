@@ -31,6 +31,30 @@ function normalizeText(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+function fixMojibake(value: string) {
+  if (!/[ÃÂ]/.test(value)) return value;
+
+  try {
+    const bytes = Array.from(value, (char) =>
+      `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`,
+    ).join("");
+    return decodeURIComponent(bytes);
+  } catch {
+    return value;
+  }
+}
+
+function normalizeProfileExperience(profile: ProfileExperience): ProfileExperience {
+  return {
+    label: fixMojibake(profile.label),
+    eyebrow: fixMojibake(profile.eyebrow),
+    headline: fixMojibake(profile.headline),
+    summary: fixMojibake(profile.summary),
+    focus: profile.focus.map(fixMojibake),
+    prompts: profile.prompts.map(fixMojibake),
+  };
+}
+
 function resolveFirstName(user: unknown) {
   const candidate =
     (user as { name?: string | null } | null)?.name ??
@@ -154,10 +178,10 @@ function QuickSignal({
 
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-black text-slate-900 dark:text-white">
-          {title}
+          {fixMojibake(title)}
         </span>
         <span className="mt-1 block line-clamp-2 text-xs leading-5 text-slate-500 dark:text-white/58">
-          {description}
+          {fixMojibake(description)}
         </span>
       </span>
 
@@ -224,10 +248,10 @@ function BrainConsole({
 }) {
   const messages = useMemo(
     () => [
-      `Bom dia, ${userName}. Eu sou o Brain. O contexto de ${profile.label} já está organizado.`,
+      fixMojibake(`Bom dia, ${userName}. Eu sou o Brain. O contexto de ${profile.label} já está organizado.`),
       profile.summary,
-      `Minha sugestão agora: olhar ${profile.focus.slice(0, 2).join(" e ")}.`,
-      "Converse comigo pelo Chat. Use os nós do Brain quando quiser aprofundar um assunto do sistema.",
+      fixMojibake(`Minha sugestão agora: olhar ${profile.focus.slice(0, 2).join(" e ")}.`),
+      fixMojibake("Converse comigo pelo Chat. Use os nós do Brain quando quiser aprofundar um assunto do sistema."),
     ],
     [profile, userName],
   );
@@ -268,7 +292,7 @@ function BrainConsole({
                 href="/admin/visao-geral"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white/55 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-slate-900 backdrop-blur transition hover:-translate-y-0.5 hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] dark:border-white/10 dark:bg-white/[0.055] dark:text-white"
               >
-                Abrir visão geral
+                {fixMojibake("Abrir visão geral")}
                 <FiArrowRight size={15} />
               </Link>
             </div>
@@ -294,7 +318,7 @@ function BrainConsole({
                   Brain online
                 </p>
                 <h2 className="text-lg font-black text-slate-950 dark:text-white">
-                  Resposta pelo Chat · conhecimento pelos nós
+                  {fixMojibake("Resposta pelo Chat · conhecimento pelos nós")}
                 </h2>
               </div>
             </div>
@@ -323,7 +347,7 @@ function BrainConsole({
                 href={graphHref}
                 className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-slate-500 transition hover:text-[var(--tc-accent,#ef0001)] dark:text-white/45"
               >
-                Aprofundar no mapa de nós do Brain
+                {fixMojibake("Aprofundar no mapa de nós do Brain")}
                 <FiGitBranch size={14} />
               </Link>
             </div>
@@ -356,7 +380,7 @@ export default function HomeContent() {
       "usuario",
   );
 
-  const profile = useMemo(() => resolveProfileExperience(roleValue), [roleValue]);
+  const profile = useMemo(() => normalizeProfileExperience(resolveProfileExperience(roleValue)), [roleValue]);
 
   const chatHref = companySlug
     ? `/chat?assistant=brain&companySlug=${encodeURIComponent(companySlug)}`

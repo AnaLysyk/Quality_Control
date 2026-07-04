@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import type { BrainNode } from "@prisma/client";
 
@@ -253,11 +253,6 @@ export async function answerBrainChatQuestion(input: {
   const blockedSentence = blockedAction
     ? ` Algumas ações ficam bloqueadas para seu perfil, como "${blockedAction.label}".`
     : "";
-  const qaCopilotAnswer = buildQaCopilotAnswer({
-    message: input.message,
-    foundNodes: foundNodes.slice(0, input.limit ?? 5),
-    allowedActions,
-  });
 
   const modelAnswer = model.provider === "mock" ? qaCopilotAnswer : model.text;
 

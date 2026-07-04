@@ -444,9 +444,9 @@ function BrainConsole({
   }
 
   return (
-    <section className="relative mx-auto w-full max-w-[1280px] overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_18%_18%,rgba(239,0,1,0.10),transparent_24%),radial-gradient(circle_at_75%_18%,rgba(37,99,235,0.12),transparent_28%),linear-gradient(135deg,#070b16_0%,#080f20_48%,#0b1428_100%)] p-4 text-white shadow-[0_30px_100px_rgba(0,0,0,0.34)] lg:p-5 xl:p-6">
+    <section className="relative ml-0 w-full max-w-none overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_18%_18%,rgba(239,0,1,0.10),transparent_24%),radial-gradient(circle_at_75%_18%,rgba(37,99,235,0.12),transparent_28%),linear-gradient(135deg,#070b16_0%,#080f20_48%,#0b1428_100%)] p-4 text-white shadow-[0_30px_100px_rgba(0,0,0,0.34)] lg:p-5 xl:p-6">
       <style>{`
-        .brain-orb-wrap { position: relative; width: clamp(220px, 22vw, 285px); height: clamp(220px, 22vw, 285px); display: grid; place-items: center; isolation: isolate; }
+        .brain-orb-wrap { position: relative; width: clamp(205px, 20vw, 270px); height: clamp(205px, 20vw, 270px); display: grid; place-items: center; isolation: isolate; }
         .brain-orb-aura { position: absolute; width: 78%; height: 78%; border-radius: 999px; background: radial-gradient(circle, rgba(239,0,1,.20), transparent 62%); filter: blur(10px); opacity: .76; animation: brainAura 5.6s ease-in-out infinite; }
         .brain-orb { position: relative; z-index: 2; width: 62%; height: 62%; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 62% 22%, rgba(255,255,255,.36), transparent 18%), radial-gradient(circle at 44% 48%, #0d1b2f 0%, #07111f 52%, #030710 100%); box-shadow: inset 24px 20px 38px rgba(255,255,255,.11), inset -28px -32px 64px rgba(0,0,0,.74), 0 0 22px rgba(239,0,1,.38), 0 0 58px rgba(239,0,1,.14), 0 0 88px rgba(96,165,250,.08); animation: brainFloat 6s ease-in-out infinite; }
         .brain-orb-liquid { position: absolute; border-radius: 44%; filter: blur(16px); opacity: .72; mix-blend-mode: screen; }
@@ -499,12 +499,12 @@ function BrainConsole({
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(210px,280px)_minmax(0,1fr)] xl:grid-cols-[minmax(240px,300px)_minmax(0,1fr)] xl:items-start">
-          <div className="hidden justify-center pt-2 lg:flex">
+        <div className="grid gap-5 lg:grid-cols-[minmax(190px,245px)_minmax(0,1fr)] xl:grid-cols-[minmax(210px,260px)_minmax(0,1fr)] xl:items-start">
+          <div className="hidden justify-start pt-2 lg:flex">
             <BrainOrb active={isThinking || Boolean(confirmation)} />
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-[980px]">
             <h1 className="text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl xl:text-5xl">
               {homeContext.greeting || greeting}, <span className="text-[var(--tc-accent,#ef0001)]">{homeContext.userName || userName}.</span>
             </h1>
@@ -535,7 +535,7 @@ function BrainConsole({
               </button>
             </form>
 
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-4 flex flex-wrap justify-start gap-3">
               {FILTERS.map((item) => {
                 const Icon = item.icon;
                 const active = selectedMode === item.mode;
@@ -596,7 +596,7 @@ function BrainConsole({
         </div>
 
         {quickModules.length ? (
-          <div className="flex flex-wrap gap-2 border-t border-white/8 pt-2">
+          <div className="flex flex-wrap justify-start gap-2 border-t border-white/8 pt-2">
             {quickModules.slice(0, 6).map((module) => (
               <a
                 key={module.id}
@@ -610,7 +610,7 @@ function BrainConsole({
           </div>
         ) : null}
 
-        <div className="grid gap-4">
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
           <section className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -635,7 +635,7 @@ function BrainConsole({
 
           <section className="rounded-[1.7rem] border border-white/10 bg-white/[0.035] px-4 py-4 backdrop-blur">
             <h2 className="mb-3 text-base font-black text-white">Destaques do contexto</h2>
-            <div className="grid gap-3 lg:grid-cols-3">
+            <div className="grid gap-3">
               {(homeContext.highlights.length > 0 ? homeContext.highlights : [
                 { type: "flow", title: "Fluxos atualizados", description: "Sem mudanças recentes no período", href: "/operacoes/dashboard" },
                 { type: "company", title: "Empresas", description: "Selecione uma empresa para detalhar", href: "/admin/visao-geral" },
@@ -676,7 +676,7 @@ export default function HomeContent() {
 
   const loading = authLoading || navLoading;
   const userName = resolveFirstName(user);
-  const visibleModules = modules.filter((module) => module.href || module.items.length > 0);
+  const visibleModules = modules.filter((module) => module.href || (module.items?.length ?? 0) > 0);
   const quickModules = useMemo(() => resolveQuickModules(visibleModules), [visibleModules]);
   const greeting = useMemo(() => resolveGreeting(), []);
 
@@ -699,7 +699,7 @@ export default function HomeContent() {
   }
 
   return (
-    <main className="w-full overflow-x-hidden bg-transparent px-3 pb-4 text-slate-950 dark:text-white lg:px-5 lg:pb-5">
+    <main className="w-full overflow-x-hidden bg-transparent px-2 pb-4 text-slate-950 dark:text-white sm:px-4 lg:px-5 lg:pb-5">
       <BrainConsole
         userName={userName}
         profile={profile}

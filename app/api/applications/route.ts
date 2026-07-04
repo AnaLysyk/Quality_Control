@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { listApplications, createApplication } from "../../../lib/applicationsStore";
 import { getCompanyIntegratedDefects } from "../../../lib/companyDefects";
 import { syncApplicationToBrain } from "@/lib/brain-sync";
@@ -52,10 +52,16 @@ function normalizeProjectCode(value: unknown) {
   return trimmed ? trimmed : null;
 }
 
+function isLightRequest(url: URL) {
+  const value = (url.searchParams.get("light") ?? url.searchParams.get("summary") ?? "").trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes";
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const companySlug = url.searchParams.get("companySlug") || undefined;
-  const cacheKey = companySlug ? `company:${companySlug}` : "all";
+  const light = isLightRequest(url);
+  const cacheKey = companySlug ? `company:${companySlug}:light:${light ? "1" : "0"}` : `all:light:${light ? "1" : "0"}`;
 
   const cached = readApplicationsCache(cacheKey);
   if (cached) {
@@ -66,12 +72,12 @@ export async function GET(request: Request) {
 
   const items = await listApplications(companySlug ? { companySlug } : undefined);
 
-  if (!companySlug) {
+  if (!companySlug || light) {
     const payload = { items };
     writeApplicationsCache(cacheKey, payload);
 
     return NextResponse.json(payload, {
-      headers: { "x-qc-cache": "miss" },
+      headers: { "x-qc-cache": "miss", "x-qc-mode": light ? "light" : "full" },
     });
   }
 
@@ -127,7 +133,7 @@ export async function GET(request: Request) {
   writeApplicationsCache(cacheKey, payload);
 
   return NextResponse.json(payload, {
-    headers: { "x-qc-cache": "miss" },
+    headers: { "x-qc-cache": "miss", "x-qc-mode": "full" },
   });
 }
 

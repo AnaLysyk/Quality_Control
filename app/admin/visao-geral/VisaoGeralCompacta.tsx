@@ -112,6 +112,36 @@ function mergeStats(releases: CompanyRow["releases"]): Stats {
   );
 }
 
+function isInsidePeriod(value: string | null | undefined, period: number, from: string, to: string) {
+  if (!value) return false;
+  const time = new Date(value).getTime();
+  if (!Number.isFinite(time)) return false;
+
+  if (from && to) {
+    const startAt = new Date(`${from}T00:00:00`).getTime();
+    const endAt = new Date(`${to}T23:59:59`).getTime();
+    return Number.isFinite(startAt) && Number.isFinite(endAt) && time >= startAt && time <= endAt;
+  }
+
+  const cutoff = Date.now() - period * 86400000;
+  return time >= cutoff;
+}
+
+function humanizeAction(action: string) {
+  return action
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .trim();
+}
+
+function eventMatchesCompany(item: Audit, company: CompanyRow | null) {
+  if (!company) return true;
+  const text = normalize(`${item.entity_label ?? ""} ${item.entity_type ?? ""} ${item.action}`);
+  const name = normalize(company.name);
+  const slug = normalize(company.slug);
+  return Boolean((name && text.includes(name)) || (slug && text.includes(slug)));
+}
+
 function Pie({ title, slices, note }: { title: string; note: string; slices: Slice[] }) {
   const sum = slices.reduce((acc, slice) => acc + slice.value, 0);
   if (!sum) return null;
@@ -151,11 +181,58 @@ function Pie({ title, slices, note }: { title: string; note: string; slices: Sli
 
 function eventKind(item: Audit) {
   const text = normalize(`${item.action} ${item.entity_type ?? ""} ${item.entity_label ?? ""}`);
-  if (/status|update|alter/.test(text)) return { title: "Status atualizado", color: "bg-sky-500" };
-  if (/run|execu/.test(text)) return { title: "Execução movimentada", color: "bg-violet-500" };
-  if (/defeito|defect|bug|falha/.test(text)) return { title: "Defeito movimentado", color: "bg-rose-500" };
-  if (/plano|plan|caso|case|repositorio/.test(text)) return { title: "Teste criado ou atualizado", color: "bg-emerald-500" };
-  return { title: "Movimentação", color: "bg-slate-500" };
+  const action = humanizeAction(item.action);
+
+  if (/defeito|defect|bug|falha/.test(text) && /create|created|criou|novo|open|opened|abert/.test(text)) {
+    return { title: "Defeito aberto", detail: "Registro de defeito criado no período filtrado.", color: "bg-rose-500" };
+  }
+  if (/defeito|defect|bug|falha/.test(text) && /status|update|alter|resolved|closed|fech|conclu/.test(text)) {
+    return { title: "Status de defeito alterado", detail: "Defeito teve mudança de status ou atualização.", color: "bg-rose-500" };
+  }
+  if (/run|execu/.test(text) && /finish|finished|closed|completed|finaliz|conclu/.test(text)) {
+    return { title: "Run finalizada", detail: "Execução encerrada dentro do período filtrado.", color: "bg-emerald-500" };
+  }
+  if (/run|execu/.test(text) && /create|created|criou|novo|open|opened|abert/.test(text)) {
+    return { title: "Run criada", detail: "Nova execução criada no período filtrado.", color: "bg-violet-500" };
+  }
+  if (/run|execu/.test(text) && /status|update|alter|andamento|progress/.test(text)) {
+    return { title: "Status da run alterado", detail: "Execução teve alteração de andamento ou status.", color: "bg-violet-500" };
+  }
+  if (/plano|plan/.test(text) && /create|created|criou|novo/.test(text)) {
+    return { title: "Plano de teste criado", detail: "Novo plano de teste registrado no período.", color: "bg-emerald-500" };
+  }
+  if (/plano|plan/.test(text)) {
+    return { title: "Plano de teste atualizado", detail: "Plano de teste teve alteração ou movimentação.", color: "bg-emerald-500" };
+  }
+  if (/caso|case|teste|test/.test(text) && /finish|finished|finaliz|conclu|passed|failed|blocked|execut/.test(text)) {
+    return { title: "Teste finalizado", detail: "Caso de teste recebeu resultado de execução.", color: "bg-sky-500" };
+  }
+  if (/caso|case|teste|test|repositorio/.test(text) && /create|created|criou|novo/.test(text)) {
+    return { title: "Caso de teste criado", detail: "Novo caso de teste registrado no repositório.", color: "bg-sky-500" };
+  }
+  if (/status|update|alter|mudou|troca/.test(text)) {
+    return { title: "Status atualizado", detail: "Item do sistema teve status ou dados alterados.", color: "bg-sky-500" };
+  }
+  if (/ticket|chamado|suporte|support/.test(text)) {
+    return { title: "Chamado de suporte movimentado", detail: "Chamado ou solicitação recebeu ação no período.", color: "bg-amber-500" };
+  }
+  if (/empresa|company|projeto|project/.test(text) && /create|created|criou|novo/.test(text)) {
+    return { title: "Empresa ou projeto criado", detail: "Cadastro institucional criado no período.", color: "bg-indigo-500" };
+  }
+  if (/empresa|company|projeto|project/.test(text)) {
+    return { title: "Empresa ou projeto atualizado", detail: "Cadastro institucional recebeu alteração.", color: "bg-indigo-500" };
+  }
+  if (/usuario|user|vincul|invite|convite|permission|permissao|perfil|role/.test(text)) {
+    return { title: "Usuário ou permissão alterada", detail: "Usuário, vínculo ou permissão teve atualização.", color: "bg-cyan-500" };
+  }
+  if (/delete|deleted|remove|removed|exclu|apag/.test(text)) {
+    return { title: "Exclusão realizada", detail: "Item foi removido ou desvinculado no período.", color: "bg-red-500" };
+  }
+  if (/create|created|criou|novo|nova/.test(text)) {
+    return { title: "Criação registrada", detail: "Novo item criado no sistema.", color: "bg-emerald-500" };
+  }
+
+  return { title: `Ação registrada: ${action || "sistema"}`, detail: "Ação do sistema sem categoria específica mapeada ainda.", color: "bg-slate-500" };
 }
 
 function StatCard({ icon: Icon, value, label }: { icon: typeof FiActivity; value: string | number; label: string }) {
@@ -191,7 +268,12 @@ export default function VisaoGeralCompacta() {
   useEffect(() => {
     let ok = true;
     setLoading(true);
-    fetchApi(`/api/admin/quality/overview?period=${effectivePeriod}`, { cache: "no-store" })
+    const params = new URLSearchParams({ period: String(effectivePeriod) });
+    if (hasRange) {
+      params.set("start", from);
+      params.set("end", to);
+    }
+    fetchApi(`/api/admin/quality/overview?${params.toString()}`, { cache: "no-store" })
       .then((response) => response.json().then((json) => ({ response, json })).catch(() => ({ response, json: null })))
       .then(({ response, json }) => ok && setOverview(response.ok ? unwrapEnvelopeData<Overview>(json) ?? json : null))
       .catch(() => ok && setOverview(null))
@@ -199,13 +281,18 @@ export default function VisaoGeralCompacta() {
     return () => {
       ok = false;
     };
-  }, [effectivePeriod]);
+  }, [effectivePeriod, from, hasRange, to]);
 
   useEffect(() => {
     let ok = true;
     const id = window.setTimeout(() => {
+      const auditParams = new URLSearchParams({ limit: String(Math.max(12, visibleEvents + FIRST_EVENTS)), period: String(effectivePeriod) });
+      if (hasRange) {
+        auditParams.set("start", from);
+        auditParams.set("end", to);
+      }
       Promise.all([
-        fetchApi("/api/admin/audit-logs?limit=12", { cache: "no-store" }),
+        fetchApi(`/api/admin/audit-logs?${auditParams.toString()}`, { cache: "no-store" }),
         fetchApi(selectedCompany ? `/api/admin/defeitos?company=${encodeURIComponent(selectedCompany)}` : "/api/admin/defeitos", {
           cache: "no-store",
         }),
@@ -229,7 +316,7 @@ export default function VisaoGeralCompacta() {
       ok = false;
       window.clearTimeout(id);
     };
-  }, [selectedCompany, effectivePeriod]);
+  }, [effectivePeriod, from, hasRange, selectedCompany, to, visibleEvents]);
 
   useEffect(() => {
     setVisibleCards(FIRST_ITEMS);
@@ -242,8 +329,14 @@ export default function VisaoGeralCompacta() {
   const stats = company ? mergeStats(company.releases) : overview?.globalStats ?? null;
   const filteredCompanies = companies.filter((entry) => normalize(`${entry.name} ${entry.slug ?? ""}`).includes(normalize(query)));
   const shownCompanies = filteredCompanies.slice(0, visibleCards);
-  const shownEvents = audit.slice(0, visibleEvents);
-  const linkedDefects = defects.filter((defect) => defect.run_id !== null && defect.run_id !== undefined && String(defect.run_id).trim()).length;
+  const filteredEvents = audit
+    .filter((event) => isInsidePeriod(event.created_at, effectivePeriod, from, to))
+    .filter((event) => eventMatchesCompany(event, company));
+  const shownEvents = filteredEvents.slice(0, visibleEvents);
+  const linkedDefects = defects
+    .filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to))
+    .filter((defect) => defect.run_id !== null && defect.run_id !== undefined && String(defect.run_id).trim()).length;
+  const defectsInPeriod = defects.filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to));
   const passRate = stats ? Math.round((stats.pass / Math.max(1, total(stats))) * 100) : 0;
 
   return (
@@ -330,8 +423,8 @@ export default function VisaoGeralCompacta() {
             <div className="grid grid-cols-2 gap-3 border-t border-white/12 pt-4 sm:grid-cols-3 lg:grid-cols-5">
               <StatCard icon={FiActivity} value={releases.length} label="Runs" />
               <StatCard icon={FiShield} value={`${passRate}%`} label="Aprovação" />
-              <StatCard icon={FiAlertTriangle} value={defects.length} label="Defeitos" />
-              <StatCard icon={FiUsers} value={audit.length} label="Ações" />
+              <StatCard icon={FiAlertTriangle} value={defectsInPeriod.length} label="Defeitos" />
+              <StatCard icon={FiUsers} value={filteredEvents.length} label="Ações" />
             </div>
           </div>
         </section>
@@ -358,7 +451,7 @@ export default function VisaoGeralCompacta() {
               {mode === "company" ? (
                 <>
                   <button type="button" onClick={() => setSelectedCompany(null)} className={selectedCompany === null ? selectedCard : card}>
-                    <span className="absolute inset-y-0 left-0 w-1.5 bg-[var(--tc-accent)]" />
+                    {selectedCompany === null ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[var(--tc-accent)]" /> : null}
                     <b>Todas as empresas</b>
                     <p className="text-sm text-[#64748b] dark:text-white/60">{companies.length} empresas liberadas</p>
                   </button>
@@ -407,15 +500,18 @@ export default function VisaoGeralCompacta() {
             />
             <Pie
               title="Defeitos"
-              note={`${linkedDefects} vinculados a runs · ${defects.length - linkedDefects} soltos`}
+              note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`}
               slices={[
                 { label: "Com run", value: linkedDefects, color: "#8b5cf6" },
-                { label: "Soltos", value: defects.length - linkedDefects, color: "#ef4444" },
+                { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" },
               ]}
             />
           </div>
           <section className="tc-panel">
             <h2 className="text-xl font-black tracking-[-.04em]">Eventos recentes</h2>
+            <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">
+              Exibindo ações do período filtrado: criação, status, runs, planos, testes, defeitos, suporte, usuários e permissões.
+            </p>
             <div className="mt-5 space-y-4">
               {shownEvents.length ? (
                 shownEvents.map((event) => {
@@ -425,16 +521,19 @@ export default function VisaoGeralCompacta() {
                       <span className={`mt-1 h-9 w-9 rounded-2xl ${meta.color}`} />
                       <div className="flex-1 rounded-3xl border border-[var(--tc-border)] bg-white p-4 dark:bg-[#0b1628]">
                         <b>{meta.title}</b>
-                        <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{event.entity_label ?? event.action}</p>
+                        <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{meta.detail}</p>
+                        <p className="mt-2 text-sm text-[#64748b] dark:text-white/60">{event.entity_label ?? humanizeAction(event.action)}</p>
                         <small>{shortDate(event.created_at)} · {event.actor_email ?? "Sistema"}</small>
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <p className="rounded-2xl border border-[var(--tc-border)] p-4 text-sm text-[#64748b] dark:text-white/60">Nenhum evento encontrado.</p>
+                <p className="rounded-2xl border border-[var(--tc-border)] p-4 text-sm text-[#64748b] dark:text-white/60">
+                  Nenhuma ação encontrada para este contexto no período filtrado.
+                </p>
               )}
-              {audit.length > shownEvents.length ? (
+              {filteredEvents.length > shownEvents.length ? (
                 <button type="button" onClick={() => setVisibleEvents((value) => value + FIRST_EVENTS)} className="w-full rounded-2xl border border-[var(--tc-border)] px-4 py-3 text-sm font-black">
                   Ver mais eventos
                 </button>

@@ -288,9 +288,9 @@ function BrainConsole({
   const messages = useMemo(
     () => [
       fixMojibake(`${greeting}, ${userName}. Eu sou o Brain. Seu contexto de ${profile.label} já está organizado.`),
-      profile.summary,
       fixMojibake(`Minha sugestão agora: olhar ${profile.focus.slice(0, 2).join(" e ")}.`),
-      fixMojibake("Use o chat flutuante para perguntar qualquer coisa. Os atalhos abaixo são só caminhos rápidos do menu."),
+      fixMojibake("Use o chat flutuante para perguntar qualquer coisa."),
+      fixMojibake("Os atalhos abaixo são caminhos rápidos do menu lateral."),
     ],
     [greeting, profile, userName],
   );
@@ -302,22 +302,7 @@ function BrainConsole({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_18%,rgba(239,0,1,0.18),transparent_26%),radial-gradient(circle_at_18%_12%,rgba(1,24,72,0.10),transparent_30%)] dark:bg-[radial-gradient(circle_at_78%_20%,rgba(239,0,1,0.22),transparent_30%),radial-gradient(circle_at_16%_10%,rgba(37,99,235,0.14),transparent_34%)]" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col gap-5">
-        <header className="grid gap-5 lg:grid-cols-[0.42fr_0.58fr] lg:items-end">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)] shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.055]">
-              <FiCpu size={13} />
-              {profile.eyebrow}
-            </div>
-
-            <h1 className="mt-4 max-w-xl text-4xl font-black leading-[0.98] tracking-tight text-slate-950 dark:text-white lg:text-5xl 2xl:text-6xl">
-              {profile.headline}
-            </h1>
-
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-white/66 lg:text-base">
-              {profile.summary}
-            </p>
-          </div>
-
+        <header>
           <div className="rounded-[2rem] border border-slate-200/80 bg-white/64 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-black/18 lg:p-7">
             <p className="min-h-[132px] text-3xl font-black leading-tight tracking-tight text-slate-950 dark:text-white lg:text-5xl">
               {typed}

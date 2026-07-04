@@ -1,5 +1,5 @@
-import VisaoGeralRapida from "./VisaoGeralRapida";
+import VisaoGeralPageClient from "./VisaoGeralCompacta";
 
 export default function VisaoGeralPage() {
-  return <VisaoGeralRapida />;
+  return <VisaoGeralPageClient />;
 }

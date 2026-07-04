@@ -11,6 +11,7 @@ import { buildBrainRuntimeContext } from "@/lib/brain/runtime";
 import { redactBrainNodeForUser } from "@/lib/brain/redaction";
 import { buildBrainSearchIndex, searchBrainIndex } from "@/lib/brain/searchIndex";
 import { buildQaCopilotAnswer } from "@/lib/brain/qaCopilot";
+import { buildBrainSystemPrompt, runBrainModel } from "@/lib/brain/modelProvider";
 import { prisma } from "@/lib/prismaClient";
 
 export type BrainChatAnswer = {
@@ -46,9 +47,15 @@ function resolveContextualQuery(message: string, current: BrainConversationConte
   return message;
 }
 
+function compact(value: unknown, max = 1800) {
+  const text = String(value ?? "").replace(/\s+/g, " ").trim();
+  return text.length > max ? `${text.slice(0, max - 1)}...` : text;
+}
+
 function toChatNode(node: BrainNode, access: BrainAccessContext) {
   const runtime = buildBrainRuntimeContext(access);
   const redacted = redactBrainNodeForUser(runtime, node);
+
   return {
     id: redacted.id,
     type: redacted.type,
@@ -58,6 +65,51 @@ function toChatNode(node: BrainNode, access: BrainAccessContext) {
   };
 }
 
+function buildModelUserPrompt(input: {
+  message: string;
+  foundNodes: ReturnType<typeof toChatNode>[];
+  allowedActions: BrainNodeAction[];
+  qaCopilotAnswer: string;
+}) {
+  const nodes = input.foundNodes
+    .slice(0, 5)
+    .map((node) => ({
+      id: node.id,
+      type: node.type,
+      label: node.label,
+      description: node.description,
+      metadata: node.metadata,
+    }));
+
+  const actions = input.allowedActions
+    .slice(0, 6)
+    .map((action) => ({
+      id: action.id,
+      label: action.label,
+      type: action.type,
+      route: action.route ?? null,
+      provider: action.provider ?? null,
+    }));
+
+  return [
+    "Pergunta da usuária:",
+    input.message,
+    "",
+    "Contexto seguro vindo do Brain/RAG/banco:",
+    compact(JSON.stringify(nodes), 5000),
+    "",
+    "Ações disponíveis:",
+    compact(JSON.stringify(actions), 2000),
+    "",
+    "Template QA já montado:",
+    input.qaCopilotAnswer,
+    "",
+    "Responda como uma IA de QA interna.",
+    "Use o banco como fonte principal.",
+    "Explique o próximo passo de forma prática.",
+  ].join("\n");
+}
+
 export async function answerBrainChatQuestion(input: {
   message: string;
   access: BrainAccessContext;
@@ -65,16 +117,19 @@ export async function answerBrainChatQuestion(input: {
   limit?: number;
 }): Promise<BrainChatAnswer> {
   const query = resolveContextualQuery(input.message, input.currentBrainContext);
+
   const [nodes, edges] = await Promise.all([
-    prisma.brainNode.findMany({ orderBy: { updatedAt: "desc" }, take: 600 }),
-    prisma.brainEdge.findMany({ take: 1200 }),
+    prisma.brainNode.findMany({ orderBy: { updatedAt: "desc" }, take: 220 }),
+    prisma.brainEdge.findMany({ take: 450 }),
   ]);
+
   const visibility = filterBrainGraphByAccess(nodes, edges, input.access);
   const visibleNodes = nodes.filter((node) => visibility.visibleNodeIds.has(node.id));
   const visibleEdges = edges.filter((edge) => visibility.visibleEdgeIds.has(edge.id));
+
   const index = buildBrainSearchIndex(visibleNodes, visibleEdges);
   const results = searchBrainIndex(index, query, {
-    limit: input.limit ?? 5,
+    limit: input.limit ?? 4,
     currentNodeId: input.currentBrainContext?.lastNodeId,
     currentModuleId: input.currentBrainContext?.lastNodeType,
   });
@@ -90,8 +145,28 @@ export async function answerBrainChatQuestion(input: {
       metadata: { query: input.message },
     });
 
+    const qaCopilotAnswer = buildQaCopilotAnswer({
+      message: input.message,
+      foundNodes: [],
+      allowedActions: [],
+    });
+
+    const model = await runBrainModel({
+      messages: [
+        { role: "system", content: buildBrainSystemPrompt() },
+        { role: "user", content: buildModelUserPrompt({
+          message: input.message,
+          foundNodes: [],
+          allowedActions: [],
+          qaCopilotAnswer,
+        }) },
+      ],
+      temperature: 0.2,
+      maxTokens: 1400,
+    });
+
     return {
-      answer: "Nao encontrei esse no no Brain. Posso procurar por empresa, projeto, run, defeito, tela, permissao ou usuario relacionado.",
+      answer: model.provider === "mock" ? qaCopilotAnswer : model.text,
       foundNodes: [],
       suggestedActions: [],
       evidence: [],
@@ -102,15 +177,22 @@ export async function answerBrainChatQuestion(input: {
   const resultIds = new Set(results.map((result) => result.nodeId));
   const foundNodes = visibleNodes.filter((node) => resultIds.has(node.id));
   const mainNode = foundNodes.find((node) => node.id === results[0]?.nodeId) ?? foundNodes[0];
+
   const actions = mainNode ? buildBrainNodeActions(mainNode) : [];
   const allowedActions = actions.filter((action) => {
     if (input.access.user.isGlobalAdmin) return true;
+
     return action.requiredPermissions.length === 0 || action.requiredPermissions.some((permission) =>
       input.access.userAccess.permissions[permission.moduleId]?.includes(permission.action),
     );
   });
-  const navigationAction = allowedActions.find((action) => action.route && (action.id === "open" || action.id === "navigate" || action.id === "open_external"));
+
+  const navigationAction = allowedActions.find((action) =>
+    action.route && (action.id === "open" || action.id === "navigate" || action.id === "open_external"),
+  );
+
   const blockedAction = actions.find((action) => !allowedActions.includes(action));
+
   const currentBrainContext: BrainConversationContext = mainNode
     ? {
         lastNodeId: mainNode.id,
@@ -140,12 +222,36 @@ export async function answerBrainChatQuestion(input: {
     },
   });
 
+  const safeFoundNodes = foundNodes.slice(0, input.limit ?? 4).map((node) => toChatNode(node, input.access));
+
+  const qaCopilotAnswer = buildQaCopilotAnswer({
+    message: input.message,
+    foundNodes: foundNodes.slice(0, input.limit ?? 4),
+    allowedActions,
+  });
+
+  const model = await runBrainModel({
+    messages: [
+      { role: "system", content: buildBrainSystemPrompt() },
+      { role: "user", content: buildModelUserPrompt({
+        message: input.message,
+        foundNodes: safeFoundNodes,
+        allowedActions,
+        qaCopilotAnswer,
+      }) },
+    ],
+    temperature: 0.2,
+    maxTokens: 1800,
+  });
+
   const topLabels = foundNodes.slice(0, 3).map((node) => `${node.label} (${node.type})`).join(", ");
+
   const navSentence = navigationAction?.route && wantsNavigation(input.message)
     ? ` Posso abrir: ${navigationAction.route}.`
     : "";
+
   const blockedSentence = blockedAction
-    ? ` Algumas acoes ficam bloqueadas para seu perfil, como "${blockedAction.label}".`
+    ? ` Algumas ações ficam bloqueadas para seu perfil, como "${blockedAction.label}".`
     : "";
   const qaCopilotAnswer = buildQaCopilotAnswer({
     message: input.message,
@@ -153,9 +259,11 @@ export async function answerBrainChatQuestion(input: {
     allowedActions,
   });
 
+  const modelAnswer = model.provider === "mock" ? qaCopilotAnswer : model.text;
+
   return {
-    answer: [`Encontrei no Brain: ${topLabels}.${navSentence}${blockedSentence}`, qaCopilotAnswer].join("\n\n"),
-    foundNodes: foundNodes.slice(0, input.limit ?? 5).map((node) => toChatNode(node, input.access)),
+    answer: [`Encontrei no Brain: ${topLabels}.${navSentence}${blockedSentence}`, modelAnswer].join("\n\n"),
+    foundNodes: safeFoundNodes,
     suggestedActions: allowedActions,
     navigation: navigationAction?.route ? { label: navigationAction.label, route: navigationAction.route } : undefined,
     blocked: blockedAction
@@ -173,5 +281,3 @@ export async function answerBrainChatQuestion(input: {
     currentBrainContext,
   };
 }
-
-

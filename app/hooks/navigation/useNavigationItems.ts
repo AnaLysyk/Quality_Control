@@ -195,7 +195,7 @@ function resolveModuleHref(
     }
 
     if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
-      return "/admin/dashboard";
+      return "/admin/home";
     }
 
     if (companySlug && effectiveRole && COMPANY_DASHBOARD_ROLES.has(effectiveRole)) {

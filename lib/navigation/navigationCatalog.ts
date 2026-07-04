@@ -2,6 +2,7 @@ import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type NavModule =
   | "home"
+  | "overview"
   | "companies"
   | "operations"
   | "quality"
@@ -79,6 +80,17 @@ export const NAV_CATALOG: NavModuleDef[] = [
     href: "/home",
     allowedRoles: ALL_USERS,
     testId: "nav-home",
+    items: [],
+  },
+
+  {
+    id: "overview",
+    routeId: "visao-geral.admin",
+    label: "Visão Geral",
+    iconKey: "bar-chart",
+    href: "/admin/visao-geral",
+    allowedRoles: LEADER_AND_SUPPORT,
+    testId: "nav-admin-overview",
     items: [],
   },
 

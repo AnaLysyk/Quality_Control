@@ -240,7 +240,7 @@ function getRoutesForModule(module: PermissionModule) {
     const requiredPermission = getRoutePermission(route);
     const routeModuleId = typeof record.moduleId === "string" ? record.moduleId : null;
 
-    return requiredPermission.moduleId === module.id || routeModuleId === module.id;
+    return requiredPermission.moduleId === permissionModule.id || routeModuleId === permissionModule.id;
   });
 }
 
@@ -260,9 +260,9 @@ function getModuleState(
   systemDefaults: PermissionMatrix,
   effectivePermissions: PermissionMatrix,
 ) {
-  const total = module.actions.length;
-  const allowed = module.actions.filter((action) => hasPermissionAccess(effectivePermissions, module.id, action)).length;
-  const baseAllowed = module.actions.filter((action) => hasPermissionAccess(systemDefaults, module.id, action)).length;
+  const total = permissionModule.actions.length;
+  const allowed = permissionModule.actions.filter((action) => hasPermissionAccess(effectivePermissions, permissionModule.id, action)).length;
+  const baseAllowed = permissionModule.actions.filter((action) => hasPermissionAccess(systemDefaults, permissionModule.id, action)).length;
 
   if (allowed === 0) {
     return {
@@ -410,7 +410,7 @@ export default function AdminPermissionsPage() {
         const defaults = normalizePermissionMatrix(resolveRoleDefaults(role));
         const permissions = role === selectedRole ? effectivePermissions : defaults;
         const visibleModules = PERMISSION_MODULES.filter((module) =>
-          module.actions.some((action) => hasPermissionAccess(permissions, module.id, action)),
+          permissionModule.actions.some((action) => hasPermissionAccess(permissions, permissionModule.id, action)),
         ).length;
         const activeActions = countPermissionActions(permissions);
         const details = getProfileDetails(role);
@@ -429,21 +429,21 @@ export default function AdminPermissionsPage() {
     const normalizedQuery = normalizeText(query);
 
     return PERMISSION_MODULES.map((module) => {
-      const routes = getRoutesForModule(module);
+      const routes = getRoutesForModule(permissionModule);
       const state = getModuleState(module, systemDefaults, effectivePermissions);
-      const changedActions = module.actions.filter(
+      const changedActions = permissionModule.actions.filter(
         (action) =>
-          hasPermissionAccess(effectivePermissions, module.id, action) !==
-          hasPermissionAccess(systemDefaults, module.id, action),
+          hasPermissionAccess(effectivePermissions, permissionModule.id, action) !==
+          hasPermissionAccess(systemDefaults, permissionModule.id, action),
       ).length;
 
       const content = normalizeText(
         [
-          module.label,
-          module.description,
-          module.category,
-          module.id,
-          module.actions.join(" "),
+          permissionModule.label,
+          permissionModule.description,
+          permissionModule.category,
+          permissionModule.id,
+          permissionModule.actions.join(" "),
           routes.map((route) => `${getRouteValue(route, "path")} ${getRouteValue(route, "label")} ${getRouteValue(route, "description")}`).join(" "),
         ].join(" "),
       );
@@ -466,8 +466,8 @@ export default function AdminPermissionsPage() {
       let right: number | string = "";
 
       if (sortKey === "module") {
-        left = a.module.label;
-        right = b.module.label;
+        left = a.permissionModule.label;
+        right = b.permissionModule.label;
       }
 
       if (sortKey === "status") {
@@ -543,19 +543,19 @@ export default function AdminPermissionsPage() {
   const searchSuggestions = useMemo(() => {
     const suggestions = new Set<string>();
 
-    for (const module of PERMISSION_MODULES) {
-      suggestions.add(module.label);
-      suggestions.add(module.id);
-      suggestions.add(module.category);
+    for (const permissionModule of PERMISSION_MODULES) {
+      suggestions.add(permissionModule.label);
+      suggestions.add(permissionModule.id);
+      suggestions.add(permissionModule.category);
 
-      if (module.description) suggestions.add(module.description);
+      if (permissionModule.description) suggestions.add(permissionModule.description);
 
-      for (const action of module.actions) {
+      for (const action of permissionModule.actions) {
         suggestions.add(action);
         suggestions.add(getActionLabel(action));
       }
 
-      for (const route of getRoutesForModule(module)) {
+      for (const route of getRoutesForModule(permissionModule)) {
         const path = getRouteValue(route, "path");
         const label = getRouteValue(route, "label");
         const description = getRouteValue(route, "description");
@@ -596,8 +596,8 @@ export default function AdminPermissionsPage() {
 
   function handleModuleToggle(module: PermissionModule, shouldAllow: boolean) {
     setDraftOverride((current) =>
-      module.actions.reduce(
-        (nextOverride, action) => toggleOverrideAction(nextOverride, systemDefaults, module.id, action, shouldAllow),
+      permissionModule.actions.reduce(
+        (nextOverride, action) => toggleOverrideAction(nextOverride, systemDefaults, permissionModule.id, action, shouldAllow),
         current,
       ),
     );
@@ -1139,15 +1139,15 @@ export default function AdminPermissionsPage() {
                   {pageRows.map((row) => {
                     const { module, state, routes, changedActions } = row;
                     const StateIcon = state.icon;
-                    const expanded = expandedModuleId === module.id;
+                    const expanded = expandedModuleId === permissionModule.id;
 
                     return (
-                      <Fragment key={row.module.id}>
-                        <tr key={module.id} className="bg-white align-top hover:bg-slate-50">
+                      <Fragment key={row.permissionModule.id}>
+                        <tr key={permissionModule.id} className="bg-white align-top hover:bg-slate-50">
                           <td className="px-4 py-3">
                             <button
                               type="button"
-                              onClick={() => setExpandedModuleId(expanded ? null : module.id)}
+                              onClick={() => setExpandedModuleId(expanded ? null : permissionModule.id)}
                               className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-[#011848] hover:text-[#011848]"
                             >
                               {expanded ? <FiChevronDown className="h-4 w-4" /> : <FiChevronRight className="h-4 w-4" />}
@@ -1155,12 +1155,12 @@ export default function AdminPermissionsPage() {
                           </td>
 
                           <td className="px-4 py-3">
-                            <p className="text-sm font-black text-[#0f172a]">{module.label}</p>
+                            <p className="text-sm font-black text-[#0f172a]">{permissionModule.label}</p>
                             <p className="mt-1 max-w-2xl text-xs font-semibold leading-relaxed text-slate-500">
-                              {module.description}
+                              {permissionModule.description}
                             </p>
                             <p className="mt-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
-                              {module.id}
+                              {permissionModule.id}
                             </p>
                           </td>
 
@@ -1222,7 +1222,7 @@ export default function AdminPermissionsPage() {
                         </tr>
 
                         {expanded ? (
-                          <tr key={`${module.id}-details`} className="bg-slate-50">
+                          <tr key={`${permissionModule.id}-details`} className="bg-slate-50">
                             <td colSpan={7} className="px-4 py-4">
                               <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                                 <section className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -1232,16 +1232,16 @@ export default function AdminPermissionsPage() {
                                   </p>
 
                                   <div className="mt-4 grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
-                                    {module.actions.map((action) => {
-                                      const checked = hasPermissionAccess(effectivePermissions, module.id, action);
-                                      const baseChecked = hasPermissionAccess(systemDefaults, module.id, action);
+                                    {permissionModule.actions.map((action) => {
+                                      const checked = hasPermissionAccess(effectivePermissions, permissionModule.id, action);
+                                      const baseChecked = hasPermissionAccess(systemDefaults, permissionModule.id, action);
                                       const changed = checked !== baseChecked;
 
                                       return (
                                         <button
-                                          key={`${module.id}-${action}`}
+                                          key={`${permissionModule.id}-${action}`}
                                           type="button"
-                                          onClick={() => handleToggle(module.id, action, !checked)}
+                                          onClick={() => handleToggle(permissionModule.id, action, !checked)}
                                           disabled={!canEdit || loadingProfile || saving}
                                           className={[
                                             "flex min-h-10 items-center justify-between gap-3 rounded-xl border bg-white px-3 py-2 text-left text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-50",
@@ -1281,7 +1281,7 @@ export default function AdminPermissionsPage() {
                                         const status = getRouteValue(route, "status");
 
                                         return (
-                                          <div key={`${module.id}-${path}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                          <div key={`${permissionModule.id}-${path}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                                             <div className="flex items-center justify-between gap-2">
                                               <p className="truncate text-xs font-black text-[#0f172a]">{label || path}</p>
                                               {status ? (
@@ -1301,7 +1301,7 @@ export default function AdminPermissionsPage() {
                                               </span>
                                               <span>
                                                 <strong className="text-slate-700">Permissão:</strong>{" "}
-                                                {requiredPermission.moduleId || module.id}:{requiredPermission.action || "view"}
+                                                {requiredPermission.moduleId || permissionModule.id}:{requiredPermission.action || "view"}
                                               </span>
                                               <span className="truncate">
                                                 <strong className="text-slate-700">Arquivo:</strong> {mainFile || "Não mapeado"}
@@ -1312,7 +1312,7 @@ export default function AdminPermissionsPage() {
                                       })
                                     ) : (
                                       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-semibold text-slate-500">
-                                        Nenhuma rota direta mapeada. Componentes e botões que usam <strong>{module.id}</strong> devem respeitar o perfil.
+                                        Nenhuma rota direta mapeada. Componentes e botões que usam <strong>{permissionModule.id}</strong> devem respeitar o perfil.
                                       </div>
                                     )}
                                   </div>

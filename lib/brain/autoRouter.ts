@@ -1,15 +1,18 @@
 ﻿import type { AgentMode } from "@/lib/brain/agents";
 
+export type AutoBrainSource = "brain" | "rag" | "database" | "web" | "local-model";
+
 export type AutoBrainRoute = {
   agentMode: AgentMode;
   useBrain: boolean;
   useRag: boolean;
   useDatabase: boolean;
   useWeb: boolean;
+  useLocalModel: boolean;
   useQaCopilot: boolean;
   label: string;
   reason: string;
-  sources: Array<"brain" | "rag" | "database" | "web">;
+  sources: AutoBrainSource[];
 };
 
 function normalize(value: string) {
@@ -28,10 +31,11 @@ function isCasual(text: string) {
 }
 
 export function buildAutoBrainRoute(message: string): AutoBrainRoute {
-  const text = normalize(String(message ?? ""));
+  const raw = String(message ?? "");
+  const text = normalize(raw);
 
   const wantsWeb =
-    /https?:\/\//i.test(message) ||
+    /https?:\/\//i.test(raw) ||
     hasAny(text, [
       "internet",
       "web",
@@ -41,6 +45,7 @@ export function buildAutoBrainRoute(message: string): AutoBrainRoute {
       "buscar online",
       "noticia",
       "notícias",
+      "noticias",
       "hoje",
       "agora",
       "atual",
@@ -150,15 +155,17 @@ export function buildAutoBrainRoute(message: string): AutoBrainRoute {
   }
 
   const useBrain = !isCasual(text) || wantsWeb || wantsQa || wantsDebug || wantsPlaywright || wantsMemory;
-  const sources: AutoBrainRoute["sources"] = ["brain", "rag", "database"];
+  const sources: AutoBrainSource[] = ["database", "brain", "rag", "local-model"];
+
   if (wantsWeb) sources.push("web");
 
   return {
     agentMode,
     useBrain,
     useRag: useBrain,
-    useDatabase: useBrain,
+    useDatabase: true,
     useWeb: wantsWeb,
+    useLocalModel: true,
     useQaCopilot: true,
     label,
     reason,

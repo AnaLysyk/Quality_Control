@@ -277,6 +277,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/login")) {
+      setLoading(false);
+      return;
+    }
+
     // If we had a cache hit on mount, revalidate silently in background
     const timeoutId = window.setTimeout(() => {
       void refreshUser(!initialHadCacheRef.current);

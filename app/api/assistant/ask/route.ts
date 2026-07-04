@@ -15,12 +15,12 @@ export const runtime = "nodejs";
 
 const ASSISTANT_ENABLED = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
 const MAX_ASSISTANT_PAYLOAD_BYTES = 256 * 1024;
-const MAX_HISTORY_MESSAGES = 8;
-const MAX_MESSAGE_CHARS = 2500;
-const MAX_REPLY_CHARS = 12000;
-const MAX_AGENT_RUNTIME_MS = 45_000;
-const MAX_BRAIN_DIRECT_MS = 35_000;
-const MAX_WEB_CONTEXT_CHARS = 3000;
+const MAX_HISTORY_MESSAGES = 4;
+const MAX_MESSAGE_CHARS = 1600;
+const MAX_REPLY_CHARS = 5000;
+const MAX_AGENT_RUNTIME_MS = 18_000;
+const MAX_BRAIN_DIRECT_MS = 8_000;
+const MAX_WEB_CONTEXT_CHARS = 1600;
 
 type AssistantRequestBody = {
   messages?: Array<{ role: "user" | "assistant"; content: string }>;
@@ -227,7 +227,7 @@ function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?
 }
 
 function shouldAnswerFromBrain(message: string) {
-  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cÃ§][aÃ£]o|defeito|bug|usuario|usu[aÃ¡]rio|qase|kase|jira|operacional|brain|brian|n[oÃ³]|dashboard|painel)\b/i.test(message);
+  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cç][aã]o|defeito|bug|usuario|usu[aá]rio|qase|kase|jira|operacional|brain|brian|n[oó]|dashboard|painel|qa|teste|testes|caso|cen[aá]rio|regress[aã]o|evid[eê]ncia|print|v[ií]deo|log|payload|endpoint|api|postman|playwright|release|aceite|homologa[cç][aã]o|ticket|chamado|erro|falha|risco|impacto|status code|internet|web|pesquisa|google|documenta[cç][aã]o oficial)\b/i.test(message);
 }
 
 function shouldUseBrainFirstContext(brainContext: AssistantOpenEventDetail | null) {
@@ -346,7 +346,7 @@ export async function POST(req: Request) {
             : brainAnswer.suggestedActions.slice(0, 3).map((action) => ({ kind: "prompt", label: action.label, prompt: action.label })),
           context: null,
           meta: {
-            agentMode: brainContext?.agentMode ?? "qa",
+            agentMode: autoBrainRoute.agentMode,
             nodeId: brainAnswer.currentBrainContext.lastNodeId ?? null,
             source: "brain",
             navigation: brainAnswer.navigation ?? null,
@@ -472,5 +472,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
 

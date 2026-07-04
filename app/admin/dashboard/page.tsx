@@ -7,6 +7,7 @@ import styles from "./page.module.css";
 import {
   FiAlertTriangle,
   FiArrowUpRight,
+  FiDownload,
   FiExternalLink,
   FiRefreshCw,
   FiSearch,
@@ -42,6 +43,7 @@ type DefectItem = {
   status: string;
   origin?: "manual" | "automatico";
   companyName?: string | null;
+  companySlug?: string | null;
   run_id?: string | number | null;
   url?: string;
 };
@@ -56,6 +58,10 @@ type RankedCompanyRow = RankingResponse["companies"][number] & {
   alertCount: number | null;
   latestRunAt: string | null;
   trendSummary: string;
+  hasTelemetry: boolean;
+  statusLabel: string;
+  statusTone: "positive" | "warning" | "danger" | "neutral";
+  scoreLabel: string | number;
 };
 
 const GATE_META: Record<QualityGateStatus, { label: string; tone: "positive" | "warning" | "danger" | "neutral" }> = {
@@ -257,10 +263,17 @@ function getEventMeta(action: string) {
 
 function matchCompanyDefect(item: DefectItem, company: CompanyRow | null) {
   if (!company) return true;
+
   const ref = normalizeText(item.companyName);
+  const itemSlug = normalizeText(item.companySlug);
   const name = normalizeText(company.name);
   const slug = normalizeText(company.slug);
-  return Boolean(ref) && (ref.includes(name) || (slug && ref.includes(slug)));
+
+  return Boolean(ref || itemSlug) && (
+    (ref && name && ref.includes(name)) ||
+    (ref && slug && ref.includes(slug)) ||
+    (slug && itemSlug === slug)
+  );
 }
 
 function buildCompanyAttention(company: CompanyRow | null, defects: DefectItem[]) {
@@ -306,6 +319,7 @@ export default function AdminHomePage() {
   const companyContextRef = useRef<HTMLElement | null>(null);
   const rankingSectionRef = useRef<HTMLElement | null>(null);
   const [overview, setOverview] = useState<QualityOverviewResponse | null>(null);
+  const [selectedScopedOverview, setSelectedScopedOverview] = useState<QualityOverviewResponse | null>(null);
   const [defectsPayload, setDefectsPayload] = useState<DefectsResponse | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [ranking, setRanking] = useState<RankingResponse | null>(null);
@@ -362,11 +376,52 @@ export default function AdminHomePage() {
 
   useEffect(() => {
     let canceled = false;
+
+    if (!selectedCompanySlug) {
+      setSelectedScopedOverview(null);
+      return () => {
+        canceled = true;
+      };
+    }
+
+    const loadSelectedOverview = async () => {
+      try {
+        const response = await fetchApi(`/api/admin/quality/overview?period=30&company=${encodeURIComponent(selectedCompanySlug)}`, { cache: "no-store" });
+        if (response.status === 401) {
+          router.replace("/login");
+          return;
+        }
+
+        const raw = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          if (!canceled) setSelectedScopedOverview(null);
+          return;
+        }
+
+        if (!canceled) setSelectedScopedOverview(unwrapEnvelopeData<QualityOverviewResponse>(raw) ?? null);
+      } catch {
+        if (!canceled) setSelectedScopedOverview(null);
+      }
+    };
+
+    void loadSelectedOverview();
+
+    return () => {
+      canceled = true;
+    };
+  }, [refreshKey, router, selectedCompanySlug]);
+
+  useEffect(() => {
+    let canceled = false;
     const loadDefects = async () => {
       setLoadingDefects(true);
       setDefectsError(null);
       try {
-        const response = await fetchApi("/api/admin/defeitos", { cache: "no-store" });
+        const defectsUrl = selectedCompanySlug
+          ? `/api/admin/defeitos?company=${encodeURIComponent(selectedCompanySlug)}`
+          : "/api/admin/defeitos";
+        const response = await fetchApi(defectsUrl, { cache: "no-store" });
         if (response.status === 401) {
           router.replace("/login");
           return;
@@ -389,7 +444,7 @@ export default function AdminHomePage() {
     return () => {
       canceled = true;
     };
-  }, [refreshKey, router]);
+  }, [refreshKey, router, selectedCompanySlug]);
 
   useEffect(() => {
     let canceled = false;
@@ -562,7 +617,7 @@ export default function AdminHomePage() {
       const haystack = normalizeText(`${item.entity_label ?? ""} ${item.entity_type ?? ""}`);
       return (name && haystack.includes(name)) || (slug && haystack.includes(slug));
     });
-    return (filtered.length ? filtered : auditLogs).slice(0, 6);
+    return filtered.slice(0, 6);
   }, [auditLogs, selectedCompany]);
   const attentionItems = useMemo(() => (selectedCompany ? buildCompanyAttention(selectedCompany, selectedCompanyDefects) : buildGlobalAttention(companies, defectsPayload?.items ?? [], overview)), [companies, defectsPayload?.items, overview, selectedCompany, selectedCompanyDefects]);
   const suggestedRunCompany = selectedCompany ?? mostCriticalCompany ?? null;
@@ -577,13 +632,36 @@ export default function AdminHomePage() {
     })[0] ?? null;
   }, [suggestedRunCompany]);
 
+  const reportOverview = selectedScopedOverview ?? overview;
+  const reportCompanies = selectedCompany
+    ? selectedScopedOverview?.companies?.length
+      ? selectedScopedOverview.companies
+      : [selectedCompany]
+    : companies;
+  const reportCompanyCount = selectedCompany ? 1 : companies.length;
+  const reportTelemetry = selectedCompany
+    ? reportOverview?.coverage.withStats ?? (selectedCompany.releases.some((release) => release.stats !== null) ? 1 : 0)
+    : companiesWithTelemetry;
+  const reportRuns = selectedCompany ? reportOverview?.releaseCount ?? selectedCompany.releases.length : totalRuns;
+  const reportPassRate = selectedCompany ? reportOverview?.globalPassRate ?? selectedCompany.passRate : overview?.globalPassRate;
+  const reportTrend = selectedCompany ? reportOverview?.trendSummary ?? selectedCompany.trend : overview?.trendSummary;
+  const reportRiskCount = selectedCompany ? reportCompanies.filter((company) => company.gate.status === "failed").length : companiesAtRisk;
+  const reportStaleCount = selectedCompany ? reportCompanies.filter((company) => (hoursSince(company.latestRelease?.createdAt) ?? 0) > 72).length : companiesWithoutRecentRun;
+  const reportOpenDefects = selectedCompany ? selectedCompanyDefects.filter((item) => item.status !== "done").length : openDefects;
+  const reportFailingDefects = selectedCompany ? selectedCompanyDefects.filter((item) => item.status === "fail").length : failingDefects;
+
   const heroCards = [
-    { id: "companies", label: "Cobertura com telemetria", value: companiesWithTelemetry, note: `${overview?.coverage.total ?? companies.length} empresas no escopo global` },
-    { id: "runs", label: "Execuções consolidadas", value: totalRuns, note: `Janela analítica de ${overview?.period ?? 30} dias` },
-    { id: "pass-rate", label: "Taxa média de aprovação", value: formatPercent(overview?.globalPassRate), note: formatTrend(overview?.trendSummary) },
-    { id: "risk", label: "Gate crítico por empresa", value: companiesAtRisk, note: `${companiesWithoutRecentRun} sem execução acima de 72h` },
-    { id: "defects", label: "Defeitos ativos", value: openDefects, note: `${failingDefects} com falha aberta` },
-    { id: "releases", label: "Releases sob risco", value: overview?.riskCount ?? "--", note: `${overview?.warningCount ?? 0} em observação` },
+    {
+      id: "scope",
+      label: selectedCompany ? "Empresa selecionada" : "Cobertura global",
+      value: selectedCompany ? selectedCompany.name : reportCompanyCount,
+      note: selectedCompany ? "PDF e indicadores usam este contexto" : `${overview?.coverage.total ?? companies.length} empresas no escopo global`,
+    },
+    { id: "companies", label: "Cobertura com telemetria", value: reportTelemetry, note: selectedCompany ? "Telemetria da empresa selecionada" : `${overview?.coverage.total ?? companies.length} empresas no escopo global` },
+    { id: "runs", label: "Execuções consolidadas", value: reportRuns, note: `Janela analítica de ${reportOverview?.period ?? 30} dias` },
+    { id: "pass-rate", label: "Taxa média de aprovação", value: formatPercent(reportPassRate), note: formatTrend(reportTrend) },
+    { id: "risk", label: "Gate crítico", value: reportRiskCount, note: `${reportStaleCount} sem execução acima de 72h` },
+    { id: "defects", label: "Defeitos ativos", value: reportOpenDefects, note: `${reportFailingDefects} com falha aberta` },
   ];
   const rankingRows = useMemo<RankedCompanyRow[]>(
     () =>
@@ -593,13 +671,22 @@ export default function AdminHomePage() {
           companies.find((company) => normalizeText(company.name) === normalizeText(entry.name)) ??
           null;
 
+        const hasTelemetry = Boolean(matchedCompany && matchedCompany.releases.length > 0);
+        const statusMeta = hasTelemetry
+          ? RANKING_STATUS_META[entry.status]
+          : { label: "Sem dados", summary: "Sem telemetria na janela atual", tone: "neutral" as const };
+
         return {
           ...entry,
           position: index + 1,
-          passRate: matchedCompany?.passRate ?? null,
-          alertCount: matchedCompany ? countRuns(matchedCompany, ["failed", "warning"]) : null,
-          latestRunAt: matchedCompany?.latestRelease?.createdAt ?? null,
-          trendSummary: matchedCompany ? formatTrend(matchedCompany.trend) : RANKING_STATUS_META[entry.status].summary,
+          passRate: hasTelemetry ? matchedCompany?.passRate ?? null : null,
+          alertCount: hasTelemetry && matchedCompany ? countRuns(matchedCompany, ["failed", "warning"]) : null,
+          latestRunAt: hasTelemetry ? matchedCompany?.latestRelease?.createdAt ?? null : null,
+          trendSummary: hasTelemetry && matchedCompany ? formatTrend(matchedCompany.trend) : statusMeta.summary,
+          hasTelemetry,
+          statusLabel: statusMeta.label,
+          statusTone: statusMeta.tone,
+          scoreLabel: hasTelemetry ? entry.score : "--",
         };
       }),
     [companies, ranking?.companies],
@@ -638,7 +725,7 @@ export default function AdminHomePage() {
                     alt="Logo"
                     className="h-12 w-12 rounded-2xl border border-white/20 object-contain p-1 backdrop-blur-sm"
                   />
-                  <h1 className="tc-hero-title">Dashboard</h1>
+                  <h1 className="tc-hero-title">Visão Geral</h1>
                 </div>
                 <div className="flex flex-wrap items-stretch gap-3">
                   {loadingOverview ? <p className="self-center text-xs font-semibold uppercase tracking-[0.24em] text-white/72">Atualizando...</p> : null}
@@ -682,7 +769,7 @@ export default function AdminHomePage() {
             </div>
           </section>
 
-          <section className="tc-panel">
+          <section className="tc-panel dashboard-print-hidden">
             <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0 space-y-3">
                 <div className="space-y-2">
@@ -690,8 +777,21 @@ export default function AdminHomePage() {
                     Seleção rápida de empresa
                   </h2>
                   <p className="max-w-160 text-[0.98rem] leading-7 text-[var(--tc-text-muted)]">
-                    Busque por nome ou slug, troque o contexto ativo e siga no painel sem quebrar o fluxo.
+                    Busque por nome ou slug, selecione uma empresa no carrossel e gere o PDF do contexto escolhido.
                   </p>
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[var(--tc-primary,#011848)] bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-extrabold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--tc-accent,#ef0001)]"
+                    >
+                      <FiDownload className="h-4 w-4" />
+                      {selectedCompany ? "Gerar PDF da empresa" : "Gerar PDF geral"}
+                    </button>
+                    <span className="rounded-full border border-[var(--tc-border)] bg-[var(--tc-surface)] px-3 py-2 text-xs font-bold text-[var(--tc-text-muted)]">
+                      Relatório: {selectedCompany?.name ?? "Ambiente inteiro"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -892,7 +992,7 @@ export default function AdminHomePage() {
                     <div className="grid min-w-0 sm:min-w-[16rem] gap-2 sm:gap-3 grid-cols-2">
                       <div className="tc-panel-muted">
                         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Tendencia</div>
-                        <div className="mt-2 flex items-center gap-2 text-base font-semibold text-[var(--tc-text-primary)]">{selectedCompany.trend.direction === "down" ? <FiTrendingDown className="text-[var(--tc-accent)]" /> : <FiTrendingUp className="text-emerald-600" />}{formatTrend(selectedCompany.trend)}</div>
+                        <div className="mt-2 flex items-center gap-2 text-base font-semibold text-[var(--tc-text-primary)]">{selectedCompany.trend.direction === "down" ? <FiTrendingDown className="text-[var(--tc-accent)]" /> : <FiTrendingUp className="text-emerald-600" />}{selectedCompany.releases.length === 0 ? "Sem telemetria na janela atual" : formatTrend(selectedCompany.trend)}</div>
                       </div>
                       <div className="tc-panel-muted">
                         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Última execução</div>
@@ -914,48 +1014,60 @@ export default function AdminHomePage() {
                     <div className="space-y-1">
                       <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">Ação sugerida</div>
                       <div className="text-sm font-bold text-[var(--tc-text-primary)]">
-                        {criticalDefects > 0 || selectedCompany.gate.status === "failed"
-                          ? "Priorizar triagem técnica imediata"
-                          : countRuns(selectedCompany, ["warning"]) > 0
-                            ? "Validar releases sob observação"
-                            : "Manter cadência e monitorar contexto"}
+                        {selectedCompany.releases.length === 0
+                          ? "Configurar telemetria da empresa"
+                          : criticalDefects > 0 || selectedCompany.gate.status === "failed"
+                            ? "Priorizar triagem técnica imediata"
+                            : countRuns(selectedCompany, ["warning"]) > 0
+                              ? "Validar releases sob observação"
+                              : "Manter cadência e monitorar contexto"}
                       </div>
                       <div className="text-sm leading-6 text-[var(--tc-text-muted)]">
-                        {criticalDefects > 0 || selectedCompany.gate.status === "failed"
-                          ? "Há sinal de risco real na empresa e o bloco de defeitos precisa de leitura rápida."
-                          : countRuns(selectedCompany, ["warning"]) > 0
-                            ? "A empresa não está em falha aberta, mas já mostra oscilação que merece antecipação."
-                            : "Sem alertas relevantes na janela atual; foco em consistência e última execução."}
+                        {selectedCompany.releases.length === 0
+                          ? "Sem runs monitoradas, a visão correta é configurar ou vincular dados antes de classificar a empresa como estável."
+                          : criticalDefects > 0 || selectedCompany.gate.status === "failed"
+                            ? "Há sinal de risco real na empresa e o bloco de defeitos precisa de leitura rápida."
+                            : countRuns(selectedCompany, ["warning"]) > 0
+                              ? "A empresa não está em falha aberta, mas já mostra oscilação que merece antecipação."
+                              : "Sem alertas relevantes na janela atual; foco em consistência e última execução."}
                       </div>
                     </div>
                     <div className="space-y-1">
                       <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">Ponto sensível</div>
                       <div className="text-sm font-bold text-[var(--tc-text-primary)]">
-                        {(hoursSince(selectedCompany.latestRelease?.createdAt) ?? 0) > 72
-                          ? "Execução desatualizada"
-                          : countRuns(selectedCompany, "no_data") > 0
-                            ? "Runs sem telemetria completa"
-                            : "Telemetria em dia"}
+                        {selectedCompany.releases.length === 0
+                          ? "Sem telemetria"
+                          : (hoursSince(selectedCompany.latestRelease?.createdAt) ?? 0) > 72
+                            ? "Execução desatualizada"
+                            : countRuns(selectedCompany, "no_data") > 0
+                              ? "Runs sem telemetria completa"
+                              : "Telemetria em dia"}
                       </div>
                       <div className="text-sm leading-6 text-[var(--tc-text-muted)]">
-                        {(hoursSince(selectedCompany.latestRelease?.createdAt) ?? 0) > 72
-                          ? `A última execução válida já passou de ${hoursSince(selectedCompany.latestRelease?.createdAt)}h.`
-                          : countRuns(selectedCompany, "no_data") > 0
-                            ? `${countRuns(selectedCompany, "no_data")} runs ainda não entregam sinal suficiente para score confiável.`
-                            : "A cobertura atual permite leitura mais segura do pass rate e do ranking."}
+                        {selectedCompany.releases.length === 0
+                          ? "Nenhuma run com telemetria foi encontrada para esta empresa; pass rate e ranking não devem ser tratados como leitura confiável."
+                          : (hoursSince(selectedCompany.latestRelease?.createdAt) ?? 0) > 72
+                            ? `A última execução válida já passou de ${hoursSince(selectedCompany.latestRelease?.createdAt)}h.`
+                            : countRuns(selectedCompany, "no_data") > 0
+                              ? `${countRuns(selectedCompany, "no_data")} runs ainda não entregam sinal suficiente para score confiável.`
+                              : "A cobertura atual permite leitura mais segura do pass rate e do ranking."}
                       </div>
                     </div>
                     <div className="space-y-1">
                       <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">Melhor sinal</div>
                       <div className="text-sm font-bold text-[var(--tc-text-primary)]">
-                        {countRuns(selectedCompany, "approved") > 0
-                          ? `${countRuns(selectedCompany, "approved")} runs aprovadas`
-                          : "Sem aprovação recente"}
+                        {selectedCompany.releases.length === 0
+                          ? "Sem execuções monitoradas"
+                          : countRuns(selectedCompany, "approved") > 0
+                            ? `${countRuns(selectedCompany, "approved")} runs aprovadas`
+                            : "Sem aprovação recente"}
                       </div>
                       <div className="text-sm leading-6 text-[var(--tc-text-muted)]">
-                        {countRuns(selectedCompany, "approved") > 0
-                          ? "A operação já mostrou estabilidade suficiente para apoiar a tomada de decisão."
-                          : "Se não houver aprovação recente, vale cruzar eventos e run em foco antes de agir."}
+                        {selectedCompany.releases.length === 0
+                          ? "Ainda não há execução suficiente para apontar melhor sinal de qualidade."
+                          : countRuns(selectedCompany, "approved") > 0
+                            ? "A operação já mostrou estabilidade suficiente para apoiar a tomada de decisão."
+                            : "Se não houver aprovação recente, vale cruzar eventos e run em foco antes de agir."}
                       </div>
                     </div>
                   </div>
@@ -1206,11 +1318,11 @@ export default function AdminHomePage() {
                             <div className="truncate text-base font-bold text-[var(--tc-text-primary)]">{company.name}</div>
                             <div className="mt-1 truncate text-sm text-[var(--tc-text-muted)]">{company.trendSummary}</div>
                           </div>
-                          <div className="text-[1.65rem] font-black tracking-[-0.04em] text-[var(--tc-text-primary)]">{company.score}</div>
+                          <div className="text-[1.65rem] font-black tracking-[-0.04em] text-[var(--tc-text-primary)]">{company.scoreLabel}</div>
                           <div>
-                            <span className="tc-status-pill" data-tone={RANKING_STATUS_META[company.status].tone}>
+                            <span className="tc-status-pill" data-tone={company.statusTone}>
                               <span className="tc-status-dot" />
-                              {RANKING_STATUS_META[company.status].label}
+                              {company.statusLabel}
                             </span>
                           </div>
                           <div className="text-sm font-semibold text-[var(--tc-text-primary)]">{formatPercent(company.passRate)}</div>
@@ -1259,13 +1371,13 @@ export default function AdminHomePage() {
                             <div className="mt-0.5 truncate text-xs text-[var(--tc-text-muted)]">{company.trendSummary}</div>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-xl font-black tracking-[-0.04em] text-[var(--tc-text-primary)]">{company.score}</div>
+                            <div className="text-xl font-black tracking-[-0.04em] text-[var(--tc-text-primary)]">{company.scoreLabel}</div>
                           </div>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <span className="tc-status-pill" data-tone={RANKING_STATUS_META[company.status].tone}>
+                          <span className="tc-status-pill" data-tone={company.statusTone}>
                             <span className="tc-status-dot" />
-                            {RANKING_STATUS_META[company.status].label}
+                            {company.statusLabel}
                           </span>
                           <span className="text-xs font-semibold text-[var(--tc-text-muted)]">PR {formatPercent(company.passRate)}</span>
                           <span className="text-xs font-semibold text-[var(--tc-text-muted)]">{typeof company.alertCount === "number" ? `${company.alertCount} alertas` : ""}</span>

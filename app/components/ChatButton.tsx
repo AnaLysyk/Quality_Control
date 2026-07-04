@@ -413,7 +413,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
       }
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        setMessages(parsed.slice(-120));
+        setMessages(parsed.slice(-40));
       }
     } catch {
       setMessages([]);
@@ -422,7 +422,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
   useEffect(() => {
     try {
-      localStorage.setItem(conversationStorageKey, JSON.stringify(messages.slice(-120)));
+      localStorage.setItem(conversationStorageKey, JSON.stringify(messages.slice(-40)));
     } catch {
       // ignore storage errors
     }
@@ -488,7 +488,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     function handleAssistantContext(e: Event) {
       const detail = (e as CustomEvent<AssistantOpenEventDetail>).detail ?? {};
       const detailRoute = detail.route ?? pathname;
-      if (detailRoute !== pathname) return;
+      if (detailRoute !== pathname && detail.source !== "brain" && detail.source !== "brain-node") return;
       const resolvedContext = resolveAssistantScreenContext(detailRoute);
       setAssistantContext(mergeAssistantContext(resolvedContext, detail.context ?? null));
       if (detail.source === "brain" || detailRoute.startsWith("/brain")) {
@@ -581,10 +581,19 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
         setActiveAgentMode(detail.agentMode as AgentMode);
       }
       setAssistantContext(mergeAssistantContext(resolvedContext, detail.context ?? null));
-      setPanelMode(detail.panelMode ?? "compact");
+      setPanelMode(detail.panelMode ?? (String(detail.source ?? "").startsWith("brain") ? "side" : "compact"));
       setOpen(true);
-      if (detail.initialMessage) {
-        setInput(detail.initialMessage);
+      const looseDetail = detail as AssistantOpenEventDetail & { prompt?: string; suggestedPrompt?: string };
+      const initialAssistantMessage =
+        detail.initialMessage ??
+        looseDetail.prompt ??
+        looseDetail.suggestedPrompt ??
+        (typeof detail.metadata === "object" && detail.metadata && "suggestedPrompt" in detail.metadata
+          ? String((detail.metadata as Record<string, unknown>).suggestedPrompt ?? "")
+          : "");
+
+      if (initialAssistantMessage) {
+        setInput(initialAssistantMessage);
       }
       if (detail.focusInput !== false) {
         window.setTimeout(() => {
@@ -598,6 +607,77 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
       window.removeEventListener("assistant:open", handleAssistantOpen);
     };
   }, [pathname]);
+
+
+
+  // brain:ask-chat-fast-open
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleBrainAskChatFast(e: Event) {
+      const detail = (e as CustomEvent<Record<string, unknown>>).detail ?? {};
+      const metadata = (detail.metadata && typeof detail.metadata === "object" && !Array.isArray(detail.metadata))
+        ? detail.metadata as Record<string, unknown>
+        : detail;
+
+      const route = typeof detail.route === "string" ? detail.route : typeof metadata.route === "string" ? metadata.route : pathname;
+      const nodeId = typeof detail.nodeId === "string" ? detail.nodeId : typeof metadata.nodeId === "string" ? metadata.nodeId : typeof metadata.entityId === "string" ? metadata.entityId : null;
+      const nodeLabel = typeof detail.nodeLabel === "string" ? detail.nodeLabel : typeof metadata.nodeLabel === "string" ? metadata.nodeLabel : typeof metadata.label === "string" ? metadata.label : null;
+      const nodeType = typeof detail.nodeType === "string" ? detail.nodeType : typeof metadata.nodeType === "string" ? metadata.nodeType : typeof metadata.entityType === "string" ? metadata.entityType : null;
+
+      const suggestedPrompt =
+        (typeof detail.initialMessage === "string" && detail.initialMessage.trim()) ? detail.initialMessage :
+        (typeof detail.prompt === "string" && detail.prompt.trim()) ? detail.prompt :
+        (typeof detail.suggestedPrompt === "string" && detail.suggestedPrompt.trim()) ? detail.suggestedPrompt :
+        (typeof metadata.suggestedPrompt === "string" && metadata.suggestedPrompt.trim()) ? metadata.suggestedPrompt :
+        nodeLabel ? `Me explica "${nodeLabel}" no Brain usando banco, RAG, histórico, permissões e evidências.` :
+        "Me ajuda com esse contexto no Brain.";
+
+      const resolvedContext = resolveAssistantScreenContext(route);
+
+      setBrainOpenContext({
+        source: "brain",
+        route,
+        nodeId,
+        nodeLabel,
+        nodeType,
+        agentMode: "qa",
+        metadata,
+      } as AssistantOpenEventDetail);
+
+      setAssistantContext(
+        mergeAssistantContext(resolvedContext, {
+          route,
+          module: "brain",
+          screenLabel: "Brain",
+          screenSummary: suggestedPrompt,
+          entityType: nodeType ?? undefined,
+          entityId: nodeId ?? undefined,
+          metadata,
+        }),
+      );
+
+      setActiveAgentMode(null);
+      setPanelMode("side");
+      setOpen(true);
+      setInput(suggestedPrompt);
+
+      window.setTimeout(() => {
+        inputRef.current?.focus();
+      }, 30);
+    }
+
+    window.addEventListener("brain:ask-chat", handleBrainAskChatFast);
+    window.addEventListener("brain:open-chat", handleBrainAskChatFast);
+    window.addEventListener("brain:ask", handleBrainAskChatFast);
+
+    return () => {
+      window.removeEventListener("brain:ask-chat", handleBrainAskChatFast);
+      window.removeEventListener("brain:open-chat", handleBrainAskChatFast);
+      window.removeEventListener("brain:ask", handleBrainAskChatFast);
+    };
+  }, [pathname, screenContext]);
+
 
   if (!assistantEnabled) return null;
   if (!user) return null;
@@ -617,7 +697,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     const trimmedOptimistic = optimisticText?.trim() ?? "";
     if (!payload.action && !trimmedOptimistic) return;
 
-    const requestHistory: AssistantConversationTurn[] = messages.slice(-12).map((message) => ({
+    const requestHistory: AssistantConversationTurn[] = messages.slice(-6).map((message) => ({
       from: message.from,
       text: message.text,
       tool: (message.tool ?? null) as AssistantConversationTurn["tool"],
@@ -822,7 +902,6 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     return null;
   }
-
   async function sendMessage(textOverride?: string) {
     const text = (textOverride ?? input).trim();
     if (!text) return;

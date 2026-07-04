@@ -1,7 +1,3 @@
-:global(body:has(.tc-hero-panel) .app-page-cover) {
-  display: none;
-}
-
 .barFill {
   width: var(--bar-w, 0%);
 }

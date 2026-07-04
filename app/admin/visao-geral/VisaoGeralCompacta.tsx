@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { IconType } from "react-icons";
 import {
   FiActivity,
   FiBriefcase,
@@ -52,29 +53,20 @@ type AdminUser = {
   image?: string | null;
 };
 
-type ActorProfile = {
-  name: string;
-  avatar: string | null;
-};
-
+type ActorProfile = { name: string; avatar: string | null };
 type Mode = "company" | "user";
-
-type Slice = {
-  label: string;
-  value: number;
-  color: string;
-};
+type Slice = { label: string; value: number; color: string };
 
 const FIRST_ITEMS = 6;
 const FIRST_EVENTS = 5;
 const periods = [7, 30, 90] as const;
 
-const selectedCard =
-  "relative flex w-[78vw] min-w-56 max-w-72 shrink-0 flex-col gap-3 overflow-hidden rounded-3xl border border-[rgba(239,0,1,.28)] bg-white p-4 text-left shadow-[0_24px_44px_rgba(1,24,72,.12)] ring-1 ring-[rgba(239,0,1,.16)] dark:bg-[#101d32]";
-const card =
-  "relative flex w-[78vw] min-w-56 max-w-72 shrink-0 flex-col gap-3 overflow-hidden rounded-3xl border border-[var(--tc-border)] bg-white p-4 text-left transition hover:bg-[#f8fbff] dark:bg-[#0b1628] dark:hover:bg-[#101f35]";
 const statCard =
   "rounded-[22px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5";
+const carouselItem =
+  "group relative flex min-w-60 shrink-0 items-center gap-3 rounded-2xl border border-transparent px-3 py-3 text-left transition hover:border-[rgba(239,0,1,.18)] hover:bg-white/50 dark:hover:bg-white/5";
+const carouselItemSelected =
+  "group relative flex min-w-60 shrink-0 items-center gap-3 rounded-2xl border border-[rgba(239,0,1,.34)] bg-transparent px-3 py-3 text-left shadow-[inset_3px_0_0_var(--tc-accent)]";
 
 function normalize(value?: string | null) {
   return (value ?? "")
@@ -95,15 +87,6 @@ function total(stats?: Stats | null) {
 
 function keyOf(company: CompanyRow) {
   return company.slug ?? company.id;
-}
-
-function initials(value: string) {
-  return value
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
 }
 
 function nameFromEmail(email?: string | null) {
@@ -151,15 +134,11 @@ function isInsidePeriod(value: string | null | undefined, period: number, from: 
     return Number.isFinite(startAt) && Number.isFinite(endAt) && time >= startAt && time <= endAt;
   }
 
-  const cutoff = Date.now() - period * 86400000;
-  return time >= cutoff;
+  return time >= Date.now() - period * 86400000;
 }
 
 function humanizeAction(action: string) {
-  return action
-    .replace(/[_-]+/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .trim();
+  return action.replace(/[_-]+/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").trim();
 }
 
 function eventMatchesCompany(item: Audit, company: CompanyRow | null) {
@@ -175,7 +154,7 @@ function Pie({ title, slices, note }: { title: string; note: string; slices: Sli
   if (!sum) return null;
 
   return (
-    <section className="tc-panel">
+    <section className="rounded-[28px] border border-[var(--tc-border)] bg-transparent p-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black tracking-[-.04em]">{title}</h2>
@@ -188,20 +167,15 @@ function Pie({ title, slices, note }: { title: string; note: string; slices: Sli
         </div>
       </div>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        {slices
-          .filter((slice) => slice.value > 0)
-          .map((slice) => (
-            <div
-              key={slice.label}
-              className="flex justify-between rounded-2xl border border-[var(--tc-border)] bg-white px-3 py-2 text-sm dark:bg-[#0b1628]"
-            >
-              <span className="flex items-center gap-2 text-[#64748b] dark:text-white/60">
-                <i className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slice.color }} />
-                {slice.label}
-              </span>
-              <b>{slice.value}</b>
-            </div>
-          ))}
+        {slices.filter((slice) => slice.value > 0).map((slice) => (
+          <div key={slice.label} className="flex justify-between rounded-2xl border border-[var(--tc-border)] bg-transparent px-3 py-2 text-sm">
+            <span className="flex items-center gap-2 text-[#64748b] dark:text-white/60">
+              <i className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slice.color }} />
+              {slice.label}
+            </span>
+            <b>{slice.value}</b>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -211,59 +185,27 @@ function eventKind(item: Audit) {
   const text = normalize(`${item.action} ${item.entity_type ?? ""} ${item.entity_label ?? ""}`);
   const action = humanizeAction(item.action);
 
-  if (/defeito|defect|bug|falha/.test(text) && /create|created|criou|novo|open|opened|abert/.test(text)) {
-    return { title: "Defeito aberto", detail: "Registro de defeito criado no período filtrado.", color: "bg-rose-500" };
-  }
-  if (/defeito|defect|bug|falha/.test(text) && /status|update|alter|resolved|closed|fech|conclu/.test(text)) {
-    return { title: "Status de defeito alterado", detail: "Defeito teve mudança de status ou atualização.", color: "bg-rose-500" };
-  }
-  if (/run|execu/.test(text) && /finish|finished|closed|completed|finaliz|conclu/.test(text)) {
-    return { title: "Run finalizada", detail: "Execução encerrada dentro do período filtrado.", color: "bg-emerald-500" };
-  }
-  if (/run|execu/.test(text) && /create|created|criou|novo|open|opened|abert/.test(text)) {
-    return { title: "Run criada", detail: "Nova execução criada no período filtrado.", color: "bg-violet-500" };
-  }
-  if (/run|execu/.test(text) && /status|update|alter|andamento|progress/.test(text)) {
-    return { title: "Status da run alterado", detail: "Execução teve alteração de andamento ou status.", color: "bg-violet-500" };
-  }
-  if (/plano|plan/.test(text) && /create|created|criou|novo/.test(text)) {
-    return { title: "Plano de teste criado", detail: "Novo plano de teste registrado no período.", color: "bg-emerald-500" };
-  }
-  if (/plano|plan/.test(text)) {
-    return { title: "Plano de teste atualizado", detail: "Plano de teste teve alteração ou movimentação.", color: "bg-emerald-500" };
-  }
-  if (/caso|case|teste|test/.test(text) && /finish|finished|finaliz|conclu|passed|failed|blocked|execut/.test(text)) {
-    return { title: "Teste finalizado", detail: "Caso de teste recebeu resultado de execução.", color: "bg-sky-500" };
-  }
-  if (/caso|case|teste|test|repositorio/.test(text) && /create|created|criou|novo/.test(text)) {
-    return { title: "Caso de teste criado", detail: "Novo caso de teste registrado no repositório.", color: "bg-sky-500" };
-  }
-  if (/status|update|alter|mudou|troca/.test(text)) {
-    return { title: "Status atualizado", detail: "Item do sistema teve status ou dados alterados.", color: "bg-sky-500" };
-  }
-  if (/ticket|chamado|suporte|support/.test(text)) {
-    return { title: "Chamado de suporte movimentado", detail: "Chamado ou solicitação recebeu ação no período.", color: "bg-amber-500" };
-  }
-  if (/empresa|company|projeto|project/.test(text) && /create|created|criou|novo/.test(text)) {
-    return { title: "Empresa ou projeto criado", detail: "Cadastro institucional criado no período.", color: "bg-indigo-500" };
-  }
-  if (/empresa|company|projeto|project/.test(text)) {
-    return { title: "Empresa ou projeto atualizado", detail: "Cadastro institucional recebeu alteração.", color: "bg-indigo-500" };
-  }
-  if (/usuario|user|vincul|invite|convite|permission|permissao|perfil|role/.test(text)) {
-    return { title: "Usuário ou permissão alterada", detail: "Usuário, vínculo ou permissão teve atualização.", color: "bg-cyan-500" };
-  }
-  if (/delete|deleted|remove|removed|exclu|apag/.test(text)) {
-    return { title: "Exclusão realizada", detail: "Item foi removido ou desvinculado no período.", color: "bg-red-500" };
-  }
-  if (/create|created|criou|novo|nova/.test(text)) {
-    return { title: "Criação registrada", detail: "Novo item criado no sistema.", color: "bg-emerald-500" };
-  }
+  if (/defeito|defect|bug|falha/.test(text) && /create|created|criou|novo|open|opened|abert/.test(text)) return { title: "Defeito aberto", detail: "Registro de defeito criado no período filtrado.", color: "bg-rose-500" };
+  if (/defeito|defect|bug|falha/.test(text) && /status|update|alter|resolved|closed|fech|conclu/.test(text)) return { title: "Status de defeito alterado", detail: "Defeito teve mudança de status ou atualização.", color: "bg-rose-500" };
+  if (/run|execu/.test(text) && /finish|finished|closed|completed|finaliz|conclu/.test(text)) return { title: "Run finalizada", detail: "Execução encerrada dentro do período filtrado.", color: "bg-emerald-500" };
+  if (/run|execu/.test(text) && /create|created|criou|novo|open|opened|abert/.test(text)) return { title: "Run criada", detail: "Nova execução criada no período filtrado.", color: "bg-violet-500" };
+  if (/run|execu/.test(text) && /status|update|alter|andamento|progress/.test(text)) return { title: "Status da run alterado", detail: "Execução teve alteração de andamento ou status.", color: "bg-violet-500" };
+  if (/plano|plan/.test(text) && /create|created|criou|novo/.test(text)) return { title: "Plano de teste criado", detail: "Novo plano de teste registrado no período.", color: "bg-emerald-500" };
+  if (/plano|plan/.test(text)) return { title: "Plano de teste atualizado", detail: "Plano de teste teve alteração ou movimentação.", color: "bg-emerald-500" };
+  if (/caso|case|teste|test/.test(text) && /finish|finished|finaliz|conclu|passed|failed|blocked|execut/.test(text)) return { title: "Teste finalizado", detail: "Caso de teste recebeu resultado de execução.", color: "bg-sky-500" };
+  if (/caso|case|teste|test|repositorio/.test(text) && /create|created|criou|novo/.test(text)) return { title: "Caso de teste criado", detail: "Novo caso de teste registrado no repositório.", color: "bg-sky-500" };
+  if (/status|update|alter|mudou|troca/.test(text)) return { title: "Status atualizado", detail: "Item do sistema teve status ou dados alterados.", color: "bg-sky-500" };
+  if (/ticket|chamado|suporte|support/.test(text)) return { title: "Chamado de suporte movimentado", detail: "Chamado ou solicitação recebeu ação no período.", color: "bg-amber-500" };
+  if (/empresa|company|projeto|project/.test(text) && /create|created|criou|novo/.test(text)) return { title: "Empresa ou projeto criado", detail: "Cadastro institucional criado no período.", color: "bg-indigo-500" };
+  if (/empresa|company|projeto|project/.test(text)) return { title: "Empresa ou projeto atualizado", detail: "Cadastro institucional recebeu alteração.", color: "bg-indigo-500" };
+  if (/usuario|user|vincul|invite|convite|permission|permissao|perfil|role/.test(text)) return { title: "Usuário ou permissão alterada", detail: "Usuário, vínculo ou permissão teve atualização.", color: "bg-cyan-500" };
+  if (/delete|deleted|remove|removed|exclu|apag/.test(text)) return { title: "Exclusão realizada", detail: "Item foi removido ou desvinculado no período.", color: "bg-red-500" };
+  if (/create|created|criou|novo|nova/.test(text)) return { title: "Criação registrada", detail: "Novo item criado no sistema.", color: "bg-emerald-500" };
 
   return { title: `Ação registrada: ${action || "sistema"}`, detail: "Ação do sistema sem categoria específica mapeada ainda.", color: "bg-slate-500" };
 }
 
-function StatCard({ icon: Icon, value, label }: { icon: typeof FiActivity; value: string | number; label: string }) {
+function StatCard({ icon: Icon, value, label }: { icon: IconType; value: string | number; label: string }) {
   return (
     <div className={statCard}>
       <Icon className="text-white/72" />
@@ -284,6 +226,22 @@ function RoundUserAvatar({ src, name, size = "md" }: { src?: string | null; name
         <img src={src} alt={name} className="h-full w-full rounded-full object-cover" />
       ) : (
         <FiUser size={iconSize} strokeWidth={2.6} />
+      )}
+    </div>
+  );
+}
+
+function RoundCompanyAvatar({ company }: { company?: CompanyRow | null }) {
+  const logo = company?.logo ?? null;
+  const name = company?.name ?? "Empresa";
+
+  return (
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/70 bg-[#e8edf5] text-[#64748b] shadow-[0_10px_22px_rgba(1,24,72,.08)] ring-1 ring-black/5 dark:border-white/20 dark:bg-[#dce3ee] dark:text-[#64748b]">
+      {logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo} alt={name} className="h-full w-full rounded-full object-cover" />
+      ) : (
+        <FiBriefcase size={20} strokeWidth={2.4} />
       )}
     </div>
   );
@@ -330,9 +288,7 @@ export default function VisaoGeralCompacta() {
       .then(({ response, json }) => ok && setOverview(response.ok ? unwrapEnvelopeData<Overview>(json) ?? json : null))
       .catch(() => ok && setOverview(null))
       .finally(() => ok && setLoading(false));
-    return () => {
-      ok = false;
-    };
+    return () => { ok = false; };
   }, [effectivePeriod, from, hasRange, to]);
 
   useEffect(() => {
@@ -345,9 +301,7 @@ export default function VisaoGeralCompacta() {
       }
       Promise.all([
         fetchApi(`/api/admin/audit-logs?${auditParams.toString()}`, { cache: "no-store" }),
-        fetchApi(selectedCompany ? `/api/admin/defeitos?company=${encodeURIComponent(selectedCompany)}` : "/api/admin/defeitos", {
-          cache: "no-store",
-        }),
+        fetchApi(selectedCompany ? `/api/admin/defeitos?company=${encodeURIComponent(selectedCompany)}` : "/api/admin/defeitos", { cache: "no-store" }),
       ])
         .then(async ([auditResponse, defectResponse]) => {
           const auditJson = await auditResponse.json().catch(() => null);
@@ -387,10 +341,7 @@ export default function VisaoGeralCompacta() {
           items.forEach((user) => {
             const email = user.email?.trim();
             if (!email) return;
-            next[email] = {
-              name: user.name?.trim() || nameFromEmail(email),
-              avatar: avatarFromUser(user),
-            };
+            next[email] = { name: user.name?.trim() || nameFromEmail(email), avatar: avatarFromUser(user) };
           });
           setActorProfiles((current) => ({ ...current, ...next }));
         })
@@ -430,7 +381,7 @@ export default function VisaoGeralCompacta() {
 
   return (
     <div className="min-h-screen bg-white text-[#011848] dark:bg-[#07111f] dark:text-white">
-      <div className="flex flex-col gap-4 px-3 py-4 sm:px-4 lg:px-8">
+      <div className="flex flex-col gap-5 px-3 py-4 sm:px-4 lg:px-8">
         <section className="tc-hero-panel">
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -469,41 +420,12 @@ export default function VisaoGeralCompacta() {
                   <div className="absolute right-0 top-[calc(100%+.5rem)] z-30 w-80 rounded-3xl border border-white/16 bg-white p-4 text-[#011848] shadow-2xl dark:bg-[#07111f] dark:text-white">
                     <p className="text-xs font-black uppercase tracking-[.22em] text-[var(--tc-text-muted)]">Filtrar por período</p>
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                      <label className="text-xs font-bold">
-                        De
-                        <input type="date" value={draftFrom} onChange={(event) => setDraftFrom(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" />
-                      </label>
-                      <label className="text-xs font-bold">
-                        Até
-                        <input type="date" value={draftTo} onChange={(event) => setDraftTo(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" />
-                      </label>
+                      <label className="text-xs font-bold">De<input type="date" value={draftFrom} onChange={(event) => setDraftFrom(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" /></label>
+                      <label className="text-xs font-bold">Até<input type="date" value={draftTo} onChange={(event) => setDraftTo(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" /></label>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (draftFrom && draftTo) {
-                            setFrom(draftFrom);
-                            setTo(draftTo);
-                            setShowCalendar(false);
-                          }
-                        }}
-                        className="rounded-xl bg-[var(--tc-primary)] px-3 py-2 text-xs font-black text-white"
-                      >
-                        Aplicar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFrom("");
-                          setTo("");
-                          setDraftFrom("");
-                          setDraftTo("");
-                        }}
-                        className="rounded-xl border border-[var(--tc-border)] px-3 py-2 text-xs font-black"
-                      >
-                        Limpar
-                      </button>
+                      <button type="button" onClick={() => { if (draftFrom && draftTo) { setFrom(draftFrom); setTo(draftTo); setShowCalendar(false); } }} className="rounded-xl bg-[var(--tc-primary)] px-3 py-2 text-xs font-black text-white">Aplicar</button>
+                      <button type="button" onClick={() => { setFrom(""); setTo(""); setDraftFrom(""); setDraftTo(""); }} className="rounded-xl border border-[var(--tc-border)] px-3 py-2 text-xs font-black">Limpar</button>
                     </div>
                   </div>
                 ) : null}
@@ -518,124 +440,79 @@ export default function VisaoGeralCompacta() {
           </div>
         </section>
 
-        <section className="tc-panel">
-          <div className="flex flex-col gap-4">
+        <section className="bg-transparent px-1 py-1">
+          <div className="flex flex-col gap-3">
             <div className="flex gap-2">
-              <button type="button" onClick={() => { setMode("company"); setSelectedUser(null); }} className={`tc-button-${mode === "company" ? "primary" : "secondary"}`}>
-                <FiBriefcase /> Empresa
-              </button>
-              <button type="button" onClick={() => { setMode("user"); setSelectedCompany(null); }} className={`tc-button-${mode === "user" ? "primary" : "secondary"}`}>
-                <FiUsers /> Usuário
-              </button>
+              <button type="button" onClick={() => { setMode("company"); setSelectedUser(null); }} className={`tc-button-${mode === "company" ? "primary" : "secondary"}`}><FiBriefcase /> Empresa</button>
+              <button type="button" onClick={() => { setMode("user"); setSelectedCompany(null); }} className={`tc-button-${mode === "user" ? "primary" : "secondary"}`}><FiUsers /> Usuário</button>
             </div>
             <label className="w-full">
-              <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-white px-4 py-3 dark:bg-[#07111f]">
+              <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-transparent px-4 py-3">
                 <FiSearch />
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mode === "company" ? "Buscar empresa" : "Buscar usuário"} className="w-full bg-transparent text-sm outline-none" />
               </div>
             </label>
           </div>
-          <div className="mt-5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mt-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex min-w-max gap-3">
               {mode === "company" ? (
                 <>
-                  <button type="button" onClick={() => setSelectedCompany(null)} className={selectedCompany === null ? selectedCard : card}>
-                    {selectedCompany === null ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[var(--tc-accent)]" /> : null}
-                    <b>Todas as empresas</b>
-                    <p className="text-sm text-[#64748b] dark:text-white/60">{companies.length} empresas liberadas</p>
+                  <button type="button" onClick={() => setSelectedCompany(null)} className={selectedCompany === null ? carouselItemSelected : carouselItem}>
+                    <RoundCompanyAvatar />
+                    <span><b>Todas as empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">{companies.length} empresas liberadas</p></span>
                   </button>
                   {shownCompanies.map((entry) => (
-                    <button key={keyOf(entry)} type="button" onClick={() => setSelectedCompany(keyOf(entry))} className={selectedCompany === keyOf(entry) ? selectedCard : card}>
-                      {selectedCompany === keyOf(entry) ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[var(--tc-accent)]" /> : null}
-                      <div className="flex gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef3ff] font-black dark:bg-[#13213a]">
-                          {entry.logo ? <img src={entry.logo} alt={entry.name} className="h-full w-full rounded-2xl object-cover" /> : initials(entry.name)}
-                        </div>
-                        <div>
-                          <b>{entry.name}</b>
-                          <p className="text-xs text-[#64748b] dark:text-white/60">{entry.releases.length} runs</p>
-                        </div>
-                      </div>
+                    <button key={keyOf(entry)} type="button" onClick={() => setSelectedCompany(keyOf(entry))} className={selectedCompany === keyOf(entry) ? carouselItemSelected : carouselItem}>
+                      <RoundCompanyAvatar company={entry} />
+                      <span className="min-w-0"><b className="line-clamp-1">{entry.name}</b><p className="text-xs text-[#64748b] dark:text-white/60">{entry.releases.length} runs</p></span>
                     </button>
                   ))}
-                  {filteredCompanies.length > shownCompanies.length ? (
-                    <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={card}>
-                      <b>Ver mais empresas</b>
-                      <p className="text-sm text-[#64748b] dark:text-white/60">Carrega mais itens sem renderizar tudo.</p>
-                    </button>
-                  ) : null}
+                  {filteredCompanies.length > shownCompanies.length ? <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={carouselItem}><RoundCompanyAvatar /><span><b>Ver mais empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">Carregar mais</p></span></button> : null}
                 </>
               ) : (
                 <>
-                  <button type="button" onClick={() => setSelectedUser(null)} className={selectedUser === null ? selectedCard : card}>
-                    {selectedUser === null ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[var(--tc-accent)]" /> : null}
-                    <b>Todos os usuários</b>
-                    <p className="text-sm text-[#64748b] dark:text-white/60">Histórico geral dos usuários.</p>
+                  <button type="button" onClick={() => setSelectedUser(null)} className={selectedUser === null ? carouselItemSelected : carouselItem}>
+                    <RoundUserAvatar name="Todos os usuários" />
+                    <span><b>Todos os usuários</b><p className="text-sm text-[#64748b] dark:text-white/60">Histórico geral</p></span>
                   </button>
                   {shownUsers.map((user) => {
                     const email = user.email?.trim() ?? user.id ?? "";
                     const selected = selectedUser === email;
                     const name = user.name?.trim() || nameFromEmail(email);
                     return (
-                      <button key={email} type="button" onClick={() => setSelectedUser(email)} className={selected ? selectedCard : card}>
-                        {selected ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[var(--tc-accent)]" /> : null}
-                        <div className="flex min-w-0 items-center gap-3">
-                          <RoundUserAvatar src={avatarFromUser(user)} name={name} />
-                          <div className="min-w-0">
-                            <b className="line-clamp-1">{name}</b>
-                            <p className="truncate text-xs text-[#64748b] dark:text-white/60">{email}</p>
-                          </div>
-                        </div>
+                      <button key={email} type="button" onClick={() => setSelectedUser(email)} className={selected ? carouselItemSelected : carouselItem}>
+                        <RoundUserAvatar src={avatarFromUser(user)} name={name} />
+                        <span className="min-w-0"><b className="line-clamp-1">{name}</b><p className="truncate text-xs text-[#64748b] dark:text-white/60">{email}</p></span>
                       </button>
                     );
                   })}
-                  {filteredUsers.length > shownUsers.length ? (
-                    <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={card}>
-                      <b>Ver mais usuários</b>
-                      <p className="text-sm text-[#64748b] dark:text-white/60">Carrega mais usuários sem renderizar tudo.</p>
-                    </button>
-                  ) : null}
+                  {filteredUsers.length > shownUsers.length ? <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={carouselItem}><RoundUserAvatar name="Ver mais usuários" /><span><b>Ver mais usuários</b><p className="text-sm text-[#64748b] dark:text-white/60">Carregar mais</p></span></button> : null}
                 </>
               )}
             </div>
           </div>
         </section>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,.85fr)_minmax(360px,1.15fr)]">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,.85fr)_minmax(360px,1.15fr)]">
           <div className="flex flex-col gap-4">
-            <Pie
-              title="Runs por status"
-              note="Distribuição do contexto filtrado"
-              slices={[
-                { label: "Aprovados", value: stats?.pass ?? 0, color: "#22c55e" },
-                { label: "Reprovados", value: stats?.fail ?? 0, color: "#ef4444" },
-                { label: "Bloqueados", value: stats?.blocked ?? 0, color: "#f59e0b" },
-                { label: "Em andamento", value: stats?.notRun ?? 0, color: "#60a5fa" },
-              ]}
-            />
-            <Pie
-              title="Defeitos"
-              note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`}
-              slices={[
-                { label: "Com run", value: linkedDefects, color: "#8b5cf6" },
-                { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" },
-              ]}
-            />
+            <Pie title="Runs por status" note="Distribuição do contexto filtrado" slices={[{ label: "Aprovados", value: stats?.pass ?? 0, color: "#22c55e" }, { label: "Reprovados", value: stats?.fail ?? 0, color: "#ef4444" }, { label: "Bloqueados", value: stats?.blocked ?? 0, color: "#f59e0b" }, { label: "Em andamento", value: stats?.notRun ?? 0, color: "#60a5fa" }]} />
+            <Pie title="Defeitos" note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`} slices={[{ label: "Com run", value: linkedDefects, color: "#8b5cf6" }, { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" }]} />
           </div>
-          <section className="tc-panel">
+          <section className="bg-transparent px-1 py-1">
             <h2 className="text-xl font-black tracking-[-.04em]">Eventos recentes</h2>
-            <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">
-              Exibindo ações do período filtrado: criação, status, runs, planos, testes, defeitos, suporte, usuários e permissões.
-            </p>
-            <div className="mt-5 space-y-4">
+            <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Exibindo ações do período filtrado: criação, status, runs, planos, testes, defeitos, suporte, usuários e permissões.</p>
+            <div className="mt-5 space-y-0">
               {shownEvents.length ? (
-                shownEvents.map((event) => {
+                shownEvents.map((event, index) => {
                   const meta = eventKind(event);
                   const profile = event.actor_email ? actorProfiles[event.actor_email] : undefined;
                   return (
-                    <div key={event.id} className="flex gap-3">
-                      <EventAvatar email={event.actor_email} profile={profile} />
-                      <div className="flex-1 rounded-3xl border border-[var(--tc-border)] bg-white p-4 dark:bg-[#0b1628]">
+                    <div key={event.id} className="relative flex gap-4 pb-6">
+                      <div className="flex flex-col items-center">
+                        <EventAvatar email={event.actor_email} profile={profile} />
+                        {index < shownEvents.length - 1 ? <span className="mt-2 h-full min-h-10 w-px bg-[var(--tc-border)]" /> : null}
+                      </div>
+                      <div className="min-w-0 flex-1 pt-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <b>{meta.title}</b>
                           <span className={`h-2.5 w-2.5 rounded-full ${meta.color}`} aria-hidden />
@@ -647,16 +524,8 @@ export default function VisaoGeralCompacta() {
                     </div>
                   );
                 })
-              ) : (
-                <p className="rounded-2xl border border-[var(--tc-border)] p-4 text-sm text-[#64748b] dark:text-white/60">
-                  Nenhuma ação encontrada para este contexto no período filtrado.
-                </p>
-              )}
-              {filteredEvents.length > shownEvents.length ? (
-                <button type="button" onClick={() => setVisibleEvents((value) => value + FIRST_EVENTS)} className="w-full rounded-2xl border border-[var(--tc-border)] px-4 py-3 text-sm font-black">
-                  Ver mais eventos
-                </button>
-              ) : null}
+              ) : <p className="py-4 text-sm text-[#64748b] dark:text-white/60">Nenhuma ação encontrada para este contexto no período filtrado.</p>}
+              {filteredEvents.length > shownEvents.length ? <button type="button" onClick={() => setVisibleEvents((value) => value + FIRST_EVENTS)} className="w-full rounded-2xl border border-[var(--tc-border)] px-4 py-3 text-sm font-black">Ver mais eventos</button> : null}
             </div>
           </section>
         </div>

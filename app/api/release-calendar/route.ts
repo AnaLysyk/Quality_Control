@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import {
   getReleaseCalendarModel,
@@ -12,7 +12,7 @@ import { getAccessContext } from "@/lib/auth/session";
 import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
-import { getReleaseCalendarSummary, listReleaseCalendarEvents, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
+import { listReleaseCalendarEvents, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -30,13 +30,20 @@ const VALID_AUDIENCE_PROFILES = [
   "release_actor",
   "brain",
 ] as const;
+const VALID_SCOPES = ["mine", "company", "all"] as const;
+const GLOBAL_AGENDA_ROLES = new Set(["leader_tc", "technical_support"]);
 
 type ReleaseStatus = (typeof VALID_STATUSES)[number];
+type AgendaScope = (typeof VALID_SCOPES)[number];
+type AccessContextValue = NonNullable<Awaited<ReturnType<typeof getAccessContext>>>;
 
 async function requireReleaseCalendarAccess(req: NextRequest, action: "view" | "create" | "edit" | "status") {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401, headers: NO_STORE_HEADERS });
+    return {
+      access: null,
+      response: NextResponse.json({ error: "Nao autorizado" }, { status: 401, headers: NO_STORE_HEADERS }),
+    };
   }
 
   const permissions = resolveEffectivePermissionMatrix({
@@ -47,10 +54,13 @@ async function requireReleaseCalendarAccess(req: NextRequest, action: "view" | "
   });
   const allowed = access.isGlobalAdmin || hasPermissionAccess(permissions, "release_calendar", action);
   if (!allowed) {
-    return NextResponse.json({ error: "Sem permissao para acessar a agenda." }, { status: 403, headers: NO_STORE_HEADERS });
+    return {
+      access,
+      response: NextResponse.json({ error: "Sem permissao para acessar a agenda." }, { status: 403, headers: NO_STORE_HEADERS }),
+    };
   }
 
-  return null;
+  return { access, response: null };
 }
 
 function normalizeStatus(value: unknown): ReleaseStatus | null {
@@ -71,8 +81,89 @@ function normalizeAudienceProfile(value: unknown): ReleaseCalendarAudienceProfil
     : null;
 }
 
+function normalizeScope(value: unknown): AgendaScope {
+  return typeof value === "string" && VALID_SCOPES.includes(value as AgendaScope) ? (value as AgendaScope) : "all";
+}
+
+function normalizeText(value: unknown) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
 function actorName(user: { name?: string | null; email?: string | null; id: string }) {
   return user.name ?? user.email ?? user.id;
+}
+
+function canViewGlobalAgenda(access: AccessContextValue) {
+  return access.isGlobalAdmin || GLOBAL_AGENDA_ROLES.has(normalizeText(access.role));
+}
+
+function eventBelongsToUser(event: ReleaseCalendarEvent, access: AccessContextValue) {
+  const candidates = new Set(
+    [access.userId, access.email, access.user]
+      .map(normalizeText)
+      .filter(Boolean),
+  );
+
+  if (!candidates.size) return false;
+  if (candidates.has(normalizeText(event.ownerId))) return true;
+  if (candidates.has(normalizeText(event.ownerName))) return true;
+
+  return event.participantNames.some((participant) => candidates.has(normalizeText(participant)));
+}
+
+function filterEventsByAccess(input: {
+  events: ReleaseCalendarEvent[];
+  access: AccessContextValue;
+  scope: AgendaScope;
+  requestedCompanySlug?: string | null;
+}) {
+  const canSeeEveryCompany = canViewGlobalAgenda(input.access);
+  const allowedCompanySlugs = new Set(input.access.companySlugs.map((slug) => slug.toLowerCase()));
+  const requestedCompanySlug = normalizeText(input.requestedCompanySlug);
+
+  return input.events.filter((event) => {
+    const eventCompanySlug = normalizeText(event.companySlug);
+
+    if (requestedCompanySlug && eventCompanySlug !== requestedCompanySlug) return false;
+
+    if (input.scope === "mine") {
+      return eventBelongsToUser(event, input.access);
+    }
+
+    if (canSeeEveryCompany) return true;
+
+    if (!eventCompanySlug) return false;
+    return allowedCompanySlugs.has(eventCompanySlug);
+  });
+}
+
+function buildCalendarSummary(events: ReleaseCalendarEvent[]) {
+  const companies = new Set(events.map((event) => event.companySlug ?? event.companyName).filter(Boolean));
+  const projects = new Set(events.map((event) => event.projectSlug).filter(Boolean));
+  const users = new Set(
+    events
+      .flatMap((event) => [event.ownerName, ...event.participantNames])
+      .map((value) => value?.trim())
+      .filter(Boolean),
+  );
+  const contexts = new Set(events.map((event) => event.context).filter(Boolean));
+
+  return {
+    total: events.length,
+    planned: events.filter((event) => event.status === "planned").length,
+    atRisk: events.filter((event) => event.status === "at_risk").length,
+    blocked: events.filter((event) => event.status === "blocked").length,
+    done: events.filter((event) => event.status === "done").length,
+    critical: events.filter((event) => event.criticality === "critical").length,
+    releases: new Set(events.map((event) => event.releaseId)).size,
+    qaWindows: events.filter((event) => event.type === "qa_window").length,
+    companies: companies.size,
+    projects: projects.size,
+    users: users.size,
+    contexts: contexts.size,
+    leaderVisible: events.filter((event) => event.audienceProfiles.includes("leader_tc")).length,
+    supportVisible: events.filter((event) => event.audienceProfiles.includes("technical_support")).length,
+  };
 }
 
 function buildRecipients(user: { name?: string | null; email?: string | null; id: string }, event: ReleaseCalendarEvent): NotificationEventRecipient[] {
@@ -139,8 +230,8 @@ async function recordCalendarNotification(input: {
 }
 
 export async function GET(req: NextRequest) {
-  const blocked = await requireReleaseCalendarAccess(req, "view");
-  if (blocked) return blocked;
+  const { access, response } = await requireReleaseCalendarAccess(req, "view");
+  if (response || !access) return response;
 
   const url = new URL(req.url);
   const companySlug = url.searchParams.get("companySlug")?.trim() || null;
@@ -151,21 +242,29 @@ export async function GET(req: NextRequest) {
   const criticality = normalizeCriticality(url.searchParams.get("criticality")?.trim() || null);
   const context = normalizeContext(url.searchParams.get("context")?.trim() || null);
   const audienceProfile = normalizeAudienceProfile(url.searchParams.get("audienceProfile")?.trim() || null);
+  const scope = normalizeScope(url.searchParams.get("scope")?.trim() || null);
 
-  const [events, summary] = await Promise.all([
-    listReleaseCalendarEvents({ companySlug, projectSlug, releaseId, ownerName, status, criticality, context, audienceProfile }),
-    getReleaseCalendarSummary(),
-  ]);
+  const events = await listReleaseCalendarEvents({
+    companySlug: null,
+    projectSlug,
+    releaseId,
+    ownerName,
+    status,
+    criticality,
+    context,
+    audienceProfile,
+  });
+  const scopedEvents = filterEventsByAccess({ events, access, scope, requestedCompanySlug: companySlug });
 
   return NextResponse.json(
-    { ...getReleaseCalendarModel(), events, calendarSummary: summary },
+    { ...getReleaseCalendarModel(), events: scopedEvents, calendarSummary: buildCalendarSummary(scopedEvents) },
     { headers: NO_STORE_HEADERS },
   );
 }
 
 export async function POST(req: NextRequest) {
-  const blocked = await requireReleaseCalendarAccess(req, "create");
-  if (blocked) return blocked;
+  const { response } = await requireReleaseCalendarAccess(req, "create");
+  if (response) return response;
 
   const user = await authenticateRequest(req);
   if (!user) {
@@ -193,8 +292,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const blocked = await requireReleaseCalendarAccess(req, "status");
-  if (blocked) return blocked;
+  const { response } = await requireReleaseCalendarAccess(req, "status");
+  if (response) return response;
 
   const user = await authenticateRequest(req);
   if (!user) {
@@ -234,4 +333,3 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ event, notification }, { status: 200, headers: NO_STORE_HEADERS });
 }
-

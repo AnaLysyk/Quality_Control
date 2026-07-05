@@ -25,12 +25,19 @@ function getPrimaryDatabaseUrl() {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL ?? null;
 }
 
+function getConfiguredBrainDatabaseUrl() {
+  return process.env.BRAIN_DATABASE_URL ??
+    process.env.BRAIN_RAG_DATABASE_URL ??
+    process.env.PRISMA_DATABASE_URL ??
+    null;
+}
+
 function canUsePrimaryDatabaseAsBrainFallback() {
   return process.env.NODE_ENV !== "production" || process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
 }
 
 function getBrainDatabaseUrl() {
-  const brainDatabaseUrl = process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL;
+  const brainDatabaseUrl = getConfiguredBrainDatabaseUrl();
   const primaryDatabaseUrl = getPrimaryDatabaseUrl();
 
   if (!brainDatabaseUrl) {
@@ -42,7 +49,7 @@ function getBrainDatabaseUrl() {
     }
 
     throw new Error(
-      "BRAIN_DATABASE_URL or BRAIN_RAG_DATABASE_URL is required for the Brain RAG database.",
+      "BRAIN_DATABASE_URL, BRAIN_RAG_DATABASE_URL or PRISMA_DATABASE_URL is required for the Brain RAG database.",
     );
   }
 
@@ -55,7 +62,7 @@ function getBrainDatabaseUrl() {
     process.env.NODE_ENV === "production"
   ) {
     throw new Error(
-      "Brain RAG database must be separated from the production/system database. Set BRAIN_ALLOW_PRIMARY_DATABASE=true only for local development.",
+      "Brain RAG database must be separated from the production/system database. Set BRAIN_DATABASE_URL or PRISMA_DATABASE_URL to a database different from DATABASE_URL.",
     );
   }
 

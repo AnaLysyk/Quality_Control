@@ -1,0 +1,154 @@
+.homeTheme {
+  --home-bg-light: linear-gradient(135deg, #ffffff 0%, #f6f8fc 52%, #eef3ff 100%);
+  --home-bg-dark: linear-gradient(135deg, #050713 0%, #070b18 52%, #0a1020 100%);
+  --home-text-light: #0f172a;
+  --home-muted-light: #52627a;
+  --home-border-light: rgba(15, 23, 42, 0.12);
+  --home-card-light: rgba(255, 255, 255, 0.72);
+  --home-soft-light: rgba(248, 250, 252, 0.86);
+  --home-text-dark: #f8fafc;
+  --home-muted-dark: rgba(226, 232, 240, 0.7);
+  --home-border-dark: rgba(255, 255, 255, 0.1);
+  --home-card-dark: rgba(255, 255, 255, 0.04);
+  --home-soft-dark: rgba(0, 0, 0, 0.18);
+
+  min-height: 100%;
+  background: var(--home-bg-light) !important;
+  color: var(--home-text-light) !important;
+}
+
+.homeTheme :global(main),
+.homeTheme :global(main > section) {
+  background: var(--home-bg-light) !important;
+  color: var(--home-text-light) !important;
+}
+
+.homeTheme :global(main > section) {
+  border-color: var(--home-border-light) !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12) !important;
+}
+
+.homeTheme :global(main > section > div.pointer-events-none) {
+  display: none !important;
+}
+
+.homeTheme :global(.brain-caption),
+.homeTheme :global(section section),
+.homeTheme :global(form),
+.homeTheme :global(a),
+.homeTheme :global(button),
+.homeTheme :global(input) {
+  border-color: var(--home-border-light) !important;
+}
+
+.homeTheme :global(.brain-caption),
+.homeTheme :global(section section),
+.homeTheme :global(form),
+.homeTheme :global([class*="bg-white/"]),
+.homeTheme :global([class*="bg-black/"]) {
+  background: var(--home-card-light) !important;
+  color: var(--home-text-light) !important;
+}
+
+.homeTheme :global([class*="text-white"]),
+.homeTheme :global(h1),
+.homeTheme :global(h2),
+.homeTheme :global(h3),
+.homeTheme :global(p),
+.homeTheme :global(input),
+.homeTheme :global(button),
+.homeTheme :global(a) {
+  color: var(--home-text-light) !important;
+}
+
+.homeTheme :global([class*="text-white/"]),
+.homeTheme :global([class*="placeholder:text-white"]::placeholder),
+.homeTheme :global(input::placeholder) {
+  color: var(--home-muted-light) !important;
+}
+
+.homeTheme :global([class*="bg-[var(--tc-accent"]),
+.homeTheme :global([class*="bg-[var(--tc-accent"] *),
+.homeTheme :global(button[class*="bg-[var(--tc-accent"]),
+.homeTheme :global(button[class*="bg-[var(--tc-accent"] *) {
+  color: #ffffff !important;
+}
+
+.homeTheme :global(.brain-orb-wrap),
+.homeTheme :global(.brain-orb-wrap *) {
+  color: #ffffff !important;
+}
+
+.homeTheme :global(input) {
+  background: transparent !important;
+}
+
+.homeTheme :global([class*="border-white"]),
+.homeTheme :global([class*="border-white/"]) {
+  border-color: var(--home-border-light) !important;
+}
+
+:global(.dark) .homeTheme,
+:global([data-theme="dark"]) .homeTheme,
+:global(.dark) .homeTheme :global(main),
+:global(.dark) .homeTheme :global(main > section),
+:global([data-theme="dark"]) .homeTheme :global(main),
+:global([data-theme="dark"]) .homeTheme :global(main > section) {
+  background: var(--home-bg-dark) !important;
+  color: var(--home-text-dark) !important;
+}
+
+:global(.dark) .homeTheme :global(main > section),
+:global([data-theme="dark"]) .homeTheme :global(main > section) {
+  border-color: var(--home-border-dark) !important;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.34) !important;
+}
+
+:global(.dark) .homeTheme :global(.brain-caption),
+:global(.dark) .homeTheme :global(section section),
+:global(.dark) .homeTheme :global(form),
+:global(.dark) .homeTheme :global([class*="bg-white/"]),
+:global(.dark) .homeTheme :global([class*="bg-black/"]),
+:global([data-theme="dark"]) .homeTheme :global(.brain-caption),
+:global([data-theme="dark"]) .homeTheme :global(section section),
+:global([data-theme="dark"]) .homeTheme :global(form),
+:global([data-theme="dark"]) .homeTheme :global([class*="bg-white/"]),
+:global([data-theme="dark"]) .homeTheme :global([class*="bg-black/"]) {
+  background: var(--home-card-dark) !important;
+  color: var(--home-text-dark) !important;
+}
+
+:global(.dark) .homeTheme :global([class*="text-white"]),
+:global(.dark) .homeTheme :global(h1),
+:global(.dark) .homeTheme :global(h2),
+:global(.dark) .homeTheme :global(h3),
+:global(.dark) .homeTheme :global(p),
+:global(.dark) .homeTheme :global(input),
+:global(.dark) .homeTheme :global(button),
+:global(.dark) .homeTheme :global(a),
+:global([data-theme="dark"]) .homeTheme :global([class*="text-white"]),
+:global([data-theme="dark"]) .homeTheme :global(h1),
+:global([data-theme="dark"]) .homeTheme :global(h2),
+:global([data-theme="dark"]) .homeTheme :global(h3),
+:global([data-theme="dark"]) .homeTheme :global(p),
+:global([data-theme="dark"]) .homeTheme :global(input),
+:global([data-theme="dark"]) .homeTheme :global(button),
+:global([data-theme="dark"]) .homeTheme :global(a) {
+  color: var(--home-text-dark) !important;
+}
+
+:global(.dark) .homeTheme :global([class*="text-white/"]),
+:global(.dark) .homeTheme :global([class*="placeholder:text-white"]::placeholder),
+:global(.dark) .homeTheme :global(input::placeholder),
+:global([data-theme="dark"]) .homeTheme :global([class*="text-white/"]),
+:global([data-theme="dark"]) .homeTheme :global([class*="placeholder:text-white"]::placeholder),
+:global([data-theme="dark"]) .homeTheme :global(input::placeholder) {
+  color: var(--home-muted-dark) !important;
+}
+
+:global(.dark) .homeTheme :global([class*="border-white"]),
+:global(.dark) .homeTheme :global([class*="border-white/"]),
+:global([data-theme="dark"]) .homeTheme :global([class*="border-white"]),
+:global([data-theme="dark"]) .homeTheme :global([class*="border-white/"]) {
+  border-color: var(--home-border-dark) !important;
+}

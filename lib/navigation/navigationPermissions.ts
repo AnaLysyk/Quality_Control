@@ -9,6 +9,13 @@ import { getVisibleRouteIds } from "./get-visible-routes";
 import { SYSTEM_ROUTE_BY_ID } from "./route-map";
 import type { NavItemDef, NavModuleDef } from "./navigationCatalog";
 
+const OPERATIONS_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
+  "operacao.inicio": { moduleId: "operations", action: "view" },
+  "operacao.dashboard": { moduleId: "operations", action: "dashboard" },
+  "operacao.metricas": { moduleId: "operations", action: "metrics" },
+  "operacao.busca": { moduleId: "operations", action: "search" },
+};
+
 function buildNavigationAccessContext(
   userRole: SystemRole | null,
   permissions?: PermissionMatrix | null,
@@ -35,6 +42,9 @@ function canSeeNavigationDefinition(
   if (allowedRoles && !allowedRoles.includes(userRole)) return false;
 
   if (item.routeId) {
+    const operationPermission = OPERATIONS_ROUTE_PERMISSIONS[item.routeId];
+    if (operationPermission) return canAccess(context, operationPermission);
+
     if (visibleRouteIds.has(item.routeId)) return true;
     if (item.routeId === "visao-geral.admin") {
       return canAccess(context, { moduleId: "dashboard", action: "view" });

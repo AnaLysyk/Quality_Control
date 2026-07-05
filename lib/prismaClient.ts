@@ -49,22 +49,34 @@ function normalizeDatabaseUrl(value: string) {
   }
 }
 
+function canUsePrimaryDatabaseAsBrainFallback() {
+  return process.env.NODE_ENV !== "production" || process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
+}
+
 function getBrainDatabaseUrl() {
   const brainDatabaseUrl = process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL;
+  const primaryDatabaseUrl = getPrimaryDatabaseUrl();
 
   if (!brainDatabaseUrl) {
+    if (primaryDatabaseUrl && canUsePrimaryDatabaseAsBrainFallback()) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[brain] BRAIN_DATABASE_URL ausente. Usando DATABASE_URL como fallback local temporario do RAG.");
+      }
+      return primaryDatabaseUrl;
+    }
+
     throw new Error(
       "BRAIN_DATABASE_URL or BRAIN_RAG_DATABASE_URL is required for Brain RAG tables.",
     );
   }
 
-  const primaryDatabaseUrl = getPrimaryDatabaseUrl();
   const allowPrimaryDatabase = process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
 
   if (
     primaryDatabaseUrl &&
     normalizeDatabaseUrl(primaryDatabaseUrl) === normalizeDatabaseUrl(brainDatabaseUrl) &&
-    !allowPrimaryDatabase
+    !allowPrimaryDatabase &&
+    process.env.NODE_ENV === "production"
   ) {
     throw new Error(
       "Brain RAG tables must use a separate database. Set BRAIN_ALLOW_PRIMARY_DATABASE=true only for local development.",

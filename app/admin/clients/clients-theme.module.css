@@ -3,7 +3,6 @@
   --clients-bg-dark: linear-gradient(135deg, #050713 0%, #07111f 54%, #0a1020 100%);
   --clients-panel-light: rgba(255, 255, 255, 0.96);
   --clients-panel-dark: rgba(15, 23, 42, 0.92);
-  --clients-soft-light: rgba(248, 250, 252, 0.98);
   --clients-soft-dark: rgba(17, 30, 50, 0.86);
   --clients-row-light: #ffffff;
   --clients-row-alt-light: #f8fbff;
@@ -81,7 +80,7 @@
 
 .clientsTheme :global(.tc-queue-shell input),
 .clientsTheme :global(.tc-queue-shell select),
-.clientsTheme :global(.tc-queue-shell button:not([class*="bg-[linear-gradient"]):not([class*="bg-sky-700"])) {
+.clientsTheme :global(.tc-queue-shell button:not([class*="bg-"])) {
   border-color: var(--clients-border-light) !important;
   background-color: var(--clients-panel-light) !important;
   color: var(--clients-text-light) !important;
@@ -91,15 +90,15 @@
   color: var(--clients-muted-light) !important;
 }
 
-.clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-muted"]),
-.clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-secondary"]),
-.clientsTheme :global(.tc-queue-shell [class*="text-[#4b5563"]),
+.clientsTheme :global(.tc-queue-shell [class*="tc-text-muted"]),
+.clientsTheme :global(.tc-queue-shell [class*="tc-text-secondary"]),
 .clientsTheme :global(.tc-queue-shell [class*="text-slate"]),
+.clientsTheme :global(.tc-queue-shell [class*="text-white/"]),
 .clientsTheme :global(.tc-queue-shell small) {
   color: var(--clients-muted-light) !important;
 }
 
-.clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-primary"]),
+.clientsTheme :global(.tc-queue-shell [class*="tc-text-primary"]),
 .clientsTheme :global(.tc-queue-shell h1),
 .clientsTheme :global(.tc-queue-shell h2),
 .clientsTheme :global(.tc-queue-shell h3),
@@ -109,30 +108,23 @@
   color: var(--clients-text-light) !important;
 }
 
-.clientsTheme :global(.tc-queue-shell .bg-emerald-100),
 .clientsTheme :global(.tc-queue-shell [class*="bg-emerald-100"]) {
   background: #d1fae5 !important;
   color: #047857 !important;
 }
 
-.clientsTheme :global(.tc-queue-shell .bg-amber-100),
 .clientsTheme :global(.tc-queue-shell [class*="bg-amber-100"]) {
   background: #fef3c7 !important;
   color: #b45309 !important;
 }
 
-.clientsTheme :global(.tc-queue-shell [class*="bg-sky-50"]),
-.clientsTheme :global(.tc-queue-shell [class*="text-sky-700"]) {
+.clientsTheme :global(.tc-queue-shell [class*="bg-sky-50"]) {
+  background: #e0f2fe !important;
   color: #0369a1 !important;
 }
 
-.clientsTheme :global(.tc-queue-shell [class*="bg-sky-50"]) {
-  background: #e0f2fe !important;
-}
-
 .clientsTheme :global(.tc-queue-shell a),
-.clientsTheme :global(.tc-queue-shell button[class*="text-[var(--tc-accent"]),
-.clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-accent"]),
+.clientsTheme :global(.tc-queue-shell [class*="tc-accent"]),
 .clientsTheme :global(.tc-queue-shell [class*="text-red"]),
 .clientsTheme :global(.tc-queue-shell [class*="text-rose"]) {
   color: #dc2626 !important;
@@ -140,7 +132,8 @@
 
 .clientsTheme :global(.tc-button-primary),
 .clientsTheme :global(.tc-queue-shell button[class*="bg-sky-700"]),
-.clientsTheme :global(.tc-queue-shell button[class*="bg-[linear-gradient"]) {
+.clientsTheme :global(.tc-queue-shell button[class*="bg-[linear-gradient"]),
+.clientsTheme :global(.tc-queue-shell button[class*="bg-[linear-gradient"] *) {
   color: #ffffff !important;
 }
 
@@ -225,10 +218,10 @@
 
 :global(.dark) .clientsTheme :global(.tc-queue-shell input),
 :global(.dark) .clientsTheme :global(.tc-queue-shell select),
-:global(.dark) .clientsTheme :global(.tc-queue-shell button:not([class*="bg-[linear-gradient"]):not([class*="bg-sky-700"])),
+:global(.dark) .clientsTheme :global(.tc-queue-shell button:not([class*="bg-"])),
 :global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell input),
 :global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell select),
-:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell button:not([class*="bg-[linear-gradient"]):not([class*="bg-sky-700"])) {
+:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell button:not([class*="bg-"])) {
   border-color: var(--clients-border-dark) !important;
   background-color: var(--clients-soft-dark) !important;
   color: var(--clients-text-dark) !important;
@@ -239,27 +232,27 @@
   color: var(--clients-muted-dark) !important;
 }
 
-:global(.dark) .clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-muted"]),
-:global(.dark) .clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-secondary"]),
-:global(.dark) .clientsTheme :global(.tc-queue-shell [class*="text-[#4b5563"]),
+:global(.dark) .clientsTheme :global(.tc-queue-shell [class*="tc-text-muted"]),
+:global(.dark) .clientsTheme :global(.tc-queue-shell [class*="tc-text-secondary"]),
 :global(.dark) .clientsTheme :global(.tc-queue-shell [class*="text-slate"]),
+:global(.dark) .clientsTheme :global(.tc-queue-shell [class*="text-white/"]),
 :global(.dark) .clientsTheme :global(.tc-queue-shell small),
-:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-muted"]),
-:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-secondary"]),
-:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="text-[#4b5563"]),
+:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="tc-text-muted"]),
+:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="tc-text-secondary"]),
 :global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="text-slate"]),
+:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="text-white/"]),
 :global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell small) {
   color: var(--clients-muted-dark) !important;
 }
 
-:global(.dark) .clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-primary"]),
+:global(.dark) .clientsTheme :global(.tc-queue-shell [class*="tc-text-primary"]),
 :global(.dark) .clientsTheme :global(.tc-queue-shell h1),
 :global(.dark) .clientsTheme :global(.tc-queue-shell h2),
 :global(.dark) .clientsTheme :global(.tc-queue-shell h3),
 :global(.dark) .clientsTheme :global(.tc-queue-shell h4),
 :global(.dark) .clientsTheme :global(.tc-queue-shell p),
 :global(.dark) .clientsTheme :global(.tc-queue-shell b),
-:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="text-[var(--tc-text-primary"]),
+:global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell [class*="tc-text-primary"]),
 :global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell h1),
 :global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell h2),
 :global([data-theme="dark"]) .clientsTheme :global(.tc-queue-shell h3),

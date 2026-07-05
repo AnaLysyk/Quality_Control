@@ -1,4 +1,4 @@
-﻿// app/layout.tsx
+// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import AppShell from "@/components/AppShell";
@@ -16,6 +16,7 @@ import {
 } from "@/lib/appSettingsCookies";
 import "./globals.css";
 import "./operational-theme.css";
+import "./admin-permissions-theme.css";
 import { ClientBootScripts } from "./_components/ClientBootScripts";
 
 export const metadata: Metadata = {
@@ -141,4 +142,3 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     </html>
   );
 }
-

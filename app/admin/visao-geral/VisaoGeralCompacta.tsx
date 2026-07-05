@@ -22,6 +22,7 @@ import { fetchApi } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import type { CompanyRow, Stats } from "@/lib/quality";
 import { buildPieGradient } from "./pieChartUtils";
+import QualityControlOverviewBoard from "./QualityControlOverviewBoard";
 
 type Overview = {
   companies: CompanyRow[];
@@ -65,7 +66,6 @@ type AdminUser = {
 type ActorProfile = { name: string; avatar: string | null };
 type Mode = "company" | "user";
 type Slice = { label: string; value: number; color: string };
-
 type RunRow = {
   id: string;
   title: string;
@@ -94,6 +94,14 @@ function normalize(value?: string | null) {
     .toLowerCase();
 }
 
+function total(stats?: Stats | null) {
+  return stats ? stats.pass + stats.fail + stats.blocked + stats.notRun : 0;
+}
+
+function keyOf(company: CompanyRow) {
+  return company.slug ?? company.id;
+}
+
 function shortDate(value?: string | null) {
   if (!value) return "--";
   const date = new Date(value);
@@ -112,14 +120,6 @@ function shortDateTime(value?: string | null) {
   }).format(date);
 }
 
-function total(stats?: Stats | null) {
-  return stats ? stats.pass + stats.fail + stats.blocked + stats.notRun : 0;
-}
-
-function keyOf(company: CompanyRow) {
-  return company.slug ?? company.id;
-}
-
 function nameFromEmail(email?: string | null) {
   if (!email) return "Sistema";
   return email
@@ -130,6 +130,15 @@ function nameFromEmail(email?: string | null) {
 
 function avatarFromUser(user?: AdminUser | null) {
   return user?.avatar_url ?? user?.avatarUrl ?? user?.image ?? null;
+}
+
+function profileTag(user: AdminUser) {
+  const raw = normalize(user.profileLabel ?? user.permissionRole ?? user.role ?? user.companyRole ?? "Usuário");
+  if (raw.includes("leader") || raw.includes("lider")) return "Líder TC";
+  if (raw.includes("support") || raw.includes("suporte")) return "Suporte";
+  if (raw.includes("testing") || raw.includes("tc")) return "Usuário TC";
+  if (raw.includes("empresa") || raw.includes("company")) return "Empresa";
+  return "Usuário";
 }
 
 function daysBetween(start: string, end: string) {
@@ -193,15 +202,6 @@ function resolveHealth(passRate: number | null, defectsInPeriod: number) {
   return { label: "Saudável", detail: "Operação dentro do esperado", tone: "border-emerald-300/45 bg-emerald-500/16 text-emerald-50" };
 }
 
-function profileTag(user: AdminUser) {
-  const raw = normalize(user.profileLabel ?? user.permissionRole ?? user.role ?? user.companyRole ?? "Usuário");
-  if (raw.includes("leader") || raw.includes("lider")) return "Líder TC";
-  if (raw.includes("support") || raw.includes("suporte")) return "Suporte";
-  if (raw.includes("testing") || raw.includes("tc")) return "Usuário TC";
-  if (raw.includes("empresa") || raw.includes("company")) return "Empresa";
-  return "Usuário";
-}
-
 function runTitle(release: CompanyRow["releases"][number], index: number) {
   const record = release as unknown as Record<string, unknown>;
   const title = record.title ?? record.name ?? record.runName ?? record.code ?? record.id;
@@ -214,10 +214,10 @@ function runProject(release: CompanyRow["releases"][number]) {
   return typeof value === "string" && value.trim() ? value.trim() : "Projeto não informado";
 }
 
-function buildRunRows(companies: CompanyRow[], selectedCompany: CompanyRow | null) {
+function buildRunRows(companies: CompanyRow[], selectedCompany: CompanyRow | null): RunRow[] {
   const source = selectedCompany ? [selectedCompany] : companies;
   return source.flatMap((entry) =>
-    entry.releases.map<RunRow>((release, index) => {
+    entry.releases.map((release, index) => {
       const stats = release.stats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 };
       return {
         id: `${keyOf(entry)}-${runTitle(release, index)}-${index}`,
@@ -231,67 +231,6 @@ function buildRunRows(companies: CompanyRow[], selectedCompany: CompanyRow | nul
         notRun: stats.notRun,
       };
     }),
-  );
-}
-
-function Pie({ title, slices, note, contextLabel }: { title: string; note: string; contextLabel: string; slices: Slice[] }) {
-  const [activeLabel, setActiveLabel] = useState<string | null>(null);
-  const visibleSlices = slices.filter((slice) => slice.value > 0);
-  const sum = visibleSlices.reduce((acc, slice) => acc + slice.value, 0);
-  if (!sum) return null;
-
-  const activeSlice = visibleSlices.find((slice) => slice.label === activeLabel) ?? visibleSlices[0];
-  const activePercent = Math.round((activeSlice.value / sum) * 100);
-
-  return (
-    <section className="overflow-hidden rounded-[30px] border border-[var(--tc-border)] bg-white/85 p-4 shadow-[0_18px_36px_rgba(1,24,72,.08)] dark:bg-white/[0.045]">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#64748b] dark:text-white/45">{contextLabel}</p>
-          <h2 className="mt-1 text-lg font-black tracking-[-.03em]">{title}</h2>
-          <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{note}</p>
-        </div>
-        <div className="group relative grid place-items-center">
-          <div
-            className="relative h-36 w-36 rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,.18),0_18px_45px_rgba(15,23,42,.14)] transition duration-300 group-hover:scale-[1.03]"
-            style={{ background: buildPieGradient(visibleSlices) }}
-            tabIndex={0}
-            aria-label={`${title}: ${activeSlice.label}, ${activePercent}%`}
-          >
-            <div className="absolute inset-9 flex flex-col items-center justify-center rounded-full bg-white text-center text-[#011848] shadow-inner dark:bg-[#07111f] dark:text-white">
-              <b className="text-2xl leading-none">{activePercent}%</b>
-              <small className="mt-1 max-w-[74px] truncate text-[10px] font-black uppercase tracking-[.12em] text-[#64748b] dark:text-white/45">{activeSlice.label}</small>
-            </div>
-          </div>
-          <div className="pointer-events-none absolute -top-2 left-1/2 hidden -translate-x-1/2 -translate-y-full rounded-2xl border border-[var(--tc-border)] bg-white px-3 py-2 text-xs font-black text-[#011848] shadow-2xl group-hover:block group-focus-within:block dark:bg-[#07111f] dark:text-white">
-            {activeSlice.label}: {activeSlice.value} · {activePercent}%
-          </div>
-        </div>
-      </div>
-      <div className="mt-4 grid gap-2">
-        {visibleSlices.map((slice) => {
-          const percent = Math.round((slice.value / sum) * 100);
-          const active = activeSlice.label === slice.label;
-          return (
-            <button
-              key={slice.label}
-              type="button"
-              onMouseEnter={() => setActiveLabel(slice.label)}
-              onFocus={() => setActiveLabel(slice.label)}
-              onClick={() => setActiveLabel(slice.label)}
-              className={`flex items-center justify-between rounded-2xl border px-3 py-2 text-sm transition ${active ? "border-[rgba(239,0,1,.34)] bg-[rgba(239,0,1,.06)]" : "border-[var(--tc-border)] bg-transparent hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"}`}
-              title={`${slice.label}: ${slice.value} (${percent}%)`}
-            >
-              <span className="flex min-w-0 items-center gap-2 text-[#64748b] dark:text-white/60">
-                <i className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: slice.color }} />
-                <span className="truncate">{slice.label}</span>
-              </span>
-              <b className="shrink-0">{slice.value} · {percent}%</b>
-            </button>
-          );
-        })}
-      </div>
-    </section>
   );
 }
 
@@ -385,6 +324,67 @@ function CommandPill({ children }: { children: React.ReactNode }) {
   return <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-black uppercase tracking-[.16em] text-white/62">{children}</span>;
 }
 
+function Pie({ title, slices, note, contextLabel }: { title: string; note: string; contextLabel: string; slices: Slice[] }) {
+  const [activeLabel, setActiveLabel] = useState<string | null>(null);
+  const visibleSlices = slices.filter((slice) => slice.value > 0);
+  const sum = visibleSlices.reduce((acc, slice) => acc + slice.value, 0);
+  if (!sum) return null;
+
+  const activeSlice = visibleSlices.find((slice) => slice.label === activeLabel) ?? visibleSlices[0];
+  const activePercent = Math.round((activeSlice.value / sum) * 100);
+
+  return (
+    <section className="overflow-hidden rounded-[30px] border border-[var(--tc-border)] bg-white/85 p-4 shadow-[0_18px_36px_rgba(1,24,72,.08)] dark:bg-white/[0.045]">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#64748b] dark:text-white/45">{contextLabel}</p>
+          <h2 className="mt-1 text-lg font-black tracking-[-.03em]">{title}</h2>
+          <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{note}</p>
+        </div>
+        <div className="group relative grid place-items-center">
+          <div
+            className="relative h-36 w-36 rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,.18),0_18px_45px_rgba(15,23,42,.14)] transition duration-300 group-hover:scale-[1.03]"
+            style={{ background: buildPieGradient(visibleSlices) }}
+            tabIndex={0}
+            aria-label={`${title}: ${activeSlice.label}, ${activePercent}%`}
+          >
+            <div className="absolute inset-9 flex flex-col items-center justify-center rounded-full bg-white text-center text-[#011848] shadow-inner dark:bg-[#07111f] dark:text-white">
+              <b className="text-2xl leading-none">{activePercent}%</b>
+              <small className="mt-1 max-w-[74px] truncate text-[10px] font-black uppercase tracking-[.12em] text-[#64748b] dark:text-white/45">{activeSlice.label}</small>
+            </div>
+          </div>
+          <div className="pointer-events-none absolute -top-2 left-1/2 hidden -translate-x-1/2 -translate-y-full rounded-2xl border border-[var(--tc-border)] bg-white px-3 py-2 text-xs font-black text-[#011848] shadow-2xl group-hover:block group-focus-within:block dark:bg-[#07111f] dark:text-white">
+            {activeSlice.label}: {activeSlice.value} · {activePercent}%
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-2">
+        {visibleSlices.map((slice) => {
+          const percent = Math.round((slice.value / sum) * 100);
+          const active = activeSlice.label === slice.label;
+          return (
+            <button
+              key={slice.label}
+              type="button"
+              onMouseEnter={() => setActiveLabel(slice.label)}
+              onFocus={() => setActiveLabel(slice.label)}
+              onClick={() => setActiveLabel(slice.label)}
+              className={`flex items-center justify-between rounded-2xl border px-3 py-2 text-sm transition ${active ? "border-[rgba(239,0,1,.34)] bg-[rgba(239,0,1,.06)]" : "border-[var(--tc-border)] bg-transparent hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"}`}
+              title={`${slice.label}: ${slice.value} (${percent}%)`}
+            >
+              <span className="flex min-w-0 items-center gap-2 text-[#64748b] dark:text-white/60">
+                <i className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: slice.color }} />
+                <span className="truncate">{slice.label}</span>
+              </span>
+              <b className="shrink-0">{slice.value} · {percent}%</b>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default function VisaoGeralCompacta() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [audit, setAudit] = useState<Audit[]>([]);
@@ -463,8 +463,6 @@ export default function VisaoGeralCompacta() {
   }, [effectivePeriod, from, hasRange, selectedCompany, to, visibleEvents]);
 
   useEffect(() => {
-    if (mode !== "user") return;
-
     let ok = true;
     const id = window.setTimeout(() => {
       fetchApi("/api/admin/users", { cache: "no-store" })
@@ -484,13 +482,13 @@ export default function VisaoGeralCompacta() {
           setActorProfiles((current) => ({ ...current, ...next }));
         })
         .catch(() => undefined);
-    }, 250);
+    }, 650);
 
     return () => {
       ok = false;
       window.clearTimeout(id);
     };
-  }, [mode]);
+  }, []);
 
   useEffect(() => {
     setVisibleCards(FIRST_ITEMS);
@@ -510,20 +508,20 @@ export default function VisaoGeralCompacta() {
     .filter((event) => eventMatchesCompany(event, company))
     .filter((event) => !selectedUser || event.actor_email === selectedUser);
   const shownEvents = filteredEvents.slice(0, visibleEvents);
-  const linkedDefects = defects
-    .filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to))
-    .filter((defect) => defect.run_id !== null && defect.run_id !== undefined && String(defect.run_id).trim()).length;
   const defectsInPeriod = defects.filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to));
+  const linkedDefects = defectsInPeriod.filter((defect) => defect.run_id !== null && defect.run_id !== undefined && String(defect.run_id).trim()).length;
   const testCaseCount = total(stats);
-  const planCount = company ? Math.max(0, new Set(company.releases.map((release) => release.project || release.app || release.qaseProject || release.title).filter(Boolean)).size) : overview?.projectRows?.length ?? 0;
+  const planCount = company ? Math.max(0, new Set(company.releases.map((release) => {
+    const row = release as unknown as Record<string, unknown>;
+    return row.project ?? row.app ?? row.qaseProject ?? row.title ?? row.name;
+  }).filter(Boolean)).size) : overview?.projectRows?.length ?? 0;
   const statsTotal = total(stats);
   const passRate = stats && statsTotal > 0 ? Math.round((stats.pass / statsTotal) * 100) : null;
   const health = resolveHealth(passRate, defectsInPeriod.length);
-  const hasInsightCards = statsTotal > 0 || defectsInPeriod.length > 0;
+  const hasInsightCards = statsTotal > 0 || defectsInPeriod.length > 0 || releases.length > 0;
   const selectedContextLabel = company?.name ?? (mode === "user" ? (selectedUser ? nameFromEmail(selectedUser) : "Todos os usuários") : "Todas as empresas");
   const periodLabel = hasRange ? `${shortDate(from)} até ${shortDate(to)}` : `últimos ${period} dias`;
   const runRows = buildRunRows(companies, company);
-  const runListTitle = company ? `Runs da empresa ${company.name}` : "Runs por empresa";
   const contextExplanation = mode === "company"
     ? company
       ? `Mostrando apenas a empresa ${company.name} em ${periodLabel}.`
@@ -540,16 +538,16 @@ export default function VisaoGeralCompacta() {
           <div className="relative z-10 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_380px]">
             <div className="min-w-0">
               <div className="mb-4 flex flex-wrap items-center gap-2">
-                <CommandPill>Central Executiva</CommandPill>
+                <CommandPill>Central de Qualidade</CommandPill>
                 <CommandPill>{selectedContextLabel}</CommandPill>
                 <CommandPill>{periodLabel}</CommandPill>
                 {loading || loadingActivity ? <CommandPill>Atualizando dados</CommandPill> : <CommandPill>Dados prontos</CommandPill>}
               </div>
               <h1 className="max-w-5xl text-4xl font-black leading-[.95] tracking-[-.06em] sm:text-5xl xl:text-6xl">
-                Visão Geral da operação
+                Controle real da qualidade
               </h1>
               <p className="mt-4 max-w-3xl text-base font-semibold leading-relaxed text-white/68 sm:text-lg">
-                {contextExplanation} Runs, defeitos, planos, casos e movimentações precisam responder ao mesmo filtro.
+                {contextExplanation} A leitura agora junta runs, defeitos, planos, casos, solicitações, agenda, gestão e usuários no mesmo contexto.
               </p>
 
               <div className="mt-6 grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -570,22 +568,10 @@ export default function VisaoGeralCompacta() {
                 <p className="mt-2 text-sm font-semibold text-white/70">{health.detail}</p>
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Filtro</p>
-                  <p className="mt-1 truncate text-sm font-black">{selectedContextLabel}</p>
-                </div>
-                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Planos</p>
-                  <p className="mt-1 text-sm font-black">{planCount}</p>
-                </div>
-                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Casos</p>
-                  <p className="mt-1 text-sm font-black">{testCaseCount}</p>
-                </div>
-                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Empresas</p>
-                  <p className="mt-1 text-sm font-black">{company ? 1 : companies.length}</p>
-                </div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3"><p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Filtro</p><p className="mt-1 truncate text-sm font-black">{selectedContextLabel}</p></div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3"><p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Planos</p><p className="mt-1 text-sm font-black">{planCount}</p></div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3"><p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Casos</p><p className="mt-1 text-sm font-black">{testCaseCount}</p></div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3"><p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Empresas</p><p className="mt-1 text-sm font-black">{company ? 1 : companies.length}</p></div>
               </div>
             </aside>
           </div>
@@ -627,7 +613,7 @@ export default function VisaoGeralCompacta() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-black tracking-[-.04em]">Mapa de contexto</h2>
-              <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Escolha empresa ou usuário para a visão geral responder ao contexto certo.</p>
+              <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">A mesma estrutura aparece de forma geral em todas as empresas ou individualmente ao selecionar uma empresa.</p>
             </div>
             <label className="w-full lg:max-w-md">
               <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-white/65 px-4 py-3 dark:bg-white/[0.04]">
@@ -675,6 +661,23 @@ export default function VisaoGeralCompacta() {
             </div>
           </div>
         </section>
+
+        <QualityControlOverviewBoard
+          companies={companies}
+          selectedCompany={company}
+          audit={filteredEvents}
+          defectsInPeriod={defectsInPeriod}
+          adminUsers={adminUsers}
+          runRows={runRows}
+          stats={stats}
+          planCount={planCount}
+          testCaseCount={testCaseCount}
+          passRate={passRate}
+          selectedContextLabel={selectedContextLabel}
+          periodLabel={periodLabel}
+          mode={mode}
+          selectedUser={selectedUser}
+        />
 
         <div className={hasInsightCards ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]" : "grid gap-6"}>
           <section className="min-w-0 rounded-[30px] border border-[var(--tc-border)] bg-white/78 p-5 shadow-[0_18px_46px_rgba(1,24,72,.08)] dark:bg-white/[0.035]">
@@ -725,46 +728,12 @@ export default function VisaoGeralCompacta() {
                 <h2 className="mt-1 text-lg font-black tracking-[-.03em]">Resumo do filtro</h2>
                 <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{contextExplanation}</p>
                 <div className="mt-4 grid gap-3">
-                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiCheckCircle /> Aprovação</span>
-                    <b className={passRate === null ? "text-[#64748b]" : statusTone(passRate)}>{passRate === null ? "--" : `${passRate}%`}</b>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiTarget /> Casos avaliados</span>
-                    <b>{testCaseCount}</b>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiClock /> Período</span>
-                    <b>{periodLabel}</b>
-                  </div>
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3"><span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiCheckCircle /> Aprovação</span><b className={passRate === null ? "text-[#64748b]" : statusTone(passRate)}>{passRate === null ? "--" : `${passRate}%`}</b></div>
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3"><span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiTarget /> Casos avaliados</span><b>{testCaseCount}</b></div>
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3"><span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiClock /> Período</span><b>{periodLabel}</b></div>
                 </div>
               </section>
               <Pie title="Runs por status" contextLabel={selectedContextLabel} note={`Todas as runs encontradas em ${periodLabel}`} slices={[{ label: "Aprovados", value: stats?.pass ?? 0, color: "#22c55e" }, { label: "Reprovados", value: stats?.fail ?? 0, color: "#ef4444" }, { label: "Bloqueados", value: stats?.blocked ?? 0, color: "#f59e0b" }, { label: "Em andamento", value: stats?.notRun ?? 0, color: "#60a5fa" }]} />
-              {runRows.length ? (
-                <section className="rounded-[28px] border border-[var(--tc-border)] bg-white/82 p-4 shadow-[0_18px_36px_rgba(1,24,72,.08)] dark:bg-white/[0.04]">
-                  <h2 className="text-lg font-black tracking-[-.03em]">{runListTitle}</h2>
-                  <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Runs retornadas pelo filtro atual.</p>
-                  <div className="mt-4 grid gap-2">
-                    {runRows.slice(0, 5).map((run) => {
-                      const rate = run.total > 0 ? Math.round((run.pass / run.total) * 100) : null;
-                      return (
-                        <div key={run.id} className="rounded-2xl border border-[var(--tc-border)] px-3 py-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <b className="line-clamp-1 text-sm">{run.title}</b>
-                              <p className="mt-1 truncate text-xs text-[#64748b] dark:text-white/55">{run.companyName} · {run.project}</p>
-                            </div>
-                            <span className="shrink-0 rounded-full bg-[rgba(1,24,72,.08)] px-2 py-1 text-xs font-black dark:bg-white/10">{rate === null ? "--" : `${rate}%`}</span>
-                          </div>
-                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${rate ?? 0}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-              ) : null}
               <Pie title="Defeitos" contextLabel={selectedContextLabel} note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`} slices={[{ label: "Com run", value: linkedDefects, color: "#8b5cf6" }, { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" }]} />
             </aside>
           ) : null}

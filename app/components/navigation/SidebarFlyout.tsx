@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import { getIcon } from "./iconRegistry";
 import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
@@ -25,8 +26,21 @@ const flyoutItemClass =
   "flex w-full min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, badgeLabel = "" }: SidebarFlyoutProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const prefetchHref = useCallback(
+    (href?: string) => {
+      if (!href) return;
+      try {
+        router.prefetch(resolveSidebarHref(href));
+      } catch {
+        // Prefetch é apenas otimização. A navegação normal continua funcionando.
+      }
+    },
+    [router],
+  );
 
   const clearClose = useCallback(() => {
     if (closeTimer.current) {
@@ -43,7 +57,8 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
   const handleButtonMouseEnter = useCallback(() => {
     clearClose();
     setOpen(true);
-  }, [clearClose]);
+    if (mod.href) prefetchHref(mod.href);
+  }, [clearClose, mod.href, prefetchHref]);
 
   useEffect(() => {
     return () => {
@@ -55,15 +70,20 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
   const baseClassName = `${miniBaseClass} ${isActive ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`;
 
   if (visibleItems.length === 0 && mod.href) {
+    const href = resolveSidebarHref(mod.href);
     return (
       <Link
-        href={resolveSidebarHref(mod.href)}
+        href={href}
+        prefetch={false}
         data-testid={mod.testId}
         title={mod.label}
         aria-label={mod.label}
         data-active={isActive ? "true" : undefined}
         aria-current={isActive ? "page" : undefined}
         onClick={onClose}
+        onPointerEnter={() => prefetchHref(mod.href)}
+        onPointerDown={() => prefetchHref(mod.href)}
+        onFocus={() => prefetchHref(mod.href)}
         className={`${baseClassName} relative`}
       >
         {createElement(getIcon(mod.iconKey), { size: 17, className: "text-current" })}
@@ -99,10 +119,12 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
           <nav className="p-2">
             {visibleItems.map((item) => {
               const active = isItemActive(item);
+              const href = resolveSidebarHref(item.href!);
               return (
                 <Link
                   key={item.id}
-                  href={resolveSidebarHref(item.href!)}
+                  href={href}
+                  prefetch={false}
                   data-testid={item.testId}
                   data-active={active ? "true" : undefined}
                   aria-current={active ? "page" : undefined}
@@ -110,6 +132,9 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
                     setOpen(false);
                     onClose?.();
                   }}
+                  onPointerEnter={() => prefetchHref(item.href)}
+                  onPointerDown={() => prefetchHref(item.href)}
+                  onFocus={() => prefetchHref(item.href)}
                   className={`${flyoutItemClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
                 >
                   {createElement(getIcon(item.iconKey), { size: 14, className: "shrink-0 text-current opacity-75" })}

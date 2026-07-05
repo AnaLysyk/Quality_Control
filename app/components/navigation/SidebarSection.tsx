@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { createElement, Fragment } from "react";
+import { useRouter } from "next/navigation";
+import { createElement, Fragment, useCallback } from "react";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import { getIcon } from "./iconRegistry";
 import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
@@ -36,18 +37,36 @@ export default function SidebarSection({
   onClose,
   badgeLabel = "",
 }: SidebarSectionProps) {
+  const router = useRouter();
   const visibleItems = mod.items.filter((item) => item.href);
   const hasChildren = visibleItems.length > 0;
   const moduleClassName = `${moduleBaseClass} ${isActive ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`;
 
+  const prefetchHref = useCallback(
+    (href?: string) => {
+      if (!href) return;
+      try {
+        router.prefetch(resolveSidebarHref(href));
+      } catch {
+        // Prefetch é apenas otimização. A navegação normal continua funcionando.
+      }
+    },
+    [router],
+  );
+
   if (!hasChildren && mod.href) {
+    const href = resolveSidebarHref(mod.href);
     return (
       <Link
-        href={resolveSidebarHref(mod.href)}
+        href={href}
+        prefetch={false}
         data-testid={mod.testId}
         data-active={isActive ? "true" : undefined}
         aria-current={isActive ? "page" : undefined}
         onClick={onClose}
+        onPointerEnter={() => prefetchHref(mod.href)}
+        onPointerDown={() => prefetchHref(mod.href)}
+        onFocus={() => prefetchHref(mod.href)}
         className={moduleClassName}
       >
         {createElement(getIcon(mod.iconKey), { size: 16, className: "shrink-0 text-current" })}
@@ -80,6 +99,7 @@ export default function SidebarSection({
           {visibleItems.map((item, index) => {
             const active = isItemActive(item);
             const showGroupLabel = item.group && (index === 0 || visibleItems[index - 1].group !== item.group);
+            const href = resolveSidebarHref(item.href!);
             return (
               <Fragment key={item.id}>
                 {showGroupLabel && (
@@ -88,11 +108,15 @@ export default function SidebarSection({
                   </span>
                 )}
                 <Link
-                  href={resolveSidebarHref(item.href!)}
+                  href={href}
+                  prefetch={false}
                   data-testid={item.testId}
                   data-active={active ? "true" : undefined}
                   aria-current={active ? "page" : undefined}
                   onClick={onClose}
+                  onPointerEnter={() => prefetchHref(item.href)}
+                  onPointerDown={() => prefetchHref(item.href)}
+                  onFocus={() => prefetchHref(item.href)}
                   className={`${subItemBaseClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
                 >
                   {createElement(getIcon(item.iconKey), { size: 13, className: "shrink-0 text-current opacity-75" })}

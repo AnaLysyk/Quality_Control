@@ -1,17 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { IconType } from "react-icons";
 import {
   FiActivity,
   FiAlertTriangle,
+  FiBarChart2,
   FiBriefcase,
   FiCalendar,
+  FiCheckCircle,
   FiClipboard,
+  FiClock,
   FiSearch,
   FiShield,
+  FiTarget,
+  FiTrendingUp,
   FiUser,
   FiUsers,
+  FiZap,
 } from "react-icons/fi";
 
 import { fetchApi } from "@/lib/api";
@@ -59,15 +65,13 @@ type Mode = "company" | "user";
 type Slice = { label: string; value: number; color: string };
 
 const FIRST_ITEMS = 6;
-const FIRST_EVENTS = 5;
+const FIRST_EVENTS = 6;
 const periods = [7, 30, 90] as const;
 
-const statCard =
-  "rounded-[22px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5";
 const contextCard =
-  "group relative flex h-28 w-52 shrink-0 flex-col justify-between overflow-hidden rounded-3xl border border-[var(--tc-border)] bg-white/75 px-4 py-3 text-left transition hover:border-[rgba(239,0,1,.24)] hover:bg-white dark:bg-white/[0.03] dark:hover:bg-white/[0.06]";
+  "group relative flex h-28 w-56 shrink-0 flex-col justify-between overflow-hidden rounded-3xl border border-[var(--tc-border)] bg-white/85 px-4 py-3 text-left shadow-[0_16px_34px_rgba(1,24,72,.08)] transition hover:-translate-y-0.5 hover:border-[rgba(239,0,1,.28)] hover:bg-white dark:bg-white/[0.04] dark:hover:bg-white/[0.07]";
 const contextCardSelected =
-  "group relative flex h-28 w-52 shrink-0 flex-col justify-between overflow-hidden rounded-3xl border border-[rgba(239,0,1,.55)] bg-white/90 px-4 py-3 text-left shadow-[inset_4px_0_0_var(--tc-accent),0_18px_32px_rgba(1,24,72,.10)] dark:bg-white/[0.05]";
+  "group relative flex h-28 w-56 shrink-0 flex-col justify-between overflow-hidden rounded-3xl border border-[rgba(239,0,1,.58)] bg-white px-4 py-3 text-left shadow-[inset_5px_0_0_var(--tc-accent),0_22px_46px_rgba(1,24,72,.14)] ring-2 ring-[rgba(239,0,1,.10)] dark:bg-white/[0.07]";
 
 function normalize(value?: string | null) {
   return (value ?? "")
@@ -150,15 +154,28 @@ function eventMatchesCompany(item: Audit, company: CompanyRow | null) {
   return Boolean((name && text.includes(name)) || (slug && text.includes(slug)));
 }
 
+function statusTone(value: number) {
+  if (value >= 85) return "text-emerald-300";
+  if (value >= 65) return "text-amber-200";
+  return "text-rose-200";
+}
+
+function resolveHealth(passRate: number | null, defectsInPeriod: number) {
+  if (passRate === null) return { label: "Sem dados", detail: "Aguardando runs com estatísticas", tone: "border-white/12 bg-white/8 text-white" };
+  if (defectsInPeriod > 0 && passRate < 70) return { label: "Atenção alta", detail: "Falhas e defeitos precisam de foco", tone: "border-rose-300/45 bg-rose-500/16 text-rose-50" };
+  if (passRate < 85) return { label: "Monitorar", detail: "Qualidade abaixo da meta ideal", tone: "border-amber-300/45 bg-amber-500/16 text-amber-50" };
+  return { label: "Saudável", detail: "Operação dentro do esperado", tone: "border-emerald-300/45 bg-emerald-500/16 text-emerald-50" };
+}
+
 function Pie({ title, slices, note }: { title: string; note: string; slices: Slice[] }) {
   const sum = slices.reduce((acc, slice) => acc + slice.value, 0);
   if (!sum) return null;
 
   return (
-    <section className="rounded-[28px] border border-[var(--tc-border)] bg-white/60 p-4 dark:bg-white/[0.03]">
+    <section className="rounded-[28px] border border-[var(--tc-border)] bg-white/80 p-4 shadow-[0_18px_36px_rgba(1,24,72,.08)] dark:bg-white/[0.04]">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black tracking-[-.04em]">{title}</h2>
+          <h2 className="text-lg font-black tracking-[-.03em]">{title}</h2>
           <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{note}</p>
         </div>
         <div className="relative h-32 w-32 rounded-full" style={{ background: buildPieGradient(slices) }}>
@@ -206,12 +223,18 @@ function eventKind(item: Audit) {
   return { title: `Ação registrada: ${action || "sistema"}`, detail: "Ação do sistema sem categoria específica mapeada ainda.", color: "bg-slate-500" };
 }
 
-function StatCard({ icon: Icon, value, label }: { icon: IconType; value: string | number; label: string }) {
+function StatCard({ icon: Icon, value, label, note }: { icon: IconType; value: string | number; label: string; note?: string }) {
   return (
-    <div className={statCard}>
-      <Icon className="text-white/72" />
-      <b className="mt-2 block text-2xl">{value}</b>
-      <small className="font-semibold text-white/72">{label}</small>
+    <div className="group rounded-[26px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5 transition hover:-translate-y-0.5 hover:bg-white/15">
+      <div className="flex items-start justify-between gap-3">
+        <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 text-white/80">
+          <Icon />
+        </div>
+        <FiTrendingUp className="mt-1 text-white/30 transition group-hover:text-white/70" />
+      </div>
+      <b className="mt-4 block text-3xl leading-none tracking-[-.05em]">{value}</b>
+      <small className="mt-2 block text-xs font-black uppercase tracking-[.16em] text-white/62">{label}</small>
+      {note ? <p className="mt-2 text-xs font-semibold text-white/52">{note}</p> : null}
     </div>
   );
 }
@@ -253,6 +276,10 @@ function EventAvatar({ email, profile }: { email: string | null; profile?: Actor
   return <RoundUserAvatar src={profile?.avatar ?? null} name={name} size="sm" />;
 }
 
+function CommandPill({ children }: { children: React.ReactNode }) {
+  return <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-black uppercase tracking-[.16em] text-white/62">{children}</span>;
+}
+
 export default function VisaoGeralCompacta() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [audit, setAudit] = useState<Audit[]>([]);
@@ -272,6 +299,7 @@ export default function VisaoGeralCompacta() {
   const [visibleCards, setVisibleCards] = useState(FIRST_ITEMS);
   const [visibleEvents, setVisibleEvents] = useState(FIRST_EVENTS);
   const [loading, setLoading] = useState(false);
+  const [loadingActivity, setLoadingActivity] = useState(false);
 
   const hasRange = Boolean(from && to);
   const effectivePeriod = hasRange ? daysBetween(from, to) : period;
@@ -289,11 +317,14 @@ export default function VisaoGeralCompacta() {
       .then(({ response, json }) => ok && setOverview(response.ok ? unwrapEnvelopeData<Overview>(json) ?? json : null))
       .catch(() => ok && setOverview(null))
       .finally(() => ok && setLoading(false));
-    return () => { ok = false; };
+    return () => {
+      ok = false;
+    };
   }, [effectivePeriod, from, hasRange, to]);
 
   useEffect(() => {
     let ok = true;
+    setLoadingActivity(true);
     const id = window.setTimeout(() => {
       const auditParams = new URLSearchParams({ limit: String(Math.max(12, visibleEvents + FIRST_EVENTS)), period: String(effectivePeriod) });
       if (hasRange) {
@@ -317,8 +348,9 @@ export default function VisaoGeralCompacta() {
           if (!ok) return;
           setAudit([]);
           setDefects([]);
-        });
-    }, 500);
+        })
+        .finally(() => ok && setLoadingActivity(false));
+    }, 250);
     return () => {
       ok = false;
       window.clearTimeout(id);
@@ -326,7 +358,7 @@ export default function VisaoGeralCompacta() {
   }, [effectivePeriod, from, hasRange, selectedCompany, to, visibleEvents]);
 
   useEffect(() => {
-    if (mode !== "user" && !audit.length) return;
+    if (mode !== "user") return;
 
     let ok = true;
     const id = window.setTimeout(() => {
@@ -347,13 +379,13 @@ export default function VisaoGeralCompacta() {
           setActorProfiles((current) => ({ ...current, ...next }));
         })
         .catch(() => undefined);
-    }, mode === "user" ? 250 : 700);
+    }, 250);
 
     return () => {
       ok = false;
       window.clearTimeout(id);
     };
-  }, [audit.length, mode]);
+  }, [mode]);
 
   useEffect(() => {
     setVisibleCards(FIRST_ITEMS);
@@ -364,9 +396,9 @@ export default function VisaoGeralCompacta() {
   const company = selectedCompany ? companies.find((entry) => keyOf(entry) === selectedCompany) ?? null : null;
   const releases = company ? company.releases : companies.flatMap((entry) => entry.releases);
   const stats = company ? mergeStats(company.releases) : overview?.globalStats ?? null;
-  const filteredCompanies = companies.filter((entry) => normalize(`${entry.name} ${entry.slug ?? ""}`).includes(normalize(query)));
+  const filteredCompanies = useMemo(() => companies.filter((entry) => normalize(`${entry.name} ${entry.slug ?? ""}`).includes(normalize(query))), [companies, query]);
   const shownCompanies = filteredCompanies.slice(0, visibleCards);
-  const filteredUsers = adminUsers.filter((user) => normalize(`${user.name ?? ""} ${user.email ?? ""}`).includes(normalize(query)));
+  const filteredUsers = useMemo(() => adminUsers.filter((user) => normalize(`${user.name ?? ""} ${user.email ?? ""}`).includes(normalize(query))), [adminUsers, query]);
   const shownUsers = filteredUsers.slice(0, visibleCards);
   const filteredEvents = audit
     .filter((event) => isInsidePeriod(event.created_at, effectivePeriod, from, to))
@@ -379,82 +411,128 @@ export default function VisaoGeralCompacta() {
   const defectsInPeriod = defects.filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to));
   const testCaseCount = total(stats);
   const planCount = company ? Math.max(0, new Set(company.releases.map((release) => release.project || release.app || release.qaseProject || release.title).filter(Boolean)).size) : overview?.projectRows?.length ?? 0;
-  const hasInsightCards = total(stats) > 0 || defectsInPeriod.length > 0;
+  const statsTotal = total(stats);
+  const passRate = stats && statsTotal > 0 ? Math.round((stats.pass / statsTotal) * 100) : null;
+  const health = resolveHealth(passRate, defectsInPeriod.length);
+  const hasInsightCards = statsTotal > 0 || defectsInPeriod.length > 0;
+  const selectedContextLabel = company?.name ?? (selectedUser ? nameFromEmail(selectedUser) : "Operação geral");
+  const periodLabel = hasRange ? `${shortDate(from)} até ${shortDate(to)}` : `últimos ${period} dias`;
 
   return (
     <div className="text-[#011848] dark:text-white">
       <div className="flex flex-col gap-6 px-3 py-4 sm:px-4 lg:px-8">
-        <section className="tc-hero-panel">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h1 className="tc-hero-title">Visão Geral</h1>
-                <p className="mt-1 text-sm font-semibold text-white/70">
-                  {company?.name ?? "Operação geral"} · {hasRange ? `${shortDate(from)} até ${shortDate(to)}` : `últimos ${period} dias`}
-                </p>
+        <section className="relative overflow-hidden rounded-[34px] border border-white/14 bg-[radial-gradient(circle_at_10%_8%,rgba(239,0,1,.30),transparent_26%),radial-gradient(circle_at_82%_18%,rgba(59,130,246,.26),transparent_32%),linear-gradient(135deg,#040814_0%,#07111f_52%,#0b1932_100%)] p-5 text-white shadow-[0_28px_90px_rgba(1,24,72,.28)] sm:p-6 lg:p-7">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent" />
+          <div className="relative z-10 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_380px]">
+            <div className="min-w-0">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <CommandPill>Central Executiva</CommandPill>
+                <CommandPill>{periodLabel}</CommandPill>
+                {loading || loadingActivity ? <CommandPill>Atualizando dados</CommandPill> : <CommandPill>Dados prontos</CommandPill>}
               </div>
-              <div className="relative flex flex-wrap gap-2">
-                {loading ? <span className="self-center text-xs font-black uppercase tracking-[.22em] text-white/70">Atualizando...</span> : null}
-                <div className="flex gap-1 rounded-2xl border border-white/16 bg-white/10 p-1">
-                  {periods.map((item) => (
-                    <button key={item} type="button" onClick={() => { setPeriod(item); setFrom(""); setTo(""); }} className={!hasRange && period === item ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}>
-                      {item === 7 ? "Semana" : `${item} dias`}
-                    </button>
-                  ))}
-                  <button type="button" onClick={() => setShowCalendar((value) => !value)} className={hasRange ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}>
-                    <FiCalendar className="inline" /> Período
-                  </button>
-                </div>
-                {showCalendar ? (
-                  <div className="absolute right-0 top-[calc(100%+.5rem)] z-30 w-80 rounded-3xl border border-white/16 bg-white p-4 text-[#011848] shadow-2xl dark:bg-[#07111f] dark:text-white">
-                    <p className="text-xs font-black uppercase tracking-[.22em] text-[var(--tc-text-muted)]">Filtrar por período</p>
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      <label className="text-xs font-bold">De<input type="date" value={draftFrom} onChange={(event) => setDraftFrom(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" /></label>
-                      <label className="text-xs font-bold">Até<input type="date" value={draftTo} onChange={(event) => setDraftTo(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" /></label>
-                    </div>
-                    <div className="mt-3 flex gap-2">
-                      <button type="button" onClick={() => { if (draftFrom && draftTo) { setFrom(draftFrom); setTo(draftTo); setShowCalendar(false); } }} className="rounded-xl bg-[var(--tc-primary)] px-3 py-2 text-xs font-black text-white">Aplicar</button>
-                      <button type="button" onClick={() => { setFrom(""); setTo(""); setDraftFrom(""); setDraftTo(""); }} className="rounded-xl border border-[var(--tc-border)] px-3 py-2 text-xs font-black">Limpar</button>
-                    </div>
-                  </div>
-                ) : null}
+              <h1 className="max-w-5xl text-4xl font-black leading-[.95] tracking-[-.06em] sm:text-5xl xl:text-6xl">
+                Visão Geral da operação
+              </h1>
+              <p className="mt-4 max-w-3xl text-base font-semibold leading-relaxed text-white/68 sm:text-lg">
+                Uma leitura forte do contexto: qualidade, runs, defeitos, eventos recentes, empresas e usuários em um único painel.
+              </p>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard icon={FiActivity} value={releases.length} label="Runs" note="no contexto filtrado" />
+                <StatCard icon={FiShield} value={passRate === null ? "--" : `${passRate}%`} label="Aprovação" note="taxa geral de qualidade" />
+                <StatCard icon={FiAlertTriangle} value={defectsInPeriod.length} label="Defeitos" note={`${linkedDefects} vinculados a runs`} />
+                <StatCard icon={FiUsers} value={filteredEvents.length} label="Eventos" note="ações rastreadas" />
               </div>
             </div>
-            <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-3 border-t border-white/12 pt-4 sm:grid-cols-5">
-              <StatCard icon={FiActivity} value={releases.length} label="Runs" />
-              <StatCard icon={FiClipboard} value={planCount} label="Planos de teste" />
-              <StatCard icon={FiShield} value={testCaseCount} label="Casos de teste" />
-              <StatCard icon={FiAlertTriangle} value={defectsInPeriod.length} label="Defeitos" />
-              <StatCard icon={FiUsers} value={filteredEvents.length} label="Eventos" />
+
+            <aside className={`flex min-h-[280px] flex-col justify-between rounded-[30px] border p-5 backdrop-blur ${health.tone}`}>
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="rounded-full border border-white/15 bg-black/12 px-3 py-1 text-[11px] font-black uppercase tracking-[.18em] text-white/72">Saúde</span>
+                  <FiZap className="text-white/72" />
+                </div>
+                <h2 className="mt-5 text-4xl font-black tracking-[-.06em]">{health.label}</h2>
+                <p className="mt-2 text-sm font-semibold text-white/70">{health.detail}</p>
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Contexto</p>
+                  <p className="mt-1 truncate text-sm font-black">{selectedContextLabel}</p>
+                </div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Planos</p>
+                  <p className="mt-1 text-sm font-black">{planCount}</p>
+                </div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Casos</p>
+                  <p className="mt-1 text-sm font-black">{testCaseCount}</p>
+                </div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Empresas</p>
+                  <p className="mt-1 text-sm font-black">{companies.length}</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <div className="relative z-10 mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/12 pt-4">
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => { setMode("company"); setSelectedUser(null); }} className={mode === "company" ? "tc-button-primary" : "tc-button-secondary"}><FiBriefcase /> Empresa</button>
+              <button type="button" onClick={() => { setMode("user"); setSelectedCompany(null); }} className={mode === "user" ? "tc-button-primary" : "tc-button-secondary"}><FiUsers /> Usuário</button>
+            </div>
+            <div className="relative flex flex-wrap gap-2">
+              <div className="flex gap-1 rounded-2xl border border-white/16 bg-white/10 p-1">
+                {periods.map((item) => (
+                  <button key={item} type="button" onClick={() => { setPeriod(item); setFrom(""); setTo(""); }} className={!hasRange && period === item ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}>
+                    {item === 7 ? "Semana" : `${item} dias`}
+                  </button>
+                ))}
+                <button type="button" onClick={() => setShowCalendar((value) => !value)} className={hasRange ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}>
+                  <FiCalendar className="inline" /> Período
+                </button>
+              </div>
+              {showCalendar ? (
+                <div className="absolute right-0 top-[calc(100%+.5rem)] z-30 w-80 rounded-3xl border border-white/16 bg-white p-4 text-[#011848] shadow-2xl dark:bg-[#07111f] dark:text-white">
+                  <p className="text-xs font-black uppercase tracking-[.22em] text-[var(--tc-text-muted)]">Filtrar por período</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <label className="text-xs font-bold">De<input type="date" value={draftFrom} onChange={(event) => setDraftFrom(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" /></label>
+                    <label className="text-xs font-bold">Até<input type="date" value={draftTo} onChange={(event) => setDraftTo(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" /></label>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <button type="button" onClick={() => { if (draftFrom && draftTo) { setFrom(draftFrom); setTo(draftTo); setShowCalendar(false); } }} className="rounded-xl bg-[var(--tc-primary)] px-3 py-2 text-xs font-black text-white">Aplicar</button>
+                    <button type="button" onClick={() => { setFrom(""); setTo(""); setDraftFrom(""); setDraftTo(""); }} className="rounded-xl border border-[var(--tc-border)] px-3 py-2 text-xs font-black">Limpar</button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
 
-        <section className="space-y-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-2">
-              <button type="button" onClick={() => { setMode("company"); setSelectedUser(null); }} className={`tc-button-${mode === "company" ? "primary" : "secondary"}`}><FiBriefcase /> Empresa</button>
-              <button type="button" onClick={() => { setMode("user"); setSelectedCompany(null); }} className={`tc-button-${mode === "user" ? "primary" : "secondary"}`}><FiUsers /> Usuário</button>
+        <section className="rounded-[30px] border border-[var(--tc-border)] bg-white/78 p-4 shadow-[0_18px_46px_rgba(1,24,72,.08)] dark:bg-white/[0.035]">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-xl font-black tracking-[-.04em]">Mapa de contexto</h2>
+              <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Escolha empresa ou usuário para a visão geral responder ao contexto certo.</p>
             </div>
-            <label className="w-full">
-              <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-white/45 px-4 py-3 dark:bg-white/[0.03]">
+            <label className="w-full lg:max-w-md">
+              <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-white/65 px-4 py-3 dark:bg-white/[0.04]">
                 <FiSearch />
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mode === "company" ? "Buscar empresa" : "Buscar usuário"} className="w-full bg-transparent text-sm outline-none" />
               </div>
             </label>
           </div>
-          <div className="overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mt-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex min-w-max gap-3">
               {mode === "company" ? (
                 <>
                   <button type="button" onClick={() => setSelectedCompany(null)} className={selectedCompany === null ? contextCardSelected : contextCard}>
                     <RoundCompanyAvatar />
-                    <span className="min-w-0"><b className="line-clamp-1">Todas as empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">{companies.length} empresas</p></span>
+                    <span className="min-w-0"><b className="line-clamp-1">Todas as empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">{companies.length} empresas · visão completa</p></span>
                   </button>
                   {shownCompanies.map((entry) => (
                     <button key={keyOf(entry)} type="button" onClick={() => setSelectedCompany(keyOf(entry))} className={selectedCompany === keyOf(entry) ? contextCardSelected : contextCard}>
                       <RoundCompanyAvatar company={entry} />
-                      <span className="min-w-0"><b className="line-clamp-1">{entry.name}</b><p className="text-xs text-[#64748b] dark:text-white/60">{entry.releases.length} runs</p></span>
+                      <span className="min-w-0"><b className="line-clamp-1">{entry.name}</b><p className="text-xs text-[#64748b] dark:text-white/60">{entry.releases.length} runs · {entry.passRate ?? "--"}% aprovação</p></span>
                     </button>
                   ))}
                   {filteredCompanies.length > shownCompanies.length ? <button type="button" onClick={() => setVisibleCards((value) => value + FIRST_ITEMS)} className={contextCard}><RoundCompanyAvatar /><span><b>Ver mais empresas</b><p className="text-sm text-[#64748b] dark:text-white/60">Carregar mais</p></span></button> : null}
@@ -483,10 +561,17 @@ export default function VisaoGeralCompacta() {
           </div>
         </section>
 
-        <div className={hasInsightCards ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]" : "grid gap-6"}>
-          <section className="min-w-0">
-            <h2 className="text-xl font-black tracking-[-.04em]">Eventos recentes</h2>
-            <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Exibindo ações do período filtrado: criação, status, runs, planos, testes, defeitos, suporte, usuários e permissões.</p>
+        <div className={hasInsightCards ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]" : "grid gap-6"}>
+          <section className="min-w-0 rounded-[30px] border border-[var(--tc-border)] bg-white/78 p-5 shadow-[0_18px_46px_rgba(1,24,72,.08)] dark:bg-white/[0.035]">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-black tracking-[-.05em]">Linha do tempo operacional</h2>
+                <p className="mt-1 max-w-3xl text-sm text-[#64748b] dark:text-white/60">Ações do período filtrado com leitura de criação, status, runs, planos, testes, defeitos, suporte, usuários e permissões.</p>
+              </div>
+              <span className="rounded-full border border-[var(--tc-border)] px-3 py-2 text-xs font-black uppercase tracking-[.14em] text-[#64748b] dark:text-white/55">
+                {loadingActivity ? "Carregando" : `${filteredEvents.length} eventos`}
+              </span>
+            </div>
             <div className="mt-5 space-y-0">
               {shownEvents.length ? (
                 shownEvents.map((event, index) => {
@@ -498,14 +583,15 @@ export default function VisaoGeralCompacta() {
                         <EventAvatar email={event.actor_email} profile={profile} />
                         {index < shownEvents.length - 1 ? <span className="mt-2 h-full min-h-10 w-px bg-[var(--tc-border)]" /> : null}
                       </div>
-                      <div className="min-w-0 flex-1 pt-1">
+                      <div className="min-w-0 flex-1 rounded-3xl border border-[var(--tc-border)] bg-white/55 p-4 shadow-sm dark:bg-white/[0.025]">
                         <div className="flex flex-wrap items-center gap-2">
-                          <b>{meta.title}</b>
                           <span className={`h-2.5 w-2.5 rounded-full ${meta.color}`} aria-hidden />
+                          <b>{meta.title}</b>
+                          <small className="ml-auto text-[#64748b] dark:text-white/50">{shortDate(event.created_at)}</small>
                         </div>
                         <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{meta.detail}</p>
-                        <p className="mt-2 text-sm text-[#64748b] dark:text-white/60">{event.entity_label ?? humanizeAction(event.action)}</p>
-                        <small>{shortDate(event.created_at)} · {profile?.name ?? event.actor_email ?? "Sistema"}</small>
+                        <p className="mt-2 text-sm font-black text-[#011848] dark:text-white">{event.entity_label ?? humanizeAction(event.action)}</p>
+                        <small className="mt-2 block text-[#64748b] dark:text-white/50">{profile?.name ?? event.actor_email ?? "Sistema"}</small>
                       </div>
                     </div>
                   );
@@ -517,6 +603,23 @@ export default function VisaoGeralCompacta() {
 
           {hasInsightCards ? (
             <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
+              <section className="rounded-[28px] border border-[var(--tc-border)] bg-white/82 p-4 shadow-[0_18px_36px_rgba(1,24,72,.08)] dark:bg-white/[0.04]">
+                <h2 className="text-lg font-black tracking-[-.03em]">Sinais rápidos</h2>
+                <div className="mt-4 grid gap-3">
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiCheckCircle /> Aprovação</span>
+                    <b className={passRate === null ? "text-[#64748b]" : statusTone(passRate)}>{passRate === null ? "--" : `${passRate}%`}</b>
+                  </div>
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiTarget /> Casos avaliados</span>
+                    <b>{testCaseCount}</b>
+                  </div>
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiClock /> Período</span>
+                    <b>{periodLabel}</b>
+                  </div>
+                </div>
+              </section>
               <Pie title="Runs por status" note="Distribuição do contexto filtrado" slices={[{ label: "Aprovados", value: stats?.pass ?? 0, color: "#22c55e" }, { label: "Reprovados", value: stats?.fail ?? 0, color: "#ef4444" }, { label: "Bloqueados", value: stats?.blocked ?? 0, color: "#f59e0b" }, { label: "Em andamento", value: stats?.notRun ?? 0, color: "#60a5fa" }]} />
               <Pie title="Defeitos" note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`} slices={[{ label: "Com run", value: linkedDefects, color: "#8b5cf6" }, { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" }]} />
             </aside>

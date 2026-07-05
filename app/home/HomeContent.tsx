@@ -450,49 +450,49 @@ function BrainConsole({
   return (
     <section className="relative ml-0 w-full max-w-none overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_13%_18%,rgba(239,0,1,0.14),transparent_24%),radial-gradient(circle_at_80%_20%,rgba(147,197,253,0.12),transparent_28%),radial-gradient(circle_at_44%_105%,rgba(239,0,1,0.12),transparent_28%),linear-gradient(135deg,#050713_0%,#070b18_46%,#0a1020_100%)] p-4 text-white shadow-[0_30px_100px_rgba(0,0,0,0.34)] lg:p-5 xl:p-6">
       <style>{`
-        .brain-orb-wrap { position: relative; width: clamp(228px, 23vw, 324px); height: clamp(228px, 23vw, 324px); display: grid; place-items: center; isolation: isolate; animation: brainRobotHover 6.4s ease-in-out infinite; }
-        .brain-wave-field { position: absolute; inset: 0; z-index: 1; border-radius: 999px; filter: drop-shadow(0 0 26px rgba(255,42,68,.18)); }
-        .brain-wave { position: absolute; border-radius: 999px; opacity: .84; transform-origin: center; }
-        .brain-wave::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: conic-gradient(from 136deg, transparent 0deg, transparent 28deg, rgba(255,52,82,.18) 46deg, rgba(255,52,82,.98) 68deg, rgba(255,52,82,.24) 104deg, transparent 136deg, rgba(160,202,255,.05) 192deg, rgba(200,225,255,.36) 230deg, transparent 274deg, rgba(255,52,82,.78) 316deg, transparent 360deg); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-        .brain-wave::after { content: ""; position: absolute; width: 7px; height: 7px; border-radius: 999px; background: rgba(255,52,82,.96); box-shadow: 0 0 18px rgba(255,52,82,.96), 0 0 34px rgba(255,52,82,.44); }
-        .brain-wave.wave-one { inset: 12%; animation: brainWaveOrbit 9.2s linear infinite, brainWavePulse 4.4s ease-in-out infinite; }
-        .brain-wave.wave-one::after { right: 12%; bottom: 14%; }
-        .brain-wave.wave-two { inset: 6%; opacity: .54; filter: blur(.15px); animation: brainWaveOrbit 15s linear infinite reverse, brainWavePulse 5.8s ease-in-out infinite reverse; }
-        .brain-wave.wave-two::before { padding: 1px; background: conic-gradient(from -34deg, transparent 0deg, rgba(255,52,82,.08) 38deg, rgba(255,52,82,.68) 75deg, transparent 116deg, rgba(178,212,255,.32) 188deg, transparent 238deg, rgba(255,52,82,.20) 312deg, transparent 360deg); }
-        .brain-wave.wave-two::after { right: 6%; top: 34%; width: 5px; height: 5px; opacity: .48; }
-        .brain-wave.wave-three { inset: 1%; opacity: .34; animation: brainWaveOrbit 23s linear infinite, brainWavePulse 6.2s ease-in-out infinite; }
-        .brain-wave.wave-three::before { padding: 1px; background: conic-gradient(from 194deg, transparent 0deg, rgba(255,255,255,.06) 44deg, rgba(255,52,82,.34) 82deg, transparent 126deg, rgba(148,196,255,.18) 230deg, transparent 300deg, rgba(255,52,82,.26) 338deg, transparent 360deg); }
+        .brain-orb-wrap { position: relative; width: clamp(220px, 22vw, 300px); height: clamp(220px, 22vw, 300px); display: grid; place-items: center; isolation: isolate; animation: brainRobotHover 6.4s ease-in-out infinite; }
+        .brain-wave-field { position: absolute; inset: 0; z-index: 1; border-radius: 999px; filter: drop-shadow(0 0 22px rgba(255,42,68,.22)); }
+        .brain-wave { position: absolute; border-radius: 999px; opacity: .80; transform-origin: center; }
+        .brain-wave::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: conic-gradient(from 128deg, transparent 0deg, transparent 34deg, rgba(255,52,82,.13) 52deg, rgba(255,52,82,.86) 72deg, rgba(255,52,82,.18) 102deg, transparent 140deg, rgba(180,212,255,.18) 218deg, transparent 272deg, rgba(255,52,82,.46) 320deg, transparent 360deg); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+        .brain-wave::after { content: ""; position: absolute; width: 4px; height: 4px; border-radius: 999px; background: rgba(255,52,82,.96); box-shadow: 0 0 14px rgba(255,52,82,.96), 0 0 28px rgba(255,52,82,.40); }
+        .brain-wave.wave-one { inset: 16%; animation: brainWaveOrbit 11s linear infinite, brainWavePulse 4.4s ease-in-out infinite; }
+        .brain-wave.wave-one::after { right: 10%; bottom: 13%; }
+        .brain-wave.wave-two { inset: 9%; opacity: .44; animation: brainWaveOrbit 18s linear infinite reverse, brainWavePulse 5.8s ease-in-out infinite reverse; }
+        .brain-wave.wave-two::before { padding: 1px; background: conic-gradient(from -32deg, transparent 0deg, rgba(255,52,82,.06) 38deg, rgba(255,52,82,.44) 78deg, transparent 118deg, rgba(178,212,255,.20) 190deg, transparent 244deg, rgba(255,52,82,.16) 314deg, transparent 360deg); }
+        .brain-wave.wave-two::after { right: 7%; top: 34%; width: 3px; height: 3px; opacity: .44; }
+        .brain-wave.wave-three { inset: 3%; opacity: .25; animation: brainWaveOrbit 28s linear infinite, brainWavePulse 6.2s ease-in-out infinite; }
+        .brain-wave.wave-three::before { padding: 1px; background: conic-gradient(from 194deg, transparent 0deg, rgba(255,255,255,.05) 46deg, rgba(255,52,82,.20) 84deg, transparent 128deg, rgba(148,196,255,.12) 232deg, transparent 304deg, rgba(255,52,82,.16) 338deg, transparent 360deg); }
         .brain-wave.wave-three::after { display: none; }
-        .brain-wave-light { position: absolute; z-index: 2; width: 3px; height: 3px; border-radius: 999px; background: rgba(255,255,255,.72); box-shadow: 0 0 12px rgba(255,255,255,.70), 0 0 28px rgba(255,52,82,.30); opacity: .52; }
-        .brain-wave-light.light-one { left: 17%; top: 18%; animation: brainLightDrift 4.2s ease-in-out infinite; }
-        .brain-wave-light.light-two { right: 10%; top: 42%; animation: brainLightDrift 5.1s ease-in-out infinite reverse; }
-        .brain-orb-aura { position: absolute; z-index: 2; width: 70%; height: 70%; border-radius: 999px; background: radial-gradient(circle at 36% 70%, rgba(255,40,70,.26), transparent 42%), radial-gradient(circle, rgba(94,139,213,.13), transparent 68%); filter: blur(14px); opacity: .76; animation: brainAura 5.4s ease-in-out infinite; }
-        .brain-orb { position: relative; z-index: 3; width: 58%; height: 58%; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 66% 18%, rgba(238,247,255,.42), rgba(168,197,234,.12) 16%, transparent 27%), radial-gradient(circle at 50% 47%, #122136 0%, #07101f 54%, #020511 100%); border: 1px solid rgba(203,220,255,.14); box-shadow: inset 24px 20px 34px rgba(224,238,255,.11), inset -30px -34px 68px rgba(0,0,0,.74), 0 0 18px rgba(255,52,82,.35), 0 0 48px rgba(255,52,82,.16), 0 0 82px rgba(150,196,255,.10); animation: brainBotBreath 4.8s ease-in-out infinite; }
-        .brain-orb-liquid { position: absolute; border-radius: 44%; filter: blur(16px); opacity: .68; mix-blend-mode: screen; }
-        .brain-orb-liquid.primary { inset: 25% 45% -20% -28%; background: radial-gradient(circle, rgba(255,43,70,.98), rgba(255,43,70,.48) 42%, transparent 72%); animation: brainLiquid 7.2s ease-in-out infinite; }
-        .brain-orb-liquid.secondary { inset: -22% -28% 36% 38%; background: radial-gradient(circle, rgba(191,220,255,.54), rgba(95,147,217,.22) 48%, transparent 74%); animation: brainLiquid 8.8s ease-in-out infinite reverse; }
-        .brain-orb-red-crescent { position: absolute; left: -8%; bottom: -4%; width: 64%; height: 76%; border-radius: 999px; border-left: 12px solid rgba(255,52,82,.98); border-bottom: 8px solid rgba(255,52,82,.78); filter: blur(.2px) drop-shadow(0 0 16px rgba(255,52,82,.76)) drop-shadow(0 0 34px rgba(255,52,82,.34)); transform: rotate(-17deg); opacity: .98; }
-        .brain-orb-glass { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 66% 18%, rgba(236,246,255,.30), transparent 23%), radial-gradient(circle at 56% 64%, transparent 0%, rgba(255,255,255,.026) 56%, rgba(255,255,255,.10) 100%); border: 1px solid rgba(255,255,255,.09); }
-        .brain-orb-shine { position: absolute; right: 11%; top: 8%; width: 47%; height: 28%; border-radius: 999px; background: linear-gradient(138deg, rgba(242,249,255,.50), rgba(190,218,255,.10) 48%, transparent 76%); transform: rotate(-30deg); opacity: .84; filter: blur(.1px); }
-        .brain-face { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: clamp(22px, 3vw, 34px); transform: translate3d(0, 5px, 0); animation: brainFaceMotion 5.4s ease-in-out infinite; }
-        .brain-chevron { position: relative; width: 20px; height: 16px; filter: drop-shadow(0 0 8px rgba(255,255,255,.98)); }
-        .brain-chevron::before, .brain-chevron::after { content: ""; position: absolute; top: 7px; width: 13px; height: 5px; border-radius: 999px; background: rgba(255,255,255,.97); }
+        .brain-wave-light { position: absolute; z-index: 2; width: 3px; height: 3px; border-radius: 999px; background: rgba(255,255,255,.58); box-shadow: 0 0 10px rgba(255,255,255,.58), 0 0 24px rgba(255,52,82,.26); opacity: .44; }
+        .brain-wave-light.light-one { left: 18%; top: 18%; animation: brainLightDrift 4.2s ease-in-out infinite; }
+        .brain-wave-light.light-two { right: 11%; top: 42%; animation: brainLightDrift 5.1s ease-in-out infinite reverse; }
+        .brain-orb-aura { position: absolute; z-index: 2; width: 62%; height: 62%; border-radius: 999px; background: radial-gradient(circle at 33% 72%, rgba(255,40,70,.18), transparent 42%), radial-gradient(circle, rgba(94,139,213,.10), transparent 70%); filter: blur(13px); opacity: .66; animation: brainAura 5.4s ease-in-out infinite; }
+        .brain-orb { position: relative; z-index: 3; width: 52%; height: 52%; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 64% 18%, rgba(235,246,255,.26), rgba(132,169,210,.10) 15%, transparent 28%), radial-gradient(circle at 44% 54%, #101a2b 0%, #07101c 52%, #02050d 100%); border: 1px solid rgba(194,215,255,.16); box-shadow: inset 18px 17px 30px rgba(222,238,255,.08), inset -28px -32px 60px rgba(0,0,0,.82), 0 0 14px rgba(255,52,82,.28), 0 0 44px rgba(255,52,82,.13), 0 0 76px rgba(150,196,255,.08); animation: brainBotBreath 4.8s ease-in-out infinite; }
+        .brain-orb-liquid { position: absolute; border-radius: 999px; mix-blend-mode: screen; pointer-events: none; }
+        .brain-orb-liquid.primary { left: -9%; bottom: 4%; width: 45%; height: 48%; background: radial-gradient(circle at 76% 68%, rgba(255,44,72,.30), rgba(255,44,72,.08) 42%, transparent 72%); filter: blur(14px); opacity: .52; animation: brainLiquid 7.2s ease-in-out infinite; }
+        .brain-orb-liquid.secondary { right: -12%; top: -12%; width: 58%; height: 52%; background: radial-gradient(circle, rgba(190,220,255,.30), rgba(95,147,217,.10) 48%, transparent 72%); filter: blur(13px); opacity: .44; animation: brainLiquid 8.8s ease-in-out infinite reverse; }
+        .brain-orb-red-crescent { position: absolute; left: 3%; bottom: 2%; width: 50%; height: 56%; border-radius: 999px; border-left: 5px solid rgba(255,52,82,.98); border-bottom: 4px solid rgba(255,52,82,.62); filter: drop-shadow(0 0 10px rgba(255,52,82,.82)) drop-shadow(0 0 24px rgba(255,52,82,.30)); transform: rotate(-24deg); opacity: .98; }
+        .brain-orb-glass { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 66% 18%, rgba(236,246,255,.21), transparent 22%), radial-gradient(circle at 56% 64%, transparent 0%, rgba(255,255,255,.018) 58%, rgba(255,255,255,.07) 100%); border: 1px solid rgba(255,255,255,.07); }
+        .brain-orb-shine { position: absolute; right: 12%; top: 9%; width: 43%; height: 25%; border-radius: 999px; background: linear-gradient(138deg, rgba(242,249,255,.34), rgba(190,218,255,.07) 50%, transparent 76%); transform: rotate(-30deg); opacity: .64; filter: blur(.1px); }
+        .brain-face { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: clamp(21px, 2.7vw, 30px); transform: translate3d(0, 4px, 0); animation: brainFaceMotion 5.4s ease-in-out infinite; }
+        .brain-chevron { position: relative; width: 16px; height: 13px; filter: drop-shadow(0 0 8px rgba(255,255,255,.98)); }
+        .brain-chevron::before, .brain-chevron::after { content: ""; position: absolute; top: 6px; width: 11px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.96); }
         .brain-chevron::before { left: 1px; transform: rotate(-54deg); transform-origin: right center; }
         .brain-chevron::after { right: 1px; transform: rotate(54deg); transform-origin: left center; }
-        .brain-dash { display: block; width: 17px; height: 5px; border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 0 11px rgba(255,255,255,.88); animation: brainDashBlink 4.7s ease-in-out infinite; }
-        .brain-orb-wrap.is-active .brain-wave.wave-one { animation-duration: 6.4s, 3.2s; }
-        .brain-orb-wrap.is-active .brain-wave.wave-two { animation-duration: 9.8s, 4.2s; }
-        .brain-orb-wrap.is-active .brain-orb { box-shadow: inset 24px 20px 34px rgba(224,238,255,.12), inset -30px -34px 68px rgba(0,0,0,.74), 0 0 30px rgba(255,52,82,.58), 0 0 68px rgba(255,52,82,.22), 0 0 104px rgba(150,196,255,.14); }
-        .brain-orb-wrap.is-active .brain-orb-liquid.primary { opacity: .88; }
-        @keyframes brainRobotHover { 0%, 100% { transform: translate3d(0,0,0) rotate(-.6deg); } 45% { transform: translate3d(0,-12px,0) rotate(.7deg); } 70% { transform: translate3d(3px,-7px,0) rotate(-.2deg); } }
-        @keyframes brainBotBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
-        @keyframes brainAura { 0%,100% { transform: scale(.94); opacity: .54; } 50% { transform: scale(1.12); opacity: .90; } }
-        @keyframes brainLiquid { 0%,100% { transform: rotate(0deg) translate3d(0,0,0) scale(1); } 50% { transform: rotate(14deg) translate3d(8px,-10px,0) scale(1.14); } }
+        .brain-dash { display: block; width: 14px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.94); box-shadow: 0 0 10px rgba(255,255,255,.84); animation: brainDashBlink 4.7s ease-in-out infinite; }
+        .brain-orb-wrap.is-active .brain-wave.wave-one { animation-duration: 7.6s, 3.4s; }
+        .brain-orb-wrap.is-active .brain-wave.wave-two { animation-duration: 11.4s, 4.4s; }
+        .brain-orb-wrap.is-active .brain-orb { box-shadow: inset 18px 17px 30px rgba(222,238,255,.09), inset -28px -32px 60px rgba(0,0,0,.82), 0 0 22px rgba(255,52,82,.44), 0 0 58px rgba(255,52,82,.18), 0 0 92px rgba(150,196,255,.11); }
+        .brain-orb-wrap.is-active .brain-orb-liquid.primary { opacity: .62; }
+        @keyframes brainRobotHover { 0%, 100% { transform: translate3d(0,0,0) rotate(-.35deg); } 45% { transform: translate3d(0,-8px,0) rotate(.45deg); } 70% { transform: translate3d(2px,-5px,0) rotate(-.15deg); } }
+        @keyframes brainBotBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
+        @keyframes brainAura { 0%,100% { transform: scale(.94); opacity: .46; } 50% { transform: scale(1.10); opacity: .78; } }
+        @keyframes brainLiquid { 0%,100% { transform: rotate(0deg) translate3d(0,0,0) scale(1); } 50% { transform: rotate(10deg) translate3d(4px,-5px,0) scale(1.06); } }
         @keyframes brainWaveOrbit { to { transform: rotate(360deg); } }
-        @keyframes brainWavePulse { 0%,100% { opacity: .42; filter: blur(.2px) drop-shadow(0 0 16px rgba(255,52,82,.24)); } 45% { opacity: .94; filter: blur(.05px) drop-shadow(0 0 28px rgba(255,52,82,.42)); } }
-        @keyframes brainLightDrift { 0%,100% { transform: translate3d(0,0,0) scale(.8); opacity: .30; } 50% { transform: translate3d(7px,-5px,0) scale(1.3); opacity: .78; } }
-        @keyframes brainFaceMotion { 0%,100% { transform: translate3d(0,5px,0); } 50% { transform: translate3d(2px,1px,0); } }
-        @keyframes brainDashBlink { 0%, 88%, 100% { transform: scaleY(1); opacity: .96; } 92% { transform: scaleY(.24); opacity: .70; } }
+        @keyframes brainWavePulse { 0%,100% { opacity: .34; filter: blur(.2px) drop-shadow(0 0 14px rgba(255,52,82,.20)); } 45% { opacity: .80; filter: blur(.05px) drop-shadow(0 0 24px rgba(255,52,82,.36)); } }
+        @keyframes brainLightDrift { 0%,100% { transform: translate3d(0,0,0) scale(.8); opacity: .24; } 50% { transform: translate3d(6px,-4px,0) scale(1.2); opacity: .64; } }
+        @keyframes brainFaceMotion { 0%,100% { transform: translate3d(0,4px,0); } 50% { transform: translate3d(1px,1px,0); } }
+        @keyframes brainDashBlink { 0%, 88%, 100% { transform: scaleY(1); opacity: .94; } 92% { transform: scaleY(.24); opacity: .70; } }
         @media (prefers-reduced-motion: reduce) { .brain-orb-wrap, .brain-orb, .brain-orb-aura, .brain-orb-liquid, .brain-wave, .brain-wave-light, .brain-face, .brain-dash { animation: none; } }
       `}</style>
 

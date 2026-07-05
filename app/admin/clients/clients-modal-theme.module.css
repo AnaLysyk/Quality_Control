@@ -1,0 +1,153 @@
+.modalTheme :global(form[aria-label="Cadastrar empresa"]),
+.modalTheme :global(form[aria-label="Editar empresa"]),
+.modalTheme :global(form[aria-label="Empresa"]) {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: #0f172a !important;
+}
+
+.modalTheme :global(form[aria-label="Cadastrar empresa"] > div:nth-child(2)),
+.modalTheme :global(form[aria-label="Editar empresa"] > div:nth-child(2)),
+.modalTheme :global(form[aria-label="Empresa"] > div:nth-child(2)) {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.modalTheme :global(form[aria-label="Cadastrar empresa"] label),
+.modalTheme :global(form[aria-label="Editar empresa"] label),
+.modalTheme :global(form[aria-label="Empresa"] label),
+.modalTheme :global(form[aria-label="Cadastrar empresa"] p),
+.modalTheme :global(form[aria-label="Editar empresa"] p),
+.modalTheme :global(form[aria-label="Empresa"] p),
+.modalTheme :global(form[aria-label="Cadastrar empresa"] span),
+.modalTheme :global(form[aria-label="Editar empresa"] span),
+.modalTheme :global(form[aria-label="Empresa"] span) {
+  color: #0f172a !important;
+}
+
+.modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="text-xs"]),
+.modalTheme :global(form[aria-label="Editar empresa"] [class*="text-xs"]),
+.modalTheme :global(form[aria-label="Empresa"] [class*="text-xs"]),
+.modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="text-(--tc-text-muted"]),
+.modalTheme :global(form[aria-label="Editar empresa"] [class*="text-(--tc-text-muted"]),
+.modalTheme :global(form[aria-label="Empresa"] [class*="text-(--tc-text-muted"]) {
+  color: #52627a !important;
+}
+
+.modalTheme :global(form[aria-label="Cadastrar empresa"] input),
+.modalTheme :global(form[aria-label="Editar empresa"] input),
+.modalTheme :global(form[aria-label="Empresa"] input),
+.modalTheme :global(form[aria-label="Cadastrar empresa"] textarea),
+.modalTheme :global(form[aria-label="Editar empresa"] textarea),
+.modalTheme :global(form[aria-label="Empresa"] textarea),
+.modalTheme :global(form[aria-label="Cadastrar empresa"] select),
+.modalTheme :global(form[aria-label="Editar empresa"] select),
+.modalTheme :global(form[aria-label="Empresa"] select) {
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.modalTheme :global(form[aria-label="Cadastrar empresa"] input::placeholder),
+.modalTheme :global(form[aria-label="Editar empresa"] input::placeholder),
+.modalTheme :global(form[aria-label="Empresa"] input::placeholder),
+.modalTheme :global(form[aria-label="Cadastrar empresa"] textarea::placeholder),
+.modalTheme :global(form[aria-label="Editar empresa"] textarea::placeholder),
+.modalTheme :global(form[aria-label="Empresa"] textarea::placeholder) {
+  color: #7b8aa0 !important;
+}
+
+.modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="bg-(--tc-surface"]),
+.modalTheme :global(form[aria-label="Editar empresa"] [class*="bg-(--tc-surface"]),
+.modalTheme :global(form[aria-label="Empresa"] [class*="bg-(--tc-surface"]) {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  background: #f8fbff !important;
+  color: #0f172a !important;
+}
+
+.modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="bg-[#07111f"]),
+.modalTheme :global(form[aria-label="Editar empresa"] [class*="bg-[#07111f"]),
+.modalTheme :global(form[aria-label="Empresa"] [class*="bg-[#07111f"]),
+.modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="bg-[#0b1628"]),
+.modalTheme :global(form[aria-label="Editar empresa"] [class*="bg-[#0b1628"]),
+.modalTheme :global(form[aria-label="Empresa"] [class*="bg-[#0b1628"]) {
+  background: #06152c !important;
+  color: #ffffff !important;
+}
+
+.modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="bg-[#07111f"] *),
+.modalTheme :global(form[aria-label="Editar empresa"] [class*="bg-[#07111f"] *),
+.modalTheme :global(form[aria-label="Empresa"] [class*="bg-[#07111f"] *),
+.modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="bg-[#0b1628"] *),
+.modalTheme :global(form[aria-label="Editar empresa"] [class*="bg-[#0b1628"] *),
+.modalTheme :global(form[aria-label="Empresa"] [class*="bg-[#0b1628"] *) {
+  color: #ffffff !important;
+}
+
+:global(.dark) .modalTheme :global(form[aria-label="Cadastrar empresa"]),
+:global(.dark) .modalTheme :global(form[aria-label="Editar empresa"]),
+:global(.dark) .modalTheme :global(form[aria-label="Empresa"]),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Cadastrar empresa"]),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Editar empresa"]),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Empresa"]) {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: rgba(15, 23, 42, 0.98) !important;
+  color: #f8fafc !important;
+}
+
+:global(.dark) .modalTheme :global(form[aria-label="Cadastrar empresa"] > div:nth-child(2)),
+:global(.dark) .modalTheme :global(form[aria-label="Editar empresa"] > div:nth-child(2)),
+:global(.dark) .modalTheme :global(form[aria-label="Empresa"] > div:nth-child(2)),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Cadastrar empresa"] > div:nth-child(2)),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Editar empresa"] > div:nth-child(2)),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Empresa"] > div:nth-child(2)) {
+  background: rgba(15, 23, 42, 0.98) !important;
+  color: #f8fafc !important;
+}
+
+:global(.dark) .modalTheme :global(form[aria-label="Cadastrar empresa"] label),
+:global(.dark) .modalTheme :global(form[aria-label="Editar empresa"] label),
+:global(.dark) .modalTheme :global(form[aria-label="Empresa"] label),
+:global(.dark) .modalTheme :global(form[aria-label="Cadastrar empresa"] p),
+:global(.dark) .modalTheme :global(form[aria-label="Editar empresa"] p),
+:global(.dark) .modalTheme :global(form[aria-label="Empresa"] p),
+:global(.dark) .modalTheme :global(form[aria-label="Cadastrar empresa"] span),
+:global(.dark) .modalTheme :global(form[aria-label="Editar empresa"] span),
+:global(.dark) .modalTheme :global(form[aria-label="Empresa"] span),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Cadastrar empresa"] label),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Editar empresa"] label),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Empresa"] label),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Cadastrar empresa"] p),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Editar empresa"] p),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Empresa"] p),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Cadastrar empresa"] span),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Editar empresa"] span),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Empresa"] span) {
+  color: #f8fafc !important;
+}
+
+:global(.dark) .modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="text-xs"]),
+:global(.dark) .modalTheme :global(form[aria-label="Editar empresa"] [class*="text-xs"]),
+:global(.dark) .modalTheme :global(form[aria-label="Empresa"] [class*="text-xs"]),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Cadastrar empresa"] [class*="text-xs"]),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Editar empresa"] [class*="text-xs"]),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Empresa"] [class*="text-xs"]) {
+  color: #b9c6d8 !important;
+}
+
+:global(.dark) .modalTheme :global(form[aria-label="Cadastrar empresa"] input),
+:global(.dark) .modalTheme :global(form[aria-label="Editar empresa"] input),
+:global(.dark) .modalTheme :global(form[aria-label="Empresa"] input),
+:global(.dark) .modalTheme :global(form[aria-label="Cadastrar empresa"] textarea),
+:global(.dark) .modalTheme :global(form[aria-label="Editar empresa"] textarea),
+:global(.dark) .modalTheme :global(form[aria-label="Empresa"] textarea),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Cadastrar empresa"] input),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Editar empresa"] input),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Empresa"] input),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Cadastrar empresa"] textarea),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Editar empresa"] textarea),
+:global([data-theme="dark"]) .modalTheme :global(form[aria-label="Empresa"] textarea) {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: rgba(17, 30, 50, 0.92) !important;
+  color: #f8fafc !important;
+}

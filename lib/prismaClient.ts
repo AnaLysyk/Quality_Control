@@ -75,12 +75,14 @@ function getBrainDatabaseUrl() {
 }
 
 function getBrainPrismaClient() {
-  if (!globalForPrisma.brainPrismaAdapter) {
-    globalForPrisma.brainPrismaAdapter = new PrismaPg(getBrainDatabaseUrl());
+  let adapter = globalForPrisma.brainPrismaAdapter;
+  if (!adapter) {
+    adapter = new PrismaPg(getBrainDatabaseUrl());
+    globalForPrisma.brainPrismaAdapter = adapter;
   }
 
   if (!globalForPrisma.brainPrisma) {
-    globalForPrisma.brainPrisma = new PrismaClient({ adapter: globalForPrisma.brainPrismaAdapter });
+    globalForPrisma.brainPrisma = new PrismaClient({ adapter });
   }
 
   return globalForPrisma.brainPrisma;

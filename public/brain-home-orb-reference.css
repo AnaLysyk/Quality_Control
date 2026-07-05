@@ -1,12 +1,17 @@
-/* Orb do Brain fiel ao print: esfera lisa, olhos simples e aro LED sutil. */
+/*
+  Brain Home Orb — versão fiel ao print de referência.
+  Abordagem sênior: um único objeto visual, sem peças mecânicas, sem mancha pesada,
+  com esfera glossy escura, rosto minimalista e aro LED sutil.
+*/
 .brain-orb-wrap {
   position: relative !important;
-  width: clamp(232px, 23vw, 304px) !important;
-  height: clamp(232px, 23vw, 304px) !important;
+  width: clamp(228px, 22vw, 296px) !important;
+  height: clamp(228px, 22vw, 296px) !important;
   display: grid !important;
   place-items: center !important;
   isolation: isolate !important;
-  filter: drop-shadow(0 20px 48px rgba(0, 0, 0, 0.34)) !important;
+  transform: translateZ(0) !important;
+  filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.34)) !important;
 }
 
 .brain-wave-field {
@@ -15,16 +20,17 @@
   z-index: 1 !important;
   border-radius: 999px !important;
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.17) 0 1.25px, transparent 2.7px),
-    radial-gradient(circle at 86% 45%, rgba(255, 255, 255, 0.15) 0 1.15px, transparent 2.6px),
-    radial-gradient(circle at 76% 84%, rgba(255, 68, 102, 0.22) 0 1.35px, transparent 2.8px) !important;
-  filter: drop-shadow(0 0 14px rgba(255, 68, 102, 0.14)) !important;
+    radial-gradient(circle at 18% 17%, rgba(255, 255, 255, 0.18) 0 1.2px, transparent 2.8px),
+    radial-gradient(circle at 88% 45%, rgba(255, 255, 255, 0.15) 0 1.1px, transparent 2.7px),
+    radial-gradient(circle at 76% 84%, rgba(255, 67, 102, 0.24) 0 1.35px, transparent 2.8px),
+    radial-gradient(circle at 22% 37%, rgba(255, 67, 102, 0.12) 0 1.1px, transparent 2.5px) !important;
+  filter: drop-shadow(0 0 15px rgba(255, 67, 102, 0.14)) !important;
 }
 
 .brain-wave {
   position: absolute !important;
   border-radius: 999px !important;
-  opacity: 1 !important;
+  pointer-events: none !important;
 }
 
 .brain-wave::before {
@@ -38,14 +44,14 @@
       from 205deg,
       transparent 0deg,
       transparent 30deg,
-      rgba(255, 75, 112, 0.18) 50deg,
-      rgba(255, 75, 112, 0.84) 70deg,
-      rgba(255, 75, 112, 0.16) 100deg,
-      transparent 140deg,
-      rgba(196, 220, 255, 0.04) 198deg,
-      rgba(196, 220, 255, 0.18) 232deg,
+      rgba(255, 75, 112, 0.16) 49deg,
+      rgba(255, 75, 112, 0.92) 70deg,
+      rgba(255, 75, 112, 0.17) 101deg,
+      transparent 139deg,
+      rgba(203, 224, 255, 0.04) 202deg,
+      rgba(203, 224, 255, 0.20) 233deg,
       transparent 270deg,
-      rgba(255, 75, 112, 0.46) 326deg,
+      rgba(255, 75, 112, 0.48) 326deg,
       transparent 360deg
     ) !important;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) !important;
@@ -59,13 +65,14 @@
   width: 4px !important;
   height: 4px !important;
   border-radius: 999px !important;
-  background: rgba(255, 67, 101, 0.96) !important;
-  box-shadow: 0 0 12px rgba(255, 67, 101, 0.90), 0 0 24px rgba(255, 67, 101, 0.28) !important;
+  background: rgba(255, 67, 102, 0.98) !important;
+  box-shadow: 0 0 12px rgba(255, 67, 102, 0.90), 0 0 24px rgba(255, 67, 102, 0.30) !important;
 }
 
 .brain-wave.wave-one {
   inset: 16% !important;
-  animation: brainWaveOrbit 13s linear infinite !important;
+  opacity: 0.92 !important;
+  animation: brainWaveOrbit 14s linear infinite !important;
 }
 
 .brain-wave.wave-one::after {
@@ -75,8 +82,8 @@
 
 .brain-wave.wave-two {
   inset: 9% !important;
-  opacity: 0.34 !important;
-  animation: brainWaveOrbit 21s linear infinite reverse !important;
+  opacity: 0.32 !important;
+  animation: brainWaveOrbit 23s linear infinite reverse !important;
 }
 
 .brain-wave.wave-two::before {
@@ -84,12 +91,12 @@
     conic-gradient(
       from -30deg,
       transparent 0deg,
-      rgba(255, 75, 112, 0.05) 42deg,
-      rgba(255, 75, 112, 0.30) 76deg,
-      transparent 116deg,
-      rgba(180, 210, 255, 0.10) 186deg,
+      rgba(255, 75, 112, 0.045) 42deg,
+      rgba(255, 75, 112, 0.28) 77deg,
+      transparent 118deg,
+      rgba(180, 210, 255, 0.10) 188deg,
       transparent 246deg,
-      rgba(255, 75, 112, 0.12) 312deg,
+      rgba(255, 75, 112, 0.11) 313deg,
       transparent 360deg
     ) !important;
 }
@@ -99,13 +106,13 @@
   height: 3px !important;
   right: 8% !important;
   top: 36% !important;
-  opacity: 0.48 !important;
+  opacity: 0.46 !important;
 }
 
 .brain-wave.wave-three {
   inset: 2% !important;
-  opacity: 0.14 !important;
-  animation: brainWaveOrbit 30s linear infinite !important;
+  opacity: 0.13 !important;
+  animation: brainWaveOrbit 34s linear infinite !important;
 }
 
 .brain-wave.wave-three::before {
@@ -113,12 +120,12 @@
     conic-gradient(
       from 190deg,
       transparent 0deg,
-      rgba(255, 255, 255, 0.035) 50deg,
-      rgba(255, 75, 112, 0.11) 88deg,
+      rgba(255, 255, 255, 0.03) 48deg,
+      rgba(255, 75, 112, 0.10) 88deg,
       transparent 126deg,
-      rgba(180, 210, 255, 0.08) 228deg,
+      rgba(180, 210, 255, 0.075) 228deg,
       transparent 302deg,
-      rgba(255, 75, 112, 0.08) 338deg,
+      rgba(255, 75, 112, 0.075) 338deg,
       transparent 360deg
     ) !important;
 }
@@ -133,8 +140,8 @@
   width: 2.8px !important;
   height: 2.8px !important;
   border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.60) !important;
-  box-shadow: 0 0 9px rgba(255, 255, 255, 0.54), 0 0 18px rgba(255, 67, 101, 0.16) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  box-shadow: 0 0 9px rgba(255, 255, 255, 0.54), 0 0 18px rgba(255, 67, 102, 0.16) !important;
   opacity: 0.38 !important;
 }
 
@@ -155,10 +162,10 @@
   height: 58% !important;
   border-radius: 999px !important;
   background:
-    radial-gradient(circle at 25% 74%, rgba(255, 58, 96, 0.16), transparent 40%),
-    radial-gradient(circle at 56% 45%, rgba(92, 135, 204, 0.08), transparent 68%) !important;
-  filter: blur(16px) !important;
-  opacity: 0.38 !important;
+    radial-gradient(circle at 25% 74%, rgba(255, 58, 96, 0.14), transparent 42%),
+    radial-gradient(circle at 58% 44%, rgba(92, 135, 204, 0.08), transparent 68%) !important;
+  filter: blur(15px) !important;
+  opacity: 0.36 !important;
 }
 
 .brain-orb {
@@ -169,24 +176,25 @@
   border-radius: 999px !important;
   overflow: hidden !important;
   background:
-    radial-gradient(circle at 66% 18%, rgba(235, 244, 255, 0.15), transparent 18%),
-    radial-gradient(circle at 50% 48%, #132133 0%, #09121d 54%, #03070f 80%, #01030a 100%) !important;
+    radial-gradient(ellipse at 68% 18%, rgba(235, 244, 255, 0.13) 0%, rgba(190, 211, 240, 0.055) 18%, transparent 31%),
+    radial-gradient(circle at 48% 48%, #132133 0%, #09121d 55%, #03070f 81%, #01030a 100%) !important;
   border: 1px solid rgba(205, 223, 255, 0.14) !important;
   box-shadow:
-    inset 14px 14px 24px rgba(220, 236, 255, 0.05),
-    inset -30px -34px 60px rgba(0, 0, 0, 0.88),
+    inset 13px 13px 23px rgba(220, 236, 255, 0.050),
+    inset -31px -35px 61px rgba(0, 0, 0, 0.89),
     0 0 12px rgba(255, 74, 110, 0.20),
-    0 0 32px rgba(255, 74, 110, 0.08),
-    0 0 68px rgba(140, 186, 255, 0.07) !important;
+    0 0 31px rgba(255, 74, 110, 0.08),
+    0 0 66px rgba(140, 186, 255, 0.07) !important;
 }
 
+/* Nada de mancha vermelha dentro da esfera. Apenas uma luz ambiente mínima no canto. */
 .brain-orb::before {
   content: "" !important;
   position: absolute !important;
   inset: 0 !important;
   z-index: 2 !important;
   border-radius: inherit !important;
-  background: radial-gradient(circle at 17% 77%, rgba(255, 58, 96, 0.10), transparent 24%) !important;
+  background: radial-gradient(circle at 18% 76%, rgba(255, 58, 96, 0.075), transparent 25%) !important;
   pointer-events: none !important;
 }
 
@@ -198,22 +206,23 @@
   visibility: hidden !important;
 }
 
+/* Arco vermelho fino na borda inferior esquerda, como no print. */
 .brain-orb-red-crescent {
   display: block !important;
   position: absolute !important;
-  left: 2% !important;
-  bottom: 5% !important;
-  width: 37% !important;
-  height: 43% !important;
+  left: -1% !important;
+  bottom: 4% !important;
+  width: 40% !important;
+  height: 48% !important;
   z-index: 4 !important;
-  border-left: 3px solid rgba(255, 58, 96, 0.92) !important;
-  border-bottom: 2px solid rgba(255, 58, 96, 0.52) !important;
+  border-left: 3px solid rgba(255, 58, 96, 0.93) !important;
+  border-bottom: 2px solid rgba(255, 58, 96, 0.50) !important;
   border-top: 0 !important;
   border-right: 0 !important;
   border-radius: 999px !important;
-  transform: rotate(-24deg) !important;
-  filter: drop-shadow(0 0 8px rgba(255, 58, 96, 0.70)) drop-shadow(0 0 16px rgba(255, 58, 96, 0.18)) !important;
-  opacity: 0.92 !important;
+  transform: rotate(-23deg) !important;
+  filter: drop-shadow(0 0 8px rgba(255, 58, 96, 0.72)) drop-shadow(0 0 16px rgba(255, 58, 96, 0.18)) !important;
+  opacity: 0.95 !important;
   visibility: visible !important;
 }
 
@@ -223,20 +232,21 @@
   z-index: 5 !important;
   border-radius: inherit !important;
   background:
-    radial-gradient(circle at 69% 18%, rgba(255, 255, 255, 0.13), transparent 22%),
-    radial-gradient(circle at 52% 64%, transparent 0%, rgba(255, 255, 255, 0.014) 58%, rgba(255, 255, 255, 0.048) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    radial-gradient(circle at 69% 18%, rgba(255, 255, 255, 0.115), transparent 21%),
+    radial-gradient(circle at 52% 64%, transparent 0%, rgba(255, 255, 255, 0.012) 58%, rgba(255, 255, 255, 0.045) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.055) !important;
 }
 
+/* Reflexo branco/frio no topo direito: pequeno, ovalado, sem estourar. */
 .brain-orb-shine {
   position: absolute !important;
   right: 12% !important;
   top: 8% !important;
   z-index: 6 !important;
-  width: 34% !important;
+  width: 35% !important;
   height: 22% !important;
   border-radius: 999px !important;
-  background: radial-gradient(ellipse at 45% 35%, rgba(245, 250, 255, 0.38), rgba(205, 223, 248, 0.13) 48%, transparent 76%) !important;
+  background: radial-gradient(ellipse at 45% 35%, rgba(245, 250, 255, 0.34), rgba(205, 223, 248, 0.12) 48%, transparent 76%) !important;
   transform: rotate(-28deg) !important;
   opacity: 0.58 !important;
 }
@@ -248,55 +258,58 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 22px !important;
+  gap: 21px !important;
   transform: translateY(2px) !important;
 }
 
+/* Olho esquerdo: usar o próprio caractere ^ evita o efeito de Y/mancha. */
 .brain-chevron {
   position: relative !important;
-  width: 15px !important;
-  height: 12px !important;
-  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.92)) !important;
-}
-
-.brain-chevron::before,
-.brain-chevron::after {
-  content: "" !important;
-  position: absolute !important;
-  top: 6px !important;
-  width: 10px !important;
-  height: 3px !important;
-  border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.97) !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 16px !important;
+  height: 13px !important;
+  color: rgba(255, 255, 255, 0.97) !important;
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.88)) !important;
 }
 
 .brain-chevron::before {
-  left: 1px !important;
-  transform: rotate(-50deg) !important;
-  transform-origin: right center !important;
+  content: "^" !important;
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.97) !important;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  transform: translateY(2px) scaleX(0.92) !important;
+  transform-origin: center !important;
 }
 
 .brain-chevron::after {
-  right: 1px !important;
-  transform: rotate(50deg) !important;
-  transform-origin: left center !important;
+  display: none !important;
+  content: none !important;
 }
 
+/* Olho direito: traço curto e delicado. */
 .brain-dash {
   width: 14px !important;
   height: 3px !important;
   border-radius: 999px !important;
   background: rgba(255, 255, 255, 0.96) !important;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.80) !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.78) !important;
 }
 
 .brain-orb-wrap.is-active .brain-orb {
   box-shadow:
-    inset 14px 14px 24px rgba(220, 236, 255, 0.06),
-    inset -30px -34px 60px rgba(0, 0, 0, 0.88),
-    0 0 16px rgba(255, 74, 110, 0.30),
-    0 0 42px rgba(255, 74, 110, 0.12),
-    0 0 78px rgba(140, 186, 255, 0.09) !important;
+    inset 13px 13px 23px rgba(220, 236, 255, 0.058),
+    inset -31px -35px 61px rgba(0, 0, 0, 0.89),
+    0 0 16px rgba(255, 74, 110, 0.28),
+    0 0 42px rgba(255, 74, 110, 0.11),
+    0 0 78px rgba(140, 186, 255, 0.08) !important;
 }
 
 @keyframes brainWaveOrbit {

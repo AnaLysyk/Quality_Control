@@ -83,6 +83,11 @@ type QuickModule = {
   href: string;
 };
 
+type HomeContextCacheEntry = {
+  expiresAt: number;
+  value: HomeContext;
+};
+
 const FILTERS: Array<{ mode: BrainMode; label: string; icon: typeof FiBriefcase }> = [
   { mode: "company", label: "Por empresa", icon: FiBriefcase },
   { mode: "user", label: "Por usuário", icon: FiUser },
@@ -97,6 +102,10 @@ const RANGE_OPTIONS: Array<{ value: RangeKey; label: string }> = [
   { value: "7d", label: "7 dias" },
   { value: "30d", label: "30 dias" },
 ];
+
+const HOME_CONTEXT_CACHE_TTL_MS = 60_000;
+const homeContextCache = new Map<string, HomeContextCacheEntry>();
+const homeContextInflight = new Map<string, Promise<HomeContext>>();
 
 function normalizeText(value: string) {
   return value
@@ -228,6 +237,47 @@ function fallbackContext(input: { greeting: string; userName: string; profile: P
     highlights: [],
     routes: { adminOverview: "/admin/visao-geral" },
   };
+}
+
+function homeContextKey(input: { greeting: string; userName: string; profile: ProfileExperience; range: RangeKey }) {
+  return [input.range, input.greeting, input.userName, input.profile.label].join("::");
+}
+
+function getCachedHomeContext(input: { greeting: string; userName: string; profile: ProfileExperience; range: RangeKey }) {
+  const cached = homeContextCache.get(homeContextKey(input));
+  if (!cached) return null;
+  if (cached.expiresAt <= Date.now()) {
+    homeContextCache.delete(homeContextKey(input));
+    return null;
+  }
+  return cached.value;
+}
+
+function fetchHomeContextCached(input: { greeting: string; userName: string; profile: ProfileExperience; range: RangeKey }) {
+  const key = homeContextKey(input);
+  const cached = getCachedHomeContext(input);
+  if (cached) return Promise.resolve(cached);
+
+  const inflight = homeContextInflight.get(key);
+  if (inflight) return inflight;
+
+  const promise = fetch(`/api/brain/home-context?range=${input.range}`, { cache: "no-store" })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((data: HomeContext | null) => data ?? fallbackContext(input))
+    .catch(() => fallbackContext(input))
+    .then((context) => {
+      homeContextCache.set(key, {
+        value: context,
+        expiresAt: Date.now() + HOME_CONTEXT_CACHE_TTL_MS,
+      });
+      return context;
+    })
+    .finally(() => {
+      homeContextInflight.delete(key);
+    });
+
+  homeContextInflight.set(key, promise);
+  return promise;
 }
 
 function confirmationFor(mode: BrainMode, userName: string) {
@@ -393,15 +443,22 @@ function BrainConsole({
 
   useEffect(() => {
     let active = true;
+    const requestInput = { greeting, userName, profile, range };
+    const cached = getCachedHomeContext(requestInput);
+
+    if (cached) {
+      setHomeContext(cached);
+      setLoadingContext(false);
+      return () => {
+        active = false;
+      };
+    }
+
     setLoadingContext(true);
-    fetch(`/api/brain/home-context?range=${range}`, { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: HomeContext | null) => {
+    fetchHomeContextCached(requestInput)
+      .then((context) => {
         if (!active) return;
-        setHomeContext(data ?? fallbackContext({ greeting, userName, profile, range }));
-      })
-      .catch(() => {
-        if (active) setHomeContext(fallbackContext({ greeting, userName, profile, range }));
+        setHomeContext(context);
       })
       .finally(() => {
         if (active) setLoadingContext(false);

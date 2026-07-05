@@ -1,8 +1,8 @@
-﻿import "server-only";
+import "server-only";
 
 import type { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prismaClient";
+import { brainPrisma } from "@/lib/brain/brainPrisma";
 
 export type BrainAuditEventInput = {
   userId?: string | null;
@@ -22,7 +22,7 @@ export type BrainAuditEventInput = {
 
 export async function recordBrainAuditEvent(input: BrainAuditEventInput) {
   try {
-    return await prisma.brainAuditLog.create({
+    return await brainPrisma.brainAuditLog.create({
       data: {
         action: input.action,
         entityType: input.provider ? `BrainIntegration:${input.provider}` : "BrainAction",
@@ -49,4 +49,3 @@ export async function recordBrainAuditEvent(input: BrainAuditEventInput) {
     return null;
   }
 }
-

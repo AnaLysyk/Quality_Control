@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import loadDynamic from "next/dynamic";
+import styles from "./chat-theme.module.css";
 
 const Chat = loadDynamic(() => import("../components/TeamChat"), {
   ssr: false,
@@ -11,7 +12,7 @@ const Chat = loadDynamic(() => import("../components/TeamChat"), {
 
 export default function ChatPage() {
   return (
-    <div className="qc-chat-page-shell">
+    <div className={`${styles.chatTheme} qc-chat-page-shell`}>
       <Chat />
     </div>
   );

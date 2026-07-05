@@ -1,7 +1,8 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { reviewBrainAgentReview } from "@/lib/brain/agentReview";
+import { brainPrisma } from "@/lib/brain/brainPrisma";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
   const status = url.searchParams.get("status")?.trim().toLowerCase() || "pending";
   const companySlug = url.searchParams.get("companySlug")?.trim().toLowerCase() || null;
 
-  const items = await prisma.brainInboxItem.findMany({
+  const items = await brainPrisma.brainInboxItem.findMany({
     where: {
       status,
       ...(companySlug ? { companySlug } : {}),
@@ -45,9 +46,24 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "id é obrigatório" }, { status: 400 });
   }
 
-  const item = await prisma.brainInboxItem.findUnique({ where: { id } });
+  const item = await brainPrisma.brainInboxItem.findUnique({ where: { id } });
   if (!item) {
     return NextResponse.json({ error: "Item de inbox não encontrado" }, { status: 404 });
+  }
+
+  if (item.kind === "agent_operation_approval") {
+    const action = body.action === "approve" || body.action === "reject" || body.action === "archive"
+      ? body.action
+      : "review";
+
+    const updated = await reviewBrainAgentReview({
+      id,
+      action,
+      reviewedBy: accessResult.context.user.id,
+      note: body.note,
+    });
+
+    return NextResponse.json({ item: updated });
   }
 
   const action = body.action ?? "review";
@@ -60,7 +76,7 @@ export async function PATCH(req: Request) {
   };
 
   const nextStatus = statusByAction[action];
-  const updated = await prisma.brainInboxItem.update({
+  const updated = await brainPrisma.brainInboxItem.update({
     where: { id },
     data: {
       status: nextStatus,
@@ -82,7 +98,7 @@ export async function PATCH(req: Request) {
       needs_review: "suggested",
     };
 
-    await prisma.brainSuggestion.update({
+    await brainPrisma.brainSuggestion.update({
       where: { id: item.suggestionId },
       data: {
         status: suggestionStatus[nextStatus] ?? "suggested",
@@ -92,4 +108,3 @@ export async function PATCH(req: Request) {
 
   return NextResponse.json({ item: updated });
 }
-

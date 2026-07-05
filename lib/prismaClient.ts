@@ -1,9 +1,28 @@
-﻿import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { getPrismaClientOptions, resetPrismaAdapter } from "@/lib/prismaClientOptions";
 
 // Singleton pattern: reutiliza a instância entre hot-reloads no dev
 // e evita "too many connections" em produção.
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+  brainPrisma?: PrismaClient;
+  brainPrismaAdapter?: PrismaPg;
+};
+
+const BRAIN_DELEGATE_NAMES = new Set([
+  "brainNode",
+  "brainEdge",
+  "brainMemory",
+  "brainAuditLog",
+  "brainSuggestion",
+  "brainInboxItem",
+  "brainWorkspace",
+  "brainWorkspaceNode",
+  "brainWorkspaceEdge",
+  "brainSavedView",
+  "brainRetentionPolicy",
+]);
 
 function hasDatabaseUrl() {
   return Boolean(
@@ -11,6 +30,62 @@ function hasDatabaseUrl() {
       process.env.POSTGRES_PRISMA_URL ??
       process.env.POSTGRES_URL,
   );
+}
+
+function getPrimaryDatabaseUrl() {
+  return process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL ?? null;
+}
+
+function normalizeDatabaseUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+
+  try {
+    const parsed = new URL(trimmed);
+    parsed.searchParams.sort?.();
+    return parsed.toString();
+  } catch {
+    return trimmed;
+  }
+}
+
+function getBrainDatabaseUrl() {
+  const brainDatabaseUrl = process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL;
+
+  if (!brainDatabaseUrl) {
+    throw new Error(
+      "BRAIN_DATABASE_URL or BRAIN_RAG_DATABASE_URL is required for Brain RAG tables.",
+    );
+  }
+
+  const primaryDatabaseUrl = getPrimaryDatabaseUrl();
+  const allowPrimaryDatabase = process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
+
+  if (
+    primaryDatabaseUrl &&
+    normalizeDatabaseUrl(primaryDatabaseUrl) === normalizeDatabaseUrl(brainDatabaseUrl) &&
+    !allowPrimaryDatabase
+  ) {
+    throw new Error(
+      "Brain RAG tables must use a separate database. Set BRAIN_ALLOW_PRIMARY_DATABASE=true only for local development.",
+    );
+  }
+
+  return brainDatabaseUrl;
+}
+
+function getBrainPrismaClient() {
+  let adapter = globalForPrisma.brainPrismaAdapter;
+  if (!adapter) {
+    adapter = new PrismaPg(getBrainDatabaseUrl());
+    globalForPrisma.brainPrismaAdapter = adapter;
+  }
+
+  if (!globalForPrisma.brainPrisma) {
+    globalForPrisma.brainPrisma = new PrismaClient({ adapter });
+  }
+
+  return globalForPrisma.brainPrisma;
 }
 
 function isPrismaOptionalMode() {
@@ -53,8 +128,11 @@ let currentPrisma: PrismaClient =
 function createPrismaClientProxy(): PrismaClient {
   return new Proxy({} as PrismaClient, {
     get(_target, prop) {
-      const value = Reflect.get(currentPrisma as object, prop, currentPrisma);
-      return typeof value === "function" ? value.bind(currentPrisma) : value;
+      const client = typeof prop === "string" && BRAIN_DELEGATE_NAMES.has(prop)
+        ? getBrainPrismaClient()
+        : currentPrisma;
+      const value = Reflect.get(client as object, prop, client);
+      return typeof value === "function" ? value.bind(client) : value;
     },
     set(_target, prop, value) {
       return Reflect.set(currentPrisma as object, prop, value, currentPrisma);
@@ -76,4 +154,3 @@ export function reconnectPrisma() {
   console.info("[prisma] Reconnecting after connection loss...");
   currentPrisma = recreatePrismaClient();
 }
-

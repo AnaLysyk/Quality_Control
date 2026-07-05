@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import {
   canUseFreeProvider,
@@ -7,11 +7,7 @@ import {
   type FreeProvider,
 } from "@/lib/brain/freeApiGuard";
 
-export type BrainModelProvider =
-  | "groq"
-  | "gemini"
-  | "openrouter"
-  | "mock";
+export type BrainModelProvider = "groq" | "gemini" | "openrouter" | "mock";
 
 export type BrainModelMessage = {
   role: "system" | "user" | "assistant";
@@ -41,17 +37,28 @@ class ProviderHttpError extends Error {
   }
 }
 
-const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
-const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
-const DEFAULT_OPENROUTER_MODEL = "openrouter/free";
-
-const GROQ_FREE_MODELS = new Set([
+const DEFAULT_GROQ_MODELS = [
   "llama-3.1-8b-instant",
   "llama-3.3-70b-versatile",
+  "qwen/qwen3-32b",
   "openai/gpt-oss-20b",
   "openai/gpt-oss-120b",
-  "qwen/qwen3-32b",
-]);
+];
+
+const DEFAULT_GEMINI_MODELS = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
+];
+
+const DEFAULT_OPENROUTER_MODELS = [
+  "openrouter/free",
+];
+
+const GROQ_FREE_MODELS = new Set(DEFAULT_GROQ_MODELS);
 
 function boolEnv(name: string, fallback = false) {
   const value = String(process.env[name] ?? "").trim().toLowerCase();
@@ -65,11 +72,11 @@ function numberEnv(name: string, fallback: number) {
 }
 
 function timeoutMs() {
-  return numberEnv("BRAIN_ONLINE_PROVIDER_TIMEOUT_MS", 4500);
+  return numberEnv("BRAIN_ONLINE_PROVIDER_TIMEOUT_MS", 2500);
 }
 
 function maxOutputTokens(input?: BrainModelInput) {
-  return Math.min(input?.maxTokens ?? numberEnv("BRAIN_MAX_OUTPUT_TOKENS", 700), 900);
+  return Math.min(input?.maxTokens ?? numberEnv("BRAIN_MAX_OUTPUT_TOKENS", 500), 900);
 }
 
 function compactText(value: unknown, max = 9000) {
@@ -94,6 +101,17 @@ function retryAfter(response: Response) {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
+function unique(values: string[]) {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
+function csvEnv(name: string) {
+  return String(process.env[name] ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function readProviderOrder(): FreeProvider[] {
   const raw = String(process.env.BRAIN_FREE_PROVIDER_ORDER ?? "groq,gemini,openrouter");
   const allowed = new Set<FreeProvider>(["groq", "gemini", "openrouter"]);
@@ -115,14 +133,26 @@ function providerHasKey(provider: FreeProvider) {
   }
 }
 
-function providerModel(provider: FreeProvider) {
+function providerModels(provider: FreeProvider) {
   switch (provider) {
     case "groq":
-      return process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL;
+      return unique([
+        ...csvEnv("GROQ_MODELS"),
+        process.env.GROQ_MODEL || "",
+        ...DEFAULT_GROQ_MODELS,
+      ]);
     case "gemini":
-      return process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+      return unique([
+        ...csvEnv("GEMINI_MODELS"),
+        process.env.GEMINI_MODEL || "",
+        ...DEFAULT_GEMINI_MODELS,
+      ]);
     case "openrouter":
-      return process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL;
+      return unique([
+        ...csvEnv("OPENROUTER_MODELS"),
+        process.env.OPENROUTER_MODEL || "",
+        ...DEFAULT_OPENROUTER_MODELS,
+      ]);
   }
 }
 
@@ -155,10 +185,10 @@ function fallbackAnswer(messages: BrainModelMessage[]) {
   const lastUser = [...messages].reverse().find((item) => item.role === "user")?.content ?? "";
 
   return [
-    "Brain respondeu em modo rápido.",
+    "Brain respondeu com o template interno.",
     "",
-    "Não usei API paga. As APIs grátis configuradas não tinham chave, estavam bloqueadas por limite ou não responderam a tempo.",
-    "Base usada: banco/RAG/templates do Quality Control.",
+    "Motivo: nenhuma API gratuita estava disponível agora por falta de chave, falta de cota, limite, erro ou timeout.",
+    "Base usada: banco, RAG e templates internos do Quality Control.",
     "",
     "Pedido recebido:",
     compactText(lastUser, 1200),
@@ -261,7 +291,7 @@ async function callOpenRouter(input: BrainModelInput, model: string): Promise<Br
 
   const safeModel = model === "openrouter/free" || model.endsWith(":free")
     ? model
-    : DEFAULT_OPENROUTER_MODEL;
+    : "openrouter/free";
 
   const response = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -313,15 +343,8 @@ export async function runBrainModel(input: BrainModelInput): Promise<BrainModelR
 
   if (onlineEnabled) {
     for (const provider of readProviderOrder()) {
-      const model = providerModel(provider);
-
       if (!providerHasKey(provider)) {
         errors.push(`${provider}: chave ausente`);
-        continue;
-      }
-
-      if (!isFreeModelAllowed(provider, model)) {
-        errors.push(`${provider}: modelo bloqueado por modo grátis (${model})`);
         continue;
       }
 
@@ -331,17 +354,28 @@ export async function runBrainModel(input: BrainModelInput): Promise<BrainModelR
         continue;
       }
 
-      try {
-        const result = await callProvider(provider, input, model);
-        await recordFreeProviderUsage(provider, estimatedTokens, 200, null);
-        return result;
-      } catch (error) {
-        const status = error instanceof ProviderHttpError ? error.status : 0;
-        const retry = error instanceof ProviderHttpError ? error.retryAfterSeconds : null;
-        if (status) await recordFreeProviderUsage(provider, estimatedTokens, status, retry);
-        errors.push(`${provider}: ${error instanceof Error ? error.message : String(error)}`);
+      for (const model of providerModels(provider)) {
+        if (!isFreeModelAllowed(provider, model)) {
+          errors.push(`${provider}: modelo bloqueado por modo grátis (${model})`);
+          continue;
+        }
+
+        try {
+          const result = await callProvider(provider, input, model);
+          await recordFreeProviderUsage(provider, estimatedTokens, 200, null);
+          return result;
+        } catch (error) {
+          const status = error instanceof ProviderHttpError ? error.status : 0;
+          const retry = error instanceof ProviderHttpError ? error.retryAfterSeconds : null;
+          if (status) await recordFreeProviderUsage(provider, estimatedTokens, status, retry);
+          errors.push(`${provider}/${model}: ${error instanceof Error ? error.message : String(error)}`);
+
+          if ([402, 403, 429].includes(status)) break;
+        }
       }
     }
+  } else {
+    errors.push("modo online desativado");
   }
 
   if (errors.length) {
@@ -350,7 +384,7 @@ export async function runBrainModel(input: BrainModelInput): Promise<BrainModelR
 
   return {
     provider: "mock",
-    model: "brain-fast-template",
+    model: "brain-internal-rag-template",
     text: fallbackAnswer(input.messages),
   };
 }
@@ -358,12 +392,14 @@ export async function runBrainModel(input: BrainModelInput): Promise<BrainModelR
 export function buildBrainSystemPrompt() {
   return [
     "Você é o Brain do Quality Control.",
-    "Você apoia QA, debug, automação, documentação, evidências, análise de risco, permissões, banco de dados, RAG e web.",
-    "O banco de dados é sempre a fonte principal da verdade.",
-    "Use RAG e memória para contexto.",
-    "Use apenas providers grátis configurados.",
+    "Você apoia QA, debug, automação, documentação, evidências, análise de risco, permissões, banco de dados, RAG, templates internos e APIs gratuitas configuradas.",
+    "O banco de dados e o RAG são sempre a fonte principal da verdade.",
+    "A API externa gratuita, quando disponível, é apenas uma camada para melhorar a conversa e organizar melhor a resposta.",
+    "Use RAG e memória para contexto antes de qualquer resposta.",
+    "Use apenas providers gratuitos configurados: Groq, Gemini e OpenRouter.",
     "Nunca use modelo pago.",
-    "Se APIs externas falharem, responda com o template interno do Brain.",
+    "Quando uma API gratuita atingir limite, falhar ou estourar timeout, use a próxima da ordem configurada.",
+    "Se não houver chave configurada, cota disponível ou resposta das APIs externas, responda com o template interno do Brain.",
     "Responda em português brasileiro.",
     "Seja direto, prático e operacional.",
     "Respeite empresa, usuário, perfil, permissão e escopo.",

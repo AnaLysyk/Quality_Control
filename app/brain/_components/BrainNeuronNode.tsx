@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
@@ -35,7 +35,7 @@ function IconForNode({ node }: { node: BrainNode }) {
   if (node.type === "company" || node.type === "project" || node.type === "module") return <FiGitBranch className="h-4 w-4" />;
   if (node.type === "screen") return <FiMonitor className="h-4 w-4" />;
   if (node.type === "integration") return <FiLink2 className="h-4 w-4" />;
-  if (node.type === "person" || node.type === "requester") return <FiUser className="h-4 w-4" />;
+  if (node.type === "person" || node.type === "requester" || node.metadata?.isUserHub) return <FiUser className="h-4 w-4" />;
   if (node.type === "document" || node.type === "pdf" || node.type === "email") return <FiFileText className="h-4 w-4" />;
   if (node.type === "automation" || node.type === "execution") return <FiCpu className="h-4 w-4" />;
   if (node.generatedBy === "brain") return <FiZap className="h-4 w-4" />;
@@ -58,12 +58,19 @@ function nodeKicker(node: BrainNode) {
   const stage = typeof node.metadata?.stage === "string" ? node.metadata.stage : "";
   const provider = typeof node.metadata?.provider === "string" ? node.metadata.provider : "";
   const accessType = typeof node.metadata?.accessType === "string" ? node.metadata.accessType : "";
+  const profileType = typeof node.metadata?.profileType === "string" ? node.metadata.profileType : "";
 
+  if (profileType) return profileType;
   if (provider) return provider;
   if (stage) return stage;
   if (route) return route.replace(/^\/admin\//, "").replace(/^\/login\//, "");
   if (accessType) return accessType;
   return node.module;
+}
+
+function companyColor(node: BrainNode) {
+  const color = node.metadata?.companyColor;
+  return typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color) ? color : null;
 }
 
 function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
@@ -74,10 +81,11 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
   const dimmed = hasFocus && !nodeData.related && !isSelected;
   const count = typeof node.metadata?.count === "number" ? node.metadata.count : nodeData.connectedCount;
   const pendingCount = typeof node.metadata?.pendingCount === "number" ? node.metadata.pendingCount : null;
-  const isCore = Boolean(node.metadata?.isBrainCore || node.metadata?.isContextCore);
-  const hasOperationalFlow = Boolean(node.metadata?.isOperationalFlow || node.type === "integration");
+  const isCore = Boolean(node.metadata?.isBrainCore || node.metadata?.isContextCore || node.metadata?.isProfileRoot || node.metadata?.isCompanyHub || node.metadata?.isModuleHub);
+  const hasOperationalFlow = Boolean(node.metadata?.isOperationalFlow || node.type === "integration" || node.metadata?.isUserHub);
   const isBig = isCore || node.type === "company" || node.type === "project" || node.type === "module" || node.size === "lg";
   const isSmall = ["status", "log", "event", "email", "pdf", "comment"].includes(node.type);
+  const color = companyColor(node);
 
   const size = isCore ? "h-[140px] w-[140px]" : isBig ? "h-[118px] w-[118px]" : isSmall ? "h-[82px] w-[82px]" : "h-[96px] w-[96px]";
 
@@ -87,6 +95,10 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
       data-brain-node-status={node.status}
       data-brain-node-type={node.type}
       title={`${node.label} · ${labelize(node.type)} · ${statusLabel(node.status)}`}
+      style={color && !isSelected ? {
+        borderColor: color,
+        boxShadow: `0 0 52px ${color}66, inset 0 0 34px ${color}2e`,
+      } : undefined}
       className={`brain-orb-node relative flex ${size} cursor-grab select-none flex-col items-center justify-center rounded-full border text-center backdrop-blur-md transition duration-300 active:cursor-grabbing ${theme(node, isSelected, nodeData.orphan)} ${dimmed ? "scale-75 opacity-35 blur-[1px]" : "opacity-100"} ${isSelected ? "z-30 scale-110" : "z-10"}`}
     >
       <Handle type="target" position={Position.Left} className="!h-2 !w-2 !border-cyan-100 !bg-cyan-300" />
@@ -128,4 +140,3 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
 }
 
 export const BrainNeuronNode = memo(BrainNeuronNodeComponent);
-

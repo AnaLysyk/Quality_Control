@@ -12,7 +12,7 @@ import { redactBrainNodeForUser } from "@/lib/brain/redaction";
 import { buildBrainSearchIndex, searchBrainIndex } from "@/lib/brain/searchIndex";
 import { buildQaCopilotAnswer } from "@/lib/brain/qaCopilot";
 import { buildBrainSystemPrompt, runBrainModel } from "@/lib/brain/modelProvider";
-import { prisma } from "@/lib/prismaClient";
+import { brainPrisma } from "@/lib/brain/brainPrisma";
 
 export type BrainChatAnswer = {
   answer: string;
@@ -105,7 +105,7 @@ function buildModelUserPrompt(input: {
     input.qaCopilotAnswer,
     "",
     "Responda como uma IA de QA interna.",
-    "Use o banco como fonte principal.",
+    "Use o banco RAG do Brain como fonte principal antes de qualquer API externa.",
     "Explique o próximo passo de forma prática.",
   ].join("\n");
 }
@@ -119,8 +119,8 @@ export async function answerBrainChatQuestion(input: {
   const query = resolveContextualQuery(input.message, input.currentBrainContext);
 
   const [nodes, edges] = await Promise.all([
-    prisma.brainNode.findMany({ orderBy: { updatedAt: "desc" }, take: 220 }),
-    prisma.brainEdge.findMany({ take: 450 }),
+    brainPrisma.brainNode.findMany({ orderBy: { updatedAt: "desc" }, take: 220 }),
+    brainPrisma.brainEdge.findMany({ take: 450 }),
   ]);
 
   const visibility = filterBrainGraphByAccess(nodes, edges, input.access);

@@ -114,7 +114,7 @@ async function resolvePermissionAccessForUserUncached(userId: string): Promise<R
   const override = await getUserPermissionOverride(userId);
   const rawRoleDefaults = await resolveProfilePermissionDefaults(roleKey);
   const roleDefaults = expandOperations(roleKey, rawRoleDefaults);
-  const permissions = expandOperations(roleKey, resolvePermissionsFromDefaults(roleDefaults, override ?? undefined));
+  const permissions = resolvePermissionsFromDefaults(roleDefaults, override ?? undefined);
 
   return {
     userId,

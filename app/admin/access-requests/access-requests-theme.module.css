@@ -1,0 +1,362 @@
+.accessRequestsTheme {
+  --access-bg-light: linear-gradient(135deg, #ffffff 0%, #f7f9fd 54%, #eef4ff 100%);
+  --access-bg-dark: linear-gradient(135deg, #050713 0%, #07111f 54%, #0a1020 100%);
+  --access-panel-light: rgba(255, 255, 255, 0.96);
+  --access-panel-dark: rgba(15, 23, 42, 0.92);
+  --access-soft-light: rgba(248, 250, 252, 0.98);
+  --access-soft-dark: rgba(17, 30, 50, 0.86);
+  --access-row-light: #ffffff;
+  --access-row-alt-light: #f8fbff;
+  --access-row-active-light: #eaf6ff;
+  --access-row-hover-light: #f0f8ff;
+  --access-row-dark: rgba(15, 23, 42, 0.9);
+  --access-row-alt-dark: rgba(17, 30, 50, 0.92);
+  --access-row-active-dark: rgba(14, 116, 144, 0.28);
+  --access-row-hover-dark: rgba(14, 116, 144, 0.2);
+  --access-border-light: rgba(15, 23, 42, 0.12);
+  --access-border-dark: rgba(148, 163, 184, 0.24);
+  --access-text-light: #0f172a;
+  --access-muted-light: #52627a;
+  --access-text-dark: #f8fafc;
+  --access-muted-dark: #b9c6d8;
+
+  min-height: 100%;
+  background: var(--access-bg-light) !important;
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(main),
+.accessRequestsTheme :global(main > div),
+.accessRequestsTheme :global(.admin-dashboard-print-shell),
+.accessRequestsTheme :global(.admin-dashboard-print-shell > div) {
+  background: transparent !important;
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(.min-h-screen) {
+  background: transparent !important;
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(section:first-of-type) {
+  border-radius: 1.5rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: linear-gradient(135deg, #011848 0%, #061b4d 48%, #ef0001 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 22px 55px rgba(1, 24, 72, 0.18) !important;
+  padding: 1rem !important;
+}
+
+.accessRequestsTheme :global(section:first-of-type *),
+.accessRequestsTheme :global(section:first-of-type h1),
+.accessRequestsTheme :global(section:first-of-type p) {
+  color: #ffffff !important;
+}
+
+.accessRequestsTheme :global(section:first-of-type [class*="text-slate"]),
+.accessRequestsTheme :global(section:first-of-type [class*="text-white/"]) {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.accessRequestsTheme :global(section[class*="queueShell"]),
+.accessRequestsTheme :global(.queueShell) {
+  border-color: var(--access-border-light) !important;
+  background: var(--access-panel-light) !important;
+  color: var(--access-text-light) !important;
+  box-shadow: 0 18px 54px rgba(15, 23, 42, 0.09) !important;
+}
+
+.accessRequestsTheme :global(section[class*="queueShell"] > div:first-child),
+.accessRequestsTheme :global(.queueShell > div:first-child) {
+  border-color: var(--access-border-light) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f7fbff 58%, rgba(14, 165, 233, 0.08) 100%) !important;
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(input),
+.accessRequestsTheme :global(select),
+.accessRequestsTheme :global(textarea) {
+  border-color: var(--access-border-light) !important;
+  background: #ffffff !important;
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(input::placeholder),
+.accessRequestsTheme :global(textarea::placeholder) {
+  color: #7b8aa0 !important;
+}
+
+.accessRequestsTheme :global(table),
+.accessRequestsTheme :global(thead),
+.accessRequestsTheme :global(thead tr),
+.accessRequestsTheme :global(thead th) {
+  background: #f8fbff !important;
+  color: var(--access-muted-light) !important;
+  border-color: var(--access-border-light) !important;
+}
+
+.accessRequestsTheme :global(tbody tr) {
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(tbody tr:nth-child(odd)) {
+  background: var(--access-row-light) !important;
+}
+
+.accessRequestsTheme :global(tbody tr:nth-child(even)) {
+  background: var(--access-row-alt-light) !important;
+}
+
+.accessRequestsTheme :global(tbody tr:hover) {
+  background: var(--access-row-hover-light) !important;
+}
+
+.accessRequestsTheme :global(tbody tr[class*="bg-sky"]),
+.accessRequestsTheme :global(tbody tr[aria-selected="true"]) {
+  background: var(--access-row-active-light) !important;
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(td),
+.accessRequestsTheme :global(th) {
+  border-color: var(--access-border-light) !important;
+  color: inherit !important;
+}
+
+.accessRequestsTheme :global(tbody td),
+.accessRequestsTheme :global(tbody td *) {
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(tbody td [class*="text-red"]),
+.accessRequestsTheme :global(tbody td [class*="text-rose"]),
+.accessRequestsTheme :global(tbody td a[href^="mailto"]),
+.accessRequestsTheme :global(tbody td [class*="text-(--tc-accent"]) {
+  color: #dc2626 !important;
+}
+
+.accessRequestsTheme :global([class*="text-(--tc-text-muted"]),
+.accessRequestsTheme :global([class*="text-(--tc-text-secondary"]),
+.accessRequestsTheme :global([class*="text-slate"]),
+.accessRequestsTheme :global(small) {
+  color: var(--access-muted-light) !important;
+}
+
+.accessRequestsTheme :global([class*="text-(--tc-text-primary"]),
+.accessRequestsTheme :global(h1),
+.accessRequestsTheme :global(h2),
+.accessRequestsTheme :global(h3),
+.accessRequestsTheme :global(h4),
+.accessRequestsTheme :global(p),
+.accessRequestsTheme :global(b) {
+  color: var(--access-text-light) !important;
+}
+
+.accessRequestsTheme :global(button:not([class*="bg-[#011848"]):not([class*="bg-sky"]):not([class*="bg-rose"]):not([class*="bg-emerald"])) {
+  border-color: var(--access-border-light) !important;
+}
+
+.accessRequestsTheme :global([class*="bg-sky-50"]),
+.accessRequestsTheme :global([class*="bg-sky-100"]) {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+}
+
+.accessRequestsTheme :global([class*="bg-emerald-50"]),
+.accessRequestsTheme :global([class*="bg-emerald-100"]) {
+  background: #d1fae5 !important;
+  color: #047857 !important;
+}
+
+.accessRequestsTheme :global([class*="bg-amber-50"]),
+.accessRequestsTheme :global([class*="bg-amber-100"]) {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+}
+
+.accessRequestsTheme :global([class*="bg-rose-50"]),
+.accessRequestsTheme :global([class*="bg-rose-100"]) {
+  background: #ffe4e6 !important;
+  color: #be123c !important;
+}
+
+.accessRequestsTheme :global([class*="bg-violet-50"]),
+.accessRequestsTheme :global([class*="bg-violet-100"]) {
+  background: #ede9fe !important;
+  color: #6d28d9 !important;
+}
+
+.accessRequestsTheme :global([class*="bg-[#011848"]),
+.accessRequestsTheme :global([class*="bg-[#011848"] *),
+.accessRequestsTheme :global([class*="bg-sky-950"]),
+.accessRequestsTheme :global([class*="bg-sky-950"] *) {
+  color: #ffffff !important;
+}
+
+:global(.dark) .accessRequestsTheme,
+:global([data-theme="dark"]) .accessRequestsTheme {
+  background: var(--access-bg-dark) !important;
+  color: var(--access-text-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(main),
+:global(.dark) .accessRequestsTheme :global(main > div),
+:global(.dark) .accessRequestsTheme :global(.admin-dashboard-print-shell),
+:global(.dark) .accessRequestsTheme :global(.admin-dashboard-print-shell > div),
+:global(.dark) .accessRequestsTheme :global(.min-h-screen),
+:global([data-theme="dark"]) .accessRequestsTheme :global(main),
+:global([data-theme="dark"]) .accessRequestsTheme :global(main > div),
+:global([data-theme="dark"]) .accessRequestsTheme :global(.admin-dashboard-print-shell),
+:global([data-theme="dark"]) .accessRequestsTheme :global(.admin-dashboard-print-shell > div),
+:global([data-theme="dark"]) .accessRequestsTheme :global(.min-h-screen) {
+  background: transparent !important;
+  color: var(--access-text-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(section:first-of-type),
+:global([data-theme="dark"]) .accessRequestsTheme :global(section:first-of-type) {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #011848 0%, #050b16 48%, #990001 100%) !important;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(section[class*="queueShell"]),
+:global(.dark) .accessRequestsTheme :global(.queueShell),
+:global([data-theme="dark"]) .accessRequestsTheme :global(section[class*="queueShell"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global(.queueShell) {
+  border-color: var(--access-border-dark) !important;
+  background: var(--access-panel-dark) !important;
+  color: var(--access-text-dark) !important;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.28) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(section[class*="queueShell"] > div:first-child),
+:global(.dark) .accessRequestsTheme :global(.queueShell > div:first-child),
+:global([data-theme="dark"]) .accessRequestsTheme :global(section[class*="queueShell"] > div:first-child),
+:global([data-theme="dark"]) .accessRequestsTheme :global(.queueShell > div:first-child) {
+  border-color: var(--access-border-dark) !important;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 30, 50, 0.94) 58%, rgba(14, 165, 233, 0.12) 100%) !important;
+  color: var(--access-text-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(input),
+:global(.dark) .accessRequestsTheme :global(select),
+:global(.dark) .accessRequestsTheme :global(textarea),
+:global([data-theme="dark"]) .accessRequestsTheme :global(input),
+:global([data-theme="dark"]) .accessRequestsTheme :global(select),
+:global([data-theme="dark"]) .accessRequestsTheme :global(textarea) {
+  border-color: var(--access-border-dark) !important;
+  background: var(--access-soft-dark) !important;
+  color: var(--access-text-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(input::placeholder),
+:global(.dark) .accessRequestsTheme :global(textarea::placeholder),
+:global([data-theme="dark"]) .accessRequestsTheme :global(input::placeholder),
+:global([data-theme="dark"]) .accessRequestsTheme :global(textarea::placeholder) {
+  color: #91a5c0 !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(table),
+:global(.dark) .accessRequestsTheme :global(thead),
+:global(.dark) .accessRequestsTheme :global(thead tr),
+:global(.dark) .accessRequestsTheme :global(thead th),
+:global([data-theme="dark"]) .accessRequestsTheme :global(table),
+:global([data-theme="dark"]) .accessRequestsTheme :global(thead),
+:global([data-theme="dark"]) .accessRequestsTheme :global(thead tr),
+:global([data-theme="dark"]) .accessRequestsTheme :global(thead th) {
+  background: var(--access-panel-dark) !important;
+  border-color: var(--access-border-dark) !important;
+  color: var(--access-muted-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(tbody tr:nth-child(odd)),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody tr:nth-child(odd)) {
+  background: var(--access-row-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(tbody tr:nth-child(even)),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody tr:nth-child(even)) {
+  background: var(--access-row-alt-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(tbody tr:hover),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody tr:hover) {
+  background: var(--access-row-hover-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(tbody tr[class*="bg-sky"]),
+:global(.dark) .accessRequestsTheme :global(tbody tr[aria-selected="true"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody tr[class*="bg-sky"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody tr[aria-selected="true"]) {
+  background: var(--access-row-active-dark) !important;
+  color: var(--access-text-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(td),
+:global(.dark) .accessRequestsTheme :global(th),
+:global([data-theme="dark"]) .accessRequestsTheme :global(td),
+:global([data-theme="dark"]) .accessRequestsTheme :global(th) {
+  border-color: var(--access-border-dark) !important;
+  color: inherit !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(tbody td),
+:global(.dark) .accessRequestsTheme :global(tbody td *),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody td),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody td *) {
+  color: var(--access-text-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global(tbody td [class*="text-red"]),
+:global(.dark) .accessRequestsTheme :global(tbody td [class*="text-rose"]),
+:global(.dark) .accessRequestsTheme :global(tbody td a[href^="mailto"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody td [class*="text-red"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody td [class*="text-rose"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global(tbody td a[href^="mailto"]) {
+  color: #fca5a5 !important;
+}
+
+:global(.dark) .accessRequestsTheme :global([class*="text-(--tc-text-muted"]),
+:global(.dark) .accessRequestsTheme :global([class*="text-(--tc-text-secondary"]),
+:global(.dark) .accessRequestsTheme :global([class*="text-slate"]),
+:global(.dark) .accessRequestsTheme :global(small),
+:global([data-theme="dark"]) .accessRequestsTheme :global([class*="text-(--tc-text-muted"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global([class*="text-(--tc-text-secondary"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global([class*="text-slate"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global(small) {
+  color: var(--access-muted-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global([class*="text-(--tc-text-primary"]),
+:global(.dark) .accessRequestsTheme :global(h1),
+:global(.dark) .accessRequestsTheme :global(h2),
+:global(.dark) .accessRequestsTheme :global(h3),
+:global(.dark) .accessRequestsTheme :global(h4),
+:global(.dark) .accessRequestsTheme :global(p),
+:global(.dark) .accessRequestsTheme :global(b),
+:global([data-theme="dark"]) .accessRequestsTheme :global([class*="text-(--tc-text-primary"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global(h1),
+:global([data-theme="dark"]) .accessRequestsTheme :global(h2),
+:global([data-theme="dark"]) .accessRequestsTheme :global(h3),
+:global([data-theme="dark"]) .accessRequestsTheme :global(h4),
+:global([data-theme="dark"]) .accessRequestsTheme :global(p),
+:global([data-theme="dark"]) .accessRequestsTheme :global(b) {
+  color: var(--access-text-dark) !important;
+}
+
+:global(.dark) .accessRequestsTheme :global([class*="bg-sky-50"]),
+:global(.dark) .accessRequestsTheme :global([class*="bg-sky-100"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global([class*="bg-sky-50"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global([class*="bg-sky-100"]) {
+  background: rgba(14, 116, 144, 0.22) !important;
+  color: #bae6fd !important;
+}
+
+:global(.dark) .accessRequestsTheme :global([class*="bg-violet-50"]),
+:global(.dark) .accessRequestsTheme :global([class*="bg-violet-100"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global([class*="bg-violet-50"]),
+:global([data-theme="dark"]) .accessRequestsTheme :global([class*="bg-violet-100"]) {
+  background: rgba(109, 40, 217, 0.24) !important;
+  color: #ddd6fe !important;
+}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
@@ -86,9 +86,13 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const chatNoticeSignatureRef = useRef<string | null>(null);
 
+  const isMobileDrawer = mobileOpen && Boolean(onClose);
+  const effectiveCollapsed = isMobileDrawer ? false : collapsed;
+  const handleSidebarToggle = isMobileDrawer ? () => onClose?.() : toggleCollapsed;
+
   const canSwitchCompany = can("context", "switch_company");
   const canSwitchProject = can("context", "switch_project");
-  const showCompanyContextSelector = clients.length > 0 && !collapsed && canSwitchCompany;
+  const showCompanyContextSelector = clients.length > 0 && !effectiveCollapsed && canSwitchCompany;
   const showProjectContextSelector = Boolean(activeClientSlug) && canSwitchProject;
 
   useEffect(() => {
@@ -101,6 +105,17 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       setCompanySearch("");
     }
   }, [canSwitchCompany, companyOpen]);
+
+  useEffect(() => {
+    if (!mobileOpen || !onClose) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen, onClose]);
 
   const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
   const logoSrc = dbLogo || menuLogoEnv || "/images/tc.png";
@@ -157,13 +172,14 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const sidebarBody = (
     <aside
       data-testid="sidebar-operational-shell"
-      data-sidebar="true" className={`qc-sidebar sidebar-theme sidebar-operational-shell flex h-full flex-col overflow-hidden border-r text-white transition-[width] duration-300 ease-in-out ${
-        collapsed ? "w-18" : "w-72"
+      data-sidebar="true"
+      className={`qc-sidebar sidebar-theme sidebar-operational-shell flex h-full flex-col overflow-hidden border-r text-white transition-[width] duration-300 ease-in-out ${
+        effectiveCollapsed ? "w-18" : "w-72 max-w-[calc(100vw-1.5rem)]"
       }`}
     >
       <SidebarHeader
-        collapsed={collapsed}
-        onToggle={toggleCollapsed}
+        collapsed={effectiveCollapsed}
+        onToggle={handleSidebarToggle}
         logoSrc={logoSrc}
         logoHref={logoHref}
         onClose={onClose}
@@ -209,7 +225,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                 </div>
               </div>
 
-              <div className="max-h-72 overflow-y-auto py-1 [scrollbar-width:thin]">
+              <div className="max-h-[min(18rem,45vh)] overflow-y-auto py-1 [scrollbar-width:thin]">
                 {filteredCompanies.length > 0 ? (
                   filteredCompanies.map((client) => {
                     const active = client.slug === activeClientSlug;
@@ -249,46 +265,45 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
       {showProjectContextSelector ? (
         <div className="pt-2">
-          <ProjectSelector collapsed={collapsed} showCompanySelector={false} />
+          <ProjectSelector collapsed={effectiveCollapsed} showCompanySelector={false} />
           <div className="mx-3 border-t border-white/10" />
         </div>
       ) : null}
 
-
-      {!collapsed && (
+      {!effectiveCollapsed && (
         <div className="sidebar-search-fixed px-3 py-3">
-        <div className="sidebar-search flex items-center gap-2 rounded-xl border px-2.5 py-2">
-          <FiSearch size={14} className="shrink-0 text-white/55" />
-          <input
-            value={navSearch}
-            onChange={(event) => setNavSearch(event.target.value)}
-            placeholder="Digite para procurar telas e mÃ³dulos..."
-            className="w-full bg-transparent text-[12px] text-white placeholder:text-white/50 outline-none"
-            data-testid="sidebar-nav-search"
-          />
-        </div>
+          <div className="sidebar-search flex items-center gap-2 rounded-xl border px-2.5 py-2">
+            <FiSearch size={14} className="shrink-0 text-white/55" />
+            <input
+              value={navSearch}
+              onChange={(event) => setNavSearch(event.target.value)}
+              placeholder="Digite para procurar telas e módulos..."
+              className="w-full bg-transparent text-[12px] text-white placeholder:text-white/50 outline-none"
+              data-testid="sidebar-nav-search"
+            />
+          </div>
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visibleFavorites.length > 0 && (
           <>
             <div className="pt-3">
               <SidebarFavorites
                 favorites={visibleFavorites}
-                collapsed={collapsed}
+                collapsed={effectiveCollapsed}
                 onRemove={removeFavorite}
                 pathname={pathname}
                 onClose={onClose}
               />
             </div>
-            {!collapsed && <div className="mx-4 mb-1 border-t border-white/10" />}
-            {collapsed && <div className="mx-2 my-1 border-t border-white/10" />}
+            {!effectiveCollapsed && <div className="mx-4 mb-1 border-t border-white/10" />}
+            {effectiveCollapsed && <div className="mx-2 my-1 border-t border-white/10" />}
           </>
         )}
 
-        {!collapsed && (
-          <nav className="px-3 pb-3 pt-0" aria-label="NavegaÃ§Ã£o principal">
+        {!effectiveCollapsed && (
+          <nav className="px-3 pb-3 pt-0" aria-label="Navegação principal">
             <div className="space-y-0.5">
               {!loading &&
                 visibleModules.map((mod) => (
@@ -306,13 +321,13 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
             {!loading && visibleModules.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/15 bg-white/8 px-3 py-4 text-center text-xs text-white/65">
-                Nenhum mÃ³dulo encontrado.
+                Nenhum módulo encontrado.
               </div>
             ) : null}
           </nav>
         )}
 
-        {collapsed && (
+        {effectiveCollapsed && (
           <nav className="px-1.5 py-1">
             <div className="space-y-0.5">
               {!loading &&
@@ -331,7 +346,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         )}
       </div>
 
-      <SidebarFooter collapsed={collapsed} />
+      <SidebarFooter collapsed={effectiveCollapsed} />
     </aside>
   );
 
@@ -339,8 +354,19 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     <>
       <div className="hidden h-full shrink-0 lg:block">{sidebarBody}</div>
       {mobileOpen && onClose ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/45 lg:hidden" onClick={onClose}>
-          <div id={mobilePanelId} className="h-full" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-[2px] lg:hidden"
+          onClick={onClose}
+          role="presentation"
+        >
+          <div
+            id={mobilePanelId}
+            className="h-full w-fit max-w-[calc(100vw-1.5rem)]"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navegação"
+          >
             {sidebarBody}
           </div>
         </div>
@@ -348,4 +374,3 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     </>
   );
 }
-

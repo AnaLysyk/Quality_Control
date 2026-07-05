@@ -1,0 +1,51 @@
+.permissionsCleanLayout {
+  min-height: 100%;
+}
+
+.permissionsCleanLayout :global(.profile-permissions-page.qc-profile-permissions-page) {
+  background: transparent !important;
+  padding-top: 0 !important;
+}
+
+.permissionsCleanLayout :global(.profile-permissions-page.qc-profile-permissions-page > div) {
+  gap: 0.75rem !important;
+}
+
+.permissionsCleanLayout :global(.permissions-profile-hero-unified) {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.permissionsCleanLayout :global(.permissions-profile-hero-unified > div:first-child) {
+  justify-content: flex-end !important;
+}
+
+.permissionsCleanLayout :global(.permissions-profile-hero-unified > div:first-child > div:first-child),
+.permissionsCleanLayout :global(.permissions-profile-metrics) {
+  display: none !important;
+}
+
+.permissionsCleanLayout :global(.permissions-profile-hero-unified > div:first-child > div:last-child) {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: flex-end !important;
+  gap: 0.5rem !important;
+}
+
+.permissionsCleanLayout :global(.permissions-profile-type-grid) {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .permissionsCleanLayout :global(.permissions-profile-hero-unified > div:first-child > div:last-child) {
+    justify-content: stretch !important;
+  }
+
+  .permissionsCleanLayout :global(.permissions-profile-hero-unified > div:first-child > div:last-child > *) {
+    flex: 1 1 auto !important;
+  }
+}

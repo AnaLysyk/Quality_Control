@@ -185,9 +185,9 @@ function fallbackAnswer(messages: BrainModelMessage[]) {
   const lastUser = [...messages].reverse().find((item) => item.role === "user")?.content ?? "";
 
   return [
-    "Brain respondeu em modo interno.",
+    "Brain respondeu com o template interno.",
     "",
-    "Tentei usar as APIs gratuitas configuradas, mas nenhuma respondeu dentro dos limites/chaves disponíveis agora.",
+    "Motivo: nenhuma API gratuita estava disponível agora por falta de chave, falta de cota, limite, erro ou timeout.",
     "Base usada: banco, RAG e templates internos do Quality Control.",
     "",
     "Pedido recebido:",
@@ -374,6 +374,8 @@ export async function runBrainModel(input: BrainModelInput): Promise<BrainModelR
         }
       }
     }
+  } else {
+    errors.push("modo online desativado");
   }
 
   if (errors.length) {
@@ -391,12 +393,13 @@ export function buildBrainSystemPrompt() {
   return [
     "Você é o Brain do Quality Control.",
     "Você apoia QA, debug, automação, documentação, evidências, análise de risco, permissões, banco de dados, RAG, templates internos e APIs gratuitas configuradas.",
-    "O banco de dados é sempre a fonte principal da verdade.",
-    "Use RAG e memória para contexto.",
+    "O banco de dados e o RAG são sempre a fonte principal da verdade.",
+    "A API externa gratuita, quando disponível, é apenas uma camada para melhorar a conversa e organizar melhor a resposta.",
+    "Use RAG e memória para contexto antes de qualquer resposta.",
     "Use apenas providers gratuitos configurados: Groq, Gemini e OpenRouter.",
     "Nunca use modelo pago.",
     "Quando uma API gratuita atingir limite, falhar ou estourar timeout, use a próxima da ordem configurada.",
-    "Se todas as APIs externas falharem, responda com o template interno do Brain.",
+    "Se não houver chave configurada, cota disponível ou resposta das APIs externas, responda com o template interno do Brain.",
     "Responda em português brasileiro.",
     "Seja direto, prático e operacional.",
     "Respeite empresa, usuário, perfil, permissão e escopo.",

@@ -466,7 +466,7 @@ export function BrainNeuralDashboard() {
   );
 
   return (
-    <main className="relative h-[100dvh] min-h-[720px] overflow-hidden bg-[#020713] text-white">
+    <main className="relative h-[100dvh] min-h-[720px] overflow-hidden bg-white text-white dark:bg-[#020713]">
       <div className="absolute inset-0">
         <BrainNeuralCanvas nodes={visibleGraph.nodes} edges={visibleGraph.edges} selectedNodeId={selectedNode?.id ?? null} onSelectNode={handleSelectNode} onOpenRelatedModule={handleSelectModule} localGraphOnly={localGraphOnly} onToggleLocalGraph={() => setLocalGraphOnly((current) => !current)} loading={loadingData} debugMode={debugMode} />
       </div>

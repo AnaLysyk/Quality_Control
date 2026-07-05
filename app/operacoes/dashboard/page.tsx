@@ -4,8 +4,6 @@ import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import ContextualDashboardClient from "./ContextualDashboardClient";
 
-export const dynamic = "force-dynamic";
-
 export default function OperacoesDashboardPage() {
   const { loading, can } = usePermissionAccess();
 

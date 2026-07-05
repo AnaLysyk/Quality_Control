@@ -50,6 +50,13 @@ type HomeEntityOption = {
 type RangeKey = "24h" | "7d" | "30d";
 type BrainMode = "company" | "user" | "screen" | "flow" | "pending" | "continue";
 
+type HomeCaptionTurn = {
+  id: string;
+  from: "user" | "assistant";
+  text: string;
+  ts: number;
+};
+
 type HomeContext = {
   greeting: string;
   userName: string;
@@ -83,6 +90,32 @@ type QuickModule = {
   href: string;
 };
 
+type BrowserSpeechRecognitionEvent = {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: {
+      isFinal?: boolean;
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+};
+
+type BrowserSpeechRecognition = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  maxAlternatives: number;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+};
+
 const FILTERS: Array<{ mode: BrainMode; label: string; icon: typeof FiBriefcase }> = [
   { mode: "company", label: "Por empresa", icon: FiBriefcase },
   { mode: "user", label: "Por usuário", icon: FiUser },
@@ -97,6 +130,8 @@ const RANGE_OPTIONS: Array<{ value: RangeKey; label: string }> = [
   { value: "7d", label: "7 dias" },
   { value: "30d", label: "30 dias" },
 ];
+
+const HOME_HISTORY_KEY_PREFIX = "brain_home_caption_history_v1";
 
 function normalizeText(value: string) {
   return value
@@ -179,6 +214,36 @@ function useTyping(message: string) {
   }, [message]);
 
   return typed;
+}
+
+function resolveSpeechRecognitionConstructor() {
+  if (typeof window === "undefined") return null;
+  const speechWindow = window as unknown as {
+    SpeechRecognition?: new () => BrowserSpeechRecognition;
+    webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+  };
+  return speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition ?? null;
+}
+
+function makeHomeId(prefix: string) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function resolveAssistantActor(user: unknown) {
+  const record = (user ?? {}) as Record<string, unknown>;
+  return {
+    userId: typeof record.id === "string" ? record.id : null,
+    permissionRole: typeof record.permissionRole === "string" ? record.permissionRole : null,
+    role: typeof record.role === "string" ? record.role : null,
+    companyRole: typeof record.companyRole === "string" ? record.companyRole : null,
+    companySlug: typeof record.clientSlug === "string" ? record.clientSlug : null,
+    companySlugs: Array.isArray(record.clientSlugs) ? record.clientSlugs : null,
+    userOrigin: typeof record.userOrigin === "string" ? record.userOrigin : typeof record.user_origin === "string" ? record.user_origin : null,
+    isGlobalAdmin: Boolean(record.isGlobalAdmin ?? record.is_global_admin),
+  };
 }
 
 function resolveQuickModules(modules: HomeNavModule[]): QuickModule[] {
@@ -294,19 +359,24 @@ function openAssistantChat(input: {
   selectedEntity?: HomeEntityOption | null;
   profile: ProfileExperience;
   homeContext: HomeContext;
+  homeConversation: HomeCaptionTurn[];
 }) {
   if (typeof window === "undefined") return;
 
+  const historySnippet = input.homeConversation
+    .slice(-10)
+    .map((turn) => `${turn.from === "user" ? "Usuária" : "Brain"}: ${turn.text}`)
+    .join("\n");
   const prompt =
     input.command.trim() ||
-    `Continue a análise da Home usando ${modeLabel(input.selectedMode)} em ${input.homeContext.periodLabel}.`;
+    (historySnippet ? `Continue a conversa da Home.\n\n${historySnippet}` : `Continue a análise da Home usando ${modeLabel(input.selectedMode)} em ${input.homeContext.periodLabel}.`);
 
   window.dispatchEvent(
     new CustomEvent("assistant:open", {
       detail: {
         source: "home",
         route: window.location.pathname || "/",
-        panelMode: "compact",
+        panelMode: "side",
         agentMode: "qa",
         focusInput: true,
         initialMessage: prompt,
@@ -321,6 +391,7 @@ function openAssistantChat(input: {
             selectedMode: input.selectedMode,
             selectedEntity: input.selectedEntity ?? null,
             companySlug: input.companySlug ?? null,
+            homeConversation: input.homeConversation.slice(-12),
             summary: input.homeContext.summary,
           },
         },
@@ -380,12 +451,14 @@ function BrainConsole({
   greeting,
   quickModules,
   companySlug,
+  authUser,
 }: {
   userName: string;
   profile: ProfileExperience;
   greeting: string;
   quickModules: QuickModule[];
   companySlug?: string | null;
+  authUser: unknown;
 }) {
   const [range, setRange] = useState<RangeKey>("24h");
   const [homeContext, setHomeContext] = useState<HomeContext>(() => fallbackContext({ greeting, userName, profile, range: "24h" }));
@@ -393,7 +466,15 @@ function BrainConsole({
   const [selectedMode, setSelectedMode] = useState<BrainMode | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<HomeEntityOption | null>(null);
   const [command, setCommand] = useState("");
-  const [confirmation, setConfirmation] = useState("");
+  const [homeConversation, setHomeConversation] = useState<HomeCaptionTurn[]>([]);
+  const [sendingHome, setSendingHome] = useState(false);
+  const [dictating, setDictating] = useState(false);
+
+  const homeStorageKey = useMemo(() => {
+    const record = (authUser ?? {}) as Record<string, unknown>;
+    const id = typeof record.id === "string" ? record.id : userName;
+    return `${HOME_HISTORY_KEY_PREFIX}:${id}`;
+  }, [authUser, userName]);
 
   useEffect(() => {
     let active = true;
@@ -416,30 +497,156 @@ function BrainConsole({
     };
   }, [greeting, profile, range, userName]);
 
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(homeStorageKey);
+      if (!raw) {
+        setHomeConversation([]);
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      setHomeConversation(Array.isArray(parsed) ? parsed.slice(-24) : []);
+    } catch {
+      setHomeConversation([]);
+    }
+  }, [homeStorageKey]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(homeStorageKey, JSON.stringify(homeConversation.slice(-24)));
+    } catch {
+      // ignora falha de histórico local
+    }
+  }, [homeConversation, homeStorageKey]);
+
   const narrative = useMemo(() => homeContext.typedMessages.join(" "), [homeContext.typedMessages]);
   const typed = useTyping(narrative);
-  const isThinking = loadingContext || typed.length < narrative.length;
+  const lastAssistantCaption = useMemo(() => [...homeConversation].reverse().find((turn) => turn.from === "assistant")?.text ?? "", [homeConversation]);
+  const captionText = lastAssistantCaption || typed;
+  const isThinking = loadingContext || typed.length < narrative.length || sendingHome;
+
+  function appendAssistantCaption(text: string) {
+    setHomeConversation((current) => [
+      ...current,
+      { id: makeHomeId("assistant"), from: "assistant", text, ts: Date.now() },
+    ].slice(-24));
+  }
 
   function handleFilter(mode: BrainMode) {
     setSelectedMode(mode);
     setSelectedEntity(null);
-    setConfirmation(confirmationFor(mode, homeContext.userName || userName));
+    appendAssistantCaption(confirmationFor(mode, homeContext.userName || userName));
   }
 
   function handleEntitySelect(option: HomeEntityOption) {
     setSelectedEntity(option);
-    setConfirmation(
+    appendAssistantCaption(
       selectedMode === "company"
         ? `Perfeito, ${homeContext.userName}. Preparei a visão geral da empresa ${option.label}.`
         : `Perfeito, ${homeContext.userName}. Preparei a visão geral do usuário ${option.label}.`,
     );
   }
 
+  async function askHomeBrain(text: string) {
+    const now = Date.now();
+    const userTurn: HomeCaptionTurn = { id: makeHomeId("user"), from: "user", text, ts: now };
+    const thinkingTurn: HomeCaptionTurn = {
+      id: makeHomeId("assistant"),
+      from: "assistant",
+      text: "Certo. Estou interpretando isso e conectando com o contexto da Home...",
+      ts: now + 1,
+    };
+    const requestHistory = [...homeConversation.slice(-8), userTurn].map((turn) => ({
+      from: turn.from,
+      text: turn.text,
+      ts: turn.ts,
+    }));
+
+    setCommand("");
+    setSendingHome(true);
+    setHomeConversation((current) => [...current, userTurn, thinkingTurn].slice(-24));
+
+    try {
+      const response = await fetch("/api/assistente/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          context: {
+            route: "/home",
+            module: "home",
+            screenLabel: "Brain Command Center",
+            screenSummary: profile.summary,
+            suggestedPrompts: profile.prompts,
+            metadata: {
+              range: homeContext.range,
+              periodLabel: homeContext.periodLabel,
+              selectedMode,
+              selectedEntity,
+              companySlug,
+              summary: homeContext.summary,
+            },
+          },
+          actor: resolveAssistantActor(authUser),
+          history: requestHistory,
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { reply?: string; error?: string };
+      if (!response.ok) throw new Error(data.error || response.statusText || `Erro ${response.status}`);
+      const reply = String(data.reply ?? "Pronto. Entendi seu pedido e mantive a conversa no contexto.");
+      setHomeConversation((current) => current.map((turn) => (turn.id === thinkingTurn.id ? { ...turn, text: reply, ts: Date.now() } : turn)).slice(-24));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "não consegui acessar o Brain agora";
+      setHomeConversation((current) =>
+        current.map((turn) =>
+          turn.id === thinkingTurn.id
+            ? { ...turn, text: `Não consegui concluir agora: ${message}. Mantive sua mensagem no histórico para continuar pelo chat.` }
+            : turn,
+        ).slice(-24),
+      );
+    } finally {
+      setSendingHome(false);
+    }
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = command.trim();
-    if (!trimmed) return;
-    setConfirmation("Entendi o contexto digitado. Posso continuar pelo chat flutuante com essa mensagem completa.");
+    if (!trimmed || sendingHome) return;
+    void askHomeBrain(trimmed);
+  }
+
+  function startHomeDictation() {
+    const SpeechRecognitionConstructor = resolveSpeechRecognitionConstructor();
+    if (!SpeechRecognitionConstructor) {
+      appendAssistantCaption("Este navegador não liberou ditado por voz aqui. Você pode continuar digitando ou abrir o chat lateral.");
+      return;
+    }
+
+    const recognition = new SpeechRecognitionConstructor();
+    recognition.lang = "pt-BR";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        transcript += event.results[index]?.[0]?.transcript ?? "";
+      }
+      const spoken = transcript.trim();
+      if (spoken) {
+        setCommand((current) => `${current}${current.trim() ? " " : ""}${spoken}`.trim());
+        appendAssistantCaption("Ouvi sua fala. Revise a legenda do campo e envie para eu interpretar.");
+      }
+    };
+    recognition.onerror = () => {
+      appendAssistantCaption("Não consegui captar o áudio. Confere a permissão do microfone e tenta de novo.");
+      setDictating(false);
+    };
+    recognition.onend = () => setDictating(false);
+
+    setDictating(true);
+    recognition.start();
   }
 
   function goToOverview() {
@@ -467,23 +674,25 @@ function BrainConsole({
         .brain-wave-light.light-one { left: 18%; top: 18%; animation: brainLightDrift 4.2s ease-in-out infinite; }
         .brain-wave-light.light-two { right: 11%; top: 42%; animation: brainLightDrift 5.1s ease-in-out infinite reverse; }
         .brain-orb-aura { position: absolute; z-index: 2; width: 62%; height: 62%; border-radius: 999px; background: radial-gradient(circle at 33% 72%, rgba(255,40,70,.18), transparent 42%), radial-gradient(circle, rgba(94,139,213,.10), transparent 70%); filter: blur(13px); opacity: .66; animation: brainAura 5.4s ease-in-out infinite; }
-        .brain-orb { position: relative; z-index: 3; width: 52%; height: 52%; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 64% 18%, rgba(235,246,255,.26), rgba(132,169,210,.10) 15%, transparent 28%), radial-gradient(circle at 44% 54%, #101a2b 0%, #07101c 52%, #02050d 100%); border: 1px solid rgba(194,215,255,.16); box-shadow: inset 18px 17px 30px rgba(222,238,255,.08), inset -28px -32px 60px rgba(0,0,0,.82), 0 0 14px rgba(255,52,82,.28), 0 0 44px rgba(255,52,82,.13), 0 0 76px rgba(150,196,255,.08); animation: brainBotBreath 4.8s ease-in-out infinite; }
+        .brain-orb { position: relative; z-index: 3; width: 47%; height: 47%; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 60% 18%, rgba(198,222,247,.16), rgba(132,169,210,.06) 14%, transparent 27%), radial-gradient(circle at 42% 55%, #101a2b 0%, #07101c 55%, #02050d 100%); border: 1px solid rgba(194,215,255,.15); box-shadow: inset 14px 14px 26px rgba(222,238,255,.06), inset -28px -32px 58px rgba(0,0,0,.86), 0 0 12px rgba(255,52,82,.24), 0 0 38px rgba(255,52,82,.10), 0 0 72px rgba(150,196,255,.08); animation: brainBotBreath 4.8s ease-in-out infinite; }
         .brain-orb-liquid { position: absolute; border-radius: 999px; mix-blend-mode: screen; pointer-events: none; }
-        .brain-orb-liquid.primary { left: -9%; bottom: 4%; width: 45%; height: 48%; background: radial-gradient(circle at 76% 68%, rgba(255,44,72,.30), rgba(255,44,72,.08) 42%, transparent 72%); filter: blur(14px); opacity: .52; animation: brainLiquid 7.2s ease-in-out infinite; }
-        .brain-orb-liquid.secondary { right: -12%; top: -12%; width: 58%; height: 52%; background: radial-gradient(circle, rgba(190,220,255,.30), rgba(95,147,217,.10) 48%, transparent 72%); filter: blur(13px); opacity: .44; animation: brainLiquid 8.8s ease-in-out infinite reverse; }
-        .brain-orb-red-crescent { position: absolute; left: 3%; bottom: 2%; width: 50%; height: 56%; border-radius: 999px; border-left: 5px solid rgba(255,52,82,.98); border-bottom: 4px solid rgba(255,52,82,.62); filter: drop-shadow(0 0 10px rgba(255,52,82,.82)) drop-shadow(0 0 24px rgba(255,52,82,.30)); transform: rotate(-24deg); opacity: .98; }
-        .brain-orb-glass { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 66% 18%, rgba(236,246,255,.21), transparent 22%), radial-gradient(circle at 56% 64%, transparent 0%, rgba(255,255,255,.018) 58%, rgba(255,255,255,.07) 100%); border: 1px solid rgba(255,255,255,.07); }
-        .brain-orb-shine { position: absolute; right: 12%; top: 9%; width: 43%; height: 25%; border-radius: 999px; background: linear-gradient(138deg, rgba(242,249,255,.34), rgba(190,218,255,.07) 50%, transparent 76%); transform: rotate(-30deg); opacity: .64; filter: blur(.1px); }
+        .brain-orb-liquid.primary { left: -10%; bottom: 2%; width: 38%; height: 43%; background: radial-gradient(circle at 78% 72%, rgba(255,44,72,.18), rgba(255,44,72,.05) 44%, transparent 74%); filter: blur(13px); opacity: .38; animation: brainLiquid 7.2s ease-in-out infinite; }
+        .brain-orb-liquid.secondary { right: -14%; top: -14%; width: 48%; height: 44%; background: radial-gradient(circle, rgba(190,220,255,.18), rgba(95,147,217,.06) 48%, transparent 72%); filter: blur(11px); opacity: .34; animation: brainLiquid 8.8s ease-in-out infinite reverse; }
+        .brain-orb-red-crescent { position: absolute; left: 0%; bottom: 6%; width: 43%; height: 49%; border-radius: 999px; border-left: 4px solid rgba(255,52,82,.95); border-bottom: 3px solid rgba(255,52,82,.54); filter: drop-shadow(0 0 9px rgba(255,52,82,.78)) drop-shadow(0 0 20px rgba(255,52,82,.26)); transform: rotate(-25deg); opacity: .98; }
+        .brain-orb-glass { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 66% 18%, rgba(236,246,255,.14), transparent 20%), radial-gradient(circle at 56% 64%, transparent 0%, rgba(255,255,255,.014) 58%, rgba(255,255,255,.055) 100%); border: 1px solid rgba(255,255,255,.06); }
+        .brain-orb-shine { position: absolute; right: 13%; top: 10%; width: 34%; height: 20%; border-radius: 999px; background: linear-gradient(138deg, rgba(242,249,255,.22), rgba(190,218,255,.04) 50%, transparent 78%); transform: rotate(-30deg); opacity: .52; filter: blur(.1px); }
         .brain-face { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: clamp(21px, 2.7vw, 30px); transform: translate3d(0, 4px, 0); animation: brainFaceMotion 5.4s ease-in-out infinite; }
         .brain-chevron { position: relative; width: 16px; height: 13px; filter: drop-shadow(0 0 8px rgba(255,255,255,.98)); }
         .brain-chevron::before, .brain-chevron::after { content: ""; position: absolute; top: 6px; width: 11px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.96); }
         .brain-chevron::before { left: 1px; transform: rotate(-54deg); transform-origin: right center; }
         .brain-chevron::after { right: 1px; transform: rotate(54deg); transform-origin: left center; }
         .brain-dash { display: block; width: 14px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.94); box-shadow: 0 0 10px rgba(255,255,255,.84); animation: brainDashBlink 4.7s ease-in-out infinite; }
+        .brain-caption { position: relative; border: 1px solid rgba(255,255,255,.10); background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.035)); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 20px 55px rgba(0,0,0,.18); }
+        .brain-caption::before { content: ""; position: absolute; left: -7px; top: 27px; width: 14px; height: 14px; transform: rotate(45deg); border-left: 1px solid rgba(255,255,255,.10); border-bottom: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.048); }
         .brain-orb-wrap.is-active .brain-wave.wave-one { animation-duration: 7.6s, 3.4s; }
         .brain-orb-wrap.is-active .brain-wave.wave-two { animation-duration: 11.4s, 4.4s; }
-        .brain-orb-wrap.is-active .brain-orb { box-shadow: inset 18px 17px 30px rgba(222,238,255,.09), inset -28px -32px 60px rgba(0,0,0,.82), 0 0 22px rgba(255,52,82,.44), 0 0 58px rgba(255,52,82,.18), 0 0 92px rgba(150,196,255,.11); }
-        .brain-orb-wrap.is-active .brain-orb-liquid.primary { opacity: .62; }
+        .brain-orb-wrap.is-active .brain-orb { box-shadow: inset 14px 14px 26px rgba(222,238,255,.07), inset -28px -32px 58px rgba(0,0,0,.86), 0 0 20px rgba(255,52,82,.40), 0 0 54px rgba(255,52,82,.16), 0 0 90px rgba(150,196,255,.10); }
+        .brain-orb-wrap.is-active .brain-orb-liquid.primary { opacity: .46; }
         @keyframes brainRobotHover { 0%, 100% { transform: translate3d(0,0,0) rotate(-.35deg); } 45% { transform: translate3d(0,-8px,0) rotate(.45deg); } 70% { transform: translate3d(2px,-5px,0) rotate(-.15deg); } }
         @keyframes brainBotBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
         @keyframes brainAura { 0%,100% { transform: scale(.94); opacity: .46; } 50% { transform: scale(1.10); opacity: .78; } }
@@ -522,24 +731,29 @@ function BrainConsole({
 
         <div className="grid gap-5 lg:grid-cols-[minmax(235px,330px)_minmax(0,1fr)] xl:grid-cols-[minmax(250px,340px)_minmax(0,1fr)] xl:items-start">
           <div className="flex justify-center pt-1 lg:justify-start lg:pt-3">
-            <BrainOrb active={isThinking || Boolean(confirmation)} />
+            <BrainOrb active={isThinking || dictating} />
           </div>
 
           <div className="min-w-0 max-w-[980px]">
             <h1 className="text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl xl:text-5xl">
               {homeContext.greeting || greeting}, <span className="text-[var(--tc-accent,#ef0001)]">{homeContext.userName || userName}.</span>
             </h1>
-            <p className="mt-4 min-h-[92px] max-w-4xl text-xl font-semibold leading-relaxed text-white/78 sm:text-2xl xl:text-[1.55rem]">
-              {typed}
-              <span className="ml-1 inline-block h-7 w-1 translate-y-1 bg-white/84 animate-pulse" />
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-semibold text-white/50">
-              <span className="inline-flex items-center gap-2">
+
+            <div className="brain-caption mt-4 min-h-[104px] max-w-4xl rounded-[1.55rem] px-5 py-4 text-white/86 backdrop-blur">
+              <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em] text-[var(--tc-accent,#ef0001)]">
                 <span className="h-2 w-2 rounded-full bg-[var(--tc-accent,#ef0001)] shadow-[0_0_18px_rgba(239,0,1,0.8)]" />
-                Brain analisando contexto
-              </span>
+                Legenda do Brain
+              </div>
+              <p className="text-xl font-semibold leading-relaxed sm:text-2xl xl:text-[1.48rem]">
+                {captionText}
+                {isThinking ? <span className="ml-1 inline-block h-6 w-1 translate-y-1 bg-white/78 animate-pulse" /> : null}
+              </p>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-semibold text-white/50">
+              <span>{dictating ? "ouvindo áudio..." : sendingHome ? "interpretando..." : isThinking ? "digitando..." : "contexto pronto"}</span>
               <span className="h-4 w-px bg-white/10" />
-              <span>{isThinking ? "digitando..." : "contexto pronto"}</span>
+              <span>suas mensagens ficam no histórico da Home e podem seguir para o chat</span>
             </div>
 
             <form onSubmit={handleSubmit} className="mt-5 flex items-center gap-3 rounded-full border border-[var(--tc-accent,#ef0001)]/55 bg-black/20 px-5 py-4 shadow-[0_0_42px_rgba(59,130,246,0.13)] backdrop-blur">
@@ -547,12 +761,21 @@ function BrainConsole({
               <input
                 value={command}
                 onChange={(event) => setCommand(event.target.value)}
-                placeholder="Pergunte ao Brain ou escolha uma ação..."
+                placeholder="Fale ou escreva para o Brain..."
                 className="min-w-0 flex-1 bg-transparent text-base font-semibold text-white outline-none placeholder:text-white/36"
               />
-              <FiMic className="hidden shrink-0 text-white/48 sm:block" size={21} />
+              <button
+                type="button"
+                onClick={startHomeDictation}
+                disabled={dictating || sendingHome}
+                className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/58 transition hover:border-[var(--tc-accent,#ef0001)]/55 hover:text-white sm:inline-flex ${dictating ? "animate-pulse border-[var(--tc-accent,#ef0001)]/60 text-[var(--tc-accent,#ef0001)]" : ""}`}
+                aria-label={dictating ? "Gravando áudio" : "Falar com o Brain"}
+                title={dictating ? "Ouvindo..." : "Falar com o Brain"}
+              >
+                <FiMic size={19} />
+              </button>
               <button type="submit" className="sr-only">
-                Confirmar contexto
+                Enviar para o Brain
               </button>
             </form>
 
@@ -578,41 +801,38 @@ function BrainConsole({
               })}
             </div>
 
-            {confirmation ? (
-              <div className="mt-4 rounded-[1.6rem] border border-[var(--tc-accent,#ef0001)]/35 bg-[var(--tc-accent,#ef0001)]/8 px-5 py-4 text-sm font-semibold leading-relaxed text-white/82 shadow-[0_0_34px_rgba(239,0,1,0.12)]">
-                {confirmation}
-                <ContextSelector mode={selectedMode} companies={homeContext.companies} users={homeContext.users} onSelect={handleEntitySelect} />
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedEntity ? (
-                    <button
-                      type="button"
-                      onClick={goToOverview}
-                      className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-950 transition hover:-translate-y-0.5"
-                    >
-                      Abrir visão geral
-                      <FiArrowRight />
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openAssistantChat({
-                        command,
-                        companySlug,
-                        selectedMode,
-                        selectedEntity,
-                        profile,
-                        homeContext,
-                      })
-                    }
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:border-[var(--tc-accent,#ef0001)]/55"
-                  >
-                    Continuar no chat
-                    <FiMessageCircle />
-                  </button>
-                </div>
-              </div>
-            ) : null}
+            <ContextSelector mode={selectedMode} companies={homeContext.companies} users={homeContext.users} onSelect={handleEntitySelect} />
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {selectedEntity ? (
+                <button
+                  type="button"
+                  onClick={goToOverview}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-950 transition hover:-translate-y-0.5"
+                >
+                  Abrir visão geral
+                  <FiArrowRight />
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() =>
+                  openAssistantChat({
+                    command,
+                    companySlug,
+                    selectedMode,
+                    selectedEntity,
+                    profile,
+                    homeContext,
+                    homeConversation,
+                  })
+                }
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:border-[var(--tc-accent,#ef0001)]/55"
+              >
+                Abrir conversa no chat
+                <FiMessageCircle />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -727,6 +947,7 @@ export default function HomeContent() {
         greeting={greeting}
         quickModules={quickModules}
         companySlug={companySlug}
+        authUser={user}
       />
     </main>
   );

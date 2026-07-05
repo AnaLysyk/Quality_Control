@@ -5,31 +5,13 @@ import { fetchApi } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type OverviewPayload = {
-  companies?: Array<{
-    releases?: Array<Record<string, unknown>>;
-  }>;
+  averageApprovalTimeMs?: number | null;
+  averageApprovalTimeLabel?: string | null;
 };
 
 const CARD_ID = "overview-run-average-card";
 
-function toTimestamp(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
-  if (typeof value !== "string" || !value.trim()) return 0;
-  const time = Date.parse(value);
-  return Number.isFinite(time) ? time : 0;
-}
-
-function releaseTimestamp(release: Record<string, unknown>) {
-  return (
-    toTimestamp(release.createdAtValue) ||
-    toTimestamp(release.createdAt) ||
-    toTimestamp(release.created_at) ||
-    toTimestamp(release.startedAt) ||
-    toTimestamp(release.started_at)
-  );
-}
-
-function formatAverageDuration(ms: number | null) {
+function formatAverageDuration(ms: number | null | undefined) {
   if (!ms || !Number.isFinite(ms) || ms <= 0) return "--";
 
   const minutes = Math.round(ms / 60000);
@@ -42,22 +24,44 @@ function formatAverageDuration(ms: number | null) {
   return `${days}d`;
 }
 
-function calculateAverageRunInterval(payload: OverviewPayload | null) {
-  const releases = (payload?.companies ?? []).flatMap((company) => company.releases ?? []);
-  const timestamps = Array.from(new Set(releases.map(releaseTimestamp).filter((time) => time > 0))).sort((left, right) => left - right);
-
-  if (timestamps.length < 2) return null;
-
-  const intervals = timestamps.slice(1).map((time, index) => time - timestamps[index]).filter((value) => value > 0);
-  if (!intervals.length) return null;
-
-  return Math.round(intervals.reduce((sum, value) => sum + value, 0) / intervals.length);
+function resolveAverageRunDuration(payload: OverviewPayload | null) {
+  if (payload?.averageApprovalTimeLabel && payload.averageApprovalTimeLabel !== "--") return payload.averageApprovalTimeLabel;
+  return formatAverageDuration(payload?.averageApprovalTimeMs);
 }
 
 function findMetricGrid() {
   const sections = Array.from(document.querySelectorAll("section"));
   const hero = sections.find((section) => section.textContent?.includes("Visão Geral"));
   return hero?.querySelector(".mt-6.grid.gap-3") as HTMLElement | null;
+}
+
+function makeNode(tag: string, className: string, text?: string) {
+  const node = document.createElement(tag);
+  node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function createCard() {
+  const card = makeNode(
+    "div",
+    "group rounded-[26px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5 transition hover:-translate-y-0.5 hover:bg-white/15",
+  );
+  card.id = CARD_ID;
+
+  const top = makeNode("div", "flex items-start justify-between gap-3");
+  top.appendChild(makeNode("div", "grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 text-white/80", "⏱"));
+  top.appendChild(makeNode("span", "mt-1 text-white/30", "↗"));
+
+  const value = makeNode("b", "mt-4 block text-3xl leading-none tracking-[-.05em]", "--");
+  value.setAttribute("data-run-average-value", "true");
+
+  card.appendChild(top);
+  card.appendChild(value);
+  card.appendChild(makeNode("small", "mt-2 block text-xs font-black uppercase tracking-[.16em] text-white/62", "Execução média"));
+  card.appendChild(makeNode("p", "mt-2 text-xs font-semibold text-white/52", "das runs"));
+
+  return card;
 }
 
 function upsertCard(value: string) {
@@ -68,18 +72,7 @@ function upsertCard(value: string) {
 
   let card = document.getElementById(CARD_ID);
   if (!card) {
-    card = document.createElement("div");
-    card.id = CARD_ID;
-    card.className = "group rounded-[26px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5 transition hover:-translate-y-0.5 hover:bg-white/15";
-    card.innerHTML = `
-      <div class="flex items-start justify-between gap-3">
-        <div class="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 text-white/80">⏱</div>
-        <span class="mt-1 text-white/30">↗</span>
-      </div>
-      <b data-run-average-value class="mt-4 block text-3xl leading-none tracking-[-.05em]">--</b>
-      <small class="mt-2 block text-xs font-black uppercase tracking-[.16em] text-white/62">Tempo médio</small>
-      <p class="mt-2 text-xs font-semibold text-white/52">entre runs</p>
-    `;
+    card = createCard();
     grid.appendChild(card);
   }
 
@@ -98,7 +91,7 @@ export default function OverviewRunAverageCard() {
         const response = await fetchApi("/api/admin/quality/overview?period=30", { cache: "no-store" });
         const json = await response.json().catch(() => null);
         const payload = response.ok ? unwrapEnvelopeData<OverviewPayload>(json) ?? json : null;
-        latestValue = formatAverageDuration(calculateAverageRunInterval(payload));
+        latestValue = resolveAverageRunDuration(payload);
       } catch {
         latestValue = "--";
       }

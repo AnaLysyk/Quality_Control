@@ -1,15 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import {
-  Background,
-  Controls,
-  ReactFlow,
-  useEdgesState,
-  useNodesState,
-  type Edge,
-  type Node,
-} from "@xyflow/react";
+import { Background, Controls, ReactFlow, useEdgesState, useNodesState, type Edge, type Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { BrainEdge, BrainNode } from "../_types/brain.types";
 import { BrainNeuralEdge } from "./BrainNeuralEdge";
@@ -32,14 +24,7 @@ const nodeTypes = { brainNeuron: BrainNeuronNode };
 const edgeTypes = { brainNeural: BrainNeuralEdge };
 
 function isCoreNode(node: BrainNode) {
-  return Boolean(
-    node.metadata?.isBrainCore ||
-    node.metadata?.isContextCore ||
-    node.type === "company" ||
-    node.type === "project" ||
-    node.type === "module" ||
-    node.size === "lg",
-  );
+  return Boolean(node.metadata?.isBrainCore || node.metadata?.isContextCore || node.type === "company" || node.type === "project" || node.type === "module" || node.size === "lg");
 }
 
 function getConnectedNodeIds(edges: BrainEdge[]) {
@@ -48,12 +33,22 @@ function getConnectedNodeIds(edges: BrainEdge[]) {
 
 function getFocusGraph(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: string | null) {
   if (!selectedNodeId) {
-    const core = nodes.filter(isCoreNode);
-    const firstLayer = core.length ? core : nodes.slice(0, 14);
-    const ids = new Set(firstLayer.map((node) => node.id));
+    const coreNodes = nodes.filter((node) => node.metadata?.isBrainCore || node.metadata?.isContextCore);
+    const coreIds = new Set(coreNodes.map((node) => node.id));
+    const firstLayerIds = new Set<string>(coreIds);
+
+    for (const edge of edges) {
+      if (coreIds.has(edge.source)) firstLayerIds.add(edge.target);
+      if (coreIds.has(edge.target)) firstLayerIds.add(edge.source);
+    }
+
+    const firstLayer = nodes.filter((node) => firstLayerIds.has(node.id));
+    const fallbackLayer = firstLayer.length > 1 ? firstLayer : nodes.filter(isCoreNode).slice(0, 18);
+    const selectedLayer = fallbackLayer.length ? fallbackLayer : nodes.slice(0, 18);
+    const ids = new Set(selectedLayer.map((node) => node.id));
 
     return {
-      nodes: firstLayer,
+      nodes: selectedLayer,
       edges: edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target)),
     };
   }
@@ -85,23 +80,9 @@ function getFocusGraph(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: s
   };
 }
 
-function layoutNodes(
-  nodes: BrainNode[],
-  edges: BrainEdge[],
-  selectedNodeId: string | null,
-  saved: Record<string, { x: number; y: number }>,
-  canvasSize: { width: number; height: number },
-) {
-  const center = {
-    x: Math.max(420, canvasSize.width / 2 - 60),
-    y: Math.max(300, canvasSize.height / 2 - 20),
-  };
-
-  const selected =
-    selectedNodeId
-      ? nodes.find((node) => node.id === selectedNodeId)
-      : nodes.find((node) => node.metadata?.isBrainCore || node.metadata?.isContextCore) ?? nodes[0];
-
+function layoutNodes(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: string | null, saved: Record<string, { x: number; y: number }>, canvasSize: { width: number; height: number }) {
+  const center = { x: Math.max(420, canvasSize.width / 2 - 60), y: Math.max(300, canvasSize.height / 2 - 20) };
+  const selected = selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) : nodes.find((node) => node.metadata?.isBrainCore || node.metadata?.isContextCore) ?? nodes[0];
   const selectedIndex = selected ? nodes.findIndex((node) => node.id === selected.id) : -1;
   const connected = getConnectedNodeIds(edges);
 
@@ -111,13 +92,7 @@ function layoutNodes(
         id: node.id,
         type: "brainNeuron",
         position: saved[node.id],
-        data: {
-          brainNode: node,
-          selectedNodeId,
-          related: !selectedNodeId || node.id === selectedNodeId || connected.has(node.id),
-          orphan: !connected.has(node.id),
-          connectedCount: edges.filter((edge) => edge.source === node.id || edge.target === node.id).length,
-        },
+        data: { brainNode: node, selectedNodeId, related: !selectedNodeId || node.id === selectedNodeId || connected.has(node.id), orphan: !connected.has(node.id), connectedCount: edges.filter((edge) => edge.source === node.id || edge.target === node.id).length },
         draggable: true,
       };
     }
@@ -135,7 +110,6 @@ function layoutNodes(
         const angle = (orbitIndex / Math.max(1, orbitItems.length)) * Math.PI * 2 - Math.PI / 2;
         const radiusX = Math.min(Math.max(310, canvasSize.width * 0.28), 560) + (orbitIndex % 2) * 70;
         const radiusY = Math.min(Math.max(190, canvasSize.height * 0.24), 360) + (orbitIndex % 3) * 34;
-
         x = center.x + Math.cos(angle) * radiusX;
         y = center.y + Math.sin(angle) * radiusY;
       }
@@ -147,7 +121,6 @@ function layoutNodes(
       const relativeIndex = Math.max(0, relativeItems.findIndex((item) => item.id === node.id));
       const angle = (relativeIndex / Math.max(1, relativeItems.length)) * Math.PI * 2 - Math.PI / 2;
       const radius = Math.min(Math.max(260, canvasSize.width * 0.24), 520) + (relativeIndex % 3) * 72;
-
       x = center.x + Math.cos(angle) * radius;
       y = center.y + Math.sin(angle) * (radius * 0.72);
     }
@@ -161,29 +134,13 @@ function layoutNodes(
       id: node.id,
       type: "brainNeuron",
       position: { x, y },
-      data: {
-        brainNode: node,
-        selectedNodeId,
-        related: !selectedNodeId || node.id === selectedNodeId || connected.has(node.id),
-        orphan: !connected.has(node.id),
-        connectedCount: edges.filter((edge) => edge.source === node.id || edge.target === node.id).length,
-      },
+      data: { brainNode: node, selectedNodeId, related: !selectedNodeId || node.id === selectedNodeId || connected.has(node.id), orphan: !connected.has(node.id), connectedCount: edges.filter((edge) => edge.source === node.id || edge.target === node.id).length },
       draggable: true,
     };
   });
 }
 
-export function BrainNeuralCanvas({
-  nodes,
-  edges,
-  selectedNodeId,
-  onSelectNode,
-  onOpenRelatedModule,
-  localGraphOnly,
-  onToggleLocalGraph,
-  loading = false,
-  debugMode = false,
-}: BrainNeuralCanvasProps) {
+export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, onOpenRelatedModule, localGraphOnly, onToggleLocalGraph, loading = false, debugMode = false }: BrainNeuralCanvasProps) {
   const containerRef = useRef<HTMLElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 720 });
   const [manualPositions, setManualPositions] = useState<Record<string, { x: number; y: number }>>({});
@@ -197,17 +154,11 @@ export function BrainNeuralCanvas({
     function measure() {
       const element = containerRef.current;
       if (!element) return;
-
       const rect = element.getBoundingClientRect();
       const width = Math.round(rect.width);
       const height = Math.round(rect.height);
-
       if (width > 0 && height > 0) {
-        setCanvasSize((current) =>
-          current.width === width && current.height === height
-            ? current
-            : { width, height },
-        );
+        setCanvasSize((current) => current.width === width && current.height === height ? current : { width, height });
       }
     }
 
@@ -219,16 +170,8 @@ export function BrainNeuralCanvas({
     scheduleMeasure();
     timeout80 = window.setTimeout(scheduleMeasure, 80);
     timeout240 = window.setTimeout(scheduleMeasure, 240);
-
-    const observer =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(() => scheduleMeasure())
-        : null;
-
-    if (containerRef.current && observer) {
-      observer.observe(containerRef.current);
-    }
-
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => scheduleMeasure()) : null;
+    if (containerRef.current && observer) observer.observe(containerRef.current);
     window.addEventListener("resize", scheduleMeasure);
 
     return () => {
@@ -240,84 +183,29 @@ export function BrainNeuralCanvas({
     };
   }, []);
 
-  const canRenderFlow = true;
-
-  const focusedGraph = useMemo(
-    () => getFocusGraph(nodes, edges, selectedNodeId),
-    [nodes, edges, selectedNodeId],
-  );
-
-  const flowNodes = useMemo<Node[]>(
-    () => layoutNodes(focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize),
-    [focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize],
-  );
-
-  const flowEdges = useMemo<Edge[]>(
-    () =>
-      focusedGraph.edges.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        type: "brainNeural",
-        animated: edge.status === "pending" || edge.status === "warning",
-        data: {
-          brainEdge: edge,
-          highlighted: Boolean(selectedNodeId && (edge.source === selectedNodeId || edge.target === selectedNodeId)),
-        },
-      })),
-    [focusedGraph.edges, selectedNodeId],
-  );
-
-  const flowSignature = useMemo(
-    () => [
-      selectedNodeId ?? "root",
-      focusedGraph.nodes.map((node) => node.id).join("|"),
-      focusedGraph.edges.map((edge) => edge.id).join("|"),
-    ].join("::"),
-    [focusedGraph.edges, focusedGraph.nodes, selectedNodeId],
-  );
-
+  const focusedGraph = useMemo(() => getFocusGraph(nodes, edges, selectedNodeId), [nodes, edges, selectedNodeId]);
+  const flowNodes = useMemo<Node[]>(() => layoutNodes(focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize), [focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize]);
+  const flowEdges = useMemo<Edge[]>(() => focusedGraph.edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target, type: "brainNeural", animated: edge.status === "pending" || edge.status === "warning", data: { brainEdge: edge, highlighted: Boolean(selectedNodeId && (edge.source === selectedNodeId || edge.target === selectedNodeId)) } })), [focusedGraph.edges, selectedNodeId]);
+  const flowSignature = useMemo(() => [selectedNodeId ?? "root", focusedGraph.nodes.map((node) => node.id).join("|"), focusedGraph.edges.map((edge) => edge.id).join("|")].join("::"), [focusedGraph.edges, focusedGraph.nodes, selectedNodeId]);
   const [reactFlowNodes, setNodes, onNodesChange] = useNodesState(flowNodes);
   const [reactFlowEdges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
-  useEffect(() => {
-    setNodes(flowNodes);
-  }, [flowNodes, setNodes]);
-
-  useEffect(() => {
-    setEdges(flowEdges);
-  }, [flowEdges, setEdges]);
-
+  useEffect(() => setNodes(flowNodes), [flowNodes, setNodes]);
+  useEffect(() => setEdges(flowEdges), [flowEdges, setEdges]);
   useEffect(() => {
     if (!selectedNodeId) {
       setOverlayNode(null);
       return;
     }
-
-    const next = nodes.find((node) => node.id === selectedNodeId) ?? null;
-    setOverlayNode(next);
+    setOverlayNode(nodes.find((node) => node.id === selectedNodeId) ?? null);
   }, [nodes, selectedNodeId]);
 
   const handleNodeDragStop = (_: MouseEvent, node: Node) => {
-    setManualPositions((current) => ({
-      ...current,
-      [node.id]: node.position,
-    }));
+    setManualPositions((current) => ({ ...current, [node.id]: node.position }));
   };
 
   return (
-    <section
-      ref={containerRef}
-      data-brain-universe
-      className="brain-universe-canvas brain-universe-canvas-strong brain-cortex-canvas relative w-full overflow-hidden text-white"
-      style={{
-        width: "100%",
-        height: "100%",
-        minHeight: "100%",
-        display: "block",
-        position: "relative",
-      }}
-    >
+    <section ref={containerRef} data-brain-universe className="brain-universe-canvas brain-universe-canvas-strong brain-cortex-canvas relative w-full overflow-hidden text-white" style={{ width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" }}>
       <div className="brain-cortex-layer" aria-hidden="true">
         <span className="brain-cortex-lobe brain-cortex-lobe-left" />
         <span className="brain-cortex-lobe brain-cortex-lobe-right" />
@@ -330,50 +218,42 @@ export function BrainNeuralCanvas({
         <span className="brain-cortex-thread brain-cortex-thread-c" />
       </div>
 
-      {canRenderFlow ? (
-        <ReactFlow
-          key={`brain-flow-${canvasSize.width}x${canvasSize.height}-${flowSignature}`}
-          nodes={reactFlowNodes}
-          edges={reactFlowEdges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.28, duration: 420 }}
-          minZoom={0.12}
-          maxZoom={2.3}
-          nodesDraggable
-          nodesConnectable={false}
-          elementsSelectable
-          panOnDrag
-          panOnScroll
-          zoomOnScroll
-          zoomOnPinch
-          selectionOnDrag={false}
-          preventScrolling={false}
-          proOptions={{ hideAttribution: true }}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onNodeDragStop={handleNodeDragStop}
-          onNodeClick={(_, node) => {
-            const brainNode = (node.data as { brainNode: BrainNode }).brainNode;
-            onSelectNode(brainNode);
-            setOverlayNode(brainNode);
-          }}
-          onPaneClick={() => {
-            setOverlayNode(null);
-          }}
-          onNodeDoubleClick={(_, node) => onOpenRelatedModule(((node.data as { brainNode: BrainNode }).brainNode).module)}
-          className="h-full w-full"
-          style={{ width: "100%", height: "100%" }}
-        >
-          <Background color="rgba(1,24,72,0.18)" gap={34} />
-          <Controls className="!bottom-5 !left-5 !rounded-2xl backdrop-blur-xl" />
-        </ReactFlow>
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-sm font-black text-cyan-50/70">
-          Preparando universo neural...
-        </div>
-      )}
+      <ReactFlow
+        key={`brain-flow-${canvasSize.width}x${canvasSize.height}-${flowSignature}`}
+        nodes={reactFlowNodes}
+        edges={reactFlowEdges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.28, duration: 420 }}
+        minZoom={0.12}
+        maxZoom={2.3}
+        nodesDraggable
+        nodesConnectable={false}
+        elementsSelectable
+        panOnDrag
+        panOnScroll
+        zoomOnScroll
+        zoomOnPinch
+        selectionOnDrag={false}
+        preventScrolling={false}
+        proOptions={{ hideAttribution: true }}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeDragStop={handleNodeDragStop}
+        onNodeClick={(_, node) => {
+          const brainNode = (node.data as { brainNode: BrainNode }).brainNode;
+          onSelectNode(brainNode);
+          setOverlayNode(brainNode);
+        }}
+        onPaneClick={() => setOverlayNode(null)}
+        onNodeDoubleClick={(_, node) => onOpenRelatedModule(((node.data as { brainNode: BrainNode }).brainNode).module)}
+        className="h-full w-full"
+        style={{ width: "100%", height: "100%" }}
+      >
+        <Background color="rgba(1,24,72,0.18)" gap={34} />
+        <Controls className="!bottom-5 !left-5 !rounded-2xl backdrop-blur-xl" />
+      </ReactFlow>
 
       {!overlayNode ? (
         <div className="pointer-events-none absolute bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-cyan-100/10 bg-black/24 px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-50/72 backdrop-blur-xl">
@@ -389,33 +269,12 @@ export function BrainNeuralCanvas({
       ) : null}
 
       {overlayNode ? (
-        <BrainNodeOverlay
-          node={overlayNode}
-          nodes={focusedGraph.nodes}
-          edges={focusedGraph.edges}
-          debugMode={debugMode}
-          onClose={() => setOverlayNode(null)}
-          onResetFocus={() => {
-            setOverlayNode(null);
-            const core = nodes.find((node) => node.metadata?.isBrainCore || node.metadata?.isContextCore) ?? nodes[0];
-            if (core) onSelectNode(core);
-          }}
-          onOpenRelatedModule={onOpenRelatedModule}
-        />
+        <BrainNodeOverlay node={overlayNode} nodes={focusedGraph.nodes} edges={focusedGraph.edges} debugMode={debugMode} onClose={() => setOverlayNode(null)} onResetFocus={() => { setOverlayNode(null); const core = nodes.find((node) => node.metadata?.isBrainCore || node.metadata?.isContextCore) ?? nodes[0]; if (core) onSelectNode(core); }} onOpenRelatedModule={onOpenRelatedModule} />
       ) : null}
 
-      <button
-        type="button"
-        onClick={onToggleLocalGraph}
-        className={`absolute right-[132px] top-[92px] z-30 rounded-full border px-3 py-2 text-xs font-black backdrop-blur-xl transition ${
-          localGraphOnly
-            ? "border-cyan-200/70 bg-cyan-200/18 text-cyan-50"
-            : "border-white/10 bg-black/24 text-white/76 hover:border-cyan-200/60 hover:text-cyan-100"
-        }`}
-      >
+      <button type="button" onClick={onToggleLocalGraph} className={`absolute right-[132px] top-[92px] z-30 rounded-full border px-3 py-2 text-xs font-black backdrop-blur-xl transition ${localGraphOnly ? "border-cyan-200/70 bg-cyan-200/18 text-cyan-50" : "border-white/10 bg-black/24 text-white/76 hover:border-cyan-200/60 hover:text-cyan-100"}`}>
         Grafo local
       </button>
     </section>
   );
 }
-

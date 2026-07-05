@@ -39,6 +39,15 @@ type PermissionAccessGlobalState = typeof globalThis & {
 };
 
 const PERMISSION_ACCESS_CACHE_TTL_MS = 30_000;
+const OPERATION_PROFILE_ACTIONS = ["view", "dashboard", "metrics", "search"];
+
+function expandOperations(roleKey: RoleKey, matrix: PermissionMatrix) {
+  if (roleKey !== SYSTEM_ROLES.LEADER_TC && roleKey !== SYSTEM_ROLES.TECHNICAL_SUPPORT) return matrix;
+  return {
+    ...matrix,
+    operations: Array.from(new Set([...(matrix.operations ?? []), ...OPERATION_PROFILE_ACTIONS])),
+  };
+}
 
 function getPermissionAccessCache() {
   const globalState = globalThis as PermissionAccessGlobalState;
@@ -56,12 +65,16 @@ function getPermissionAccessInflight() {
   return globalState.__qcPermissionAccessInflight;
 }
 
+function removeCacheEntry<T>(map: Map<string, T>, key: string) {
+  map.delete(key);
+}
+
 export function invalidatePermissionAccessCache(userId?: string | null) {
   const cache = getPermissionAccessCache();
   const inflight = getPermissionAccessInflight();
   if (userId) {
-    cache.delete(userId);
-    inflight.delete(userId);
+    removeCacheEntry(cache, userId);
+    removeCacheEntry(inflight, userId);
     return;
   }
   cache.clear();
@@ -99,8 +112,9 @@ export async function resolveRoleKeyForUser(userId: string): Promise<RoleKey> {
 async function resolvePermissionAccessForUserUncached(userId: string): Promise<ResolvedPermissionAccess> {
   const { roleKey } = await resolvePermissionSourceForUser(userId);
   const override = await getUserPermissionOverride(userId);
-  const roleDefaults = await resolveProfilePermissionDefaults(roleKey);
-  const permissions = resolvePermissionsFromDefaults(roleDefaults, override ?? undefined);
+  const rawRoleDefaults = await resolveProfilePermissionDefaults(roleKey);
+  const roleDefaults = expandOperations(roleKey, rawRoleDefaults);
+  const permissions = expandOperations(roleKey, resolvePermissionsFromDefaults(roleDefaults, override ?? undefined));
 
   return {
     userId,
@@ -134,7 +148,7 @@ export async function resolvePermissionAccessForUser(userId: string): Promise<Re
     return value;
   } finally {
     if (inflight.get(userId) === promise) {
-      inflight.delete(userId);
+      removeCacheEntry(inflight, userId);
     }
   }
 }

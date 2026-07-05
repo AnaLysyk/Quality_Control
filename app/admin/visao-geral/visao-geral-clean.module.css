@@ -1,0 +1,16 @@
+.visaoGeralClean {
+  min-height: 100%;
+}
+
+/* Remove o bloco lateral que mostrava: Saúde, Sem dados, Contexto, Planos, Casos e Empresas. */
+.visaoGeralClean :global(section:first-of-type > div:nth-child(2) > aside:first-of-type) {
+  display: none !important;
+}
+
+.visaoGeralClean :global(section:first-of-type > div:nth-child(2)) {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.visaoGeralClean :global(section:first-of-type > div:nth-child(2) > div:first-child) {
+  max-width: none !important;
+}

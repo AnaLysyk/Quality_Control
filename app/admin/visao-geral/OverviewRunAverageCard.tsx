@@ -1,15 +1,31 @@
 "use client";
 
 import { useEffect } from "react";
-import { fetchApi } from "@/lib/api";
-import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 
 type OverviewPayload = {
   averageApprovalTimeMs?: number | null;
   averageApprovalTimeLabel?: string | null;
 };
 
+type OverviewEnvelope = OverviewPayload & {
+  data?: OverviewPayload | null;
+};
+
+type CachedOverviewFetch = {
+  expiresAt: number;
+  promise: Promise<Response>;
+};
+
+type OverviewWindow = Window & {
+  __qcOverviewFetchPatched?: boolean;
+  __qcOverviewFetchCache?: Map<string, CachedOverviewFetch>;
+  __qcOverviewLastRunAverage?: string;
+  __qcOverviewRunAverageListeners?: Set<(value: string) => void>;
+};
+
 const CARD_ID = "overview-run-average-card";
+const OVERVIEW_PATH = "/api/admin/quality/overview";
+const CACHE_MS = 6000;
 
 function formatAverageDuration(ms: number | null | undefined) {
   if (!ms || !Number.isFinite(ms) || ms <= 0) return "--";
@@ -24,9 +40,72 @@ function formatAverageDuration(ms: number | null | undefined) {
   return `${days}d`;
 }
 
+function unwrapPayload(json: unknown): OverviewPayload | null {
+  if (!json || typeof json !== "object") return null;
+  const envelope = json as OverviewEnvelope;
+  return envelope.data && typeof envelope.data === "object" ? envelope.data : envelope;
+}
+
 function resolveAverageRunDuration(payload: OverviewPayload | null) {
   if (payload?.averageApprovalTimeLabel && payload.averageApprovalTimeLabel !== "--") return payload.averageApprovalTimeLabel;
   return formatAverageDuration(payload?.averageApprovalTimeMs);
+}
+
+function getFetchKey(input: RequestInfo | URL, init?: RequestInit) {
+  const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
+  if (method !== "GET") return null;
+
+  const rawUrl = input instanceof Request ? input.url : input.toString();
+  const url = new URL(rawUrl, window.location.origin);
+  if (url.pathname !== OVERVIEW_PATH) return null;
+
+  url.searchParams.sort();
+  return `${url.pathname}?${url.searchParams.toString()}`;
+}
+
+function publishAverage(value: string) {
+  const overviewWindow = window as OverviewWindow;
+  overviewWindow.__qcOverviewLastRunAverage = value;
+  overviewWindow.__qcOverviewRunAverageListeners?.forEach((listener) => listener(value));
+}
+
+function installOverviewFetchReuse() {
+  if (typeof window === "undefined") return;
+
+  const overviewWindow = window as OverviewWindow;
+  if (overviewWindow.__qcOverviewFetchPatched) return;
+
+  overviewWindow.__qcOverviewFetchPatched = true;
+  overviewWindow.__qcOverviewFetchCache = overviewWindow.__qcOverviewFetchCache ?? new Map();
+  overviewWindow.__qcOverviewRunAverageListeners = overviewWindow.__qcOverviewRunAverageListeners ?? new Set();
+
+  const originalFetch = window.fetch.bind(window);
+
+  window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    const key = getFetchKey(input, init);
+    if (!key) return originalFetch(input, init);
+
+    const cache = overviewWindow.__qcOverviewFetchCache!;
+    const now = Date.now();
+    const cached = cache.get(key);
+    if (cached && cached.expiresAt > now) {
+      return cached.promise.then((response) => response.clone());
+    }
+
+    const promise = originalFetch(input, init).then((response) => {
+      const cloneForMetric = response.clone();
+      void cloneForMetric
+        .json()
+        .then((json) => publishAverage(resolveAverageRunDuration(unwrapPayload(json))))
+        .catch(() => publishAverage("--"));
+      return response;
+    });
+
+    cache.set(key, { expiresAt: now + CACHE_MS, promise });
+    window.setTimeout(() => cache.delete(key), CACHE_MS);
+
+    return promise.then((response) => response.clone());
+  };
 }
 
 function findMetricGrid() {
@@ -81,34 +160,26 @@ function upsertCard(value: string) {
   return true;
 }
 
+installOverviewFetchReuse();
+
 export default function OverviewRunAverageCard() {
   useEffect(() => {
-    let disposed = false;
-    let latestValue = "--";
+    let latestValue = (window as OverviewWindow).__qcOverviewLastRunAverage ?? "--";
+    const overviewWindow = window as OverviewWindow;
+    const listener = (value: string) => {
+      latestValue = value;
+      upsertCard(latestValue);
+    };
 
-    async function loadAverage() {
-      try {
-        const response = await fetchApi("/api/admin/quality/overview?period=30", { cache: "no-store" });
-        const json = await response.json().catch(() => null);
-        const payload = response.ok ? unwrapEnvelopeData<OverviewPayload>(json) ?? json : null;
-        latestValue = resolveAverageRunDuration(payload);
-      } catch {
-        latestValue = "--";
-      }
+    overviewWindow.__qcOverviewRunAverageListeners?.add(listener);
+    upsertCard(latestValue);
 
-      if (!disposed) upsertCard(latestValue);
-    }
-
-    void loadAverage();
-
-    const observer = new MutationObserver(() => {
-      if (!disposed) upsertCard(latestValue);
-    });
+    const observer = new MutationObserver(() => upsertCard(latestValue));
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      disposed = true;
       observer.disconnect();
+      overviewWindow.__qcOverviewRunAverageListeners?.delete(listener);
     };
   }, []);
 

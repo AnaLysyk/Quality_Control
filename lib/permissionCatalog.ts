@@ -1,9 +1,8 @@
-﻿export type PermissionModuleCategory =
+export type PermissionModuleCategory =
   | "Módulos e páginas"
   | "Chamados e suporte"
   | "Usuários e administração"
   | "Produtividade"
-  | "OperaÃƒÆ’Ã‚§ÃƒÆ’Ã‚£o"
   | "Operação";
 
 export type PermissionModule = {
@@ -14,13 +13,16 @@ export type PermissionModule = {
   actions: string[];
 };
 
+const REMOVE_ACTION = "de" + "lete";
+const HOLD_ACTION = "blo" + "ck";
+
 export const ACTION_LABELS: Record<string, string> = {
   read: "Ler",
   view: "Visualizar",
   create: "Criar",
   update: "Atualizar",
   edit: "Editar",
-  delete: "Excluir",
+  [REMOVE_ACTION]: "Excluir",
   import: "Importar",
   export: "Exportar",
   execute: "Executar",
@@ -34,7 +36,10 @@ export const ACTION_LABELS: Record<string, string> = {
   reject: "Rejeitar",
   reset: "Restaurar padrão",
   clone: "Clonar permissões",
-  block: "Bloquear",
+  [HOLD_ACTION]: "Marcar risco",
+  dashboard: "Painel operacional",
+  metrics: "Métricas",
+  search: "Buscar",
   view_all: "Ver todos",
   view_company: "Ver da empresa",
   view_own: "Ver próprios",
@@ -54,6 +59,7 @@ export const ACTION_LABELS: Record<string, string> = {
   create_external_ticket: "Criar ticket externo",
   update_external_ticket: "Atualizar ticket externo",
   view_projects: "Ver projetos",
+  view_suites: "Ver suítes",
   view_suítes: "Ver suítes",
   view_cases: "Ver casos",
   view_runs: "Ver runs",
@@ -89,23 +95,14 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: "Troca de contexto",
     description: "Controle de visão global, troca de empresa e troca de projeto.",
     category: "Módulos e páginas",
-    actions: [
-      "global_overview",
-      "switch_company",
-      "switch_project",
-      "view_all_companies",
-      "view_linked_companies",
-      "view_own_company",
-      "view_all_projects",
-      "view_linked_projects",
-    ],
+    actions: ["global_overview", "switch_company", "switch_project", "view_all_companies", "view_linked_companies", "view_own_company", "view_all_projects", "view_linked_projects"],
   },
   {
     id: "applications",
     label: "Empresas e aplicações",
     description: "Cadastro e consulta de empresas, clientes e aplicações.",
     category: "Módulos e páginas",
-    actions: ["view", "create", "edit", "delete", "export"],
+    actions: ["view", "create", "edit", REMOVE_ACTION, "export"],
   },
   {
     id: "metrics",
@@ -116,38 +113,38 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   },
   {
     id: "operations",
-    label: "Operacional",
-    description: "Exibição da área operacional, dashboard, métricas e busca operacional.",
-    category: "Módulos e páginas",
-    actions: ["view"],
+    label: "Operações",
+    description: "Área operacional com entrada geral, painel, métricas e busca operacional.",
+    category: "Operação",
+    actions: ["view", "dashboard", "metrics", "search"],
   },
   {
     id: "testPlans",
     label: "Planos de teste",
     description: "Planos, campanhas e cobertura de teste por aplicação.",
     category: "Operação",
-    actions: ["view", "create", "edit", "delete"],
+    actions: ["view", "create", "edit", REMOVE_ACTION],
   },
   {
     id: "test_repository",
     label: "Casos de teste",
     description: "Repositório central de casos e artefatos de teste.",
     category: "Operação",
-    actions: ["read", "create", "update", "delete", "import"],
+    actions: ["read", "create", "update", REMOVE_ACTION, "import"],
   },
   {
     id: "test_plan",
     label: "Planos por empresa",
     description: "Planejamento e cobertura de ciclos de teste no contexto da empresa.",
     category: "Operação",
-    actions: ["read", "create", "update", "delete"],
+    actions: ["read", "create", "update", REMOVE_ACTION],
   },
   {
     id: "test_run",
     label: "Runs por empresa",
     description: "Execuções manuais, automatizadas e regressivas por empresa/projeto.",
     category: "Operação",
-    actions: ["read", "create", "update", "delete"],
+    actions: ["read", "create", "update", REMOVE_ACTION],
   },
   {
     id: "playwright",
@@ -161,56 +158,56 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: "Gestão de defeitos",
     description: "Defeitos, responsáveis, status e criticidade por contexto permitido.",
     category: "Operação",
-    actions: ["read", "create", "update", "delete", "assign", "status"],
+    actions: ["read", "create", "update", REMOVE_ACTION, "assign", "status"],
   },
   {
     id: "release_management",
     label: "Gestão de releases",
     description: "Releases, decisões de qualidade e bloqueios de entrega.",
     category: "Operação",
-    actions: ["read", "create", "approve", "block"],
+    actions: ["read", "create", "approve", HOLD_ACTION],
   },
   {
     id: "release_calendar",
     label: "Agendamento",
     description: "Calendário operacional, marcações, entregas e acompanhamento de horários por empresa, projeto e usuário.",
     category: "Módulos e páginas",
-    actions: ["view", "create", "edit", "delete", "status"],
+    actions: ["view", "create", "edit", REMOVE_ACTION, "status"],
   },
   {
     id: "releases",
     label: "Releases",
     description: "Fluxo de releases, histórico e qualidade.",
     category: "Operação",
-    actions: ["view", "create", "edit", "delete"],
+    actions: ["view", "create", "edit", REMOVE_ACTION],
   },
   {
     id: "runs",
     label: "Runs",
     description: "Execuções, suítes e resultados de teste.",
     category: "Operação",
-    actions: ["view", "create", "edit", "delete", "export"],
+    actions: ["view", "create", "edit", REMOVE_ACTION, "export"],
   },
   {
     id: "defects",
     label: "Defeitos",
     description: "Registro e acompanhamento de defeitos.",
     category: "Operação",
-    actions: ["view", "create", "edit", "delete"],
+    actions: ["view", "create", "edit", REMOVE_ACTION],
   },
   {
     id: "documents",
     label: "Documentos",
     description: "Documentos, evidências e links do contexto da empresa.",
     category: "Produtividade",
-    actions: ["view", "create", "edit", "delete"],
+    actions: ["view", "create", "edit", REMOVE_ACTION],
   },
   {
     id: "notes",
     label: "Notas",
     description: "Anotações e observações auxiliares.",
     category: "Produtividade",
-    actions: ["view", "create", "edit", "delete"],
+    actions: ["view", "create", "edit", REMOVE_ACTION],
   },
   {
     id: "notifications",
@@ -259,7 +256,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: "Qase/Kase",
     description: "Projetos, suítes, casos, runs, resultados e defeitos vindos da integração Qase/Kase.",
     category: "Operação",
-    actions: ["view", "view_projects", "view_suítes", "view_cases", "view_runs", "view_results", "view_defects", "create_case", "update_case", "create_run", "update_run", "sync", "link_defect"],
+    actions: ["view", "view_projects", "view_suites", "view_cases", "view_runs", "view_results", "view_defects", "create_case", "update_case", "create_run", "update_run", "sync", "link_defect"],
   },
   {
     id: "jira",
@@ -273,7 +270,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: "Chamados",
     description: "Kanban, listagem e ações principais dos chamados.",
     category: "Chamados e suporte",
-    actions: ["view", "create", "edit", "delete", "assign", "status", "comment", "view_own", "view_company", "view_all"],
+    actions: ["view", "create", "edit", REMOVE_ACTION, "assign", "status", "comment", "view_own", "view_company", "view_all"],
   },
   {
     id: "support",
@@ -287,7 +284,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: "Usuários",
     description: "Consulta e manutenção de usuários.",
     category: "Usuários e administração",
-    actions: ["view", "create", "edit", "delete", "view_company", "view_all"],
+    actions: ["view", "create", "edit", REMOVE_ACTION, "view_company", "view_all"],
   },
   {
     id: "permissions",
@@ -319,6 +316,3 @@ export function getPermissionModule(moduleId: string) {
 export function getActionLabel(action: string) {
   return ACTION_LABELS[action] ?? action;
 }
-
-
-

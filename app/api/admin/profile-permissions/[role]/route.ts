@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { normalizeLegacyRole } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getAccessContext } from "@/lib/auth/session";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
 import {
   deleteProfilePermissionOverride,
   getProfilePermissionOverride,
-  resolveProfilePermissionDefaults,
   setProfilePermissionOverride,
 } from "@/lib/store/profilePermissionsStore";
-import { normalizePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
+import { applyPermissionOverride, normalizePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { notifyProfilePermissionsChanged } from "@/lib/notificationService";
 import { invalidateBrainCache } from "@/lib/brain/cache";
 
 export const revalidate = 0;
+
+const OPERATION_PROFILE_ACTIONS = ["view", "dashboard", "metrics", "search"];
+
+function expandSystemDefaults(role: SystemRole, matrix: PermissionMatrix) {
+  if (role !== SYSTEM_ROLES.LEADER_TC && role !== SYSTEM_ROLES.TECHNICAL_SUPPORT) return matrix;
+  return {
+    ...matrix,
+    operations: Array.from(new Set([...(matrix.operations ?? []), ...OPERATION_PROFILE_ACTIONS])),
+  };
+}
 
 function countPermissionActions(input: PermissionMatrix | null | undefined) {
   return Object.values(input ?? {}).reduce(
@@ -29,7 +38,7 @@ function describeChangedSummary(allow: PermissionMatrix, deny: PermissionMatrix)
   const denyCount = countPermissionActions(deny);
   const parts = [
     allowCount ? `${allowCount} permissão(ões) liberada(s)` : null,
-    denyCount ? `${denyCount} permissão(ões) bloqueada(s)` : null,
+    denyCount ? `${denyCount} permissão(ões) restringida(s)` : null,
   ].filter(Boolean);
   return parts.length ? parts.join(" e ") : "perfil restaurado para o padrão do sistema";
 }
@@ -64,6 +73,10 @@ async function requirePermissionManager(req: NextRequest) {
   return { admin: accessContext, access, response: null };
 }
 
+function resolveSystemDefaults(role: SystemRole) {
+  return expandSystemDefaults(role, normalizePermissionMatrix(resolveRoleDefaults(role)));
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ role: string }> }) {
   try {
     const guard = await requirePermissionManager(req);
@@ -72,9 +85,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
     const role = await resolveRole(params);
     if (!role) return NextResponse.json({ error: "Perfil inválido." }, { status: 400 });
 
-    const systemDefaults = normalizePermissionMatrix(resolveRoleDefaults(role));
+    const systemDefaults = resolveSystemDefaults(role);
     const override = await getProfilePermissionOverride(role);
-    const permissions = await resolveProfilePermissionDefaults(role);
+    const permissions = applyPermissionOverride(systemDefaults, override);
 
     return NextResponse.json({
       role,
@@ -117,7 +130,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
       reason,
       updatedBy: guard.admin?.email ?? null,
     });
-    const permissions = await resolveProfilePermissionDefaults(role);
+    const permissions = applyPermissionOverride(resolveSystemDefaults(role), saved);
     const summary = describeChangedSummary(allow, deny);
 
     await addAuditLogSafe({
@@ -163,7 +176,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     if (!role) return NextResponse.json({ error: "Perfil inválido." }, { status: 400 });
 
     await deleteProfilePermissionOverride(role);
-    const permissions = await resolveProfilePermissionDefaults(role);
+    const permissions = resolveSystemDefaults(role);
     const updatedAt = new Date().toISOString();
 
     await addAuditLogSafe({

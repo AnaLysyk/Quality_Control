@@ -138,7 +138,6 @@ export async function resolvePermissionAccessForUser(userId: string): Promise<Re
     return value;
   } finally {
     if (inflight.get(userId) === promise) {
-      removeCacheEntry(inflight, promise as unknown as string);
       removeCacheEntry(inflight, userId);
     }
   }

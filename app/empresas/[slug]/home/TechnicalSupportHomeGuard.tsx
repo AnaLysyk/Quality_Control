@@ -1,15 +1,18 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { COMPANY_ROUTE_PREFIXES } from "@/lib/companyRoutes";
+
+const INTERNAL_HOME_ROLES = new Set([
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+]);
 
 export function TechnicalSupportHomeGuard() {
   const { user, loading } = useAuthUser();
   const router = useRouter();
-  const params = useParams();
 
   useEffect(() => {
     if (loading || !user) return;
@@ -17,12 +20,10 @@ export function TechnicalSupportHomeGuard() {
       normalizeLegacyRole(user.permissionRole) ??
       normalizeLegacyRole(user.role) ??
       normalizeLegacyRole(user.companyRole);
-    if (role !== SYSTEM_ROLES.TECHNICAL_SUPPORT) return;
-    const slug = typeof params?.slug === "string" ? params.slug : Array.isArray(params?.slug) ? params.slug[0] : null;
-    if (!slug) return;
-    router.replace(`/${COMPANY_ROUTE_PREFIXES.technical_support}/${encodeURIComponent(slug)}/dashboard`);
-  }, [loading, user, router, params]);
+
+    if (!role || !INTERNAL_HOME_ROLES.has(role)) return;
+    router.replace("/admin/home");
+  }, [loading, user, router]);
 
   return null;
 }
-

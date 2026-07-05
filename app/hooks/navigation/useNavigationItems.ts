@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -75,7 +75,6 @@ function withScopeQuery(
   const serialized = params.toString();
   return serialized ? `${path}?${serialized}` : path;
 }
-
 
 function buildAgendaItems(effectiveRole: SystemRole | null, companySlug: string | null, projectSlug: string | null): NavItemDef[] {
   const basePermission = { moduleId: "release_calendar", action: "view" } as const;
@@ -190,12 +189,12 @@ function resolveModuleHref(
   effectiveRole: SystemRole | null,
 ): string | undefined {
   if (mod.id === "home") {
-    if (companySlug) {
-      return withScopeQuery(buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput), companySlug, projectSlug, true);
-    }
-
     if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
       return "/admin/home";
+    }
+
+    if (companySlug) {
+      return withScopeQuery(buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput), companySlug, projectSlug, true);
     }
 
     if (companySlug && effectiveRole && COMPANY_DASHBOARD_ROLES.has(effectiveRole)) {
@@ -267,8 +266,6 @@ function resolveModuleItems(
   effectiveRole: SystemRole | null,
   permissions?: PermissionMatrix | null,
 ): NavModuleDef {
-  const usesInternalOverview =
-    mod.id === "home" && effectiveRole != null && INTERNAL_DASHBOARD_ROLES.has(effectiveRole);
   const usesCompanyCentral =
     mod.id === "home" && effectiveRole != null && COMPANY_DASHBOARD_ROLES.has(effectiveRole);
   const dynamicItems =
@@ -280,7 +277,7 @@ function resolveModuleItems(
 
   return {
     ...mod,
-    label: usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
+    label: usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {
@@ -414,9 +411,3 @@ export function useNavigationItems() {
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }
-
-
-
-
-
-

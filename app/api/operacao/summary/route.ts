@@ -1,8 +1,10 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { hasGlobalCompanyVisibility, resolveAllowedCompanySlugs } from "@/lib/companyDefectsAccess";
 import { listLocalCompanies } from "@/lib/auth/localStore";
+import { canAccess } from "@/lib/permissions/can-access";
+import { getUserAccessContext } from "@/lib/permissions/get-user-access-context";
 
 type OperationSignal = {
   id: string;
@@ -176,6 +178,11 @@ export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  }
+
+  const accessContext = getUserAccessContext(auth);
+  if (!canAccess(accessContext, { moduleId: "operations", action: "dashboard" })) {
+    return NextResponse.json({ message: "Permissão necessária: operations:dashboard" }, { status: 403 });
   }
 
   const url = new URL(request.url);
@@ -375,4 +382,3 @@ export async function GET(request: NextRequest) {
     warnings,
   });
 }
-

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +19,7 @@ import {
   FiSliders,
   FiUsers,
 } from "react-icons/fi";
+
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
@@ -66,6 +67,14 @@ type NoticeState =
 
 type SortKey = "module" | "status" | "actions" | "routes" | "changes";
 type SortDirection = "asc" | "desc";
+
+type ModuleRow = {
+  permissionModule: PermissionModule;
+  routes: unknown[];
+  state: ReturnType<typeof getModuleState>;
+  changedActions: number;
+  content: string;
+};
 
 const PROFILE_ORDER: SystemRole[] = [
   SYSTEM_ROLES.LEADER_TC,
@@ -142,8 +151,8 @@ function compactMatrix(matrix: PermissionMatrix) {
     Object.entries(matrix)
       .map(([moduleId, actions]) => [
         moduleId,
-        Array.from(new Set(actions)).filter((action) => action.trim().length > 0),
-      ])
+        Array.from(new Set(actions ?? [])).filter((action) => action.trim().length > 0),
+      ] as const)
       .filter(([, actions]) => actions.length > 0),
   ) as PermissionMatrix;
 }
@@ -234,7 +243,7 @@ function getRouteValue(route: unknown, key: string) {
   return typeof value === "string" ? value : "";
 }
 
-function getRoutesForModule(module: PermissionModule) {
+function getRoutesForModule(permissionModule: PermissionModule) {
   return SYSTEM_ROUTES.filter((route) => {
     const record = toRecord(route);
     const requiredPermission = getRoutePermission(route);
@@ -256,13 +265,17 @@ function getProfileDetails(role: SystemRole) {
 }
 
 function getModuleState(
-  module: PermissionModule,
+  permissionModule: PermissionModule,
   systemDefaults: PermissionMatrix,
   effectivePermissions: PermissionMatrix,
 ) {
   const total = permissionModule.actions.length;
-  const allowed = permissionModule.actions.filter((action) => hasPermissionAccess(effectivePermissions, permissionModule.id, action)).length;
-  const baseAllowed = permissionModule.actions.filter((action) => hasPermissionAccess(systemDefaults, permissionModule.id, action)).length;
+  const allowed = permissionModule.actions.filter((action) =>
+    hasPermissionAccess(effectivePermissions, permissionModule.id, action),
+  ).length;
+  const baseAllowed = permissionModule.actions.filter((action) =>
+    hasPermissionAccess(systemDefaults, permissionModule.id, action),
+  ).length;
 
   if (allowed === 0) {
     return {
@@ -409,7 +422,7 @@ export default function AdminPermissionsPage() {
       PROFILE_ORDER.map((role) => {
         const defaults = normalizePermissionMatrix(resolveRoleDefaults(role));
         const permissions = role === selectedRole ? effectivePermissions : defaults;
-        const visibleModules = PERMISSION_MODULES.filter((module) =>
+        const visibleModules = PERMISSION_MODULES.filter((permissionModule) =>
           permissionModule.actions.some((action) => hasPermissionAccess(permissions, permissionModule.id, action)),
         ).length;
         const activeActions = countPermissionActions(permissions);
@@ -425,12 +438,12 @@ export default function AdminPermissionsPage() {
     [effectivePermissions, selectedRole],
   );
 
-  const moduleRows = useMemo(() => {
+  const moduleRows = useMemo<ModuleRow[]>(() => {
     const normalizedQuery = normalizeText(query);
 
-    return PERMISSION_MODULES.map((module) => {
+    return PERMISSION_MODULES.map((permissionModule) => {
       const routes = getRoutesForModule(permissionModule);
-      const state = getModuleState(module, systemDefaults, effectivePermissions);
+      const state = getModuleState(permissionModule, systemDefaults, effectivePermissions);
       const changedActions = permissionModule.actions.filter(
         (action) =>
           hasPermissionAccess(effectivePermissions, permissionModule.id, action) !==
@@ -449,7 +462,7 @@ export default function AdminPermissionsPage() {
       );
 
       return {
-        module,
+        permissionModule,
         routes,
         state,
         changedActions,
@@ -506,11 +519,11 @@ export default function AdminPermissionsPage() {
   const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const visibleModuleCount = PERMISSION_MODULES.filter(
-    (module) => getModuleState(module, systemDefaults, effectivePermissions).allowed > 0,
+    (permissionModule) => getModuleState(permissionModule, systemDefaults, effectivePermissions).allowed > 0,
   ).length;
 
   const hiddenModuleCount = PERMISSION_MODULES.filter(
-    (module) => getModuleState(module, systemDefaults, effectivePermissions).allowed === 0,
+    (permissionModule) => getModuleState(permissionModule, systemDefaults, effectivePermissions).allowed === 0,
   ).length;
 
   const effectivePermissionCount = countPermissionActions(effectivePermissions);
@@ -594,7 +607,7 @@ export default function AdminPermissionsPage() {
     setDraftOverride((current) => toggleOverrideAction(current, systemDefaults, moduleId, action, checked));
   }
 
-  function handleModuleToggle(module: PermissionModule, shouldAllow: boolean) {
+  function handleModuleToggle(permissionModule: PermissionModule, shouldAllow: boolean) {
     setDraftOverride((current) =>
       permissionModule.actions.reduce(
         (nextOverride, action) => toggleOverrideAction(nextOverride, systemDefaults, permissionModule.id, action, shouldAllow),
@@ -730,145 +743,14 @@ export default function AdminPermissionsPage() {
       setSaving(false);
     }
   }
+
   useEffect(() => {
     document.body.classList.add("qc-permissions-profile-route");
 
-    const hideShellPermissionsCover = () => {
-      const nodes = Array.from(document.querySelectorAll("h1,h2,h3,span,p,div"));
-      const titleNode = nodes.find((node) => {
-        const text = node.textContent?.trim();
-        if (text !== "Permissions") return false;
-        return !node.closest(".profile-permissions-page");
-      });
-
-      const cover = titleNode?.closest("section,header,div");
-      titleNode?.classList.add("qc-hidden-permissions-title");
-      cover?.classList.add("qc-hidden-permissions-shell-cover");
-    };
-
-    hideShellPermissionsCover();
-    const timer = window.setTimeout(hideShellPermissionsCover, 250);
-
     return () => {
-      window.clearTimeout(timer);
       document.body.classList.remove("qc-permissions-profile-route");
-      document.querySelectorAll(".qc-hidden-permissions-title").forEach((node) => {
-        node.classList.remove("qc-hidden-permissions-title");
-      });
-      document.querySelectorAll(".qc-hidden-permissions-shell-cover").forEach((node) => {
-        node.classList.remove("qc-hidden-permissions-shell-cover");
-      });
     };
   }, []);
-  useEffect(() => {
-    const markerClass = "qc-permissions-remove-cover-actions";
-
-    const removeCoverActions = () => {
-      const roots = Array.from(
-        document.querySelectorAll(".profile-permissions-page, .qc-profile-permissions-page")
-      );
-
-      for (const root of roots) {
-        const actions = Array.from(root.querySelectorAll("button, a"));
-
-        for (const action of actions) {
-          const text = (action.textContent || "").trim().toLowerCase();
-          const title = (action.getAttribute("title") || "").trim().toLowerCase();
-          const aria = (action.getAttribute("aria-label") || "").trim().toLowerCase();
-
-          const label = [text, title, aria].join(" ");
-
-          const shouldHide =
-            label.includes("permissões por usuário") ||
-            label.includes("permissoes por usuario") ||
-            label.includes("atualizar") ||
-            label.includes("recarregar") ||
-            label.includes("refresh");
-
-          if (shouldHide) {
-            action.classList.add(markerClass);
-          }
-        }
-      }
-    };
-
-    removeCoverActions();
-
-    const observer = new MutationObserver(removeCoverActions);
-    observer.observe(document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      attributes: true,
-    });
-
-    return () => {
-      observer.disconnect();
-      document
-        .querySelectorAll("." + markerClass)
-        .forEach((node) => node.classList.remove(markerClass));
-    };
-  }, []);
-  useEffect(() => {
-    const markerClass = "qc-permissions-history-icon-modal";
-
-    const syncHistoryButton = () => {
-      const roots = Array.from(
-        document.querySelectorAll(".profile-permissions-page, .qc-profile-permissions-page")
-      );
-
-      for (const root of roots) {
-        const actions = Array.from(root.querySelectorAll("button, a"));
-
-        const historyActions = actions.filter((action) => {
-          const label = (action.textContent || "").trim().toLowerCase();
-          const title = (action.getAttribute("title") || "").trim().toLowerCase();
-          const aria = (action.getAttribute("aria-label") || "").trim().toLowerCase();
-
-          return [label, title, aria].join(" ").includes("histórico");
-        });
-
-        const mainHistory = historyActions.find((action) =>
-          action.closest(".permissions-profile-hero-unified, .permissions-profile-panel")
-        ) ?? historyActions[0];
-
-        for (const action of historyActions) {
-          action.classList.remove("qc-permissions-history-icon-only");
-          action.classList.remove("qc-permissions-history-extra-hidden");
-
-          if (action === mainHistory) {
-            action.classList.add("qc-permissions-history-icon-only");
-            action.setAttribute("aria-label", "Histórico");
-            action.setAttribute("title", "Histórico");
-          } else {
-            action.classList.add("qc-permissions-history-extra-hidden");
-          }
-        }
-      }
-    };
-
-    syncHistoryButton();
-
-    const observer = new MutationObserver(syncHistoryButton);
-    observer.observe(document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      attributes: true,
-    });
-
-    return () => {
-      observer.disconnect();
-
-      document
-        .querySelectorAll(".qc-permissions-history-icon-only, .qc-permissions-history-extra-hidden")
-        .forEach((node) => {
-          node.classList.remove("qc-permissions-history-icon-only");
-          node.classList.remove("qc-permissions-history-extra-hidden");
-        });
-    };
-  }, []);
-
 
   if (loading) return <AccessDeniedState state="loading" />;
 
@@ -883,12 +765,12 @@ export default function AdminPermissionsPage() {
     );
   }
 
-  const sortMark = sortDirection === "asc" ? "?" : "?";
+  const sortMark = sortDirection === "asc" ? "↑" : "↓";
 
   return (
-    <main data-history-open={historyPanelOpen ? "true" : "false"} className="profile-permissions-page qc-profile-permissions-page qc-profile-permissions-page profile-permissions-page min-h-screen bg-[#f8fafc] px-4 py-0 text-[#0f172a] lg:px-6">
+    <main data-history-open={historyPanelOpen ? "true" : "false"} className="profile-permissions-page qc-profile-permissions-page min-h-screen bg-[#f8fafc] px-4 py-0 text-[#0f172a] lg:px-6">
       <div className="flex w-full max-w-none flex-col gap-4">
-        <section className="permissions-profile-panel permissions-profile-hero-unified permissions-profile-hero-unified permissions-profile-cover-content rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="permissions-profile-panel permissions-profile-hero-unified permissions-profile-cover-content rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
               <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#011848]">
@@ -907,15 +789,15 @@ export default function AdminPermissionsPage() {
 
             <div className="flex flex-wrap gap-2">
               <button
-                  type="button"
-                  onClick={() => setHistoryPanelOpen((current) => !current)}
-                  className="permissions-hero-history-toggle inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
-                >
-                  {historyPanelOpen ? "Fechar histórico" : "Histórico"}
-                </button>
+                type="button"
+                onClick={() => setHistoryPanelOpen((current) => !current)}
+                className="permissions-hero-history-toggle inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
+              >
+                {historyPanelOpen ? "Fechar histórico" : "Histórico"}
+              </button>
 
-                <Link
-                  href="/admin/users/permissions"
+              <Link
+                href="/admin/users/permissions"
                 className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
               >
                 <FiUsers className="h-3.5 w-3.5" />
@@ -926,7 +808,8 @@ export default function AdminPermissionsPage() {
                 type="button"
                 onClick={handleReset}
                 disabled={!canReset || saving || loadingProfile}
-                title="Restaurar padrão" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-700 transition hover:border-[#ef0001] hover:text-[#ef0001] disabled:cursor-not-allowed disabled:opacity-50"
+                title="Restaurar padrão"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-700 transition hover:border-[#ef0001] hover:text-[#ef0001] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FiRotateCcw className="h-3.5 w-3.5" />
                 <span className="sr-only">Restaurar padrão</span>
@@ -960,7 +843,7 @@ export default function AdminPermissionsPage() {
         </section>
 
         {historyPanelOpen ? (
-          <section className="profile-permissions-history permissions-history-panel permissions-history-panel rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="profile-permissions-history permissions-history-panel rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-500">
               <FiClock className="h-4 w-4" />
               Histórico do perfil
@@ -1137,13 +1020,13 @@ export default function AdminPermissionsPage() {
 
                 <tbody className="divide-y divide-slate-100">
                   {pageRows.map((row) => {
-                    const { module, state, routes, changedActions } = row;
+                    const { permissionModule, state, routes, changedActions } = row;
                     const StateIcon = state.icon;
                     const expanded = expandedModuleId === permissionModule.id;
 
                     return (
-                      <Fragment key={row.permissionModule.id}>
-                        <tr key={permissionModule.id} className="bg-white align-top hover:bg-slate-50">
+                      <Fragment key={permissionModule.id}>
+                        <tr className="bg-white align-top hover:bg-slate-50">
                           <td className="px-4 py-3">
                             <button
                               type="button"
@@ -1202,7 +1085,7 @@ export default function AdminPermissionsPage() {
                             <div className="flex justify-end gap-2">
                               <button
                                 type="button"
-                                onClick={() => handleModuleToggle(module, true)}
+                                onClick={() => handleModuleToggle(permissionModule, true)}
                                 disabled={!canEdit || loadingProfile || saving}
                                 className="h-8 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-black text-emerald-800 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
                               >
@@ -1211,7 +1094,7 @@ export default function AdminPermissionsPage() {
 
                               <button
                                 type="button"
-                                onClick={() => handleModuleToggle(module, false)}
+                                onClick={() => handleModuleToggle(permissionModule, false)}
                                 disabled={!canEdit || loadingProfile || saving}
                                 className="h-8 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-black text-rose-800 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
                               >
@@ -1222,7 +1105,7 @@ export default function AdminPermissionsPage() {
                         </tr>
 
                         {expanded ? (
-                          <tr key={`${permissionModule.id}-details`} className="bg-slate-50">
+                          <tr className="bg-slate-50">
                             <td colSpan={7} className="px-4 py-4">
                               <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                                 <section className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -1385,23 +1268,8 @@ export default function AdminPermissionsPage() {
               </div>
             </div>
           </section>
-
-          
         </section>
       </div>
     </main>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

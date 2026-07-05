@@ -1,4 +1,4 @@
-﻿import { normalizeLegacyRole } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
 export type PermissionMatrix = Record<string, string[]>;
@@ -8,8 +8,18 @@ export type PermissionOverride = {
   updatedAt?: string;
 };
 
+const OPERATION_PROFILE_ACTIONS = ["view", "dashboard", "metrics", "search"];
+
 function unique(values: string[]) {
   return Array.from(new Set(values));
+}
+
+function expandOperationDefaults(role: string | null, matrix: PermissionMatrix) {
+  if (role !== SYSTEM_ROLES.LEADER_TC && role !== SYSTEM_ROLES.TECHNICAL_SUPPORT) return matrix;
+  return {
+    ...matrix,
+    operations: unique([...(matrix.operations ?? []), ...OPERATION_PROFILE_ACTIONS]),
+  };
 }
 
 export function normalizePermissionMatrix(input: unknown): PermissionMatrix {
@@ -55,7 +65,7 @@ export function resolveEffectivePermissionMatrix(input: EffectivePermissionMatri
   const role = resolvePermissionRole(input);
   if (!role) return normalized;
 
-  return normalizePermissionMatrix(resolveRoleDefaults(role));
+  return expandOperationDefaults(role, normalizePermissionMatrix(resolveRoleDefaults(role)));
 }
 
 export function hasPermissionAccess(
@@ -82,10 +92,11 @@ export function applyPermissionOverride(
   const effective: PermissionMatrix = {};
 
   for (const moduleId of modules) {
-    const next = new Set<string>(baseDefaults[moduleId] ?? []);
-    for (const action of allow[moduleId] ?? []) next.add(action);
-    for (const action of deny[moduleId] ?? []) next.delete(action);
-    effective[moduleId] = Array.from(next);
+    const deniedActions = new Set(deny[moduleId] ?? []);
+    const next = unique([...(baseDefaults[moduleId] ?? []), ...(allow[moduleId] ?? [])]).filter(
+      (action) => !deniedActions.has(action),
+    );
+    effective[moduleId] = next;
   }
 
   return effective;
@@ -129,4 +140,3 @@ export function toVisibilityMap(permissions: PermissionMatrix | null | undefined
   }
   return visibility;
 }
-

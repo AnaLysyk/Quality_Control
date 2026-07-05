@@ -1,1 +1,5 @@
-export { default } from "../dashboard/page";
+import VisaoGeralPageClient from "./VisaoGeralCompacta";
+
+export default function VisaoGeralPage() {
+  return <VisaoGeralPageClient />;
+}

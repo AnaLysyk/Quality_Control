@@ -4,66 +4,76 @@
 
 .iconButton {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
-  width: 38px;
+  gap: 4px;
+  min-width: 42px;
   height: 38px;
-  padding: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(1, 24, 72, 0.15);
-  background: linear-gradient(135deg, rgba(1, 24, 72, 0.05) 0%, rgba(1, 24, 72, 0.02) 100%);
-  color: var(--tc-text-primary, #1a202c);
-  font-size: 0.8rem;
-  font-weight: 700;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(1, 24, 72, 0.18);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(238, 244, 255, 0.9) 100%);
+  color: #011848;
+  font-size: 0.72rem;
+  font-weight: 900;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.22s ease;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
-/* Dark mode */
-:global(.dark) .iconButton {
-  border-color: rgba(239, 0, 1, 0.25);
-  background: linear-gradient(135deg, rgba(239, 0, 1, 0.1) 0%, rgba(239, 0, 1, 0.03) 100%);
-  color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(239, 0, 1, 0.1);
+:global(.dark) .iconButton,
+:global([data-theme="dark"]) .iconButton {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(1, 24, 72, 0.8) 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3), 0 0 18px rgba(239, 0, 1, 0.1);
 }
 
 .iconButton:hover {
   border-color: var(--tc-accent, #ef0001);
-  background: linear-gradient(135deg, rgba(239, 0, 1, 0.12) 0%, rgba(239, 0, 1, 0.05) 100%);
-  transform: scale(1.08);
-  box-shadow: 0 4px 16px rgba(239, 0, 1, 0.2);
-}
-
-:global(.dark) .iconButton:hover {
-  border-color: var(--tc-accent, #ef0001);
-  background: linear-gradient(135deg, rgba(239, 0, 1, 0.2) 0%, rgba(239, 0, 1, 0.08) 100%);
-  box-shadow: 0 4px 20px rgba(239, 0, 1, 0.35), 0 0 30px rgba(239, 0, 1, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(239, 0, 1, 0.16);
 }
 
 .iconButton:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
-.flagIcon {
-  font-size: 1.25rem;
+.countryBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(1, 24, 72, 0.14);
+  background: rgba(255, 255, 255, 0.75);
+  color: #011848;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
   line-height: 1;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
-  transition: transform 0.3s ease;
 }
 
-.iconButton:hover .flagIcon {
-  transform: scale(1.1);
+:global(.dark) .countryBadge,
+:global([data-theme="dark"]) .countryBadge {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
-/* Hide the lang code in icon mode - only flag shows */
 .langCode {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -72,19 +82,21 @@
 
 .textButton {
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid rgba(1, 24, 72, 0.15);
-  background: transparent;
-  color: var(--tc-text-primary, #1a202c);
+  background: rgba(255, 255, 255, 0.82);
+  color: #011848;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 900;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.22s ease;
 }
 
-:global(.dark) .textButton {
+:global(.dark) .textButton,
+:global([data-theme="dark"]) .textButton {
   border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(15, 23, 42, 0.82);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .textButton:hover {
@@ -98,53 +110,67 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .selector {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 4px 6px;
-  border-radius: 10px;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 14px;
   background: rgba(1, 24, 72, 0.05);
-  border: 1px solid rgba(1, 24, 72, 0.15);
+  border: 1px solid rgba(1, 24, 72, 0.14);
+  max-width: 100%;
 }
 
-:global(.dark) .selector {
+:global(.dark) .selector,
+:global([data-theme="dark"]) .selector {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 .currentLang {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: none;
+  justify-content: center;
+  gap: 6px;
+  min-width: 76px;
+  padding: 7px 10px;
+  border-radius: 11px;
+  border: 1px solid transparent;
   background: transparent;
-  color: rgba(1, 24, 72, 0.6);
+  color: rgba(1, 24, 72, 0.64);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 900;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.22s ease;
 }
 
-:global(.dark) .currentLang {
-  color: rgba(255, 255, 255, 0.6);
+:global(.dark) .currentLang,
+:global([data-theme="dark"]) .currentLang {
+  color: rgba(255, 255, 255, 0.66);
 }
 
 .currentLang:hover {
-  color: rgba(1, 24, 72, 0.9);
+  color: #011848;
   background: rgba(1, 24, 72, 0.08);
 }
 
-:global(.dark) .currentLang:hover {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.08);
+:global(.dark) .currentLang:hover,
+:global([data-theme="dark"]) .currentLang:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .currentLang.active {
+  border-color: rgba(239, 0, 1, 0.22);
   color: var(--tc-accent, #ef0001);
-  background: rgba(239, 0, 1, 0.15);
-  font-weight: 700;
+  background: rgba(239, 0, 1, 0.12);
+  box-shadow: 0 8px 18px rgba(239, 0, 1, 0.12);
+}
+
+:global(.dark) .currentLang.active,
+:global([data-theme="dark"]) .currentLang.active {
+  border-color: rgba(255, 138, 156, 0.34);
+  color: #ffd4db;
+  background: rgba(239, 0, 1, 0.18);
 }
 
 .divider {
@@ -152,13 +178,7 @@
   font-size: 0.7rem;
 }
 
-:global(.dark) .divider {
+:global(.dark) .divider,
+:global([data-theme="dark"]) .divider {
   color: rgba(255, 255, 255, 0.25);
-}
-
-:global(.light-theme) .iconButton:hover,
-:global([data-theme="light"]) .iconButton:hover {
-  background: rgba(0, 122, 255, 0.1);
-  border-color: rgba(0, 122, 255, 0.3);
-  color: #007aff;
 }

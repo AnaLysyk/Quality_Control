@@ -45,12 +45,12 @@ function IconForNode({ node }: { node: BrainNode }) {
 }
 
 function theme(node: BrainNode, selected: boolean, orphan: boolean) {
-  if (selected) return "border-cyan-100 text-cyan-50 shadow-[0_0_90px_rgba(103,232,249,.92),0_0_180px_rgba(103,232,249,.22),inset_0_0_28px_rgba(255,255,255,.18)]";
-  if (node.type === "integration") return "border-violet-300/80 text-violet-50 shadow-[0_0_48px_rgba(167,139,250,.42),inset_0_0_34px_rgba(167,139,250,.22)]";
-  if (node.type === "screen") return "border-sky-300/80 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
-  if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300/80 text-rose-50 shadow-[0_0_48px_rgba(251,113,133,.46),inset_0_0_34px_rgba(251,113,133,.24)]";
-  if (["pending", "warning"].includes(node.status)) return "border-yellow-300/80 text-yellow-50 shadow-[0_0_48px_rgba(250,204,21,.42),inset_0_0_34px_rgba(250,204,21,.24)]";
-  return "border-emerald-300/75 text-emerald-50 shadow-[0_0_48px_rgba(52,211,153,.38),inset_0_0_34px_rgba(52,211,153,.24)]";
+  if (selected) return "border-cyan-100 bg-cyan-200 text-[#03111f] shadow-[0_0_90px_rgba(103,232,249,.92),0_0_180px_rgba(103,232,249,.22),inset_0_0_28px_rgba(255,255,255,.45)]";
+  if (node.type === "integration") return "border-violet-300/80 bg-violet-950/78 text-violet-50 shadow-[0_0_48px_rgba(167,139,250,.42),inset_0_0_34px_rgba(167,139,250,.22)]";
+  if (node.type === "screen") return "border-sky-300/80 bg-sky-950/78 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
+  if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300/80 bg-rose-950/82 text-rose-50 shadow-[0_0_48px_rgba(251,113,133,.46),inset_0_0_34px_rgba(251,113,133,.24)]";
+  if (["pending", "warning"].includes(node.status)) return "border-yellow-300/80 bg-yellow-950/82 text-yellow-50 shadow-[0_0_48px_rgba(250,204,21,.42),inset_0_0_34px_rgba(250,204,21,.24)]";
+  return "border-emerald-300/75 bg-emerald-950/82 text-emerald-50 shadow-[0_0_48px_rgba(52,211,153,.38),inset_0_0_34px_rgba(52,211,153,.24)]";
 }
 
 function nodeKicker(node: BrainNode) {
@@ -73,30 +73,6 @@ function companyColor(node: BrainNode) {
   return typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color) ? color : null;
 }
 
-function nodeDarkBackground(node: BrainNode, isSelected: boolean) {
-  if (isSelected) {
-    return "radial-gradient(circle at 30% 18%, rgba(8,145,178,0.92), rgba(2,6,23,0.98) 68%), linear-gradient(145deg, #020617, #0f172a)";
-  }
-
-  if (["missing", "error", "orphan"].includes(node.status)) {
-    return "radial-gradient(circle at 28% 18%, rgba(127,29,29,0.94), rgba(2,6,23,0.98) 68%), #020617";
-  }
-
-  if (["pending", "warning"].includes(node.status)) {
-    return "radial-gradient(circle at 28% 18%, rgba(113,63,18,0.94), rgba(2,6,23,0.98) 68%), #020617";
-  }
-
-  if (node.type === "integration") {
-    return "radial-gradient(circle at 28% 18%, rgba(76,29,149,0.92), rgba(2,6,23,0.98) 68%), #020617";
-  }
-
-  if (node.type === "screen") {
-    return "radial-gradient(circle at 28% 18%, rgba(12,74,110,0.92), rgba(2,6,23,0.98) 68%), #020617";
-  }
-
-  return "radial-gradient(circle at 28% 18%, rgba(6,78,59,0.92), rgba(2,6,23,0.98) 68%), #020617";
-}
-
 function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
   const nodeData = data as BrainNeuronNodeData;
   const node = nodeData.brainNode;
@@ -113,23 +89,16 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
 
   const size = isCore ? "h-[140px] w-[140px]" : isBig ? "h-[118px] w-[118px]" : isSmall ? "h-[82px] w-[82px]" : "h-[96px] w-[96px]";
 
-  const visualStyle = {
-    background: nodeDarkBackground(node, isSelected),
-    color: "#f8fafc",
-    textShadow: "0 1px 12px rgba(0,0,0,0.72)",
-    ...(color && !isSelected ? {
-      borderColor: color,
-      boxShadow: `0 0 52px ${color}66, inset 0 0 34px ${color}2e`,
-    } : {}),
-  };
-
   return (
     <div
       data-brain-node-id={node.id}
       data-brain-node-status={node.status}
       data-brain-node-type={node.type}
       title={`${node.label} · ${labelize(node.type)} · ${statusLabel(node.status)}`}
-      style={visualStyle}
+      style={color && !isSelected ? {
+        borderColor: color,
+        boxShadow: `0 0 52px ${color}66, inset 0 0 34px ${color}2e`,
+      } : undefined}
       className={`brain-orb-node relative flex ${size} cursor-grab select-none flex-col items-center justify-center rounded-full border text-center backdrop-blur-md transition duration-300 active:cursor-grabbing ${theme(node, isSelected, nodeData.orphan)} ${dimmed ? "scale-75 opacity-35 blur-[1px]" : "opacity-100"} ${isSelected ? "z-30 scale-110" : "z-10"}`}
     >
       <Handle type="target" position={Position.Left} className="!h-2 !w-2 !border-cyan-100 !bg-cyan-300" />
@@ -143,24 +112,24 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
         </span>
       ) : null}
 
-      <span className="relative z-10 mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/42 text-white">
+      <span className="relative z-10 mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/42">
         <IconForNode node={node} />
       </span>
 
-      <span className="relative z-10 line-clamp-2 max-w-[78%] text-[12px] font-black leading-tight text-white">
+      <span className="relative z-10 line-clamp-2 max-w-[78%] text-[12px] font-black leading-tight">
         {node.label}
       </span>
 
-      <span className="relative z-10 mt-1 max-w-[78%] truncate text-[8px] font-black uppercase tracking-[0.15em] text-cyan-100/70">
+      <span className="relative z-10 mt-1 max-w-[78%] truncate text-[8px] font-black uppercase tracking-[0.15em] opacity-60">
         {isCore ? labelize(node.type) : nodeKicker(node)}
       </span>
 
-      <span className="relative z-10 mt-1 rounded-full bg-black/42 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] text-white/90">
+      <span className="relative z-10 mt-1 rounded-full bg-black/42 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] opacity-80">
         {statusLabel(node.status)}
       </span>
 
       {isBig ? (
-        <span className="relative z-10 mt-1 max-w-[80%] truncate text-[9px] font-black uppercase text-white/80">
+        <span className="relative z-10 mt-1 max-w-[80%] truncate text-[9px] font-black uppercase opacity-75">
           {count} nós{pendingCount ? ` · ${pendingCount} pend.` : ""}
         </span>
       ) : null}

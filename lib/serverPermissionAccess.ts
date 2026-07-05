@@ -39,15 +39,6 @@ type PermissionAccessGlobalState = typeof globalThis & {
 };
 
 const PERMISSION_ACCESS_CACHE_TTL_MS = 30_000;
-const OPERATION_PROFILE_ACTIONS = ["view", "dashboard", "metrics", "search"];
-
-function expandOperations(roleKey: RoleKey, matrix: PermissionMatrix) {
-  if (roleKey !== SYSTEM_ROLES.LEADER_TC && roleKey !== SYSTEM_ROLES.TECHNICAL_SUPPORT) return matrix;
-  return {
-    ...matrix,
-    operations: Array.from(new Set([...(matrix.operations ?? []), ...OPERATION_PROFILE_ACTIONS])),
-  };
-}
 
 function getPermissionAccessCache() {
   const globalState = globalThis as PermissionAccessGlobalState;
@@ -112,8 +103,7 @@ export async function resolveRoleKeyForUser(userId: string): Promise<RoleKey> {
 async function resolvePermissionAccessForUserUncached(userId: string): Promise<ResolvedPermissionAccess> {
   const { roleKey } = await resolvePermissionSourceForUser(userId);
   const override = await getUserPermissionOverride(userId);
-  const rawRoleDefaults = await resolveProfilePermissionDefaults(roleKey);
-  const roleDefaults = expandOperations(roleKey, rawRoleDefaults);
+  const roleDefaults = await resolveProfilePermissionDefaults(roleKey);
   const permissions = resolvePermissionsFromDefaults(roleDefaults, override ?? undefined);
 
   return {

@@ -2,8 +2,6 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { getPrismaClientOptions, resetPrismaAdapter } from "@/lib/prismaClientOptions";
 
-// Singleton pattern: reutiliza a instância entre hot-reloads no dev
-// e evita "too many connections" em produção.
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   brainPrisma?: PrismaClient;
@@ -25,11 +23,7 @@ const BRAIN_DELEGATE_NAMES = new Set([
 ]);
 
 function hasDatabaseUrl() {
-  return Boolean(
-    process.env.DATABASE_URL ??
-      process.env.POSTGRES_PRISMA_URL ??
-      process.env.POSTGRES_URL,
-  );
+  return Boolean(process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL);
 }
 
 function getPrimaryDatabaseUrl() {
@@ -37,10 +31,7 @@ function getPrimaryDatabaseUrl() {
 }
 
 function getConfiguredBrainDatabaseUrl() {
-  return process.env.BRAIN_DATABASE_URL ??
-    process.env.BRAIN_RAG_DATABASE_URL ??
-    process.env.PRISMA_DATABASE_URL ??
-    null;
+  return process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL ?? process.env.PRISMA_DATABASE_URL ?? null;
 }
 
 function normalizeDatabaseUrl(value: string) {
@@ -72,22 +63,16 @@ function getBrainDatabaseUrl() {
       return primaryDatabaseUrl;
     }
 
-    throw new Error(
-      "BRAIN_DATABASE_URL, BRAIN_RAG_DATABASE_URL or PRISMA_DATABASE_URL is required for Brain RAG tables.",
-    );
+    throw new Error("BRAIN_DATABASE_URL, BRAIN_RAG_DATABASE_URL or PRISMA_DATABASE_URL is required for Brain RAG tables.");
   }
-
-  const allowPrimaryDatabase = process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
 
   if (
     primaryDatabaseUrl &&
     normalizeDatabaseUrl(primaryDatabaseUrl) === normalizeDatabaseUrl(brainDatabaseUrl) &&
-    !allowPrimaryDatabase &&
+    process.env.BRAIN_ALLOW_PRIMARY_DATABASE !== "true" &&
     process.env.NODE_ENV === "production"
   ) {
-    throw new Error(
-      "Brain RAG tables must use a separate database. Set BRAIN_DATABASE_URL or PRISMA_DATABASE_URL to a database different from DATABASE_URL.",
-    );
+    throw new Error("Brain RAG tables must use a separate database. Set BRAIN_DATABASE_URL or PRISMA_DATABASE_URL to a database different from DATABASE_URL.");
   }
 
   return brainDatabaseUrl;
@@ -112,17 +97,12 @@ function isPrismaOptionalMode() {
 }
 
 function createUnavailablePrismaClient(): PrismaClient {
-  return new Proxy(
-    {},
-    {
-      get(_target, prop) {
-        if (prop === "then") return undefined;
-        throw new Error(
-          "Prisma client is unavailable (no DATABASE_URL) while E2E_USE_JSON=1 is active.",
-        );
-      },
+  return new Proxy({}, {
+    get(_target, prop) {
+      if (prop === "then") return undefined;
+      throw new Error("Prisma client is unavailable (no DATABASE_URL) while E2E_USE_JSON=1 is active.");
     },
-  ) as unknown as PrismaClient;
+  }) as unknown as PrismaClient;
 }
 
 function createPrismaClient() {
@@ -147,9 +127,7 @@ let currentPrisma: PrismaClient =
 function createPrismaClientProxy(): PrismaClient {
   return new Proxy({} as PrismaClient, {
     get(_target, prop) {
-      const client = typeof prop === "string" && BRAIN_DELEGATE_NAMES.has(prop)
-        ? getBrainPrismaClient()
-        : currentPrisma;
+      const client = typeof prop === "string" && BRAIN_DELEGATE_NAMES.has(prop) ? getBrainPrismaClient() : currentPrisma;
       const value = Reflect.get(client as object, prop, client);
       return typeof value === "function" ? value.bind(client) : value;
     },
@@ -165,10 +143,6 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = currentPrisma;
 }
 
-/**
- * Reconnect the Prisma client when the underlying connection is lost.
- * Call this in catch blocks that detect "Connection terminated unexpectedly".
- */
 export function reconnectPrisma() {
   console.info("[prisma] Reconnecting after connection loss...");
   currentPrisma = recreatePrismaClient();

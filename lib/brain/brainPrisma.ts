@@ -25,44 +25,25 @@ function getPrimaryDatabaseUrl() {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL ?? null;
 }
 
-function getConfiguredBrainDatabaseUrl() {
-  return process.env.BRAIN_DATABASE_URL ??
-    process.env.BRAIN_RAG_DATABASE_URL ??
-    process.env.PRISMA_DATABASE_URL ??
-    null;
-}
-
-function canUsePrimaryDatabaseAsBrainFallback() {
-  return process.env.NODE_ENV !== "production" || process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
-}
-
 function getBrainDatabaseUrl() {
-  const brainDatabaseUrl = getConfiguredBrainDatabaseUrl();
-  const primaryDatabaseUrl = getPrimaryDatabaseUrl();
+  const brainDatabaseUrl = process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL;
 
   if (!brainDatabaseUrl) {
-    if (primaryDatabaseUrl && canUsePrimaryDatabaseAsBrainFallback()) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[brain] BRAIN_DATABASE_URL ausente. Usando DATABASE_URL como fallback local temporario do RAG.");
-      }
-      return primaryDatabaseUrl;
-    }
-
     throw new Error(
-      "BRAIN_DATABASE_URL, BRAIN_RAG_DATABASE_URL or PRISMA_DATABASE_URL is required for the Brain RAG database.",
+      "BRAIN_DATABASE_URL or BRAIN_RAG_DATABASE_URL is required for the Brain RAG database.",
     );
   }
 
+  const primaryDatabaseUrl = getPrimaryDatabaseUrl();
   const allowSameDatabase = process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
 
   if (
     primaryDatabaseUrl &&
     normalizeDatabaseUrl(primaryDatabaseUrl) === normalizeDatabaseUrl(brainDatabaseUrl) &&
-    !allowSameDatabase &&
-    process.env.NODE_ENV === "production"
+    !allowSameDatabase
   ) {
     throw new Error(
-      "Brain RAG database must be separated from the production/system database. Set BRAIN_DATABASE_URL or PRISMA_DATABASE_URL to a database different from DATABASE_URL.",
+      "Brain RAG database must be separated from the production/system database. Set BRAIN_ALLOW_PRIMARY_DATABASE=true only for local development.",
     );
   }
 

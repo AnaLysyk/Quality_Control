@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { normalizeLegacyRole, type SystemRole } from "@/lib/auth/roles";
 import { getAccessContext } from "@/lib/auth/session";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
 import {
@@ -13,18 +13,9 @@ import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { notifyProfilePermissionsChanged } from "@/lib/notificationService";
 import { invalidateBrainCache } from "@/lib/brain/cache";
+import { invalidatePermissionAccessCache } from "@/lib/serverPermissionAccess";
 
 export const revalidate = 0;
-
-const OPERATION_PROFILE_ACTIONS = ["view", "dashboard", "metrics", "search"];
-
-function expandSystemDefaults(role: SystemRole, matrix: PermissionMatrix) {
-  if (role !== SYSTEM_ROLES.LEADER_TC && role !== SYSTEM_ROLES.TECHNICAL_SUPPORT) return matrix;
-  return {
-    ...matrix,
-    operations: Array.from(new Set([...(matrix.operations ?? []), ...OPERATION_PROFILE_ACTIONS])),
-  };
-}
 
 function countPermissionActions(input: PermissionMatrix | null | undefined) {
   return Object.values(input ?? {}).reduce(
@@ -74,7 +65,7 @@ async function requirePermissionManager(req: NextRequest) {
 }
 
 function resolveSystemDefaults(role: SystemRole) {
-  return expandSystemDefaults(role, normalizePermissionMatrix(resolveRoleDefaults(role)));
+  return normalizePermissionMatrix(resolveRoleDefaults(role));
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ role: string }> }) {
@@ -133,6 +124,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
     const permissions = applyPermissionOverride(resolveSystemDefaults(role), saved);
     const summary = describeChangedSummary(allow, deny);
 
+    invalidatePermissionAccessCache();
+
     await addAuditLogSafe({
       actorUserId: guard.admin?.userId ?? null,
       actorEmail: guard.admin?.email ?? null,
@@ -178,6 +171,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     await deleteProfilePermissionOverride(role);
     const permissions = resolveSystemDefaults(role);
     const updatedAt = new Date().toISOString();
+
+    invalidatePermissionAccessCache();
 
     await addAuditLogSafe({
       actorUserId: guard.admin?.userId ?? null,

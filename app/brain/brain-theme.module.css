@@ -115,8 +115,120 @@
   color: #e0f2fe !important;
 }
 
-.brainTheme :global(.brain-filter-hud),
-.brainTheme :global(.qc-brain-filter-summary-chips),
-.brainTheme :global(.qc-brain-filter-chip) {
+.brainTheme :global(.brain-filter-hud) {
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+.brainTheme :global(.qc-brain-filter-summary-chips) {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
   color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-summary-chips > span),
+.brainTheme :global(.qc-brain-filter-chip) {
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  background: rgba(15, 23, 42, 0.82) !important;
+  color: #f8fbff !important;
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
+  backdrop-filter: blur(14px);
+}
+
+.brainTheme :global(.qc-brain-filter-chip[data-active="true"]),
+.brainTheme :global(.qc-brain-filter-main-button),
+.brainTheme :global(.qc-brain-filter-icon-button) {
+  border-color: rgba(103, 232, 249, 0.45) !important;
+  background: rgba(1, 24, 72, 0.86) !important;
+  color: #ffffff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-panel) {
+  display: block !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 1.4rem;
+  background: rgba(2, 6, 23, 0.72) !important;
+  color: #f8fbff !important;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.brainTheme :global(.qc-brain-filter-compact-bar),
+.brainTheme :global(.qc-brain-filter-popover-header),
+.brainTheme :global(.qc-brain-filter-actions) {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brainTheme :global(.qc-brain-filter-compact-bar) {
+  padding: 0.75rem;
+}
+
+.brainTheme :global(.qc-brain-filter-brand),
+.brainTheme :global(.qc-brain-filter-compact-stats),
+.brainTheme :global(.qc-brain-filter-context) {
+  color: rgba(226, 232, 240, 0.78) !important;
+}
+
+.brainTheme :global(.qc-brain-filter-compact-search),
+.brainTheme :global(.qc-brain-filter-field) {
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.78) !important;
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-compact-search input),
+.brainTheme :global(.qc-brain-filter-field select) {
+  background: transparent !important;
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-popover) {
+  margin: 0.75rem;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  background: rgba(2, 6, 23, 0.92) !important;
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-grid) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.brainTheme :global(.qc-brain-filter-field) {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.brainTheme :global(.qc-brain-filter-field span),
+.brainTheme :global(.qc-brain-filter-eyebrow) {
+  color: rgba(226, 232, 240, 0.7) !important;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.brainTheme :global(.qc-brain-filter-popover-header) {
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.brainTheme :global(.qc-brain-filter-popover-header h2),
+.brainTheme :global(.qc-brain-filter-popover-header p) {
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-actions) {
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
 }

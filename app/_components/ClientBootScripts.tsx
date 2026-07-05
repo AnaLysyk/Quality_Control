@@ -49,8 +49,25 @@ function ensurePermissionsLightSurface() {
     .profile-permissions-page th {
       color-scheme: light !important;
     }
+
+    #permissions-search-suggestions {
+      display: none !important;
+    }
   `;
   document.head.appendChild(style);
+}
+
+function removePermissionsNativeSearchSuggestions() {
+  if (typeof document === "undefined") return;
+
+  const searchInput = document.querySelector<HTMLInputElement>(
+    'input[list="permissions-search-suggestions"]',
+  );
+  searchInput?.removeAttribute("list");
+  searchInput?.setAttribute("autocomplete", "off");
+
+  const datalist = document.getElementById("permissions-search-suggestions");
+  datalist?.remove();
 }
 
 function isBrowserEvent(value: unknown): value is Event {
@@ -80,7 +97,19 @@ export function ClientBootScripts({
     runInlineScript(migrateStorageScript);
     runInlineScript(themeInitScript);
     ensurePermissionsLightSurface();
+    removePermissionsNativeSearchSuggestions();
   }, [migrateStorageScript, themeInitScript]);
+
+  useEffect(() => {
+    removePermissionsNativeSearchSuggestions();
+
+    const observer = new MutationObserver(() => {
+      removePermissionsNativeSearchSuggestions();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     function handleUnhandledRejection(event: PromiseRejectionEvent) {

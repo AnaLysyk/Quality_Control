@@ -4,8 +4,6 @@ import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { OperationsWorkspaceClient } from "../runs/OperationsWorkspaceClient";
 
-export const dynamic = "force-dynamic";
-
 export default function OperacoesPage() {
   const { loading, can } = usePermissionAccess();
 

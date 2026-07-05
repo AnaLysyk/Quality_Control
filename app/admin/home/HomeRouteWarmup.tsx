@@ -10,6 +10,11 @@ const OVERVIEW_DATA_ROUTES = [
   "/api/admin/audit-logs?limit=12&period=30",
 ];
 
+type IdleWindow = Window & {
+  requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
 export default function HomeRouteWarmup() {
   const router = useRouter();
 
@@ -17,6 +22,7 @@ export default function HomeRouteWarmup() {
     router.prefetch(OVERVIEW_ROUTE);
 
     const controller = new AbortController();
+    const idleWindow = window as IdleWindow;
 
     const warmup = () => {
       void fetch(OVERVIEW_ROUTE, {
@@ -32,17 +38,16 @@ export default function HomeRouteWarmup() {
       }
     };
 
-    const idleId =
-      "requestIdleCallback" in window
-        ? window.requestIdleCallback(warmup, { timeout: 1800 })
-        : window.setTimeout(warmup, 900);
+    const idleId = idleWindow.requestIdleCallback
+      ? idleWindow.requestIdleCallback(warmup, { timeout: 1800 })
+      : window.setTimeout(warmup, 900);
 
     return () => {
       controller.abort();
 
-      if ("cancelIdleCallback" in window && typeof idleId === "number") {
-        window.cancelIdleCallback(idleId);
-      } else if (typeof idleId === "number") {
+      if (idleWindow.cancelIdleCallback) {
+        idleWindow.cancelIdleCallback(idleId);
+      } else {
         window.clearTimeout(idleId);
       }
     };

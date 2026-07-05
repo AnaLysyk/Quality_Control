@@ -15,6 +15,7 @@ export type BrainProfileGraphOptions = {
 };
 
 const COMPANY_COLORS = ["#67e8f9", "#a78bfa", "#34d399", "#facc15", "#fb7185", "#60a5fa", "#f472b6", "#2dd4bf"];
+const QC_ROOT_ID = "platform:quality-control";
 
 function uniqueById<T extends { id: string }>(items: T[]) {
   return Array.from(new Map(items.map((item) => [item.id, item])).values());
@@ -59,13 +60,13 @@ function withCompanyColor(node: BrainNode): BrainNode {
 
 function profileMatches(node: BrainNode, profile: string | null) {
   if (!profile) return true;
-  if (node.metadata?.isProfileRoot || node.metadata?.isContextCore) return true;
+  if (node.metadata?.isProfileRoot || node.metadata?.isContextCore || node.metadata?.isQualityControlRoot) return true;
   return normalize(profileTypeForNode(node)) === normalize(profile) || !node.metadata?.accessType;
 }
 
 function companyMatches(node: BrainNode, companyId: string | null) {
   if (!companyId) return true;
-  if (node.metadata?.isProfileRoot || node.metadata?.isContextCore || node.metadata?.isCompanyHub) return true;
+  if (node.metadata?.isProfileRoot || node.metadata?.isContextCore || node.metadata?.isCompanyHub || node.metadata?.isQualityControlRoot) return true;
   if (node.companyId) return node.companyId === companyId;
   const key = companyKeyForNode(node);
   return !key || key === companyId;
@@ -73,13 +74,13 @@ function companyMatches(node: BrainNode, companyId: string | null) {
 
 function projectMatches(node: BrainNode, projectId: string | null) {
   if (!projectId) return true;
-  if (node.metadata?.isProfileRoot || node.metadata?.isContextCore || node.metadata?.isCompanyHub || node.metadata?.isModuleHub) return true;
+  if (node.metadata?.isProfileRoot || node.metadata?.isContextCore || node.metadata?.isCompanyHub || node.metadata?.isModuleHub || node.metadata?.isQualityControlRoot) return true;
   return !node.projectId || node.projectId === projectId;
 }
 
 function moduleMatches(node: BrainNode, module: string | null) {
   if (!module) return true;
-  if (node.metadata?.isProfileRoot || node.metadata?.isContextCore || node.metadata?.isCompanyHub || node.metadata?.isModuleHub) return true;
+  if (node.metadata?.isProfileRoot || node.metadata?.isContextCore || node.metadata?.isCompanyHub || node.metadata?.isModuleHub || node.metadata?.isQualityControlRoot) return true;
   return node.module === module;
 }
 
@@ -97,6 +98,20 @@ function userLabel(node: BrainNode) {
 function statusFor(nodes: BrainNode[]): BrainNodeStatus {
   if (!nodes.length) return "missing";
   return nodes.some((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)) ? "pending" : "ok";
+}
+
+function qualityControlRoot(nodes: BrainNode[]): BrainNode {
+  return {
+    id: QC_ROOT_ID,
+    type: "module",
+    module: "Quality Control",
+    label: "Quality Control",
+    description: "Nucleo principal da plataforma. Todos os perfis, empresas, modulos, usuarios, acoes e itens partem daqui.",
+    status: statusFor(nodes),
+    size: "lg",
+    information: `Quality Control conecta ${nodes.length} no(s) do Brain no contexto atual.`,
+    metadata: { isQualityControlRoot: true, count: nodes.length, pendingCount: nodes.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)).length },
+  };
 }
 
 function profileRoot(profile: string, nodes: BrainNode[]): BrainNode {
@@ -194,15 +209,22 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null;
   const profileTypes = getBrainProfileTypes(nodes);
   const profile = selectedProfileType ?? (selectedNode?.metadata?.isProfileRoot ? String(selectedNode.metadata.profileType ?? selectedNode.label) : null);
+  const selectedUserKey = selectedNode?.metadata?.isUserHub ? String(selectedNode.metadata.userKey ?? "") : null;
   const baseNodes = nodes.filter((node) => profileMatches(node, profile)).filter((node) => companyMatches(node, selectedCompanyId)).filter((node) => projectMatches(node, selectedProjectId)).filter((node) => moduleMatches(node, activeModule)).map(withCompanyColor);
-  const viewNodes: BrainNode[] = [];
+  const qcRoot = qualityControlRoot(nodes);
+  const viewNodes: BrainNode[] = [qcRoot];
   const viewEdges: BrainEdge[] = [];
   const profileRoots = profileTypes.map((item) => profileRoot(item, nodes));
 
-  if (!profile && !selectedNode && !activeModule && !hasActiveFilter) return { nodes: profileRoots, edges: [], focusNodeId: null, focusModule: "Tipos de perfil" };
+  if (!profile && !selectedNode && !activeModule && !hasActiveFilter) {
+    viewNodes.push(...profileRoots);
+    profileRoots.forEach((item) => viewEdges.push({ id: `${QC_ROOT_ID}-${item.id}`, source: QC_ROOT_ID, target: item.id, label: "possui perfil", type: "contains", status: item.status }));
+    return { nodes: uniqueById(viewNodes), edges: uniqueById(viewEdges), focusNodeId: QC_ROOT_ID, focusModule: "Quality Control" };
+  }
 
   const currentProfileNode = profileRoot(profile ?? profileTypes[0] ?? "Perfil nao informado", baseNodes.length ? baseNodes : nodes);
   viewNodes.push(currentProfileNode);
+  viewEdges.push({ id: `${QC_ROOT_ID}-${currentProfileNode.id}`, source: QC_ROOT_ID, target: currentProfileNode.id, label: "perfil", type: "contains", status: currentProfileNode.status });
 
   const companyOptions = selectedCompany ? [selectedCompany] : canSeeAllCompanies ? companies : companies.slice(0, 1);
   const companyHubs = companyOptions.map((company) => companyHub(company, baseNodes));
@@ -225,12 +247,12 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
 
   const clickedModule = selectedNode?.metadata?.isModuleHub ? String(selectedNode.metadata.module ?? selectedNode.module) : null;
   const moduleFocus = activeModule ?? clickedModule;
-  const itemCandidates = moduleFocus ? baseNodes.filter((node) => node.module === moduleFocus && !node.metadata?.isProfileRoot) : baseNodes;
-  const showItems = Boolean(moduleFocus || selectedNode || hasActiveFilter);
+  const itemCandidates = (moduleFocus ? baseNodes.filter((node) => node.module === moduleFocus && !node.metadata?.isProfileRoot) : baseNodes).filter((node) => !selectedUserKey || creatorKey(node) === selectedUserKey);
+  const showItems = Boolean(moduleFocus || selectedNode || hasActiveFilter || selectedUserKey);
   const itemLimit = hasActiveFilter ? 32 : 18;
   const selectedIds = new Set<string>(selectedNode ? [selectedNode.id] : []);
 
-  if (selectedNode && !selectedNode.metadata?.isProfileRoot && !selectedNode.metadata?.isCompanyHub && !selectedNode.metadata?.isModuleHub) {
+  if (selectedNode && !selectedNode.metadata?.isProfileRoot && !selectedNode.metadata?.isCompanyHub && !selectedNode.metadata?.isModuleHub && !selectedNode.metadata?.isUserHub) {
     for (const edge of edges) {
       if (edge.source === selectedNode.id) selectedIds.add(edge.target);
       if (edge.target === selectedNode.id) selectedIds.add(edge.source);
@@ -259,5 +281,5 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
   const retainedIds = new Set(viewNodes.map((node) => node.id));
   const retainedEdges = edges.filter((edge) => retainedIds.has(edge.source) && retainedIds.has(edge.target)).map((edge) => ({ ...edge, metadata: { ...edge.metadata, companyColor: colorForCompany(edge.companyId ?? null) } }));
 
-  return { nodes: uniqueById(viewNodes), edges: uniqueById([...viewEdges, ...retainedEdges]), focusNodeId: selectedNode?.id ?? currentProfileNode.id, focusModule: moduleFocus ?? selectedProfileType ?? "Tipos de perfil" };
+  return { nodes: uniqueById(viewNodes), edges: uniqueById([...viewEdges, ...retainedEdges]), focusNodeId: selectedNode?.id ?? currentProfileNode.id, focusModule: moduleFocus ?? selectedProfileType ?? "Quality Control" };
 }

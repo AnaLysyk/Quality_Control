@@ -61,12 +61,7 @@ function mergeWithNeuralMock(graph: BuiltBrainGraph): BuiltBrainGraph {
   const mock = buildMockBrainGraph();
   const nodes = uniqueById([...mock.nodes, ...graph.nodes]);
   const edges = uniqueById([...mock.edges, ...graph.edges]);
-  return {
-    ...graph,
-    nodes,
-    edges,
-    summary: summarize(nodes, edges, graph.requests.length ? graph : mock),
-  };
+  return { ...graph, nodes, edges, summary: summarize(nodes, edges, graph.requests.length ? graph : mock) };
 }
 
 function emptyGraph() {
@@ -75,16 +70,13 @@ function emptyGraph() {
 
 function roleValues(context: BrainContextResponse | null) {
   const user = context?.user as Record<string, unknown> | undefined;
-  return [user?.role, user?.companyRole, user?.globalRole, user?.userOrigin]
-    .filter(Boolean)
-    .map((value) => String(value).toLowerCase());
+  return [user?.role, user?.companyRole, user?.globalRole, user?.userOrigin].filter(Boolean).map((value) => String(value).toLowerCase());
 }
 
 function brainCanSeeAllCompanies(context: BrainContextResponse | null) {
   const user = context?.user as Record<string, unknown> | undefined;
   const permissions = context?.permissions as Record<string, unknown> | undefined;
   const roles = roleValues(context);
-
   return Boolean(
     permissions?.canViewAll ||
       permissions?.canViewAllCompanies ||
@@ -105,22 +97,22 @@ function defaultProjectForBrain(context: BrainContextResponse | null) {
 function mergeContextCompanies(context: BrainContextResponse | null, nodes: BrainNode[]): BrainContextCompany[] {
   const fromContext = context?.companies ?? [];
   const fromNodes = contextCompaniesFromNodes(nodes);
-  return uniqueById([...fromContext, ...fromNodes])
-    .filter((company) => Boolean(company.id && company.name))
-    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  return uniqueById([...fromContext, ...fromNodes]).filter((company) => Boolean(company.id && company.name)).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
 function mergeContextProjects(context: BrainContextResponse | null, nodes: BrainNode[]): BrainContextProject[] {
   const fromContext = context?.projects ?? [];
   const fromNodes = contextProjectsFromNodes(nodes);
-  return uniqueById([...fromContext, ...fromNodes])
-    .filter((project) => Boolean(project.id && project.name))
-    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  return uniqueById([...fromContext, ...fromNodes]).filter((project) => Boolean(project.id && project.name)).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
 function isInteractiveTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
   return Boolean(target.closest("button,input,select,textarea,a,[role='button']"));
+}
+
+function moduleOptionsFor(nodes: BrainNode[]) {
+  return Array.from(new Set(nodes.map((node) => node.module).filter(Boolean))).sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
 export function BrainNeuralDashboard() {
@@ -148,7 +140,34 @@ export function BrainNeuralDashboard() {
 
   useEffect(() => {
     document.body.classList.add("qc-brain-route", "qc-brain-active-route");
-    return () => document.body.classList.remove("qc-brain-route", "qc-brain-active-route");
+
+    const hideInstitutionalTop = () => {
+      const candidates = Array.from(document.querySelectorAll("header, [role='banner'], .qc-page-hero, .brain-page-hero, .qc-brain-topbar"));
+      for (const element of candidates) {
+        const html = element as HTMLElement;
+        const text = html.textContent?.trim() ?? "";
+        const rect = html.getBoundingClientRect();
+        const looksLikeBrainHeader = text.includes("Brain") && rect.width > 480 && rect.height >= 56 && rect.top < 220;
+        const isInsideCanvas = Boolean(html.closest(".brain-universe-canvas") || html.closest(".brain-filter-hud"));
+        if (looksLikeBrainHeader && !isInsideCanvas) {
+          html.dataset.qcBrainHiddenHeader = "true";
+          html.style.display = "none";
+        }
+      }
+    };
+
+    hideInstitutionalTop();
+    const observer = new MutationObserver(hideInstitutionalTop);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      document.body.classList.remove("qc-brain-route", "qc-brain-active-route");
+      observer.disconnect();
+      document.querySelectorAll<HTMLElement>("[data-qc-brain-hidden-header='true']").forEach((item) => {
+        item.style.display = "";
+        delete item.dataset.qcBrainHiddenHeader;
+      });
+    };
   }, []);
 
   useEffect(() => {
@@ -157,30 +176,32 @@ export function BrainNeuralDashboard() {
     setDebugMode(params.get("debug") === "1");
   }, []);
 
+  function applyLoadedData(data: Awaited<ReturnType<typeof fetchBrainDashboardData>>) {
+    const built = buildAccessRequestsBrainGraph({
+      requests: data.requests,
+      removalHistory: data.removalHistory,
+      auditLogs: data.auditLogs,
+      domainNodes: data.domainGraph.nodes,
+      domainEdges: data.domainGraph.edges,
+      realBrainNodes: data.graph.nodes,
+      realBrainEdges: data.graph.edges,
+    });
+    const merged = mergeWithNeuralMock(built);
+    setBrainContext(data.context);
+    setSelectedCompanyId(defaultCompanyForBrain(data.context));
+    setSelectedProjectId(defaultProjectForBrain(data.context));
+    setSelectedProfileType(null);
+    setActiveModule(null);
+    setGraph(merged);
+    setSelectedNode(null);
+    setDataErrors(data.errors);
+    setGraphSource(data.errors.length ? "partial" : "database");
+  }
+
   function loadBrainData() {
     setLoadingData(true);
     fetchBrainDashboardData()
-      .then((data) => {
-        const built = buildAccessRequestsBrainGraph({
-          requests: data.requests,
-          removalHistory: data.removalHistory,
-          auditLogs: data.auditLogs,
-          domainNodes: data.domainGraph.nodes,
-          domainEdges: data.domainGraph.edges,
-          realBrainNodes: data.graph.nodes,
-          realBrainEdges: data.graph.edges,
-        });
-        const merged = mergeWithNeuralMock(built);
-        setBrainContext(data.context);
-        setSelectedCompanyId(defaultCompanyForBrain(data.context));
-        setSelectedProjectId(defaultProjectForBrain(data.context));
-        setSelectedProfileType(null);
-        setActiveModule(null);
-        setGraph(merged);
-        setSelectedNode(null);
-        setDataErrors(data.errors);
-        setGraphSource(data.errors.length ? "partial" : "database");
-      })
+      .then(applyLoadedData)
       .catch((error) => {
         const fallback = emptyGraph();
         setDataErrors([error instanceof Error ? error.message : "Erro ao carregar Brain. Usando grafo inicial."]);
@@ -195,24 +216,7 @@ export function BrainNeuralDashboard() {
     let cancelled = false;
     fetchBrainDashboardData()
       .then((data) => {
-        if (cancelled) return;
-        const built = buildAccessRequestsBrainGraph({
-          requests: data.requests,
-          removalHistory: data.removalHistory,
-          auditLogs: data.auditLogs,
-          domainNodes: data.domainGraph.nodes,
-          domainEdges: data.domainGraph.edges,
-          realBrainNodes: data.graph.nodes,
-          realBrainEdges: data.graph.edges,
-        });
-        const merged = mergeWithNeuralMock(built);
-        setBrainContext(data.context);
-        setSelectedCompanyId(defaultCompanyForBrain(data.context));
-        setSelectedProjectId(defaultProjectForBrain(data.context));
-        setGraph(merged);
-        setSelectedNode(null);
-        setDataErrors(data.errors);
-        setGraphSource(data.errors.length ? "partial" : "database");
+        if (!cancelled) applyLoadedData(data);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -233,6 +237,7 @@ export function BrainNeuralDashboard() {
   const contextCompanies = useMemo(() => mergeContextCompanies(brainContext, graph.nodes), [brainContext, graph.nodes]);
   const contextProjects = useMemo(() => mergeContextProjects(brainContext, graph.nodes), [brainContext, graph.nodes]);
   const profileTypes = useMemo(() => getBrainProfileTypes(graph.nodes), [graph.nodes]);
+  const moduleOptions = useMemo(() => moduleOptionsFor(graph.nodes), [graph.nodes]);
   const canSeeAllCompanies = brainCanSeeAllCompanies(brainContext);
 
   const filteredGraph = useMemo(
@@ -285,19 +290,10 @@ export function BrainNeuralDashboard() {
     appliedQueryFocusRef.current = true;
   }, [graph.nodes, loadingData]);
 
-  const selectedNodeConnections = useMemo(
-    () => selectedNode ? visibleGraph.edges.filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id) : [],
-    [selectedNode, visibleGraph.edges],
-  );
+  const selectedNodeConnections = useMemo(() => selectedNode ? visibleGraph.edges.filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id) : [], [selectedNode, visibleGraph.edges]);
   const visibleConnected = useMemo(() => new Set(visibleGraph.edges.flatMap((edge) => [edge.source, edge.target])), [visibleGraph.edges]);
-  const visiblePendingNodes = useMemo(
-    () => visibleGraph.nodes.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)),
-    [visibleGraph.nodes],
-  );
-  const visibleOrphanNodes = useMemo(
-    () => visibleGraph.nodes.filter((node) => !visibleConnected.has(node.id)),
-    [visibleConnected, visibleGraph.nodes],
-  );
+  const visiblePendingNodes = useMemo(() => visibleGraph.nodes.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)), [visibleGraph.nodes]);
+  const visibleOrphanNodes = useMemo(() => visibleGraph.nodes.filter((node) => !visibleConnected.has(node.id)), [visibleConnected, visibleGraph.nodes]);
   const currentCompanyName = contextCompanies.find((company) => company.id === selectedCompanyId)?.name ?? (canSeeAllCompanies ? "Todas as empresas" : contextCompanies[0]?.name) ?? "Contexto institucional";
   const currentProjectName = contextProjects.find((project) => project.id === selectedProjectId)?.name ?? "Todos os projetos";
 
@@ -322,26 +318,11 @@ export function BrainNeuralDashboard() {
       pendingNodes: visiblePendingNodes.map((node) => ({ id: node.id, label: node.label, module: node.module, status: node.status })),
       orphanNodes: visibleOrphanNodes.map((node) => ({ id: node.id, label: node.label, module: node.module, status: node.status })),
       source: graphSource,
-      viewType: selectedNode ? "detail" : activeModule ? "module" : selectedCompanyId ? "company" : selectedProfileType ? "profile" : "profile-root",
+      viewType: selectedNode ? "detail" : activeModule ? "module" : selectedCompanyId ? "company" : selectedProfileType ? "profile" : "quality-control-root",
       permissions: brainContext?.permissions ?? null,
     };
-
     (window as unknown as { __QC_BRAIN_CONTEXT__?: unknown }).__QC_BRAIN_CONTEXT__ = brainScreenRuntimeContext;
-    window.dispatchEvent(
-      new CustomEvent("assistant:context", {
-        detail: {
-          source: "brain",
-          route: "/brain",
-          nodeId: selectedNode?.id ?? null,
-          nodeLabel: selectedNode?.label ?? null,
-          nodeType: selectedNode?.type ?? null,
-          entityId: selectedNode?.id ?? null,
-          entityType: selectedNode?.type ?? "screen",
-          agentMode: "qa",
-          metadata: brainScreenRuntimeContext,
-        },
-      }),
-    );
+    window.dispatchEvent(new CustomEvent("assistant:context", { detail: { source: "brain", route: "/brain", nodeId: selectedNode?.id ?? null, nodeLabel: selectedNode?.label ?? null, nodeType: selectedNode?.type ?? null, entityId: selectedNode?.id ?? null, entityType: selectedNode?.type ?? "screen", agentMode: "qa", metadata: brainScreenRuntimeContext } }));
   }, [activeModule, brainContext?.permissions, currentCompanyName, currentProjectName, graphSource, selectedCompanyId, selectedNode, selectedNodeConnections, selectedProfileType, selectedProjectId, visibleGraph.edges, visibleGraph.focusModule, visibleGraph.nodes, visibleOrphanNodes, visiblePendingNodes]);
 
   function resetScope() {
@@ -352,22 +333,21 @@ export function BrainNeuralDashboard() {
 
   function handleSelectNode(node: BrainNode) {
     setSelectedNode(node);
-
+    if (node.metadata?.isQualityControlRoot) {
+      resetScope();
+      return;
+    }
     if (node.metadata?.isProfileRoot) {
       setSelectedProfileType(String(node.metadata.profileType ?? node.label));
       setActiveModule(null);
       return;
     }
-
     if (node.metadata?.isCompanyHub || node.type === "company") {
       if (node.companyId) setSelectedCompanyId(node.companyId);
       setActiveModule(null);
       return;
     }
-
-    if (node.metadata?.isModuleHub || node.type === "module") {
-      setActiveModule(String(node.metadata?.module ?? node.module));
-    }
+    if (node.metadata?.isModuleHub || node.type === "module") setActiveModule(String(node.metadata?.module ?? node.module));
   }
 
   function handleSelectCompany(companyId: string | null) {
@@ -431,23 +411,14 @@ export function BrainNeuralDashboard() {
 
   function handleFilterPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (isInteractiveTarget(event.target)) return;
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      baseX: filterOffset.x,
-      baseY: filterOffset.y,
-    };
+    dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, baseX: filterOffset.x, baseY: filterOffset.y };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function handleFilterPointerMove(event: PointerEvent<HTMLDivElement>) {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
-    setFilterOffset({
-      x: drag.baseX + event.clientX - drag.startX,
-      y: drag.baseY + event.clientY - drag.startY,
-    });
+    setFilterOffset({ x: drag.baseX + event.clientX - drag.startX, y: drag.baseY + event.clientY - drag.startY });
   }
 
   function handleFilterPointerUp(event: PointerEvent<HTMLDivElement>) {
@@ -455,80 +426,50 @@ export function BrainNeuralDashboard() {
   }
 
   const filterHud = (
-    <div
-      className="brain-filter-hud pointer-events-auto absolute left-0 right-0 top-4 z-30 mx-auto w-[min(1180px,calc(100%-32px))]"
-      style={{ transform: `translate(${filterOffset.x}px, ${filterOffset.y}px)` }}
-      onPointerDown={handleFilterPointerDown}
-      onPointerMove={handleFilterPointerMove}
-      onPointerUp={handleFilterPointerUp}
-      onPointerCancel={handleFilterPointerUp}
-    >
-      <div className="qc-brain-filter-summary-chips mb-2">
-        <span>Perfil primeiro</span>
-        <button type="button" onClick={() => handleSelectProfile(null)} data-active={!selectedProfileType ? "true" : "false"} className="qc-brain-filter-chip">
-          Todos os perfis
-        </button>
-        {profileTypes.slice(0, 8).map((profile) => (
-          <button key={profile} type="button" onClick={() => handleSelectProfile(profile)} data-active={selectedProfileType === profile ? "true" : "false"} className="qc-brain-filter-chip">
-            {profile}
-          </button>
-        ))}
+    <div className="brain-filter-hud pointer-events-auto absolute left-0 right-0 top-4 z-30 mx-auto w-[min(1180px,calc(100%-32px))]" style={{ transform: `translate(${filterOffset.x}px, ${filterOffset.y}px)` }} onPointerDown={handleFilterPointerDown} onPointerMove={handleFilterPointerMove} onPointerUp={handleFilterPointerUp} onPointerCancel={handleFilterPointerUp}>
+      <div className="qc-brain-filter-panel qc-brain-filter-panel-compact mb-2">
+        <div className="qc-brain-filter-compact-bar">
+          <span className="qc-brain-filter-brand cursor-grab" title="Arraste os filtros">
+            <span className="qc-brain-filter-brand-logo" />
+            <strong>Quality Control</strong>
+          </span>
+          <label className="qc-brain-filter-field min-w-[180px]">
+            <span>Tipo de perfil</span>
+            <select value={selectedProfileType ?? "all"} onChange={(event) => handleSelectProfile(event.target.value === "all" ? null : event.target.value)}>
+              <option value="all">Todos os perfis</option>
+              {profileTypes.map((profile) => <option key={profile} value={profile}>{profile}</option>)}
+            </select>
+          </label>
+          <label className="qc-brain-filter-field min-w-[180px]">
+            <span>Empresa</span>
+            <select value={selectedCompanyId ?? "all"} onChange={(event) => handleSelectCompany(event.target.value === "all" ? null : event.target.value)} disabled={!canSeeAllCompanies && contextCompanies.length <= 1}>
+              <option value="all">Todas as empresas</option>
+              {contextCompanies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
+            </select>
+          </label>
+          <label className="qc-brain-filter-field min-w-[180px]">
+            <span>Módulo</span>
+            <select value={activeModule ?? "all"} onChange={(event) => handleSelectModule(event.target.value === "all" ? null : event.target.value)}>
+              <option value="all">Todos os módulos</option>
+              {moduleOptions.map((moduleName) => <option key={moduleName} value={moduleName}>{moduleName}</option>)}
+            </select>
+          </label>
+          <label className="qc-brain-filter-compact-search min-w-[220px]">
+            <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Buscar usuário, item, ação, run, plano..." />
+          </label>
+          <button type="button" onClick={handleShowAll} className="qc-brain-filter-chip">Limpar</button>
+          <button type="button" onClick={loadBrainData} className="qc-brain-filter-chip">Atualizar</button>
+        </div>
       </div>
-      <BrainContextSelector
-        nodes={graph.nodes}
-        companies={contextCompanies}
-        projects={contextProjects}
-        selectedCompanyId={selectedCompanyId}
-        selectedProjectId={selectedProjectId}
-        activeModule={activeModule}
-        searchText={searchText}
-        nodeType={nodeType}
-        nodeStatus={nodeStatus}
-        period={period}
-        showOrphansOnly={showOrphansOnly}
-        showPendingOnly={showPendingOnly}
-        visibleNodeCount={visibleGraph.nodes.length}
-        visibleEdgeCount={visibleGraph.edges.length}
-        pendingCount={visiblePendingNodes.length}
-        source={graphSource}
-        onCompanyChange={handleSelectCompany}
-        onProjectChange={handleSelectProject}
-        onModuleChange={handleSelectModule}
-        onSearchTextChange={setSearchText}
-        onNodeTypeChange={setNodeType}
-        onNodeStatusChange={setNodeStatus}
-        onPeriodChange={setPeriod}
-        onClear={handleShowAll}
-        onTogglePending={() => {
-          setShowPendingOnly((current) => !current);
-          setShowOrphansOnly(false);
-        }}
-        onToggleOrphans={() => {
-          setShowOrphansOnly((current) => !current);
-          setShowPendingOnly(false);
-        }}
-        onCenter={resetScope}
-        onRefresh={loadBrainData}
-      />
+      <BrainContextSelector nodes={graph.nodes} companies={contextCompanies} projects={contextProjects} selectedCompanyId={selectedCompanyId} selectedProjectId={selectedProjectId} activeModule={activeModule} searchText={searchText} nodeType={nodeType} nodeStatus={nodeStatus} period={period} showOrphansOnly={showOrphansOnly} showPendingOnly={showPendingOnly} visibleNodeCount={visibleGraph.nodes.length} visibleEdgeCount={visibleGraph.edges.length} pendingCount={visiblePendingNodes.length} source={graphSource} onCompanyChange={handleSelectCompany} onProjectChange={handleSelectProject} onModuleChange={handleSelectModule} onSearchTextChange={setSearchText} onNodeTypeChange={setNodeType} onNodeStatusChange={setNodeStatus} onPeriodChange={setPeriod} onClear={handleShowAll} onTogglePending={() => { setShowPendingOnly((current) => !current); setShowOrphansOnly(false); }} onToggleOrphans={() => { setShowOrphansOnly((current) => !current); setShowPendingOnly(false); }} onCenter={resetScope} onRefresh={loadBrainData} />
     </div>
   );
 
   return (
     <main className="relative h-[100dvh] min-h-[720px] overflow-hidden bg-[#020713] text-white">
       <div className="absolute inset-0">
-        <BrainNeuralCanvas
-          nodes={visibleGraph.nodes}
-          edges={visibleGraph.edges}
-          selectedNodeId={selectedNode?.id ?? null}
-          onSelectNode={handleSelectNode}
-          onOpenRelatedModule={handleSelectModule}
-          localGraphOnly={localGraphOnly}
-          onToggleLocalGraph={() => setLocalGraphOnly((current) => !current)}
-          loading={loadingData}
-          debugMode={debugMode}
-        />
+        <BrainNeuralCanvas nodes={visibleGraph.nodes} edges={visibleGraph.edges} selectedNodeId={selectedNode?.id ?? null} onSelectNode={handleSelectNode} onOpenRelatedModule={handleSelectModule} localGraphOnly={localGraphOnly} onToggleLocalGraph={() => setLocalGraphOnly((current) => !current)} loading={loadingData} debugMode={debugMode} />
       </div>
-
       {filterHud}
     </main>
   );

@@ -14,6 +14,13 @@
   --chat-dark-border: rgba(148, 163, 184, 0.24);
   --chat-dark-text: #f8fafc;
   --chat-dark-muted: #b8c7de;
+
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 16% 12%, rgba(1, 24, 72, 0.08), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(239, 0, 1, 0.055), transparent 28%),
+    linear-gradient(135deg, #ffffff 0%, var(--chat-light-bg) 52%, #eef4ff 100%) !important;
+  color: var(--chat-light-text) !important;
 }
 
 .chatTheme :global(.qc-chat-page-shell),
@@ -99,7 +106,7 @@
   color: var(--chat-light-muted) !important;
 }
 
-.chatTheme :global(.qc-chat-shell [class*="bg-(--tc-surface"],
+.chatTheme :global(.qc-chat-shell [class*="bg-(--tc-surface"]),
 .chatTheme :global(.qc-chat-shell [class*="border-(--tc-border"]) {
   border-color: var(--chat-light-border) !important;
   background: var(--chat-light-soft) !important;
@@ -127,6 +134,8 @@
   color: var(--chat-light-muted);
 }
 
+:global(.dark) .chatTheme,
+:global([data-theme="dark"]) .chatTheme,
 :global(.dark) .chatTheme :global(.qc-chat-page-shell),
 :global(.dark) .chatTheme :global(.qc-chat-shell),
 :global([data-theme="dark"]) .chatTheme :global(.qc-chat-page-shell),

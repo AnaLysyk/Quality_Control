@@ -6,6 +6,7 @@ import { createElement, Fragment, useCallback } from "react";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import { getIcon } from "./iconRegistry";
 import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
+import { OPEN_SUPPORT_TICKET_MODAL_EVENT } from "@/components/CreateSupportTicketButton";
 
 type SidebarSectionProps = {
   mod: NavModuleDef;
@@ -20,6 +21,10 @@ type SidebarSectionProps = {
 function resolveSidebarHref(href: string) {
   if (href === "/suporte/kanban") return "/kanban-it";
   return href;
+}
+
+function shouldOpenSupportTicketModal(item: NavItemDef) {
+  return item.id === "support-create" || item.routeId === "suporte.criar";
 }
 
 const moduleBaseClass =
@@ -53,6 +58,11 @@ export default function SidebarSection({
     },
     [router],
   );
+
+  const openSupportTicketModal = useCallback(() => {
+    window.dispatchEvent(new CustomEvent(OPEN_SUPPORT_TICKET_MODAL_EVENT));
+    onClose?.();
+  }, [onClose]);
 
   if (!hasChildren && mod.href) {
     const href = resolveSidebarHref(mod.href);
@@ -100,6 +110,8 @@ export default function SidebarSection({
             const active = isItemActive(item);
             const showGroupLabel = item.group && (index === 0 || visibleItems[index - 1].group !== item.group);
             const href = resolveSidebarHref(item.href!);
+            const openModal = shouldOpenSupportTicketModal(item);
+            const Icon = getIcon(item.iconKey);
             return (
               <Fragment key={item.id}>
                 {showGroupLabel && (
@@ -107,21 +119,33 @@ export default function SidebarSection({
                     {item.group}
                   </span>
                 )}
-                <Link
-                  href={href}
-                  prefetch={false}
-                  data-testid={item.testId}
-                  data-active={active ? "true" : undefined}
-                  aria-current={active ? "page" : undefined}
-                  onClick={onClose}
-                  onPointerEnter={() => prefetchHref(item.href)}
-                  onPointerDown={() => prefetchHref(item.href)}
-                  onFocus={() => prefetchHref(item.href)}
-                  className={`${subItemBaseClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
-                >
-                  {createElement(getIcon(item.iconKey), { size: 13, className: "shrink-0 text-current opacity-75" })}
-                  <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
-                </Link>
+                {openModal ? (
+                  <button
+                    type="button"
+                    data-testid={item.testId}
+                    onClick={openSupportTicketModal}
+                    className={`${subItemBaseClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
+                  >
+                    {createElement(Icon, { size: 13, className: "shrink-0 text-current opacity-75" })}
+                    <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={href}
+                    prefetch={false}
+                    data-testid={item.testId}
+                    data-active={active ? "true" : undefined}
+                    aria-current={active ? "page" : undefined}
+                    onClick={onClose}
+                    onPointerEnter={() => prefetchHref(item.href)}
+                    onPointerDown={() => prefetchHref(item.href)}
+                    onFocus={() => prefetchHref(item.href)}
+                    className={`${subItemBaseClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
+                  >
+                    {createElement(Icon, { size: 13, className: "shrink-0 text-current opacity-75" })}
+                    <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
+                  </Link>
+                )}
               </Fragment>
             );
           })}

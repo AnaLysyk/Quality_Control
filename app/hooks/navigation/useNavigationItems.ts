@@ -40,6 +40,7 @@ const AGENDA_MODULE: NavModuleDef = {
   items: [],
 };
 const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "documents"]);
+const PROJECT_CONTEXT_ONLY_MODULE_IDS = new Set<NavModuleDef["id"]>(["automation"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "home",
   "quality",
@@ -272,9 +273,12 @@ function buildClientCatalog() {
     });
 }
 
-function filterByActiveContext(modules: NavModuleDef[], companySlug: string | null) {
-  if (companySlug) return modules;
-  return modules.filter((module) => !OPERATIONAL_MODULE_IDS.has(module.id));
+function filterByActiveContext(modules: NavModuleDef[], companySlug: string | null, projectSlug: string | null) {
+  return modules.filter((module) => {
+    if (PROJECT_CONTEXT_ONLY_MODULE_IDS.has(module.id)) return Boolean(companySlug && projectSlug);
+    if (!companySlug) return !OPERATIONAL_MODULE_IDS.has(module.id);
+    return true;
+  });
 }
 
 function withReleaseAgendaModule(modules: NavModuleDef[], effectiveRole: SystemRole | null, permissions?: PermissionMatrix | null) {
@@ -356,7 +360,7 @@ export function useNavigationItems() {
     if (!user) return [];
 
     const catalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
-    const contextCatalog = filterByActiveContext(catalog, companySlug).filter(
+    const contextCatalog = filterByActiveContext(catalog, companySlug, activeProjectSlug).filter(
       (module) => !DISABLED_MODULE_IDS.has(module.id),
     );
     const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);

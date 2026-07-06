@@ -238,13 +238,13 @@ export default function NewHomeContent() {
   }
 
   return (
-    <section className="relative min-h-[calc(100vh-7rem)] w-full overflow-hidden bg-transparent px-4 pb-28 pt-5 sm:px-8 lg:px-10">
+    <section className="admin-brain-home relative min-h-[calc(100vh-7rem)] w-full overflow-hidden bg-transparent px-4 pb-28 pt-5 sm:px-8 lg:px-10">
       <div className="relative z-10 flex min-h-[500px] flex-col gap-10 lg:grid lg:grid-cols-[330px_minmax(0,1fr)] lg:items-start">
         <aside className="flex justify-center pt-2 lg:justify-start lg:pl-2">
           <BrainOrb listening={listening} />
         </aside>
 
-        <main className="mx-auto flex w-full max-w-4xl flex-col items-center justify-start gap-5 pt-12 text-center lg:pt-16 lg:pr-12">
+        <main className="admin-brain-copy mx-auto flex w-full max-w-4xl flex-col items-center justify-start gap-5 pt-12 text-center lg:pt-16 lg:pr-12">
           <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">
             {greeting}, <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">{firstName}</span>.
           </h1>
@@ -284,7 +284,7 @@ export default function NewHomeContent() {
 
       <form
         onSubmit={handleSubmit}
-        className="fixed bottom-4 left-[13.25rem] right-4 z-30 flex items-center gap-3 rounded-full border border-white/10 bg-[#0f172a]/80 px-4 py-3 shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl max-md:left-4 sm:px-6"
+        className="admin-brain-command fixed bottom-4 left-[13.25rem] right-4 z-30 flex items-center gap-3 rounded-full border border-white/10 bg-[#0f172a]/80 px-4 py-3 shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl max-md:left-4 sm:px-6"
       >
         <input
           value={command}

@@ -17,6 +17,7 @@ import {
 import "./globals.css";
 import "./operational-theme.css";
 import "./admin-permissions-theme.css";
+import "./agenda-global-theme.css";
 import { ClientBootScripts } from "./_components/ClientBootScripts";
 
 export const metadata: Metadata = {
@@ -119,25 +120,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme-preference={initialThemePreference}
       data-theme-resolved={initialResolvedTheme}
     >
-      <body
-        suppressHydrationWarning
-        className="min-h-screen w-full overflow-y-auto antialiased"
-      >
-        <ClientBootScripts migrateStorageScript={migrateStorageScript} themeInitScript={themeInitScript} />
-        <AuthProvider>
-          <LanguageProvider>
-            <AppSettingsProvider>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
+      </head>
+      <body className="min-h-screen bg-white text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-50">
+        <AppSettingsProvider initialTheme={initialThemePreference} initialLanguage="pt-BR">
+          <AuthProvider>
+            <LanguageProvider>
               <ClientProvider>
                 <ProjectProvider>
-                  <AppShell>
-                    {children}
-                    <ToasterProvider />
-                  </AppShell>
+                  <ClientBootScripts />
+                  <AppShell>{children}</AppShell>
+                  <ToasterProvider />
                 </ProjectProvider>
               </ClientProvider>
-            </AppSettingsProvider>
-          </LanguageProvider>
-        </AuthProvider>
+            </LanguageProvider>
+          </AuthProvider>
+        </AppSettingsProvider>
       </body>
     </html>
   );

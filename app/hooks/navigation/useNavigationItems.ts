@@ -29,6 +29,29 @@ const AGENDA_ROLES: SystemRole[] = [
   SYSTEM_ROLES.EMPRESA,
   SYSTEM_ROLES.COMPANY_USER,
 ];
+const MANAGEMENT_ROLES: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+  SYSTEM_ROLES.TESTING_COMPANY_USER,
+  SYSTEM_ROLES.EMPRESA,
+  SYSTEM_ROLES.COMPANY_USER,
+];
+const PERMISSION_MANAGEMENT_ROLES: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+];
+const TC_USER_CREATOR_ROLES: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+  SYSTEM_ROLES.TESTING_COMPANY_USER,
+];
+const COMPANY_USER_CREATOR_ROLES: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+  SYSTEM_ROLES.TESTING_COMPANY_USER,
+  SYSTEM_ROLES.EMPRESA,
+  SYSTEM_ROLES.COMPANY_USER,
+];
 const AGENDA_MODULE: NavModuleDef = {
   id: "agenda" as NavModuleDef["id"],
   label: "Agenda",
@@ -48,6 +71,7 @@ const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "support",
   "brain",
   "documents",
+  "management",
 ]);
 const PROJECT_SCOPED_ITEM_IDS = new Set([
   "quality-plans",
@@ -164,7 +188,7 @@ function resolveModuleHref(
   }
 
   if (mod.id === "brain") {
-    return withScopeQuery("/brain", companySlug, projectSlug, true);
+    return effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole) ? "/admin/brain" : withScopeQuery("/brain", companySlug, projectSlug, true);
   }
 
   if (mod.id === "agenda") {
@@ -175,7 +199,7 @@ function resolveModuleHref(
 }
 
 function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string | null, projectSlug: string | null): NavItemDef[] {
-  if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole) && !companySlug) {
+  if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
     return [
       {
         id: "brain-system-map",
@@ -205,7 +229,18 @@ function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string |
     ];
   }
 
-  return [];
+  return [
+    {
+      id: "brain-graph",
+      routeId: "brain.grafo",
+      label: "Brain visual",
+      iconKey: "cpu",
+      module: "brain",
+      href: "/brain",
+      favoriteEnabled: true,
+      testId: "nav-brain-graph",
+    },
+  ];
 }
 
 function buildQualityItems(items: NavItemDef[], companySlug: string | null): NavItemDef[] {
@@ -221,6 +256,139 @@ function buildQualityItems(items: NavItemDef[], companySlug: string | null): Nav
     testId: "nav-company-projects",
   };
   return [projectItem, ...items.filter((item) => item.id !== projectItem.id)];
+}
+
+function buildManagementModule(effectiveRole: SystemRole | null): NavModuleDef | null {
+  if (!effectiveRole || !MANAGEMENT_ROLES.includes(effectiveRole)) return null;
+
+  const items: NavItemDef[] = [];
+
+  if (PERMISSION_MANAGEMENT_ROLES.includes(effectiveRole)) {
+    items.push(
+      {
+        id: "management-permissions-profile",
+        routeId: "permissoes.perfil",
+        label: "Perfil",
+        iconKey: "shield",
+        module: "management",
+        href: "/admin/permissions",
+        allowedRoles: PERMISSION_MANAGEMENT_ROLES,
+        requiredPermission: { moduleId: "permissions", action: "view" },
+        group: "Gestão de permissões",
+        favoriteEnabled: true,
+        testId: "nav-management-permissions-profile",
+      },
+      {
+        id: "management-permissions-users",
+        routeId: "permissoes.matriz",
+        label: "Usuários",
+        iconKey: "users",
+        module: "management",
+        href: "/admin/users/permissions",
+        allowedRoles: PERMISSION_MANAGEMENT_ROLES,
+        requiredPermission: { moduleId: "permissions", action: "view" },
+        group: "Gestão de permissões",
+        favoriteEnabled: true,
+        testId: "nav-management-permissions-users",
+      },
+    );
+  }
+
+  items.push({
+    id: "management-users-list",
+    routeId: "usuarios.listagem",
+    label: "Listagem de usuários",
+    iconKey: "users",
+    module: "management",
+    href: "/admin/users",
+    allowedRoles: MANAGEMENT_ROLES,
+    requiredPermission: { moduleId: "users", action: "view" },
+    group: "Gestão de usuários",
+    favoriteEnabled: true,
+    testId: "nav-management-users-list",
+  });
+
+  if (TC_USER_CREATOR_ROLES.includes(effectiveRole)) {
+    items.push({
+      id: "management-users-create-tc",
+      routeId: "usuarios.criar-usuário-tc",
+      label: "Criar Usuários TC",
+      iconKey: "user-plus",
+      module: "management",
+      href: "/admin/users?tab=testing&modal=create&role=testing_company_user",
+      action: "openCreateModal",
+      allowedRoles: TC_USER_CREATOR_ROLES,
+      requiredPermission: { moduleId: "users", action: "create" },
+      group: "Gestão de usuários",
+      favoriteEnabled: true,
+      testId: "nav-management-users-create-tc",
+    });
+  }
+
+  if (COMPANY_USER_CREATOR_ROLES.includes(effectiveRole)) {
+    items.push({
+      id: "management-users-create-company",
+      routeId: "usuarios.criar-usuário-empresa",
+      label: "Criar usuário empresarial",
+      iconKey: "plus-circle",
+      module: "management",
+      href: "/admin/users?tab=company&modal=create&role=company_user",
+      action: "openCreateModal",
+      allowedRoles: COMPANY_USER_CREATOR_ROLES,
+      requiredPermission: { moduleId: "users", action: "create" },
+      group: "Gestão de usuários",
+      favoriteEnabled: true,
+      testId: "nav-management-users-create-company",
+    });
+  }
+
+  if (effectiveRole === SYSTEM_ROLES.LEADER_TC) {
+    items.push(
+      {
+        id: "management-users-create-leader",
+        routeId: "usuarios.criar-lider",
+        label: "Criar Líder TC",
+        iconKey: "user-plus",
+        module: "management",
+        href: "/admin/users?tab=admin&modal=create&role=leader_tc",
+        action: "openCreateModal",
+        allowedRoles: [SYSTEM_ROLES.LEADER_TC],
+        requiredPermission: { moduleId: "users", action: "create" },
+        group: "Gestão de usuários",
+        favoriteEnabled: true,
+        testId: "nav-management-users-create-leader",
+      },
+      {
+        id: "management-users-create-support",
+        routeId: "usuarios.criar-suporte",
+        label: "Criar suporte técnico",
+        iconKey: "tool",
+        module: "management",
+        href: "/admin/users?tab=support&modal=create&role=technical_support",
+        action: "openCreateModal",
+        allowedRoles: [SYSTEM_ROLES.LEADER_TC],
+        requiredPermission: { moduleId: "users", action: "create" },
+        group: "Gestão de usuários",
+        favoriteEnabled: true,
+        testId: "nav-management-users-create-support",
+      },
+    );
+  }
+
+  return {
+    id: "management",
+    label: "Gestão",
+    iconKey: "settings",
+    allowedRoles: MANAGEMENT_ROLES,
+    testId: "nav-management",
+    items,
+  };
+}
+
+function withScopedManagementModule(catalog: NavModuleDef[], effectiveRole: SystemRole | null) {
+  const managementModule = buildManagementModule(effectiveRole);
+  if (!managementModule) return catalog.filter((module) => module.id !== "management");
+  return [...catalog.filter((module) => module.id !== "management"), managementModule];
 }
 
 function resolveModuleItems(
@@ -359,7 +527,8 @@ export function useNavigationItems() {
   const modules = useMemo<NavModuleDef[]>(() => {
     if (!user) return [];
 
-    const catalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
+    const baseCatalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
+    const catalog = withScopedManagementModule(baseCatalog, effectiveRole);
     const contextCatalog = filterByActiveContext(catalog, companySlug, activeProjectSlug).filter(
       (module) => !DISABLED_MODULE_IDS.has(module.id),
     );

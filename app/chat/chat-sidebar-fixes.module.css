@@ -1,0 +1,99 @@
+.chatSidebarFixes {
+  --chat-sidebar-fix-bg: linear-gradient(180deg, rgb(255 255 255 / 98%), rgb(243 248 255 / 98%));
+  --chat-sidebar-fix-header: linear-gradient(180deg, rgb(255 255 255 / 94%), rgb(248 251 255 / 90%));
+  --chat-sidebar-fix-card: rgb(255 255 255 / 82%);
+  --chat-sidebar-fix-card-hover: rgb(239 246 255 / 94%);
+  --chat-sidebar-fix-card-active: linear-gradient(135deg, rgb(239 246 255 / 98%), rgb(255 255 255 / 94%));
+  --chat-sidebar-fix-text: #061225;
+  --chat-sidebar-fix-muted: rgb(71 85 105 / 88%);
+  --chat-sidebar-fix-soft: rgb(100 116 139 / 86%);
+  --chat-sidebar-fix-border: rgb(15 23 42 / 12%);
+  --chat-sidebar-fix-border-strong: rgb(1 24 72 / 18%);
+  --chat-sidebar-fix-shadow: 0 16px 38px rgb(15 23 42 / 8%);
+}
+
+:global(html.dark) .chatSidebarFixes,
+:global(.dark) .chatSidebarFixes,
+:global([data-theme="dark"]) .chatSidebarFixes {
+  --chat-sidebar-fix-bg: linear-gradient(180deg, rgb(5 13 29 / 98%), rgb(2 6 23 / 98%));
+  --chat-sidebar-fix-header: linear-gradient(180deg, rgb(10 20 42 / 92%), rgb(5 13 29 / 86%));
+  --chat-sidebar-fix-card: rgb(15 23 42 / 72%);
+  --chat-sidebar-fix-card-hover: rgb(30 41 59 / 88%);
+  --chat-sidebar-fix-card-active: linear-gradient(135deg, rgb(1 24 72 / 90%), rgb(15 23 42 / 92%));
+  --chat-sidebar-fix-text: #f8fafc;
+  --chat-sidebar-fix-muted: rgb(203 213 225 / 82%);
+  --chat-sidebar-fix-soft: rgb(148 163 184 / 88%);
+  --chat-sidebar-fix-border: rgb(226 232 240 / 12%);
+  --chat-sidebar-fix-border-strong: rgb(125 167 255 / 26%);
+  --chat-sidebar-fix-shadow: 0 18px 48px rgb(0 0 0 / 28%);
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside) {
+  background: var(--chat-sidebar-fix-bg) !important;
+  border-color: var(--chat-sidebar-fix-border) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside > div:first-child) {
+  background: var(--chat-sidebar-fix-header) !important;
+  border-color: var(--chat-sidebar-fix-border) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside input) {
+  background: var(--chat-sidebar-fix-card) !important;
+  border-color: var(--chat-sidebar-fix-border-strong) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+  box-shadow: var(--chat-sidebar-fix-shadow) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside input::placeholder) {
+  color: var(--chat-sidebar-fix-soft) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside button) {
+  color: var(--chat-sidebar-fix-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside button:not(:disabled):hover) {
+  background: var(--chat-sidebar-fix-card-hover) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside button[class*="bg-white/12"]),
+.chatSidebarFixes :global(.qc-chat-shell aside button[aria-current="true"]),
+.chatSidebarFixes :global(.qc-chat-shell aside button[data-active="true"]) {
+  background: var(--chat-sidebar-fix-card-active) !important;
+  border: 1px solid var(--chat-sidebar-fix-border-strong) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+  box-shadow: var(--chat-sidebar-fix-shadow) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside [class*="text-white/"]),
+.chatSidebarFixes :global(.qc-chat-shell aside .qc-chat-sidebar-presence-label) {
+  color: var(--chat-sidebar-fix-muted) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside button[class*="bg-white/12"] [class*="text-white/"]) {
+  color: var(--chat-sidebar-fix-muted) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside [class*="border-white/"]),
+.chatSidebarFixes :global(.qc-chat-shell aside [class*="border-dashed"]) {
+  border-color: var(--chat-sidebar-fix-border) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside [class*="border-dashed"]) {
+  background: var(--chat-sidebar-fix-card) !important;
+  color: var(--chat-sidebar-fix-muted) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside h1),
+.chatSidebarFixes :global(.qc-chat-shell aside h2),
+.chatSidebarFixes :global(.qc-chat-shell aside h3),
+.chatSidebarFixes :global(.qc-chat-shell aside strong),
+.chatSidebarFixes :global(.qc-chat-shell aside b),
+.chatSidebarFixes :global(.qc-chat-shell aside .font-bold),
+.chatSidebarFixes :global(.qc-chat-shell aside .font-black) {
+  color: var(--chat-sidebar-fix-text) !important;
+}

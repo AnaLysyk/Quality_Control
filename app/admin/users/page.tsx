@@ -963,9 +963,9 @@ export default function AdminUsersPage() {
     }
 
     return {
-        title: "Criar usuário TC",
+        title: "Criar Usuários TC",
         subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessário.",
-        submitLabel: "Criar usuário TC",
+        submitLabel: "Criar Usuários TC",
       initialRole: "testing_company_user",
       lockRole: true,
       showCompanyField: true,
@@ -1083,7 +1083,17 @@ export default function AdminUsersPage() {
           <Tabs
             value={activeTab}
             onValueChange={(value) => {
-              setActiveTab(value as UserTab);
+              const nextTab = value as UserTab;
+
+              setActiveTab(nextTab);
+              setSelectedUser(null);
+
+              if (nextTab === "testing" && userAccess.canCreateUsers) {
+                setCreateRolePreset("testing_company_user");
+                setOpenCreate(true);
+                return;
+              }
+
               setCreateRolePreset(null);
             }}
           >
@@ -1095,7 +1105,7 @@ export default function AdminUsersPage() {
                     Usuários da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Usuários TC
+                    Criar Usuários TC
                   </TabsTrigger>
                   <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Líder TC

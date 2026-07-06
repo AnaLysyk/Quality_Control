@@ -1,4 +1,4 @@
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import type { SystemRouteDefinition } from "./navigation.types";
 
 const ALL_PROFILES: SystemRole[] = [
@@ -132,7 +132,7 @@ export const SYSTEM_ROUTES = [
     id: "usuarios.criar-usuário-tc",
     moduleId: "usuarios",
     path: "/admin/users?tab=testing&modal=create&role=testing_company_user",
-    label: "Criar Usuário TC",
+    label: "Criar Usuários TC",
     description: "Abre o cadastro de um usuário interno.",
     requiredPermission: { moduleId: "users", action: "create" },
     expectedProfiles: [SYSTEM_ROLES.LEADER_TC],
@@ -741,3 +741,4 @@ export const SYSTEM_ROUTES = [
 export const SYSTEM_ROUTE_BY_ID: ReadonlyMap<string, SystemRouteDefinition> = new Map(
   SYSTEM_ROUTES.map((routeDefinition) => [routeDefinition.id, routeDefinition]),
 );
+

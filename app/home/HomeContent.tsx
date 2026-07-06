@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { FiClock, FiCommand, FiMessageCircle, FiMic, FiZap } from "react-icons/fi";
+import { FiClock, FiCommand, FiMic, FiZap } from "react-icons/fi";
 
 import { useAuthUser } from "@/hooks/useAuthUser";
 
@@ -11,17 +11,8 @@ type ProfileExperience = {
   prompts: string[];
 };
 
-type BrainUpdateWindow = {
-  id: string;
-  title: string;
-  text: string;
-  scope: string;
-  ts: number;
-};
-
 type HomeContextPayload = {
   periodLabel?: string;
-  typedMessages?: string[];
   summary?: {
     actions?: number;
     companiesUpdated?: number;
@@ -42,9 +33,7 @@ type BrowserSpeechRecognitionEvent = {
     length: number;
     [index: number]: {
       isFinal?: boolean;
-      [index: number]: {
-        transcript: string;
-      };
+      [index: number]: { transcript: string };
     };
   };
 };
@@ -62,13 +51,8 @@ type BrowserSpeechRecognition = {
   onend: (() => void) | null;
 };
 
-const HOME_UPDATES_KEY_PREFIX = "brain_home_update_windows_v1";
-
 function normalizeText(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function resolveFirstName(user: unknown) {
@@ -102,7 +86,7 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
     return {
       label: "Líder TC",
       summary: "Eu cruzo empresas, usuários, solicitações, fluxos e pendências recentes para explicar a próxima ação.",
-      prompts: ["Analisar por empresa", "Analisar por usuário", "Ver pendências das últimas horas"],
+      prompts: ["últimos defeitos criados", "últimos planos de teste", "pendências por empresa"],
     };
   }
 
@@ -110,7 +94,7 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
     return {
       label: "Suporte Técnico",
       summary: "Eu organizo chamados, integrações, usuários bloqueados e alertas técnicos para acelerar o atendimento.",
-      prompts: ["Ver incidentes", "Analisar integrações", "Checar usuários nas últimas horas"],
+      prompts: ["chamados recentes", "integrações com risco", "usuários bloqueados"],
     };
   }
 
@@ -118,14 +102,14 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
     return {
       label: "Empresa",
       summary: "Eu organizo projeto, pendências, próximas entregas e movimentações recentes da empresa.",
-      prompts: ["Ver saúde do projeto", "Listar pendências", "Atualizações das últimas 24 horas"],
+      prompts: ["saúde do projeto", "pendências recentes", "atualizações das últimas 24h"],
     };
   }
 
   return {
     label: "QA",
     summary: "Eu conecto runs, evidências, bugs e plano atual para você continuar sem procurar no menu.",
-    prompts: ["Continuar meu trabalho", "Ver meus runs", "Revisar bugs das últimas horas"],
+    prompts: ["últimos defeitos criados", "últimos casos de teste", "últimos planos de teste"],
   };
 }
 
@@ -138,11 +122,15 @@ function resolveSpeechRecognitionConstructor() {
   return speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition ?? null;
 }
 
-function makeHomeId(prefix: string) {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return `${prefix}-${crypto.randomUUID()}`;
-  }
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+function extractHourWindow(command: string) {
+  const normalized = normalizeText(command);
+  const match = normalized.match(/(?:ultimas?|em|por)\s*(\d{1,2})\s*h(?:oras?)?/i) ?? normalized.match(/(\d{1,2})\s*h(?:oras?)?/i);
+  const hours = match?.[1] ? Math.max(1, Math.min(72, Number(match[1]))) : 24;
+  return {
+    hours,
+    label: hours === 1 ? "última 1 hora" : `últimas ${hours} horas`,
+    apiRange: hours <= 24 ? "24h" : hours <= 168 ? "7d" : "30d",
+  };
 }
 
 function resolveAssistantActor(user: unknown) {
@@ -159,129 +147,33 @@ function resolveAssistantActor(user: unknown) {
   };
 }
 
-function extractHourWindow(command: string) {
-  const normalized = normalizeText(command);
-  const match = normalized.match(/(?:ultimas?|u00faltimas?|em|por)\s*(\d{1,2})\s*h(?:oras?)?/i) ?? normalized.match(/(\d{1,2})\s*h(?:oras?)?/i);
-  const hours = match?.[1] ? Math.max(1, Math.min(72, Number(match[1]))) : 24;
-  return {
-    hours,
-    label: hours === 1 ? "última 1 hora" : `últimas ${hours} horas`,
-    apiRange: hours <= 24 ? "24h" : hours <= 168 ? "7d" : "30d",
-  };
-}
-
-function buildInitialUpdates(input: {
+function buildWelcomeMessage(input: {
   greeting: string;
   userName: string;
   profile: ProfileExperience;
   payload?: HomeContextPayload | null;
-}): BrainUpdateWindow[] {
-  const periodLabel = input.payload?.periodLabel ?? "últimas 24 horas";
+}) {
   const summary = input.payload?.summary;
-  const highlights = Array.isArray(input.payload?.highlights) ? input.payload?.highlights ?? [] : [];
-  const typedMessages = Array.isArray(input.payload?.typedMessages) ? input.payload?.typedMessages ?? [] : [];
-  const baseText = typedMessages.join(" ").trim();
-  const now = Date.now();
-
-  const updates: BrainUpdateWindow[] = [
-    {
-      id: makeHomeId("update"),
-      title: "Atualizações recentes",
-      scope: periodLabel,
-      text:
-        baseText ||
-        `${input.greeting}, ${input.userName}. Estou lendo as movimentações das últimas 24 horas e organizando o que importa para ${input.profile.label}.`,
-      ts: now,
-    },
+  const period = input.payload?.periodLabel ?? "últimas 24 horas";
+  const parts = [
+    `${input.greeting}, ${input.userName}. Eu sou o Brain e já atualizei as ${period}.`,
   ];
 
   if (summary) {
-    updates.push({
-      id: makeHomeId("update"),
-      title: "Resumo tratado pelo Brain",
-      scope: periodLabel,
-      text: `${summary.actions ?? 0} ações registradas, ${summary.companiesUpdated ?? 0} empresas com atualização, ${summary.usersInvolved ?? 0} usuários envolvidos, ${summary.pendingItems ?? 0} pendências abertas e ${summary.flowsWithRisk ?? 0} fluxos com risco.`,
-      ts: now + 1,
-    });
+    parts.push(
+      `Encontrei ${summary.actions ?? 0} ações, ${summary.companiesUpdated ?? 0} empresas com atualização, ${summary.usersInvolved ?? 0} usuários envolvidos, ${summary.pendingItems ?? 0} pendências e ${summary.flowsWithRisk ?? 0} fluxos com risco.`,
+    );
   }
 
-  for (const item of highlights.slice(0, 3)) {
-    updates.push({
-      id: makeHomeId("update"),
-      title: item.title || "Destaque do contexto",
-      scope: periodLabel,
-      text: item.description || "Movimento encontrado no contexto recente.",
-      ts: now + updates.length,
-    });
-  }
+  parts.push(
+    `Você pode me perguntar sobre ${input.profile.prompts.join(", ")}, usuários, empresas, permissões ou qualquer parte do sistema. O que você quer ver agora?`,
+  );
 
-  return updates.slice(-5);
+  return parts.join(" ");
 }
 
 function BrainOrb({ active }: { active: boolean }) {
-  return (
-    <div className={`brain-orb-wrap ${active ? "is-active" : ""}`} aria-hidden="true">
-      <div className="brain-wave-field">
-        <span className="brain-wave wave-one" />
-        <span className="brain-wave wave-two" />
-        <span className="brain-wave wave-three" />
-        <span className="brain-wave-light light-one" />
-        <span className="brain-wave-light light-two" />
-      </div>
-      <div className="brain-orb-aura" />
-      <div className="brain-orb">
-        <div className="brain-orb-liquid primary" />
-        <div className="brain-orb-liquid secondary" />
-        <div className="brain-orb-red-crescent" />
-        <div className="brain-orb-glass" />
-        <div className="brain-orb-shine" />
-        <div className="brain-face">
-          <span className="brain-chevron" />
-          <span className="brain-dash" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function openAssistantChat(input: {
-  command: string;
-  profile: ProfileExperience;
-  updates: BrainUpdateWindow[];
-  hoursLabel: string;
-}) {
-  if (typeof window === "undefined") return;
-
-  const updatesSnippet = input.updates
-    .slice(-8)
-    .map((turn) => `Brain/${turn.scope}: ${turn.title} — ${turn.text}`)
-    .join("\n");
-  const prompt =
-    input.command.trim() ||
-    `Continue a análise da Home. Janela: ${input.hoursLabel}.\n\n${updatesSnippet}`;
-
-  window.dispatchEvent(
-    new CustomEvent("assistant:open", {
-      detail: {
-        source: "home",
-        route: window.location.pathname || "/",
-        panelMode: "side",
-        agentMode: "qa",
-        focusInput: true,
-        initialMessage: prompt,
-        context: {
-          module: "home",
-          screenLabel: "Brain Home",
-          screenSummary: input.profile.summary,
-          suggestedPrompts: input.profile.prompts,
-          metadata: {
-            hoursLabel: input.hoursLabel,
-            updates: input.updates.slice(-8),
-          },
-        },
-      },
-    }),
-  );
+  return <div className={`brain-orb-wrap ${active ? "is-active" : ""}`} aria-hidden="true" />;
 }
 
 function BrainConsole({
@@ -296,76 +188,44 @@ function BrainConsole({
   authUser: unknown;
 }) {
   const [command, setCommand] = useState("");
-  const [updates, setUpdates] = useState<BrainUpdateWindow[]>([]);
+  const [answer, setAnswer] = useState("");
+  const [typedAnswer, setTypedAnswer] = useState("");
   const [sendingHome, setSendingHome] = useState(false);
   const [dictating, setDictating] = useState(false);
   const [hoursLabel, setHoursLabel] = useState("últimas 24 horas");
 
-  const homeStorageKey = useMemo(() => {
-    const record = (authUser ?? {}) as Record<string, unknown>;
-    const id = typeof record.id === "string" ? record.id : userName;
-    return `${HOME_UPDATES_KEY_PREFIX}:${id}`;
-  }, [authUser, userName]);
-
   useEffect(() => {
     let active = true;
 
-    async function loadInitialUpdates() {
-      try {
-        const raw = window.localStorage.getItem(homeStorageKey);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setUpdates(parsed.slice(-5));
-            return;
-          }
-        }
-      } catch {
-        // continua com atualização nova
-      }
-
+    async function loadInitialContext() {
       try {
         const response = await fetch("/api/brain/home-context?range=24h", { cache: "no-store" });
         const payload = response.ok ? ((await response.json().catch(() => null)) as HomeContextPayload | null) : null;
-        if (active) {
-          setUpdates(buildInitialUpdates({ greeting, userName, profile, payload }));
-        }
+        if (active) setAnswer(buildWelcomeMessage({ greeting, userName, profile, payload }));
       } catch {
-        if (active) {
-          setUpdates(buildInitialUpdates({ greeting, userName, profile }));
-        }
+        if (active) setAnswer(buildWelcomeMessage({ greeting, userName, profile }));
       }
     }
 
-    void loadInitialUpdates();
+    void loadInitialContext();
     return () => {
       active = false;
     };
-  }, [greeting, homeStorageKey, profile, userName]);
+  }, [greeting, profile, userName]);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(homeStorageKey, JSON.stringify(updates.slice(-8)));
-    } catch {
-      // ignora falha de histórico local
-    }
-  }, [updates, homeStorageKey]);
+    setTypedAnswer("");
+    if (!answer) return;
 
-  function replaceThinkingWithUpdate(text: string, scope: string, title = "Resposta organizada") {
-    setUpdates((current) => {
-      const withoutThinking = current.filter((turn) => turn.id !== "brain-thinking-home");
-      return [
-        ...withoutThinking,
-        {
-          id: makeHomeId("update"),
-          title,
-          text,
-          scope,
-          ts: Date.now(),
-        },
-      ].slice(-8);
-    });
-  }
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index += 2;
+      setTypedAnswer(answer.slice(0, index));
+      if (index >= answer.length) window.clearInterval(timer);
+    }, 18);
+
+    return () => window.clearInterval(timer);
+  }, [answer]);
 
   async function askHomeBrain(text: string) {
     const windowInfo = extractHourWindow(text);
@@ -373,25 +233,14 @@ function BrainConsole({
     setHoursLabel(scope);
     setCommand("");
     setSendingHome(true);
-    setUpdates((current) => [
-      ...current.filter((turn) => turn.id !== "brain-thinking-home"),
-      {
-        id: "brain-thinking-home",
-        title: "Analisando pedido",
-        text: `Estou buscando, tratando e organizando as informações da ${scope}.`,
-        scope,
-        ts: Date.now(),
-      },
-    ].slice(-8));
-
-    openAssistantChat({ command: text, profile, updates, hoursLabel: scope });
+    setAnswer(`Estou analisando ${scope}. Vou organizar a resposta para você.`);
 
     try {
       const response = await fetch("/api/assistente/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: `Responda para a Home do Brain sem repetir a pergunta da usuária. Traga dados, informações organizadas e uma explicação clara. Janela solicitada: ${scope}. Pedido: ${text}`,
+          message: `Responda na Home do Brain de forma curta, útil e organizada. Janela: ${scope}. Pedido: ${text}`,
           context: {
             route: "/home",
             module: "home",
@@ -402,23 +251,15 @@ function BrainConsole({
             metadata: {
               requestedWindow: scope,
               apiRange: windowInfo.apiRange,
-              previousUpdates: updates.slice(-6),
             },
           },
         }),
       });
 
       const payload = (await response.json().catch(() => ({}))) as { answer?: string; message?: string; error?: string };
-      replaceThinkingWithUpdate(
-        payload.answer || payload.message || payload.error || "Não encontrei detalhes suficientes agora. Tente pedir por uma empresa, usuário, tela, fluxo ou período em horas.",
-        scope,
-      );
+      setAnswer(payload.answer || payload.message || payload.error || "Não encontrei detalhes suficientes agora. Me diga uma empresa, usuário, tela, defeito, plano ou período específico.");
     } catch {
-      replaceThinkingWithUpdate(
-        "Não consegui consultar o Brain agora. Mantive o pedido no chat flutuante para continuar a análise por lá.",
-        scope,
-        "Consulta indisponível",
-      );
+      setAnswer("Não consegui consultar o Brain agora. Tente novamente com uma pergunta mais específica.");
     } finally {
       setSendingHome(false);
     }
@@ -434,7 +275,7 @@ function BrainConsole({
   function startHomeDictation() {
     const SpeechRecognitionConstructor = resolveSpeechRecognitionConstructor();
     if (!SpeechRecognitionConstructor) {
-      replaceThinkingWithUpdate("Este navegador não liberou ditado por voz aqui. Você pode continuar digitando.", hoursLabel, "Áudio indisponível");
+      setAnswer("Este navegador não liberou ditado por voz aqui. Você pode continuar digitando.");
       return;
     }
 
@@ -460,57 +301,12 @@ function BrainConsole({
 
   return (
     <section className="brain-home-shell relative ml-0 flex min-h-[calc(100vh-4.75rem)] w-full max-w-none overflow-hidden rounded-none border border-[var(--brain-border)] bg-[var(--brain-bg)] p-4 text-[var(--brain-text)] shadow-[0_30px_100px_var(--brain-shadow)] sm:rounded-[2rem] lg:min-h-[calc(100vh-5.5rem)] lg:p-6">
-      <style>{`
-        .brain-home-shell { --brain-bg: radial-gradient(circle at 10% 14%, rgba(239,0,1,.08), transparent 24%), radial-gradient(circle at 82% 20%, rgba(59,130,246,.13), transparent 30%), linear-gradient(135deg,#ffffff 0%,#f7faff 52%,#edf4ff 100%); --brain-text: #061225; --brain-muted: rgba(6,18,37,.62); --brain-panel: rgba(255,255,255,.84); --brain-panel-strong: rgba(255,255,255,.96); --brain-border: rgba(15,23,42,.12); --brain-chip: rgba(1,24,72,.06); --brain-input: rgba(255,255,255,.9); --brain-shadow: rgba(15,23,42,.10); }
-        .dark .brain-home-shell, [data-theme="dark"] .brain-home-shell { --brain-bg: radial-gradient(circle at 13% 18%,rgba(239,0,1,.14),transparent 24%),radial-gradient(circle at 80% 20%,rgba(147,197,253,.12),transparent 28%),linear-gradient(135deg,#050713 0%,#070b18 46%,#0a1020 100%); --brain-text: #ffffff; --brain-muted: rgba(255,255,255,.58); --brain-panel: rgba(255,255,255,.07); --brain-panel-strong: rgba(255,255,255,.09); --brain-border: rgba(255,255,255,.10); --brain-chip: rgba(0,0,0,.20); --brain-input: rgba(0,0,0,.20); --brain-shadow: rgba(0,0,0,.34); }
-        .brain-orb-wrap { position: relative; width: clamp(260px, 28vw, 430px); height: clamp(260px, 28vw, 430px); display: grid; place-items: center; isolation: isolate; animation: brainRobotHover 6.4s ease-in-out infinite; }
-        .brain-wave-field { position: absolute; inset: 0; z-index: 1; border-radius: 999px; filter: drop-shadow(0 0 22px rgba(255,42,68,.22)); }
-        .brain-wave { position: absolute; border-radius: 999px; opacity: .80; transform-origin: center; }
-        .brain-wave::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: conic-gradient(from 128deg, transparent 0deg, transparent 34deg, rgba(255,52,82,.13) 52deg, rgba(255,52,82,.86) 72deg, rgba(255,52,82,.18) 102deg, transparent 140deg, rgba(180,212,255,.18) 218deg, transparent 272deg, rgba(255,52,82,.46) 320deg, transparent 360deg); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-        .brain-wave::after { content: ""; position: absolute; width: 4px; height: 4px; border-radius: 999px; background: rgba(255,52,82,.96); box-shadow: 0 0 14px rgba(255,52,82,.96), 0 0 28px rgba(255,52,82,.40); }
-        .brain-wave.wave-one { inset: 16%; animation: brainWaveOrbit 11s linear infinite, brainWavePulse 4.4s ease-in-out infinite; }
-        .brain-wave.wave-one::after { right: 10%; bottom: 13%; }
-        .brain-wave.wave-two { inset: 9%; opacity: .44; animation: brainWaveOrbit 18s linear infinite reverse, brainWavePulse 5.8s ease-in-out infinite reverse; }
-        .brain-wave.wave-two::after { right: 7%; top: 34%; width: 3px; height: 3px; opacity: .44; }
-        .brain-wave.wave-three { inset: 3%; opacity: .25; animation: brainWaveOrbit 28s linear infinite, brainWavePulse 6.2s ease-in-out infinite; }
-        .brain-wave.wave-three::after { display: none; }
-        .brain-wave-light { position: absolute; z-index: 2; width: 3px; height: 3px; border-radius: 999px; background: rgba(255,255,255,.58); box-shadow: 0 0 10px rgba(255,255,255,.58), 0 0 24px rgba(255,52,82,.26); opacity: .44; }
-        .brain-wave-light.light-one { left: 18%; top: 18%; animation: brainLightDrift 4.2s ease-in-out infinite; }
-        .brain-wave-light.light-two { right: 11%; top: 42%; animation: brainLightDrift 5.1s ease-in-out infinite reverse; }
-        .brain-orb-aura { position: absolute; z-index: 2; width: 62%; height: 62%; border-radius: 999px; background: radial-gradient(circle at 33% 72%, rgba(255,40,70,.18), transparent 42%), radial-gradient(circle, rgba(94,139,213,.10), transparent 70%); filter: blur(13px); opacity: .66; animation: brainAura 5.4s ease-in-out infinite; }
-        .brain-orb { position: relative; z-index: 3; width: 47%; height: 47%; border-radius: 999px; overflow: hidden; background: radial-gradient(circle at 60% 18%, rgba(198,222,247,.16), rgba(132,169,210,.06) 14%, transparent 27%), radial-gradient(circle at 42% 55%, #101a2b 0%, #07101c 55%, #02050d 100%); border: 1px solid rgba(194,215,255,.15); box-shadow: inset 14px 14px 26px rgba(222,238,255,.06), inset -28px -32px 58px rgba(0,0,0,.86), 0 0 12px rgba(255,52,82,.24), 0 0 38px rgba(255,52,82,.10), 0 0 72px rgba(150,196,255,.08); animation: brainBotBreath 4.8s ease-in-out infinite; }
-        .brain-orb-liquid { position: absolute; border-radius: 999px; mix-blend-mode: screen; pointer-events: none; }
-        .brain-orb-liquid.primary { left: -10%; bottom: 2%; width: 38%; height: 43%; background: radial-gradient(circle at 78% 72%, rgba(255,44,72,.18), rgba(255,44,72,.05) 44%, transparent 74%); filter: blur(13px); opacity: .38; animation: brainLiquid 7.2s ease-in-out infinite; }
-        .brain-orb-liquid.secondary { right: -14%; top: -14%; width: 48%; height: 44%; background: radial-gradient(circle, rgba(190,220,255,.18), rgba(95,147,217,.06) 48%, transparent 72%); filter: blur(11px); opacity: .34; animation: brainLiquid 8.8s ease-in-out infinite reverse; }
-        .brain-orb-red-crescent { position: absolute; left: 0%; bottom: 6%; width: 43%; height: 49%; border-radius: 999px; border-left: 4px solid rgba(255,52,82,.95); border-bottom: 3px solid rgba(255,52,82,.54); filter: drop-shadow(0 0 9px rgba(255,52,82,.78)) drop-shadow(0 0 20px rgba(255,52,82,.26)); transform: rotate(-25deg); opacity: .98; }
-        .brain-orb-glass { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 66% 18%, rgba(236,246,255,.14), transparent 20%), radial-gradient(circle at 56% 64%, transparent 0%, rgba(255,255,255,.014) 58%, rgba(255,255,255,.055) 100%); border: 1px solid rgba(255,255,255,.06); }
-        .brain-orb-shine { position: absolute; right: 13%; top: 10%; width: 34%; height: 20%; border-radius: 999px; background: linear-gradient(138deg, rgba(242,249,255,.22), rgba(190,218,255,.04) 50%, transparent 78%); transform: rotate(-30deg); opacity: .52; filter: blur(.1px); }
-        .brain-face { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: clamp(21px, 2.7vw, 30px); transform: translate3d(0, 4px, 0); animation: brainFaceMotion 5.4s ease-in-out infinite; }
-        .brain-chevron { position: relative; width: 16px; height: 13px; filter: drop-shadow(0 0 8px rgba(255,255,255,.98)); }
-        .brain-chevron::before, .brain-chevron::after { content: ""; position: absolute; top: 6px; width: 11px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.96); }
-        .brain-chevron::before { left: 1px; transform: rotate(-54deg); transform-origin: right center; }
-        .brain-chevron::after { right: 1px; transform: rotate(54deg); transform-origin: left center; }
-        .brain-dash { display: block; width: 14px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.94); box-shadow: 0 0 10px rgba(255,255,255,.84); animation: brainDashBlink 4.7s ease-in-out infinite; }
-        .brain-orb-wrap.is-active .brain-wave.wave-one { animation-duration: 7.6s, 3.4s; }
-        .brain-orb-wrap.is-active .brain-wave.wave-two { animation-duration: 11.4s, 4.4s; }
-        @keyframes brainRobotHover { 0%, 100% { transform: translate3d(0,0,0) rotate(-.35deg); } 45% { transform: translate3d(0,-8px,0) rotate(.45deg); } 70% { transform: translate3d(2px,-5px,0) rotate(-.15deg); } }
-        @keyframes brainBotBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
-        @keyframes brainAura { 0%,100% { transform: scale(.94); opacity: .46; } 50% { transform: scale(1.10); opacity: .78; } }
-        @keyframes brainLiquid { 0%,100% { transform: rotate(0deg) translate3d(0,0,0) scale(1); } 50% { transform: rotate(10deg) translate3d(4px,-5px,0) scale(1.06); } }
-        @keyframes brainWaveOrbit { to { transform: rotate(360deg); } }
-        @keyframes brainWavePulse { 0%,100% { opacity: .34; filter: blur(.2px) drop-shadow(0 0 14px rgba(255,52,82,.20)); } 45% { opacity: .80; filter: blur(.05px) drop-shadow(0 0 24px rgba(255,52,82,.36)); } }
-        @keyframes brainLightDrift { 0%,100% { transform: translate3d(0,0,0) scale(.8); opacity: .24; } 50% { transform: translate3d(6px,-4px,0) scale(1.2); opacity: .64; } }
-        @keyframes brainFaceMotion { 0%,100% { transform: translate3d(0,4px,0); } 50% { transform: translate3d(1px,1px,0); } }
-        @keyframes brainDashBlink { 0%, 88%, 100% { transform: scaleY(1); opacity: .94; } 92% { transform: scaleY(.24); opacity: .70; } }
-        @media (prefers-reduced-motion: reduce) { .brain-orb-wrap, .brain-orb, .brain-orb-aura, .brain-orb-liquid, .brain-wave, .brain-wave-light, .brain-face, .brain-dash { animation: none; } }
-      `}</style>
-
-      <div className="relative z-10 grid min-h-full w-full flex-1 items-stretch gap-6 lg:grid-cols-[minmax(300px,38vw)_minmax(0,1fr)] xl:grid-cols-[minmax(360px,42vw)_minmax(0,1fr)]">
-        <div className="flex min-h-[260px] items-center justify-center rounded-[1.8rem] border border-[var(--brain-border)] bg-[var(--brain-chip)] p-4 lg:min-h-full">
+      <div className="relative z-10 grid min-h-full w-full flex-1 items-stretch gap-6 lg:grid-cols-[minmax(220px,28vw)_minmax(0,1fr)]">
+        <div className="brain-home-orb-panel flex min-h-[240px] items-center justify-center rounded-[1.8rem] border border-[var(--brain-border)] bg-[var(--brain-chip)] p-4 lg:min-h-full">
           <BrainOrb active={sendingHome || dictating} />
         </div>
 
-        <div className="flex min-h-full min-w-0 flex-col rounded-[1.8rem] border border-[var(--brain-border)] bg-[var(--brain-panel)] p-4 backdrop-blur lg:p-6">
+        <div className="brain-home-response-panel flex min-h-full min-w-0 flex-col rounded-[1.8rem] border border-[var(--brain-border)] bg-[var(--brain-panel)] p-4 backdrop-blur lg:p-6">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="inline-flex rounded-full border border-[var(--brain-border)] bg-[var(--brain-chip)] px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-[var(--brain-muted)]">
               Brain
@@ -519,33 +315,29 @@ function BrainConsole({
               <FiClock /> {hoursLabel}
             </span>
           </div>
+
           <h1 className="text-3xl font-black leading-tight tracking-tight text-[var(--brain-text)] sm:text-4xl xl:text-5xl">
             {greeting}, <span className="text-[var(--tc-accent,#ef0001)]">{userName}.</span>
           </h1>
 
-          <div className="mt-5 min-h-[260px] flex-1 space-y-3 overflow-auto pr-1 lg:min-h-0">
-            {updates.map((item) => (
-              <article
-                key={item.id}
-                className="rounded-[1.35rem] rounded-bl-md border border-[var(--brain-border)] bg-[var(--brain-panel-strong)] px-4 py-3 text-[var(--brain-text)] shadow-[0_18px_44px_var(--brain-shadow)] backdrop-blur"
-              >
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--tc-accent,#ef0001)]/16 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tc-accent,#ef0001)]">
-                    <FiZap /> {item.scope}
-                  </span>
-                  <h2 className="text-sm font-black text-[var(--brain-text)]">{item.title}</h2>
-                </div>
-                <p className="whitespace-pre-line text-sm font-semibold leading-6 text-[var(--brain-text)] sm:text-base">{item.text}</p>
-              </article>
-            ))}
-          </div>
+          <article className="brain-home-answer-card mt-5 flex min-h-[240px] flex-1 flex-col justify-center rounded-[1.35rem] border border-[var(--brain-border)] bg-[var(--brain-panel-strong)] px-5 py-5 text-[var(--brain-text)] shadow-[0_18px_44px_var(--brain-shadow)] backdrop-blur">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--tc-accent,#ef0001)]/16 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tc-accent,#ef0001)]">
+                <FiZap /> resposta do Brain
+              </span>
+            </div>
+            <p className="brain-home-typed-text whitespace-pre-line text-base font-semibold leading-7 text-[var(--brain-text)] sm:text-lg">
+              {typedAnswer}
+              <span className="brain-home-cursor" aria-hidden="true">|</span>
+            </p>
+          </article>
 
           <form onSubmit={handleSubmit} className="mt-5 flex items-center gap-3 rounded-full border border-[var(--tc-accent,#ef0001)]/55 bg-[var(--brain-input)] px-5 py-4 shadow-[0_0_42px_rgba(59,130,246,0.13)] backdrop-blur">
             <FiCommand className="shrink-0 text-[var(--brain-muted)]" size={22} />
             <input
               value={command}
               onChange={(event) => setCommand(event.target.value)}
-              placeholder="Peça dados, atualizações ou informe horas. Ex: últimas 6h por empresa..."
+              placeholder="Pergunte ao Brain: últimos defeitos, planos, casos, usuários, empresas..."
               className="min-w-0 flex-1 bg-transparent text-base font-semibold text-[var(--brain-text)] outline-none placeholder:text-[var(--brain-muted)]"
             />
             <button
@@ -562,17 +354,6 @@ function BrainConsole({
               Enviar para o Brain
             </button>
           </form>
-
-          <div className="mt-4 flex justify-end">
-            <button
-              type="button"
-              onClick={() => openAssistantChat({ command, profile, updates, hoursLabel })}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--brain-border)] bg-[var(--brain-chip)] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[var(--brain-text)] transition hover:border-[var(--tc-accent,#ef0001)]/55"
-            >
-              Abrir conversa no chat
-              <FiMessageCircle />
-            </button>
-          </div>
         </div>
       </div>
     </section>

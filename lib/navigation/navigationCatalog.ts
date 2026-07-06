@@ -1,4 +1,4 @@
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type NavModule =
   | "home"
@@ -323,7 +323,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "requests-list",
         routeId: "solicitacoes.listagem",
-        label: "Listar empresas",
+        label: "Listagem",
         iconKey: "clipboard",
         module: "requests",
         href: "/solicitacoes",
@@ -536,3 +536,4 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [],
   },
 ];
+

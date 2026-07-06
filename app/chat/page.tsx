@@ -20,6 +20,10 @@ const ChatRuntimeFixes = loadDynamic(() => import("./ChatRuntimeFixes"), {
   ssr: false,
 });
 
+const ChatConversationWorkflowActions = loadDynamic(() => import("./ChatConversationWorkflowActions"), {
+  ssr: false,
+});
+
 export default function ChatPage() {
   const className = [
     styles.chatTheme,
@@ -35,6 +39,7 @@ export default function ChatPage() {
     <div className={className}>
       <Chat />
       <ChatRuntimeFixes />
+      <ChatConversationWorkflowActions />
     </div>
   );
 }

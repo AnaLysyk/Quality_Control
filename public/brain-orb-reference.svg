@@ -1,81 +1,87 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
   <defs>
-    <radialGradient id="orbFill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(155 132) rotate(112) scale(86 88)">
-      <stop offset="0" stop-color="#1c3042"/>
-      <stop offset="0.42" stop-color="#0a1726"/>
-      <stop offset="0.74" stop-color="#030814"/>
+    <radialGradient id="space" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 120) scale(122)">
+      <stop stop-color="#071021" stop-opacity="0.52"/>
+      <stop offset="0.7" stop-color="#080815" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#090713" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(126 118) rotate(125) scale(64 67)">
+      <stop offset="0" stop-color="#2b4052"/>
+      <stop offset="0.42" stop-color="#101c2a"/>
+      <stop offset="0.76" stop-color="#040914"/>
       <stop offset="1" stop-color="#01030a"/>
     </radialGradient>
-    <radialGradient id="orbDepth" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(118 188) rotate(46) scale(64 54)">
-      <stop stop-color="#ff365d" stop-opacity="0.38"/>
-      <stop offset="0.45" stop-color="#ff365d" stop-opacity="0.13"/>
-      <stop offset="1" stop-color="#ff365d" stop-opacity="0"/>
+    <radialGradient id="blueShine" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(139 76) rotate(-24) scale(45 30)">
+      <stop stop-color="#f7fbff" stop-opacity="0.46"/>
+      <stop offset="0.45" stop-color="#bdd6f6" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#9dbde7" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glassShine" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(181 105) rotate(-25) scale(36 24)">
-      <stop stop-color="#f8fcff" stop-opacity="0.58"/>
-      <stop offset="0.45" stop-color="#cfe2fb" stop-opacity="0.19"/>
-      <stop offset="1" stop-color="#cfe2fb" stop-opacity="0"/>
+    <radialGradient id="redCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(91 151) rotate(46) scale(52 44)">
+      <stop stop-color="#ff355f" stop-opacity="0.34"/>
+      <stop offset="0.48" stop-color="#ff355f" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ff355f" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="coolEdge" x1="100" y1="80" x2="214" y2="208" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ecf6ff" stop-opacity="0.26"/>
-      <stop offset="0.5" stop-color="#97bce9" stop-opacity="0.11"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0.03"/>
+    <linearGradient id="edge" x1="82" y1="65" x2="167" y2="177" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#eaf4ff" stop-opacity="0.54"/>
+      <stop offset="0.42" stop-color="#8baed9" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.04"/>
     </linearGradient>
-    <linearGradient id="redStroke" x1="84" y1="122" x2="126" y2="218" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ff3e68" stop-opacity="0"/>
-      <stop offset="0.28" stop-color="#ff3e68" stop-opacity="0.8"/>
-      <stop offset="0.68" stop-color="#ff3e68" stop-opacity="1"/>
-      <stop offset="1" stop-color="#ff3e68" stop-opacity="0.08"/>
+    <linearGradient id="redCrescent" x1="66" y1="104" x2="92" y2="178" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff3863" stop-opacity="0"/>
+      <stop offset="0.3" stop-color="#ff3863" stop-opacity="0.85"/>
+      <stop offset="0.76" stop-color="#ff3863" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#ff3863" stop-opacity="0.08"/>
     </linearGradient>
-    <filter id="redGlow" x="24" y="38" width="252" height="242" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#ff365d" flood-opacity="0.54"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#ff365d" flood-opacity="0.22"/>
+    <filter id="redGlow" x="20" y="20" width="200" height="200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="3.4" flood-color="#ff3863" flood-opacity="0.78"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="13" flood-color="#ff3863" flood-opacity="0.25"/>
     </filter>
-    <filter id="eyeGlow" x="94" y="122" width="116" height="60" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="0" stdDeviation="2.4" flood-color="#ffffff" flood-opacity="0.92"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#dcecff" flood-opacity="0.32"/>
+    <filter id="eyeGlow" x="80" y="92" width="88" height="62" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#ffffff" flood-opacity="0.95"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#d9ecff" flood-opacity="0.28"/>
     </filter>
-    <filter id="softAura" x="24" y="24" width="252" height="252" filterUnits="userSpaceOnUse">
-      <feGaussianBlur stdDeviation="11"/>
+    <filter id="softBlur" x="20" y="20" width="200" height="200" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="13"/>
     </filter>
   </defs>
 
-  <circle cx="150" cy="150" r="118" fill="#070b18" opacity="0.18"/>
-  <circle cx="150" cy="150" r="96" stroke="#ff365d" stroke-opacity="0.18" stroke-width="1.4"/>
-  <circle cx="150" cy="150" r="113" stroke="#dcecff" stroke-opacity="0.055" stroke-width="1"/>
-  <path d="M50 150a100 100 0 0 1 174-66" stroke="#ff365d" stroke-opacity="0.28" stroke-width="1.2" stroke-linecap="round"/>
-  <path d="M64 187a93 93 0 0 1 45-112" stroke="#ff365d" stroke-opacity="0.18" stroke-width="1.2" stroke-linecap="round"/>
-  <path d="M219 101a90 90 0 0 1 19 76" stroke="#dcecff" stroke-opacity="0.08" stroke-width="1" stroke-linecap="round"/>
+  <rect width="240" height="240" fill="transparent"/>
+  <circle cx="120" cy="120" r="118" fill="url(#space)"/>
 
-  <g opacity="0.95">
-    <circle cx="66" cy="54" r="1.7" fill="#ffffff" opacity="0.38"/>
-    <circle cx="103" cy="48" r="1.8" fill="#ff3b63" opacity="0.58"/>
-    <circle cx="236" cy="120" r="1.4" fill="#ffffff" opacity="0.28"/>
-    <circle cx="229" cy="230" r="1.4" fill="#ff3b63" opacity="0.34"/>
+  <g opacity="0.75">
+    <circle cx="121" cy="120" r="93" stroke="#6f8fba" stroke-opacity="0.06" stroke-width="1"/>
+    <circle cx="121" cy="120" r="72" stroke="#ff3863" stroke-opacity="0.13" stroke-width="1"/>
+    <path d="M39 125a86 86 0 0 1 151-57" stroke="#ff3863" stroke-opacity="0.26" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M57 155a72 72 0 0 1 37-88" stroke="#ff3863" stroke-opacity="0.17" stroke-width="1" stroke-linecap="round"/>
+    <path d="M186 73a76 76 0 0 1 18 59" stroke="#dcecff" stroke-opacity="0.09" stroke-width="1" stroke-linecap="round"/>
   </g>
 
-  <circle cx="150" cy="150" r="70" fill="url(#orbDepth)" filter="url(#softAura)" opacity="0.72"/>
+  <circle cx="120" cy="120" r="62" fill="url(#redCore)" filter="url(#softBlur)" opacity="0.66"/>
 
   <g filter="url(#redGlow)">
-    <path d="M82 150a68 68 0 0 1 58-67" stroke="#e8f2ff" stroke-opacity="0.13" stroke-width="1"/>
-    <path d="M73 154a78 78 0 0 1 144-45" stroke="#e8f2ff" stroke-opacity="0.08" stroke-width="1"/>
-    <path d="M71 155a81 81 0 0 0 50 65" stroke="#ff3e68" stroke-opacity="0.78" stroke-width="2.4" stroke-linecap="round"/>
-    <path d="M222 214a92 92 0 0 0 17-22" stroke="#ff3e68" stroke-opacity="0.38" stroke-width="2" stroke-linecap="round"/>
+    <path d="M57 127a66 66 0 0 1 120-41" stroke="#ff3863" stroke-opacity="0.22" stroke-width="1" stroke-linecap="round"/>
+    <path d="M57 127a70 70 0 0 0 41 55" stroke="#ff3863" stroke-opacity="0.72" stroke-width="2.1" stroke-linecap="round"/>
+    <path d="M190 176a75 75 0 0 0 13-19" stroke="#ff3863" stroke-opacity="0.40" stroke-width="1.8" stroke-linecap="round"/>
   </g>
 
   <g>
-    <circle cx="150" cy="150" r="64" fill="url(#orbFill)"/>
-    <circle cx="150" cy="150" r="64" stroke="url(#coolEdge)" stroke-width="1.4"/>
-    <path d="M91 151a61 61 0 0 0 39 60" stroke="url(#redStroke)" stroke-width="3.4" stroke-linecap="round" filter="url(#redGlow)"/>
-    <ellipse cx="181" cy="106" rx="30" ry="20" fill="url(#glassShine)" transform="rotate(-25 181 106)"/>
-    <circle cx="150" cy="150" r="61" stroke="#ffffff" stroke-opacity="0.045" stroke-width="1"/>
-    <circle cx="150" cy="150" r="64" stroke="#000000" stroke-opacity="0.24" stroke-width="2"/>
+    <circle cx="120" cy="120" r="53" fill="url(#orb)"/>
+    <circle cx="120" cy="120" r="54" stroke="url(#edge)" stroke-width="1.5"/>
+    <circle cx="120" cy="120" r="52" stroke="#ffffff" stroke-opacity="0.05"/>
+    <path d="M69 120a52 52 0 0 0 33 50" stroke="url(#redCrescent)" stroke-width="3" stroke-linecap="round" filter="url(#redGlow)"/>
+    <ellipse cx="145" cy="82" rx="24" ry="17" fill="url(#blueShine)" transform="rotate(-30 145 82)"/>
+    <circle cx="120" cy="120" r="54" stroke="#000" stroke-opacity="0.26" stroke-width="2"/>
   </g>
 
-  <g filter="url(#eyeGlow)" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M124 150l8 8 8-8"/>
-    <path d="M169 151h17"/>
+  <g filter="url(#eyeGlow)" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M99 119l7 7 7-7"/>
+    <path d="M137 120h14"/>
   </g>
-  <circle cx="120" cy="169" r="6" fill="#ff365d" opacity="0.12"/>
-  <circle cx="191" cy="169" r="5" fill="#ff365d" opacity="0.08"/>
+
+  <g opacity="0.7">
+    <circle cx="52" cy="40" r="1.2" fill="#fff" opacity="0.22"/>
+    <circle cx="83" cy="39" r="1.4" fill="#ff3863" opacity="0.44"/>
+    <circle cx="198" cy="92" r="1.2" fill="#fff" opacity="0.30"/>
+    <circle cx="194" cy="185" r="1.4" fill="#ff3863" opacity="0.46"/>
+  </g>
 </svg>

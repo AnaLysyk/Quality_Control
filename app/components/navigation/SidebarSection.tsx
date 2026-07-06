@@ -33,6 +33,8 @@ const moduleBaseClass =
 const subItemBaseClass =
   "flex w-full min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg border border-transparent border-l-transparent bg-transparent px-2 py-1.5 text-[13px] font-medium text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
+const selectedClass = "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)";
+
 export default function SidebarSection({
   mod,
   isActive,
@@ -45,7 +47,8 @@ export default function SidebarSection({
   const router = useRouter();
   const visibleItems = mod.items.filter((item) => item.href);
   const hasChildren = visibleItems.length > 0;
-  const moduleClassName = `${moduleBaseClass} ${isActive ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`;
+  const highlightModule = isActive && !hasChildren;
+  const moduleClassName = `${moduleBaseClass} ${highlightModule ? selectedClass : ""}`;
 
   const prefetchHref = useCallback(
     (href?: string) => {
@@ -71,8 +74,8 @@ export default function SidebarSection({
         href={href}
         prefetch={false}
         data-testid={mod.testId}
-        data-active={isActive ? "true" : undefined}
-        aria-current={isActive ? "page" : undefined}
+        data-active={highlightModule ? "true" : undefined}
+        aria-current={highlightModule ? "page" : undefined}
         onClick={onClose}
         onPointerEnter={() => prefetchHref(mod.href)}
         onPointerDown={() => prefetchHref(mod.href)}
@@ -91,8 +94,8 @@ export default function SidebarSection({
       <button
         onClick={onToggle}
         data-testid={mod.testId}
-        data-active={isActive ? "true" : undefined}
-        className={moduleClassName}
+        data-active={undefined}
+        className={moduleBaseClass}
       >
         {createElement(getIcon(mod.iconKey), { size: 16, className: "shrink-0 text-current" })}
         <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">{mod.label}</span>
@@ -123,8 +126,10 @@ export default function SidebarSection({
                   <button
                     type="button"
                     data-testid={item.testId}
+                    data-active={active ? "true" : undefined}
+                    aria-current={active ? "page" : undefined}
                     onClick={openSupportTicketModal}
-                    className={`${subItemBaseClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
+                    className={`${subItemBaseClass} ${active ? selectedClass : ""}`}
                   >
                     {createElement(Icon, { size: 13, className: "shrink-0 text-current opacity-75" })}
                     <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
@@ -140,7 +145,7 @@ export default function SidebarSection({
                     onPointerEnter={() => prefetchHref(item.href)}
                     onPointerDown={() => prefetchHref(item.href)}
                     onFocus={() => prefetchHref(item.href)}
-                    className={`${subItemBaseClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
+                    className={`${subItemBaseClass} ${active ? selectedClass : ""}`}
                   >
                     {createElement(Icon, { size: 13, className: "shrink-0 text-current opacity-75" })}
                     <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>

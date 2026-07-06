@@ -96,7 +96,7 @@ function projectQuery(companySlug: string, project: ProjectItem) {
 function operationUrl(companySlug: string, project: ProjectItem, route: OperationRoute = "dashboard") {
   const params = projectQuery(companySlug, project);
 
-  if (route === "casos") return `/casos-de-teste?${params.toString()}`;
+  if (route === "casos") return `/empresas/${companySlug}/casos-de-teste?${params.toString()}`;
   if (route === "documentos") return `/documentos?${params.toString()}`;
   if (route === "planos") return `/empresas/${companySlug}/planos-de-teste?${params.toString()}`;
   if (route === "runs") return `/empresas/${companySlug}/runs?${params.toString()}`;
@@ -258,213 +258,103 @@ export default function CompanyProjectsPage() {
               </p>
             </div>
             <div className="grid min-w-full grid-cols-3 gap-2 sm:min-w-[440px]">
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/55">Projetos</div>
-                <div className="mt-1 text-2xl font-black">{activeCount}</div>
-              </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/55">Manual</div>
-                <div className="mt-1 text-2xl font-black">{manualCount}</div>
-              </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/55">Qase</div>
-                <div className="mt-1 text-2xl font-black">{qaseCount}</div>
-              </div>
+              <StatCard label="Projetos" value={activeCount} />
+              <StatCard label="Qase" value={qaseCount} />
+              <StatCard label="Manuais" value={manualCount} />
             </div>
           </div>
         </section>
 
-        <section className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <section className="rounded-[30px] border border-(--tc-border,#d7deea) bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-black tracking-[-0.03em] text-[var(--tc-text-primary,#0b1a3c)]">Operações disponíveis</h2>
-              <p className="mt-1 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                Cadastre manualmente ou sincronize com o Qase. Depois entre na operação para controlar qualidade por projeto.
-              </p>
+              <h2 className="text-xl font-black tracking-tight">Lista de projetos</h2>
+              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Filtre por origem, sincronize Qase e abra a operação mantendo o escopo ativo.</p>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <button type="button" onClick={() => void syncQase()} disabled={syncing} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-xs font-black uppercase tracking-[0.12em] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-alt,#f8fafc)] disabled:opacity-60">
-                <FiRefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} /> Sincronizar Qase
-              </button>
-              <button type="button" onClick={() => setCreateOpen(true)} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(90deg,var(--tc-primary,#011848)_0%,var(--tc-accent,#ef0001)_100%)] px-4 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.22)] transition hover:-translate-y-0.5 hover:opacity-95">
-                <FiPlus className="h-4 w-4" /> Novo projeto
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
-            <label className="relative flex-1">
-              <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, slug ou código Qase" className="h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10" />
-            </label>
             <div className="flex flex-wrap gap-2">
-              {([
-                ["all", "Todos"],
-                ["manual", "Manuais"],
-                ["qase", "Qase"],
-              ] as Array<[SourceFilter, string]>).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setSourceFilter(value)}
-                  className={`rounded-full border px-3 py-2 text-xs font-black uppercase tracking-[0.08em] transition ${
-                    sourceFilter === value
-                      ? "border-[var(--tc-primary,#011848)] bg-[var(--tc-primary,#011848)] text-white shadow-[0_10px_20px_rgba(1,24,72,0.16)]"
-                      : "border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-secondary,#4b5563)] hover:bg-[var(--tc-surface-alt,#f8fafc)]"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              <button type="button" onClick={() => void syncQase()} disabled={syncing} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) px-4 py-2 text-sm font-semibold disabled:opacity-60">
+                <FiRefreshCw className={syncing ? "animate-spin" : ""} /> {syncing ? "Sincronizando" : "Sincronizar Qase"}
+              </button>
+              <button type="button" onClick={() => setCreateOpen(true)} className="inline-flex items-center gap-2 rounded-full bg-(--tc-primary,#011848) px-4 py-2 text-sm font-bold text-white">
+                <FiPlus /> Novo projeto
+              </button>
             </div>
           </div>
 
-          {error ? <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div> : null}
+          <div className="mt-5 grid gap-3 md:grid-cols-[1fr_220px]">
+            <label className="relative block">
+              <FiSearch className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar projeto, slug ou código Qase" className="min-h-11 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white pr-4 pl-11 text-sm outline-none" />
+            </label>
+            <select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as SourceFilter)} className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold">
+              <option value="all">Todas as origens</option>
+              <option value="qase">Qase</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
 
-          {loading ? (
-            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="h-64 animate-pulse rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)]" />
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="mt-5 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-12 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[var(--tc-primary,#011848)]">
-                <FiFolder className="h-6 w-6" />
-              </div>
-              <h3 className="mt-4 text-lg font-black text-[var(--tc-text-primary,#0b1a3c)]">Nenhum projeto encontrado</h3>
-              <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                Cadastre um projeto manual para iniciar o controle de qualidade ou sincronize com o Qase para trazer os projetos configurados na empresa.
-              </p>
-              <div className="mt-5 flex justify-center gap-2">
-                <button type="button" onClick={() => setCreateOpen(true)} className="rounded-2xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-black text-white">Novo projeto</button>
-                <button type="button" onClick={() => void syncQase()} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)]">Sincronizar Qase</button>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-5 grid gap-4 xl:grid-cols-2">
-              {filtered.map((project) => {
-                const isActive = activeProjectSlug === project.slug || activeProjectSlug === project.qaseProjectCode;
-                return (
-                  <article key={makeProjectKey(project)} className={`overflow-hidden rounded-[28px] border bg-[var(--tc-surface-alt,#f8fafc)] shadow-[0_14px_34px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.09)] ${isActive ? "border-[var(--tc-primary,#011848)] ring-4 ring-blue-950/5" : "border-[var(--tc-border,#d7deea)]"}`}>
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--tc-primary,#011848)] shadow-sm">
-                            {getProjectSource(project) === "qase" ? <FiLink className="h-5 w-5" /> : <FiFolder className="h-5 w-5" />}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="truncate text-xl font-black tracking-[-0.03em] text-[var(--tc-text-primary,#0b1a3c)]">{project.name}</h3>
-                              {isActive ? <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-blue-700"><FiCheckCircle /> Ativo</span> : null}
-                            </div>
-                            <p className="mt-1 text-xs font-semibold text-[var(--tc-text-muted,#64748b)]">/{project.slug}</p>
-                          </div>
-                        </div>
-                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${sourceClass(project)}`}>
-                          {sourceLabel(project)}
-                        </span>
-                      </div>
+          {error ? <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div> : null}
 
-                      <p className="mt-4 min-h-12 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                        {project.description || "Operação de qualidade pronta para receber casos, defeitos, planos, runs, documentos e métricas do projeto."}
-                      </p>
-
-                      <div className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3">
-                        <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#64748b)]">Módulos da operação</p>
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                          {OPERATION_MODULES.map((module) => {
-                            const Icon = module.icon;
-                            return (
-                              <button
-                                key={module.id}
-                                type="button"
-                                onClick={() => void openOperation(project, module.id)}
-                                className="group rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-3 py-2 text-left transition hover:border-[var(--tc-primary,#011848)] hover:bg-white"
-                              >
-                                <div className="flex items-center gap-2 text-xs font-black text-[var(--tc-text-primary,#0b1a3c)]">
-                                  <Icon className="h-3.5 w-3.5 text-[var(--tc-accent,#ef0001)]" />
-                                  {module.label}
-                                </div>
-                                <div className="mt-1 truncate text-[10px] font-semibold text-[var(--tc-text-muted,#64748b)]">{module.description}</div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
+          <div className="mt-5 grid gap-3">
+            {loading ? <p className="text-sm text-(--tc-text-secondary,#4b5563)">Carregando projetos...</p> : null}
+            {!loading && filtered.length === 0 ? <p className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">Nenhum projeto encontrado.</p> : null}
+            {filtered.map((project) => (
+              <article key={makeProjectKey(project)} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg font-black tracking-tight text-(--tc-text,#0b1a3c)">{project.name}</h3>
+                      <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${sourceClass(project)}`}>{sourceLabel(project)}</span>
+                      {activeProjectSlug === (project.qaseProjectCode ?? project.slug) ? <span className="inline-flex items-center gap-1 rounded-full border border-(--tc-accent,#ef0001) bg-red-50 px-2.5 py-1 text-xs font-bold text-(--tc-accent,#ef0001)"><FiCheckCircle /> Ativo</span> : null}
                     </div>
-
-                    <div className="flex flex-col gap-2 border-t border-[var(--tc-border,#d7deea)] bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="text-xs font-semibold leading-5 text-[var(--tc-text-secondary,#4b5563)]">
-                        Escopo: <strong>{companySlug}</strong> + <strong>{project.slug}</strong>
-                      </div>
-                      <button type="button" onClick={() => void openOperation(project, "dashboard")} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-white transition hover:opacity-90">
-                        Abrir operação <FiArrowRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
+                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{project.description || "Sem descrição."}</p>
+                    <p className="mt-2 text-xs font-semibold text-(--tc-text-muted,#6b7280)">Slug: {project.slug}{project.qaseProjectCode ? ` · Qase: ${project.qaseProjectCode}` : ""}</p>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[540px]">
+                    {OPERATION_MODULES.map((module) => {
+                      const Icon = module.icon;
+                      return (
+                        <button key={module.id} type="button" onClick={() => void openOperation(project, module.id)} className="group flex items-center justify-between gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-left text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)">
+                          <span className="inline-flex items-center gap-2"><Icon /> {module.label}</span>
+                          <FiArrowRight className="opacity-50 transition group-hover:translate-x-0.5" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
       </div>
 
       {createOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onClick={() => setCreateOpen(false)}>
-          <div className="w-full max-w-2xl overflow-hidden rounded-[32px] border border-[var(--tc-border,#d7deea)] bg-white shadow-[0_34px_100px_rgba(15,23,42,0.34)]" onClick={(event) => event.stopPropagation()}>
-            <div className="bg-[linear-gradient(135deg,#011848_0%,#102f6e_70%,#ef0001_150%)] px-6 py-5 text-white">
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-white/60">Cadastro manual</p>
-              <h2 className="mt-1 text-2xl font-black">Novo projeto</h2>
-              <p className="mt-1 text-sm leading-6 text-white/72">
-                Crie uma operação manual para empresas sem Qase ou para aplicações que precisam de controle próprio dentro da qualidade.
-              </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">Novo projeto</p>
+                <h3 className="mt-1 text-2xl font-black tracking-tight">Criar projeto manual</h3>
+              </div>
+              <button type="button" onClick={() => setCreateOpen(false)} className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1 text-sm font-bold">×</button>
             </div>
-            <div className="space-y-4 p-6">
-              <label className="block text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
-                Nome do projeto
-                <input
-                  value={draft.name}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      name: event.target.value,
-                      slug: current.slug || normalizeSlug(event.target.value),
-                    }))
-                  }
-                  className="mt-1 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-                  placeholder="Ex.: Cidadão Smart"
-                />
+
+            <div className="mt-5 grid gap-3">
+              <label className="grid gap-2 text-sm font-semibold">Nome
+                <input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value, slug: current.slug || normalizeSlug(event.target.value) }))} className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) px-4" />
               </label>
-              <label className="block text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
-                Slug operacional
-                <input
-                  value={draft.slug}
-                  onChange={(event) => setDraft((current) => ({ ...current, slug: normalizeSlug(event.target.value) }))}
-                  className="mt-1 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-                  placeholder="cidadao-smart"
-                />
-                <span className="mt-1 block text-xs font-semibold text-[var(--tc-text-muted,#64748b)]">
-                  Usado para filtrar dashboard, casos, defeitos, planos e runs do projeto.
-                </span>
+              <label className="grid gap-2 text-sm font-semibold">Slug
+                <input value={draft.slug} onChange={(event) => setDraft((current) => ({ ...current, slug: normalizeSlug(event.target.value) }))} className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) px-4" />
               </label>
-              <label className="block text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
-                Descrição
-                <textarea
-                  value={draft.description}
-                  onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
-                  className="mt-1 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-                  rows={4}
-                  placeholder="Resumo operacional do projeto"
-                />
+              <label className="grid gap-2 text-sm font-semibold">Descrição
+                <textarea value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} rows={3} className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3" />
               </label>
             </div>
-            <div className="flex justify-end gap-2 border-t border-[var(--tc-border,#d7deea)] px-6 py-4">
-              <button type="button" onClick={() => setCreateOpen(false)} className="rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-2 text-sm font-bold">
-                Cancelar
-              </button>
-              <button type="button" onClick={() => void createProject()} disabled={saving} className="rounded-2xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
-                {saving ? "Salvando..." : "Salvar projeto"}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setCreateOpen(false)} className="rounded-full border border-(--tc-border,#d7deea) px-4 py-2 text-sm font-semibold">Cancelar</button>
+              <button type="button" onClick={() => void createProject()} disabled={saving} className="rounded-full bg-(--tc-primary,#011848) px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
+                {saving ? "Salvando..." : "Criar"}
               </button>
             </div>
           </div>
@@ -474,4 +364,11 @@ export default function CompanyProjectsPage() {
   );
 }
 
-
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-3xl border border-white/15 bg-white/12 p-4 text-white">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/65">{label}</p>
+      <p className="mt-2 text-3xl font-black">{value}</p>
+    </div>
+  );
+}

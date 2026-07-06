@@ -11,6 +11,7 @@ type BrainNeuronNodeData = {
   related: boolean;
   orphan: boolean;
   connectedCount: number;
+  themeMode?: "light" | "dark";
 };
 
 function labelize(value: string) {
@@ -49,15 +50,26 @@ function IconForNode({ node }: { node: BrainNode }) {
   return <FiBox className="h-4 w-4" />;
 }
 
-function theme(node: BrainNode, selected: boolean, orphan: boolean) {
-  if (selected) return "border-cyan-100 bg-cyan-200 text-[#03111f] shadow-[0_0_90px_rgba(103,232,249,.92),0_0_180px_rgba(103,232,249,.22),inset_0_0_28px_rgba(255,255,255,.45)]";
-  if (node.metadata?.isBrainCore || node.metadata?.isContextCore) return "border-yellow-300/80 bg-yellow-950/82 text-yellow-50 shadow-[0_0_58px_rgba(250,204,21,.46),inset_0_0_34px_rgba(250,204,21,.24)]";
-  if (node.metadata?.isProfileRoot) return "border-sky-300/80 bg-sky-950/78 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
-  if (node.type === "integration") return "border-violet-300/80 bg-violet-950/78 text-violet-50 shadow-[0_0_48px_rgba(167,139,250,.42),inset_0_0_34px_rgba(167,139,250,.22)]";
-  if (node.type === "screen") return "border-sky-300/80 bg-sky-950/78 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
-  if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300/80 bg-rose-950/82 text-rose-50 shadow-[0_0_48px_rgba(251,113,133,.46),inset_0_0_34px_rgba(251,113,133,.24)]";
-  if (["pending", "warning"].includes(node.status)) return "border-yellow-300/80 bg-yellow-950/82 text-yellow-50 shadow-[0_0_48px_rgba(250,204,21,.42),inset_0_0_34px_rgba(250,204,21,.24)]";
-  return "border-emerald-300/75 bg-emerald-950/82 text-emerald-50 shadow-[0_0_48px_rgba(52,211,153,.38),inset_0_0_34px_rgba(52,211,153,.24)]";
+function theme(node: BrainNode, selected: boolean, orphan: boolean, darkMode: boolean) {
+  if (darkMode) {
+    if (selected) return "border-cyan-100 bg-cyan-200 text-[#03111f] shadow-[0_0_90px_rgba(103,232,249,.92),0_0_180px_rgba(103,232,249,.22),inset_0_0_28px_rgba(255,255,255,.45)]";
+    if (node.metadata?.isBrainCore || node.metadata?.isContextCore) return "border-yellow-300/80 bg-yellow-950/82 text-yellow-50 shadow-[0_0_58px_rgba(250,204,21,.46),inset_0_0_34px_rgba(250,204,21,.24)]";
+    if (node.metadata?.isProfileRoot) return "border-sky-300/80 bg-sky-950/78 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
+    if (node.type === "integration") return "border-violet-300/80 bg-violet-950/78 text-violet-50 shadow-[0_0_48px_rgba(167,139,250,.42),inset_0_0_34px_rgba(167,139,250,.22)]";
+    if (node.type === "screen") return "border-sky-300/80 bg-sky-950/78 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
+    if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300/80 bg-rose-950/82 text-rose-50 shadow-[0_0_48px_rgba(251,113,133,.46),inset_0_0_34px_rgba(251,113,133,.24)]";
+    if (["pending", "warning"].includes(node.status)) return "border-yellow-300/80 bg-yellow-950/82 text-yellow-50 shadow-[0_0_48px_rgba(250,204,21,.42),inset_0_0_34px_rgba(250,204,21,.24)]";
+    return "border-emerald-300/75 bg-emerald-950/82 text-emerald-50 shadow-[0_0_48px_rgba(52,211,153,.38),inset_0_0_34px_rgba(52,211,153,.24)]";
+  }
+
+  if (selected) return "border-cyan-400 bg-cyan-100 text-[#03111f] shadow-[0_0_70px_rgba(34,211,238,.48),0_0_120px_rgba(34,211,238,.16),inset_0_0_28px_rgba(255,255,255,.7)]";
+  if (node.metadata?.isBrainCore || node.metadata?.isContextCore) return "border-amber-300 bg-amber-300/95 text-amber-950 shadow-[0_0_40px_rgba(250,204,21,.32),inset_0_0_26px_rgba(255,255,255,.42)]";
+  if (node.metadata?.isProfileRoot) return "border-sky-300 bg-sky-200/95 text-sky-950 shadow-[0_0_36px_rgba(56,189,248,.28),inset_0_0_26px_rgba(255,255,255,.4)]";
+  if (node.type === "integration") return "border-violet-300 bg-violet-200/95 text-violet-950 shadow-[0_0_36px_rgba(167,139,250,.28),inset_0_0_26px_rgba(255,255,255,.4)]";
+  if (node.type === "screen") return "border-sky-300 bg-sky-200/95 text-sky-950 shadow-[0_0_36px_rgba(56,189,248,.28),inset_0_0_26px_rgba(255,255,255,.4)]";
+  if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300 bg-rose-400/95 text-white shadow-[0_0_40px_rgba(251,113,133,.28),inset_0_0_26px_rgba(255,255,255,.22)]";
+  if (["pending", "warning"].includes(node.status)) return "border-yellow-300 bg-yellow-300/95 text-yellow-950 shadow-[0_0_40px_rgba(250,204,21,.26),inset_0_0_26px_rgba(255,255,255,.34)]";
+  return "border-emerald-300 bg-emerald-300/95 text-emerald-950 shadow-[0_0_38px_rgba(52,211,153,.24),inset_0_0_24px_rgba(255,255,255,.34)]";
 }
 
 function nodeKicker(node: BrainNode) {
@@ -85,6 +97,7 @@ function companyColor(node: BrainNode) {
 function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
   const nodeData = data as BrainNeuronNodeData;
   const node = nodeData.brainNode;
+  const darkMode = nodeData.themeMode === "dark";
   const isSelected = selected || nodeData.selectedNodeId === node.id;
   const hasFocus = Boolean(nodeData.selectedNodeId);
   const dimmed = hasFocus && !nodeData.related && !isSelected;
@@ -97,6 +110,12 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
   const color = companyColor(node);
 
   const size = isCore ? "h-[140px] w-[140px]" : isBig ? "h-[118px] w-[118px]" : isSmall ? "h-[82px] w-[82px]" : "h-[96px] w-[96px]";
+  const chromeClass = darkMode ? "bg-black/42 text-white" : "bg-white/45 text-current";
+  const metaChipClass = darkMode ? "bg-black/42" : "bg-white/50";
+  const flowChipClass = darkMode ? "border-white/18 bg-black/48 text-white/82" : "border-[#011848]/10 bg-white/70 text-[#011848]/70";
+  const ringClass = darkMode ? "border-white/18" : "border-[#011848]/10";
+  const glowClass = darkMode ? "bg-cyan-300/24" : "bg-cyan-300/18";
+  const glareClass = darkMode ? "bg-white/24" : "bg-white/55";
 
   return (
     <div
@@ -108,20 +127,20 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
         borderColor: color,
         boxShadow: `0 0 52px ${color}66, inset 0 0 34px ${color}2e`,
       } : undefined}
-      className={`brain-orb-node relative flex ${size} cursor-grab select-none flex-col items-center justify-center rounded-full border text-center backdrop-blur-md transition duration-300 active:cursor-grabbing ${theme(node, isSelected, nodeData.orphan)} ${dimmed ? "scale-75 opacity-35 blur-[1px]" : "opacity-100"} ${isSelected ? "z-30 scale-110" : "z-10"}`}
+      className={`brain-orb-node relative flex ${size} cursor-grab select-none flex-col items-center justify-center rounded-full border text-center backdrop-blur-md transition duration-300 active:cursor-grabbing ${theme(node, isSelected, nodeData.orphan, darkMode)} ${dimmed ? "scale-75 opacity-35 blur-[1px]" : "opacity-100"} ${isSelected ? "z-30 scale-110" : "z-10"}`}
     >
       <Handle type="target" position={Position.Left} className="!h-2 !w-2 !border-cyan-100 !bg-cyan-300" />
 
-      <span className="pointer-events-none absolute inset-[-18px] rounded-full border border-white/18" />
-      <span className="pointer-events-none absolute inset-[-34px] rounded-full bg-cyan-300/24 blur-3xl" />
-      <span className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/24 blur-2xl" />
+      <span className={`pointer-events-none absolute inset-[-18px] rounded-full border ${ringClass}`} />
+      <span className={`pointer-events-none absolute inset-[-34px] rounded-full ${glowClass} blur-3xl`} />
+      <span className={`pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full ${glareClass} blur-2xl`} />
       {hasOperationalFlow ? (
-        <span className="pointer-events-none absolute -top-2 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/18 bg-black/48 px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.12em] text-white/82">
+        <span className={`pointer-events-none absolute -top-2 left-1/2 z-20 -translate-x-1/2 rounded-full border px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.12em] ${flowChipClass}`}>
           fluxo
         </span>
       ) : null}
 
-      <span className="relative z-10 mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/42">
+      <span className={`relative z-10 mb-1 flex h-8 w-8 items-center justify-center rounded-full ${chromeClass}`}>
         <IconForNode node={node} />
       </span>
 
@@ -129,16 +148,16 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
         {node.label}
       </span>
 
-      <span className="relative z-10 mt-1 max-w-[78%] truncate text-[8px] font-black uppercase tracking-[0.15em] opacity-60">
-        {isCore ? nodeKicker(node) : nodeKicker(node)}
+      <span className="relative z-10 mt-1 max-w-[78%] truncate text-[8px] font-black uppercase tracking-[0.15em] opacity-70">
+        {labelize(nodeKicker(node))}
       </span>
 
-      <span className="relative z-10 mt-1 rounded-full bg-black/42 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] opacity-80">
+      <span className={`relative z-10 mt-1 rounded-full ${metaChipClass} px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] opacity-90`}>
         {statusLabel(node, nodeData.connectedCount)}
       </span>
 
       {isBig ? (
-        <span className="relative z-10 mt-1 max-w-[80%] truncate text-[9px] font-black uppercase opacity-75">
+        <span className="relative z-10 mt-1 max-w-[80%] truncate text-[9px] font-black uppercase opacity-80">
           {count} nós{pendingCount ? ` · ${pendingCount} pend.` : ""}
         </span>
       ) : null}

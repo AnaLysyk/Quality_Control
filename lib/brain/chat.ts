@@ -26,6 +26,7 @@ export type BrainChatAnswer = {
 };
 
 function wantsNavigation(message: string) { return /\b(abre|abrir|entra|entrar|leva|navega|mostrar detalhe|detalhe|dentro)\b/i.test(message); }
+function wantsCreation(message: string) { return /\b(cria|criar|gere|gerar|monta|montar|cadastra|cadastrar|salva|salvar|registra|registrar)\b/i.test(message); }
 function resolveContextualQuery(message: string, current: BrainConversationContext | null | undefined) { if (!current?.lastNodeId) return message; if (/\b(ele|ela|dele|dela|desse|dessa|esse|essa|isso|no atual|n[oó] atual)\b/i.test(message)) return `${message} ${current.lastNodeId} ${current.lastNodeType ?? ""}`; return message; }
 function compact(value: unknown, max = 1800) { const text = String(value ?? "").replace(/\s+/g, " ").trim(); return text.length > max ? `${text.slice(0, max - 1)}...` : text; }
 function normalizeQuestion(value: string) { return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
@@ -42,7 +43,29 @@ function toChatNode(node: BrainNode, access: BrainAccessContext) {
 function buildModelUserPrompt(input: { message: string; foundNodes: ReturnType<typeof toChatNode>[]; allowedActions: BrainNodeAction[]; qaCopilotAnswer: string }) {
   const nodes = input.foundNodes.slice(0, 5).map((node) => ({ id: node.id, type: node.type, label: node.label, description: node.description, metadata: node.metadata }));
   const actions = input.allowedActions.slice(0, 6).map((action) => ({ id: action.id, label: action.label, type: action.type, route: action.route ?? null, provider: action.provider ?? null }));
-  return ["Pergunta da usuária:", input.message, "", "Contexto seguro vindo do Brain/RAG/banco:", compact(JSON.stringify(nodes), 5000), "", "Ações disponíveis:", compact(JSON.stringify(actions), 2000), "", "Template QA já montado:", input.qaCopilotAnswer, "", "Responda como uma IA de QA interna.", "Use o banco RAG do Brain como fonte principal antes de qualquer API externa.", "Explique o próximo passo de forma prática."].join("\n");
+  return [
+    "Pergunta da usuária:",
+    input.message,
+    "",
+    "Contexto seguro vindo do Brain/RAG/banco:",
+    compact(JSON.stringify(nodes), 5000),
+    "",
+    "Ações disponíveis:",
+    compact(JSON.stringify(actions), 2000),
+    "",
+    "Template QA já montado:",
+    input.qaCopilotAnswer,
+    "",
+    "Modo de atuação:",
+    "- Aja como agente do usuário dentro do Quality Control.",
+    "- Use o contexto permitido do usuário: perfil, empresa, projeto, rotas, banco, RAG, documentos e APIs internas configuradas.",
+    "- Use o Brain/RAG/banco como fonte principal para assuntos do sistema.",
+    "- Para perguntas externas, atuais ou sem base interna suficiente, indique que a camada de busca web deve complementar a resposta.",
+    "- Quando o usuário pedir para criar algo, identifique: o que criar, onde criar, campos mínimos e próximo passo seguro.",
+    "- Para qualquer mudança real, entregue um resumo de confirmação antes da gravação.",
+    "- Não responda como robô genérico; seja humano, prático e operacional.",
+    "- Explique o próximo passo de forma curta.",
+  ].join("\n");
 }
 
 export async function answerBrainChatQuestion(input: { message: string; access: BrainAccessContext; currentBrainContext?: BrainConversationContext | null; limit?: number }): Promise<BrainChatAnswer> {
@@ -70,7 +93,8 @@ export async function answerBrainChatQuestion(input: { message: string; access: 
     await recordBrainAuditEvent({ userId: input.access.user.id, profile: input.access.userAccess.permissionRole ?? input.access.userAccess.role, companyId: input.access.userAccess.companyId, action: "assistant.brain.search.empty", allowed: true, reason: "no_results", metadata: { query: input.message } });
     const qaCopilotAnswer = buildQaCopilotAnswer({ message: input.message, foundNodes: [], allowedActions: [] });
     const model = await runBrainModel({ messages: [{ role: "system", content: buildBrainSystemPrompt() }, { role: "user", content: buildModelUserPrompt({ message: input.message, foundNodes: [], allowedActions: [], qaCopilotAnswer }) }], temperature: 0.2, maxTokens: 1400 });
-    return { answer: model.provider === "mock" ? qaCopilotAnswer : model.text, foundNodes: [], suggestedActions: [], evidence: [], currentBrainContext: input.currentBrainContext ?? {} };
+    const creationHint = wantsCreation(input.message) ? "\n\nSe você quer que eu crie isso de verdade, me diga onde criar: empresa, projeto, módulo, tela, repositório ou integração. Eu monto o rascunho e peço confirmação antes de gravar." : "";
+    return { answer: `${model.provider === "mock" ? qaCopilotAnswer : model.text}${creationHint}`, foundNodes: [], suggestedActions: [], evidence: [], currentBrainContext: input.currentBrainContext ?? {} };
   }
 
   const resultIds = new Set(results.map((result) => result.nodeId));
@@ -80,14 +104,15 @@ export async function answerBrainChatQuestion(input: { message: string; access: 
   const allowedActions = actions.filter((action) => input.access.user.isGlobalAdmin || action.requiredPermissions.length === 0 || action.requiredPermissions.some((permission) => input.access.userAccess.permissions[permission.moduleId]?.includes(permission.action)));
   const navigationAction = allowedActions.find((action) => action.route && (action.id === "open" || action.id === "navigate" || action.id === "open_external"));
   const blockedAction = actions.find((action) => !allowedActions.includes(action));
-  const currentBrainContext: BrainConversationContext = mainNode ? { lastNodeId: mainNode.id, lastNodeType: mainNode.type, lastCompanyId: typeof (mainNode.metadata as Record<string, unknown> | null)?.companyId === "string" ? String((mainNode.metadata as Record<string, unknown>).companyId) : input.access.userAccess.companyId, lastProjectId: typeof (mainNode.metadata as Record<string, unknown> | null)?.projectId === "string" ? String((mainNode.metadata as Record<string, unknown>).projectId) : null, lastRoute: navigationAction?.route ?? null, lastIntent: wantsNavigation(input.message) ? "navigate" : "search" } : input.currentBrainContext ?? {};
+  const currentBrainContext: BrainConversationContext = mainNode ? { lastNodeId: mainNode.id, lastNodeType: mainNode.type, lastCompanyId: typeof (mainNode.metadata as Record<string, unknown> | null)?.companyId === "string" ? String((mainNode.metadata as Record<string, unknown>).companyId) : input.access.userAccess.companyId, lastProjectId: typeof (mainNode.metadata as Record<string, unknown> | null)?.projectId === "string" ? String((mainNode.metadata as Record<string, unknown>).projectId) : null, lastRoute: navigationAction?.route ?? null, lastIntent: wantsNavigation(input.message) ? "navigate" : wantsCreation(input.message) ? "create" : "search" } : input.currentBrainContext ?? {};
   await recordBrainAuditEvent({ userId: input.access.user.id, profile: input.access.userAccess.permissionRole ?? input.access.userAccess.role, companyId: input.access.userAccess.companyId, action: "assistant.brain.search", nodeId: mainNode?.id, allowed: Boolean(mainNode && isBrainNodeVisible(mainNode, input.access)), reason: "brain_index_result", metadata: { query: input.message, results: results.map((result) => ({ nodeId: result.nodeId, score: result.score, matchedBy: result.matchedBy })) } });
   const safeFoundNodes = foundNodes.slice(0, input.limit ?? 4).map((node) => toChatNode(node, input.access));
   const qaCopilotAnswer = buildQaCopilotAnswer({ message: input.message, foundNodes: foundNodes.slice(0, input.limit ?? 4), allowedActions });
   const model = await runBrainModel({ messages: [{ role: "system", content: buildBrainSystemPrompt() }, { role: "user", content: buildModelUserPrompt({ message: input.message, foundNodes: safeFoundNodes, allowedActions, qaCopilotAnswer }) }], temperature: 0.2, maxTokens: 1800 });
   const topLabels = foundNodes.slice(0, 3).map((node) => `${node.label} (${node.type})`).join(", ");
   const navSentence = navigationAction?.route && wantsNavigation(input.message) ? ` Posso abrir: ${navigationAction.route}.` : "";
+  const createSentence = wantsCreation(input.message) ? " Posso montar o rascunho e preparar a criação no contexto encontrado; antes de gravar, preciso confirmar com você." : "";
   const blockedSentence = blockedAction ? ` Algumas ações ficam bloqueadas para seu perfil, como "${blockedAction.label}".` : "";
   const modelAnswer = model.provider === "mock" ? qaCopilotAnswer : model.text;
-  return { answer: [`Encontrei no Brain: ${topLabels}.${navSentence}${blockedSentence}`, modelAnswer].join("\n\n"), foundNodes: safeFoundNodes, suggestedActions: allowedActions, navigation: navigationAction?.route ? { label: navigationAction.label, route: navigationAction.route } : undefined, blocked: blockedAction ? { reason: "missing_permission", missingPermissions: blockedAction.requiredPermissions.map((permission) => `${permission.moduleId}:${permission.action}`) } : undefined, evidence: results.slice(0, 5).map((result) => ({ sourceType: "node", sourceId: result.nodeId, label: result.label, reason: `match: ${result.matchedBy.join(", ") || "index"}` })), currentBrainContext };
+  return { answer: [`Encontrei no Brain: ${topLabels}.${navSentence}${createSentence}${blockedSentence}`, modelAnswer].join("\n\n"), foundNodes: safeFoundNodes, suggestedActions: allowedActions, navigation: navigationAction?.route ? { label: navigationAction.label, route: navigationAction.route } : undefined, blocked: blockedAction ? { reason: "missing_permission", missingPermissions: blockedAction.requiredPermissions.map((permission) => `${permission.moduleId}:${permission.action}`) } : undefined, evidence: results.slice(0, 5).map((result) => ({ sourceType: "node", sourceId: result.nodeId, label: result.label, reason: `match: ${result.matchedBy.join(", ") || "index"}` })), currentBrainContext };
 }

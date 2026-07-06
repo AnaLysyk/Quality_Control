@@ -17,6 +17,7 @@ export type BrainProfileGraphOptions = {
 const COMPANY_COLORS = ["#67e8f9", "#a78bfa", "#34d399", "#facc15", "#fb7185", "#60a5fa", "#f472b6", "#2dd4bf"];
 const CORE_ID = "quality-control-core";
 const PROFILE_FLOW = ["Líder TC", "Suporte técnico", "Usuário empresarial", "Empresas"];
+const PENDING_STATUSES = ["pending", "missing", "warning", "error", "orphan"];
 
 function uniqueById<T extends { id: string }>(items: T[]) {
   return Array.from(new Map(items.map((item) => [item.id, item])).values());
@@ -34,8 +35,8 @@ function profileLabel(value: unknown) {
   const normalized = normalize(value);
   if (["leader", "leader-tc", "leader_tc", "lider", "lider-tc", "lider tc", "lider_tc"].some((item) => normalized.includes(item))) return "Líder TC";
   if (["technical-support", "technical_support", "suporte", "suporte tecnico", "support"].some((item) => normalized.includes(item))) return "Suporte técnico";
-  if (["empresa", "company", "empresas"].some((item) => normalized === item || normalized.includes(item))) return "Empresas";
   if (["company-user", "company_user", "usuario empresarial", "usuario empresa", "user company"].some((item) => normalized.includes(item))) return "Usuário empresarial";
+  if (["empresa", "company", "empresas"].some((item) => normalized === item || normalized.includes(item))) return "Empresas";
   if (!normalized || normalized === "perfil nao informado" || normalized === "nao informado") return "Usuário empresarial";
   return String(value ?? "Usuário empresarial").trim();
 }
@@ -108,25 +109,31 @@ function userLabel(node: BrainNode) {
 }
 
 function statusFor(nodes: BrainNode[]): BrainNodeStatus {
-  if (!nodes.length) return "missing";
-  return nodes.some((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)) ? "pending" : "ok";
+  if (!nodes.length) return "ok";
+  return nodes.some((node) => PENDING_STATUSES.includes(node.status)) ? "pending" : "ok";
+}
+
+function pendingCount(nodes: BrainNode[]) {
+  return nodes.filter((node) => PENDING_STATUSES.includes(node.status)).length;
 }
 
 function qualityControlCore(nodes: BrainNode[]): BrainNode {
   return {
     id: CORE_ID,
     type: "module",
-    module: "Quality Control",
+    module: "Núcleo",
     label: "Quality Control",
-    description: "Núcleo principal do Brain. A partir daqui saem os perfis, empresas, módulos e dados ligados ao contexto.",
+    description: "Núcleo principal do Brain. A leitura sempre começa aqui: perfil, depois empresa/projeto, depois módulo e por último o dado.",
     status: statusFor(nodes),
     size: "lg",
-    information: `Núcleo principal com ${nodes.length} nó(s) disponíveis para navegação.` ,
+    information: `Núcleo principal com ${nodes.length} nó(s) disponíveis para navegação.`,
     metadata: {
       isBrainCore: true,
       isContextCore: true,
+      layer: 0,
+      layerLabel: "0. Núcleo",
       count: nodes.length,
-      pendingCount: nodes.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)).length,
+      pendingCount: pendingCount(nodes),
       profileFlow: PROFILE_FLOW,
     },
   };
@@ -137,13 +144,13 @@ function profileRoot(profile: string, nodes: BrainNode[]): BrainNode {
   return {
     id: stableId("profile", profile),
     type: "profile",
-    module: "Tipos de perfil",
+    module: "1. Perfil",
     label: profile,
-    description: "Primeira ligação do núcleo Quality Control. Depois do perfil aparecem empresa, módulo e o dado que você quer ver.",
+    description: "Primeira camada depois do núcleo. Clique em um perfil para abrir empresas, projetos, módulos e dados ligados a esse perfil.",
     status: statusFor(scoped),
     size: "lg",
-    information: `${profile} possui ${scoped.length} nó(s) ligados ao contexto atual.`,
-    metadata: { isProfileRoot: true, profileType: profile, count: scoped.length, pendingCount: scoped.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)).length },
+    information: scoped.length ? `${profile} possui ${scoped.length} nó(s) ligados ao contexto atual.` : `${profile} é uma camada de navegação. Selecione para ver o recorte disponível.`,
+    metadata: { isProfileRoot: true, profileType: profile, layer: 1, layerLabel: "1. Perfil", count: scoped.length, pendingCount: pendingCount(scoped) },
   };
 }
 
@@ -152,15 +159,15 @@ function companyHub(company: BrainContextCompany, nodes: BrainNode[]): BrainNode
   return {
     id: `company:${company.id}`,
     type: "company",
-    module: "Empresas",
+    module: "2. Empresa",
     label: company.name,
-    description: "Empresa no núcleo do Brain. Dentro dela aparecem usuários, módulos, defeitos, runs, planos, documentos e movimentações.",
+    description: "Segunda camada do Brain. Dentro da empresa aparecem projetos, módulos, usuários e dados.",
     status: statusFor(scoped),
     size: "lg",
     companyId: company.id,
     companyName: company.name,
     information: `${company.name} possui ${scoped.length} nó(s) visíveis neste recorte.`,
-    metadata: { isCompanyHub: true, companyColor: colorForCompany(company.id), count: scoped.length },
+    metadata: { isCompanyHub: true, layer: 2, layerLabel: "2. Empresa", companyColor: colorForCompany(company.id), count: scoped.length, pendingCount: pendingCount(scoped) },
   };
 }
 
@@ -169,7 +176,7 @@ function projectHub(project: BrainContextProject, company: BrainContextCompany |
   return {
     id: `project:${project.id}`,
     type: "project",
-    module: "Projetos",
+    module: "2. Projeto",
     label: project.name,
     description: "Projeto selecionado dentro da empresa. Ele limita módulos, itens, ações e usuários ao contexto correto.",
     status: statusFor(scoped),
@@ -179,7 +186,7 @@ function projectHub(project: BrainContextProject, company: BrainContextCompany |
     projectId: project.id,
     projectName: project.name,
     information: `${project.name} possui ${scoped.length} nó(s) no recorte atual.`,
-    metadata: { isProjectHub: true, companyColor: colorForCompany(company?.id ?? project.companyId ?? null), count: scoped.length },
+    metadata: { isProjectHub: true, layer: 2, layerLabel: "2. Projeto", companyColor: colorForCompany(company?.id ?? project.companyId ?? null), count: scoped.length, pendingCount: pendingCount(scoped) },
   };
 }
 
@@ -188,15 +195,15 @@ function moduleHub(module: string, nodes: BrainNode[], company: BrainContextComp
   return {
     id: `${company ? `company:${company.id}:` : ""}module:${module}`,
     type: "module",
-    module,
+    module: "3. Módulo",
     label: module,
-    description: "Módulo dentro do perfil/empresa selecionado. Ao abrir, aparecem os dados e usuários ligados a ele.",
+    description: "Terceira camada. Ao abrir um módulo, aparecem os dados e usuários ligados a ele.",
     status: statusFor(scoped),
     size: "lg",
     companyId: company?.id,
     companyName: company?.name,
     information: `${module} possui ${scoped.length} item(ns) neste contexto.`,
-    metadata: { isModuleHub: true, module, companyColor: colorForCompany(company?.id ?? null), count: scoped.length },
+    metadata: { isModuleHub: true, module, layer: 3, layerLabel: "3. Módulo", companyColor: colorForCompany(company?.id ?? null), count: scoped.length, pendingCount: pendingCount(scoped) },
   };
 }
 
@@ -213,7 +220,7 @@ function userHub(userKey: string, nodes: BrainNode[], company: BrainContextCompa
     companyId: company?.id,
     companyName: company?.name,
     information: `${userLabel(sample)} possui ${nodes.length} item(ns) ligados ao contexto atual.`,
-    metadata: { isUserHub: true, userKey, companyColor: colorForCompany(company?.id ?? null), count: nodes.length },
+    metadata: { isUserHub: true, layer: 4, layerLabel: "4. Usuário", userKey, companyColor: colorForCompany(company?.id ?? null), count: nodes.length, pendingCount: pendingCount(nodes) },
   };
 }
 
@@ -243,7 +250,7 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
       id: `${CORE_ID}-${profileNode.id}`,
       source: CORE_ID,
       target: profileNode.id,
-      label: "primeiro perfil",
+      label: "1 perfil",
       type: "relation",
       status: profileNode.status,
     }));
@@ -252,25 +259,25 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
 
   const currentProfileNode = profileRoot(profile ?? profileTypes[0] ?? "Usuário empresarial", baseNodes.length ? baseNodes : nodes);
   viewNodes.push(currentProfileNode);
-  viewEdges.push({ id: `${CORE_ID}-${currentProfileNode.id}`, source: CORE_ID, target: currentProfileNode.id, label: "perfil", type: "relation", status: currentProfileNode.status });
+  viewEdges.push({ id: `${CORE_ID}-${currentProfileNode.id}`, source: CORE_ID, target: currentProfileNode.id, label: "1 perfil", type: "relation", status: currentProfileNode.status });
 
   const companyOptions = selectedCompany ? [selectedCompany] : canSeeAllCompanies ? companies : companies.slice(0, 1);
   const companyHubs = companyOptions.map((company) => companyHub(company, baseNodes));
   viewNodes.push(...companyHubs);
-  companyHubs.forEach((company) => viewEdges.push({ id: `${currentProfileNode.id}-${company.id}`, source: currentProfileNode.id, target: company.id, label: "empresa", type: "belongs_to_company", status: company.status, companyId: company.companyId, metadata: { companyColor: company.metadata?.companyColor } }));
+  companyHubs.forEach((company) => viewEdges.push({ id: `${currentProfileNode.id}-${company.id}`, source: currentProfileNode.id, target: company.id, label: "2 empresa", type: "belongs_to_company", status: company.status, companyId: company.companyId, metadata: { companyColor: company.metadata?.companyColor } }));
 
   const selectedCompanyHub = selectedCompany ? companyHubs.find((company) => company.companyId === selectedCompany.id) ?? null : companyHubs[0] ?? null;
   const selectedProjectHub = selectedProject ? projectHub(selectedProject, selectedCompany, baseNodes) : null;
   if (selectedProjectHub) {
     viewNodes.push(selectedProjectHub);
-    viewEdges.push({ id: `${selectedCompanyHub?.id ?? currentProfileNode.id}-${selectedProjectHub.id}`, source: selectedCompanyHub?.id ?? currentProfileNode.id, target: selectedProjectHub.id, label: "projeto", type: "belongs_to_project", status: selectedProjectHub.status, companyId: selectedCompany?.id, projectId: selectedProjectHub.projectId, metadata: { companyColor: selectedProjectHub.metadata?.companyColor } });
+    viewEdges.push({ id: `${selectedCompanyHub?.id ?? currentProfileNode.id}-${selectedProjectHub.id}`, source: selectedCompanyHub?.id ?? currentProfileNode.id, target: selectedProjectHub.id, label: "2 projeto", type: "belongs_to_project", status: selectedProjectHub.status, companyId: selectedCompany?.id, projectId: selectedProjectHub.projectId, metadata: { companyColor: selectedProjectHub.metadata?.companyColor } });
   }
 
   const moduleNames = Array.from(new Set(baseNodes.map((node) => node.module).filter(Boolean))).sort((a, b) => a.localeCompare(b, "pt-BR"));
   const moduleHubs = moduleNames.map((module) => moduleHub(module, baseNodes, selectedCompany));
   if (selectedCompany || selectedProject || activeModule || selectedNode || hasActiveFilter || !canSeeAllCompanies) {
     viewNodes.push(...moduleHubs);
-    moduleHubs.forEach((module) => viewEdges.push({ id: `${selectedProjectHub?.id ?? selectedCompanyHub?.id ?? currentProfileNode.id}-${module.id}`, source: selectedProjectHub?.id ?? selectedCompanyHub?.id ?? currentProfileNode.id, target: module.id, label: "módulo", type: "belongs_to_module", status: module.status, companyId: selectedCompany?.id, metadata: { companyColor: module.metadata?.companyColor } }));
+    moduleHubs.forEach((module) => viewEdges.push({ id: `${selectedProjectHub?.id ?? selectedCompanyHub?.id ?? currentProfileNode.id}-${module.id}`, source: selectedProjectHub?.id ?? selectedCompanyHub?.id ?? currentProfileNode.id, target: module.id, label: "3 módulo", type: "belongs_to_module", status: module.status, companyId: selectedCompany?.id, metadata: { companyColor: module.metadata?.companyColor } }));
   }
 
   const clickedModule = selectedNode?.metadata?.isModuleHub ? String(selectedNode.metadata.module ?? selectedNode.module) : null;
@@ -288,10 +295,10 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
   }
 
   const detailItems = showItems ? uniqueById([...itemCandidates.filter((node) => selectedIds.has(node.id)), ...itemCandidates]).filter((node) => !node.metadata?.isProfileRoot && !node.metadata?.isCompanyHub && !node.metadata?.isModuleHub).slice(0, itemLimit) : [];
-  viewNodes.push(...detailItems.map((node) => ({ ...node, metadata: { ...node.metadata, isDetailNode: true } })));
+  viewNodes.push(...detailItems.map((node) => ({ ...node, metadata: { ...node.metadata, isDetailNode: true, layer: 4, layerLabel: "4. Dado" } })));
 
-  const moduleTarget = moduleFocus ? moduleHubs.find((module) => module.module === moduleFocus)?.id ?? selectedProjectHub?.id ?? selectedCompanyHub?.id ?? currentProfileNode.id : selectedProjectHub?.id ?? selectedCompanyHub?.id ?? currentProfileNode.id;
-  detailItems.forEach((node) => viewEdges.push({ id: `${moduleTarget}-${node.id}`, source: moduleTarget, target: node.id, label: "dado", type: "contains", status: node.status, companyId: node.companyId, projectId: node.projectId, module: node.module, metadata: { companyColor: node.metadata?.companyColor } }));
+  const moduleTarget = moduleFocus ? moduleHubs.find((module) => module.metadata?.module === moduleFocus)?.id ?? selectedProjectHub?.id ?? selectedCompanyHub?.id ?? currentProfileNode.id : selectedProjectHub?.id ?? selectedCompanyHub?.id ?? currentProfileNode.id;
+  detailItems.forEach((node) => viewEdges.push({ id: `${moduleTarget}-${node.id}`, source: moduleTarget, target: node.id, label: "4 dado", type: "contains", status: node.status, companyId: node.companyId, projectId: node.projectId, module: node.module, metadata: { companyColor: node.metadata?.companyColor } }));
 
   const userGroups = new Map<string, BrainNode[]>();
   detailItems.forEach((node) => {

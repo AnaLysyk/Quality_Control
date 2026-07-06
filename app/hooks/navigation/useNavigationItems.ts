@@ -32,9 +32,7 @@ const AGENDA_ROLES: SystemRole[] = [
 const MANAGEMENT_ROLES: SystemRole[] = [
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
-  SYSTEM_ROLES.TESTING_COMPANY_USER,
   SYSTEM_ROLES.EMPRESA,
-  SYSTEM_ROLES.COMPANY_USER,
 ];
 const PERMISSION_MANAGEMENT_ROLES: SystemRole[] = [
   SYSTEM_ROLES.LEADER_TC,
@@ -43,14 +41,15 @@ const PERMISSION_MANAGEMENT_ROLES: SystemRole[] = [
 const TC_USER_CREATOR_ROLES: SystemRole[] = [
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
-  SYSTEM_ROLES.TESTING_COMPANY_USER,
 ];
 const COMPANY_USER_CREATOR_ROLES: SystemRole[] = [
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
-  SYSTEM_ROLES.TESTING_COMPANY_USER,
   SYSTEM_ROLES.EMPRESA,
-  SYSTEM_ROLES.COMPANY_USER,
+];
+const INTERNAL_USER_CREATOR_ROLES: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
 ];
 const AGENDA_MODULE: NavModuleDef = {
   id: "agenda" as NavModuleDef["id"],
@@ -66,21 +65,29 @@ const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "document
 const PROJECT_CONTEXT_ONLY_MODULE_IDS = new Set<NavModuleDef["id"]>(["automation"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "home",
+  "agenda",
   "quality",
   "automation",
   "support",
+  "chat",
   "brain",
   "documents",
   "management",
 ]);
 const PROJECT_SCOPED_ITEM_IDS = new Set([
+  "quality-cases",
   "quality-plans",
   "quality-runs",
   "quality-defects",
   "docs-central",
   "docs-repository",
+  "auto-playwright",
+  "auto-api-lab",
+  "auto-base64",
+  "auto-arquivos",
+  "auto-logs",
 ]);
-const PROJECT_OPTIONAL_SCOPED_ITEM_IDS = new Set(["quality-cases"]);
+const PROJECT_OPTIONAL_SCOPED_ITEM_IDS = new Set<string>();
 const ENABLED_NAV_CATALOG = NAV_CATALOG;
 
 function withScopeQuery(
@@ -144,6 +151,14 @@ function resolveItemHref(
     return withScopeQuery(href, companySlug, projectSlug, includeProject);
   }
 
+  if (item.id === "docs-central") {
+    return withScopeQuery("/documentos", companySlug, projectSlug, true);
+  }
+
+  if (item.id === "docs-repository") {
+    return withScopeQuery("/documentos/repositorio", companySlug, projectSlug, true);
+  }
+
   if (item.companyRoute && companySlug) {
     const href = buildCompanyPathForAccess(companySlug, item.companyRoute, companyRouteInput);
     return withScopeQuery(href, companySlug, projectSlug, includeProject);
@@ -153,14 +168,6 @@ function resolveItemHref(
 
   if (item.id === "quality-cases") {
     return withScopeQuery("/casos-de-teste", companySlug, projectSlug, true);
-  }
-
-  if (item.id === "docs-central") {
-    return withScopeQuery("/documentos", companySlug, projectSlug, true);
-  }
-
-  if (item.id === "docs-repository") {
-    return withScopeQuery("/documentos/repositorio", companySlug, projectSlug, true);
   }
 
   return withScopeQuery(mappedHref, companySlug, projectSlug, includeProject);
@@ -192,7 +199,15 @@ function resolveModuleHref(
   }
 
   if (mod.id === "agenda") {
-    return withScopeQuery("/agenda", companySlug, projectSlug);
+    return withScopeQuery("/agenda", companySlug, projectSlug, true);
+  }
+
+  if (mod.id === "chat") {
+    return withScopeQuery("/chat", companySlug, projectSlug, true);
+  }
+
+  if (mod.id === "support") {
+    return withScopeQuery("/kanban-it", companySlug, projectSlug, true);
   }
 
   return resolveCompanyRouteHref(getNavigationRoute(mod)?.path, mod.href, companySlug, companyRouteInput);
@@ -255,7 +270,23 @@ function buildQualityItems(items: NavItemDef[], companySlug: string | null): Nav
     favoriteEnabled: true,
     testId: "nav-company-projects",
   };
-  return [projectItem, ...items.filter((item) => item.id !== projectItem.id)];
+  const documentationItem: NavItemDef = {
+    id: "docs-central",
+    routeId: "",
+    label: "Documentação",
+    iconKey: "file-text",
+    module: "quality",
+    href: "/documentos",
+    requiredPermission: { moduleId: "documents", action: "view" },
+    favoriteEnabled: true,
+    group: "Projeto",
+    testId: "nav-project-documents",
+  };
+  return [
+    projectItem,
+    ...items.filter((item) => item.id !== projectItem.id && item.id !== documentationItem.id),
+    documentationItem,
+  ];
 }
 
 function buildManagementModule(effectiveRole: SystemRole | null): NavModuleDef | null {
@@ -328,7 +359,7 @@ function buildManagementModule(effectiveRole: SystemRole | null): NavModuleDef |
   if (COMPANY_USER_CREATOR_ROLES.includes(effectiveRole)) {
     items.push({
       id: "management-users-create-company",
-      routeId: "usuarios.criar-usuário-empresa",
+      routeId: effectiveRole === SYSTEM_ROLES.EMPRESA ? "usuarios.criar-usuário" : "usuarios.criar-usuário-empresa",
       label: "Criar usuário empresarial",
       iconKey: "plus-circle",
       module: "management",
@@ -342,7 +373,7 @@ function buildManagementModule(effectiveRole: SystemRole | null): NavModuleDef |
     });
   }
 
-  if (effectiveRole === SYSTEM_ROLES.LEADER_TC) {
+  if (INTERNAL_USER_CREATOR_ROLES.includes(effectiveRole)) {
     items.push(
       {
         id: "management-users-create-leader",
@@ -352,7 +383,7 @@ function buildManagementModule(effectiveRole: SystemRole | null): NavModuleDef |
         module: "management",
         href: "/admin/users?tab=admin&modal=create&role=leader_tc",
         action: "openCreateModal",
-        allowedRoles: [SYSTEM_ROLES.LEADER_TC],
+        allowedRoles: INTERNAL_USER_CREATOR_ROLES,
         requiredPermission: { moduleId: "users", action: "create" },
         group: "Gestão de usuários",
         favoriteEnabled: true,
@@ -366,7 +397,7 @@ function buildManagementModule(effectiveRole: SystemRole | null): NavModuleDef |
         module: "management",
         href: "/admin/users?tab=support&modal=create&role=technical_support",
         action: "openCreateModal",
-        allowedRoles: [SYSTEM_ROLES.LEADER_TC],
+        allowedRoles: INTERNAL_USER_CREATOR_ROLES,
         requiredPermission: { moduleId: "users", action: "create" },
         group: "Gestão de usuários",
         favoriteEnabled: true,

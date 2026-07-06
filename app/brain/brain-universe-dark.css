@@ -1,0 +1,81 @@
+/* Brain universe: fundo escuro real no modo escuro.
+   Este arquivo fica global porque o canvas do React Flow cria várias camadas fora do CSS module. */
+
+body.qc-brain-active-route,
+body.qc-brain-route {
+  background: #020713 !important;
+}
+
+html.dark body.qc-brain-active-route .brain-page-fullscreen,
+html.dark body.qc-brain-active-route .brain-universe-canvas,
+html.dark body.qc-brain-active-route .brain-cortex-canvas,
+html.dark body.qc-brain-active-route .react-flow,
+html.dark body.qc-brain-active-route .react-flow__renderer,
+html.dark body.qc-brain-active-route .react-flow__viewport,
+html.dark body.qc-brain-active-route .react-flow__pane,
+html.dark body.qc-brain-active-route .react-flow__container,
+html.dark body.qc-brain-active-route .react-flow__zoompane,
+[data-theme="dark"] body.qc-brain-active-route .brain-page-fullscreen,
+[data-theme="dark"] body.qc-brain-active-route .brain-universe-canvas,
+[data-theme="dark"] body.qc-brain-active-route .brain-cortex-canvas,
+[data-theme="dark"] body.qc-brain-active-route .react-flow,
+[data-theme="dark"] body.qc-brain-active-route .react-flow__renderer,
+[data-theme="dark"] body.qc-brain-active-route .react-flow__viewport,
+[data-theme="dark"] body.qc-brain-active-route .react-flow__pane,
+[data-theme="dark"] body.qc-brain-active-route .react-flow__container,
+[data-theme="dark"] body.qc-brain-active-route .react-flow__zoompane,
+body.dark.qc-brain-active-route .brain-page-fullscreen,
+body.dark.qc-brain-active-route .brain-universe-canvas,
+body.dark.qc-brain-active-route .brain-cortex-canvas,
+body.dark.qc-brain-active-route .react-flow,
+body.dark.qc-brain-active-route .react-flow__renderer,
+body.dark.qc-brain-active-route .react-flow__viewport,
+body.dark.qc-brain-active-route .react-flow__pane,
+body.dark.qc-brain-active-route .react-flow__container,
+body.dark.qc-brain-active-route .react-flow__zoompane,
+body[data-theme="dark"].qc-brain-active-route .brain-page-fullscreen,
+body[data-theme="dark"].qc-brain-active-route .brain-universe-canvas,
+body[data-theme="dark"].qc-brain-active-route .brain-cortex-canvas,
+body[data-theme="dark"].qc-brain-active-route .react-flow,
+body[data-theme="dark"].qc-brain-active-route .react-flow__renderer,
+body[data-theme="dark"].qc-brain-active-route .react-flow__viewport,
+body[data-theme="dark"].qc-brain-active-route .react-flow__pane,
+body[data-theme="dark"].qc-brain-active-route .react-flow__container,
+body[data-theme="dark"].qc-brain-active-route .react-flow__zoompane {
+  background:
+    radial-gradient(circle at 18% 14%, rgba(59, 130, 246, 0.18), transparent 32%),
+    radial-gradient(circle at 84% 18%, rgba(239, 0, 1, 0.15), transparent 28%),
+    radial-gradient(circle at 48% 64%, rgba(34, 211, 238, 0.08), transparent 38%),
+    linear-gradient(135deg, #01040d 0%, #020713 46%, #06152c 100%) !important;
+  color: #f8fbff !important;
+}
+
+html.dark body.qc-brain-active-route .react-flow__background,
+html.dark body.qc-brain-active-route .react-flow__background-pattern,
+[data-theme="dark"] body.qc-brain-active-route .react-flow__background,
+[data-theme="dark"] body.qc-brain-active-route .react-flow__background-pattern,
+body.dark.qc-brain-active-route .react-flow__background,
+body.dark.qc-brain-active-route .react-flow__background-pattern,
+body[data-theme="dark"].qc-brain-active-route .react-flow__background,
+body[data-theme="dark"].qc-brain-active-route .react-flow__background-pattern {
+  color: rgba(125, 211, 252, 0.16) !important;
+  opacity: 0.42 !important;
+}
+
+html.dark body.qc-brain-active-route .brain-cortex-layer,
+[data-theme="dark"] body.qc-brain-active-route .brain-cortex-layer,
+body.dark.qc-brain-active-route .brain-cortex-layer,
+body[data-theme="dark"].qc-brain-active-route .brain-cortex-layer {
+  opacity: 1 !important;
+  mix-blend-mode: screen;
+}
+
+/* Fallback: quando o toggle visual ainda não colocou classe dark no html/body,
+   mas a rota Brain está aberta, manter o universo escuro por padrão. */
+body.qc-brain-active-route .brain-universe-canvas,
+body.qc-brain-active-route .brain-cortex-canvas {
+  background:
+    radial-gradient(circle at 18% 14%, rgba(59, 130, 246, 0.15), transparent 32%),
+    radial-gradient(circle at 84% 18%, rgba(239, 0, 1, 0.12), transparent 28%),
+    linear-gradient(135deg, #01040d 0%, #020713 46%, #06152c 100%) !important;
+}

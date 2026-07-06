@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { IconType } from "react-icons";
 import {
   FiActivity,
@@ -8,6 +8,7 @@ import {
   FiBriefcase,
   FiCalendar,
   FiClipboard,
+  FiFilter,
   FiSearch,
   FiShield,
   FiUser,
@@ -45,6 +46,13 @@ type Defect = {
   updated_at?: string | null;
 };
 
+type AdminUserCompanyItem = {
+  id?: string | null;
+  name?: string | null;
+  slug?: string | null;
+  role?: string | null;
+};
+
 type AdminUser = {
   id?: string;
   name?: string | null;
@@ -52,15 +60,34 @@ type AdminUser = {
   avatar_url?: string | null;
   avatarUrl?: string | null;
   image?: string | null;
+  role?: string | null;
+  permission_role?: string | null;
+  profile_kind?: string | null;
+  client_id?: string | null;
+  company_name?: string | null;
+  company_names?: string[];
+  company_ids?: string[];
+  companyNames?: string[];
+  companyIds?: string[];
+  companies?: AdminUserCompanyItem[];
 };
 
 type ActorProfile = { name: string; avatar: string | null };
 type Mode = "company" | "user";
+type UserKind = "all" | "company_user" | "testing_company_user" | "leader_tc" | "technical_support" | "empresa";
 type Slice = { label: string; value: number; color: string };
 
 const FIRST_ITEMS = 6;
 const FIRST_EVENTS = 5;
 const periods = [7, 30, 90] as const;
+const USER_KIND_OPTIONS: Array<{ value: UserKind; label: string; description: string; requiresCompany?: boolean }> = [
+  { value: "all", label: "Todos os tipos", description: "Lista geral de ações e usuários." },
+  { value: "company_user", label: "Usuário empresarial", description: "Obrigatório selecionar empresa para ver usuários e dados do escopo.", requiresCompany: true },
+  { value: "testing_company_user", label: "Usuário TC", description: "Visão geral por usuário TC, com opção de recortar por empresa." },
+  { value: "leader_tc", label: "Líder TC", description: "Ações administrativas: empresas, usuários, vínculos, permissões e solicitações." },
+  { value: "technical_support", label: "Suporte técnico", description: "Movimentações de chamados, comentários, status e ações técnicas." },
+  { value: "empresa", label: "Perfil empresa", description: "Conta institucional da empresa selecionada.", requiresCompany: true },
+];
 
 const statCard =
   "rounded-[22px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5";
@@ -147,7 +174,79 @@ function eventMatchesCompany(item: Audit, company: CompanyRow | null) {
   const text = normalize(`${item.entity_label ?? ""} ${item.entity_type ?? ""} ${item.action}`);
   const name = normalize(company.name);
   const slug = normalize(company.slug);
-  return Boolean((name && text.includes(name)) || (slug && text.includes(slug)));
+  const id = normalize(company.id);
+  return Boolean((name && text.includes(name)) || (slug && text.includes(slug)) || (id && text.includes(id)));
+}
+
+function normalizeRole(value?: string | null): UserKind | null {
+  const normalized = normalize(value).replace(/[\s-]+/g, "_");
+  if (!normalized) return null;
+  if (normalized.includes("technical_support") || normalized.includes("suporte")) return "technical_support";
+  if (normalized.includes("leader_tc") || normalized.includes("lider_tc")) return "leader_tc";
+  if (normalized.includes("testing_company_user") || normalized === "tc" || normalized.includes("usuario_tc")) return "testing_company_user";
+  if (normalized.includes("company_user") || normalized.includes("usuario_empresa") || normalized.includes("empresarial")) return "company_user";
+  if (normalized === "empresa" || normalized.includes("company_admin")) return "empresa";
+  return null;
+}
+
+function userKindOf(user: AdminUser): UserKind {
+  return normalizeRole(user.profile_kind) ?? normalizeRole(user.permission_role) ?? normalizeRole(user.role) ?? "testing_company_user";
+}
+
+function userKindLabel(kind: UserKind) {
+  return USER_KIND_OPTIONS.find((option) => option.value === kind)?.label ?? "Tipo de usuário";
+}
+
+function userEmailOf(user: AdminUser) {
+  return user.email?.trim() ?? user.id ?? "";
+}
+
+function collectUserCompanyKeys(user: AdminUser) {
+  const keys = new Set<string>();
+  const add = (value?: string | null) => {
+    const key = normalize(value).trim();
+    if (key) keys.add(key);
+  };
+
+  add(user.client_id);
+  add(user.company_name);
+  user.company_ids?.forEach(add);
+  user.companyIds?.forEach(add);
+  user.company_names?.forEach(add);
+  user.companyNames?.forEach(add);
+  user.companies?.forEach((company) => {
+    add(company.id);
+    add(company.slug);
+    add(company.name);
+  });
+
+  return keys;
+}
+
+function companyKeys(company: CompanyRow | null) {
+  const keys = new Set<string>();
+  if (!company) return keys;
+  [company.id, company.slug, company.name].forEach((value) => {
+    const key = normalize(value).trim();
+    if (key) keys.add(key);
+  });
+  return keys;
+}
+
+function userMatchesCompany(user: AdminUser, company: CompanyRow | null) {
+  if (!company) return true;
+  const userKeys = collectUserCompanyKeys(user);
+  const selectedKeys = companyKeys(company);
+  if (!selectedKeys.size) return true;
+  for (const key of selectedKeys) {
+    if (userKeys.has(key)) return true;
+  }
+  return false;
+}
+
+function supportRelevantAction(event: Audit) {
+  const text = normalize(`${event.action} ${event.entity_type ?? ""} ${event.entity_label ?? ""}`);
+  return /ticket|chamado|suporte|support|coment|comment|status|mover|move|moviment/.test(text);
 }
 
 function Pie({ title, slices, note }: { title: string; note: string; slices: Slice[] }) {
@@ -195,11 +294,13 @@ function eventKind(item: Audit) {
   if (/plano|plan/.test(text)) return { title: "Plano de teste atualizado", detail: "Plano de teste teve alteração ou movimentação.", color: "bg-emerald-500" };
   if (/caso|case|teste|test/.test(text) && /finish|finished|finaliz|conclu|passed|failed|blocked|execut/.test(text)) return { title: "Teste finalizado", detail: "Caso de teste recebeu resultado de execução.", color: "bg-sky-500" };
   if (/caso|case|teste|test|repositorio/.test(text) && /create|created|criou|novo/.test(text)) return { title: "Caso de teste criado", detail: "Novo caso de teste registrado no repositório.", color: "bg-sky-500" };
-  if (/status|update|alter|mudou|troca/.test(text)) return { title: "Status atualizado", detail: "Item do sistema teve status ou dados alterados.", color: "bg-sky-500" };
+  if (/ticket|chamado|suporte|support/.test(text) && /comment|coment/.test(text)) return { title: "Comentário em chamado", detail: "Chamado recebeu comentário ou retorno do suporte.", color: "bg-amber-500" };
+  if (/ticket|chamado|suporte|support/.test(text) && /status|update|alter|mover|move|moviment/.test(text)) return { title: "Status do chamado movido", detail: "Suporte técnico movimentou status de chamado.", color: "bg-amber-500" };
   if (/ticket|chamado|suporte|support/.test(text)) return { title: "Chamado de suporte movimentado", detail: "Chamado ou solicitação recebeu ação no período.", color: "bg-amber-500" };
   if (/empresa|company|projeto|project/.test(text) && /create|created|criou|novo/.test(text)) return { title: "Empresa ou projeto criado", detail: "Cadastro institucional criado no período.", color: "bg-indigo-500" };
   if (/empresa|company|projeto|project/.test(text)) return { title: "Empresa ou projeto atualizado", detail: "Cadastro institucional recebeu alteração.", color: "bg-indigo-500" };
   if (/usuario|user|vincul|invite|convite|permission|permissao|perfil|role/.test(text)) return { title: "Usuário ou permissão alterada", detail: "Usuário, vínculo ou permissão teve atualização.", color: "bg-cyan-500" };
+  if (/status|update|alter|mudou|troca/.test(text)) return { title: "Status atualizado", detail: "Item do sistema teve status ou dados alterados.", color: "bg-sky-500" };
   if (/delete|deleted|remove|removed|exclu|apag/.test(text)) return { title: "Exclusão realizada", detail: "Item foi removido ou desvinculado no período.", color: "bg-red-500" };
   if (/create|created|criou|novo|nova/.test(text)) return { title: "Criação registrada", detail: "Novo item criado no sistema.", color: "bg-emerald-500" };
 
@@ -261,6 +362,7 @@ export default function VisaoGeralCompacta() {
   const [actorProfiles, setActorProfiles] = useState<Record<string, ActorProfile>>({});
   const [period, setPeriod] = useState<(typeof periods)[number]>(30);
   const [mode, setMode] = useState<Mode>("company");
+  const [userKindFilter, setUserKindFilter] = useState<UserKind>("all");
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -326,11 +428,10 @@ export default function VisaoGeralCompacta() {
   }, [effectivePeriod, from, hasRange, selectedCompany, to, visibleEvents]);
 
   useEffect(() => {
-    if (mode !== "user" && !audit.length) return;
-
     let ok = true;
     const id = window.setTimeout(() => {
-      fetchApi("/api/admin/users", { cache: "no-store" })
+      const params = selectedCompany ? `?client_id=${encodeURIComponent(selectedCompany)}` : "";
+      fetchApi(`/api/admin/users${params}`, { cache: "no-store" })
         .then((response) => response.json().then((json) => ({ response, json })).catch(() => ({ response, json: null })))
         .then(({ response, json }) => {
           if (!ok || !response.ok) return;
@@ -353,25 +454,40 @@ export default function VisaoGeralCompacta() {
       ok = false;
       window.clearTimeout(id);
     };
-  }, [audit.length, mode]);
+  }, [audit.length, mode, selectedCompany]);
 
   useEffect(() => {
     setVisibleCards(FIRST_ITEMS);
     setVisibleEvents(FIRST_EVENTS);
-  }, [mode, query, selectedCompany, selectedUser, effectivePeriod]);
+  }, [mode, query, selectedCompany, selectedUser, userKindFilter, effectivePeriod]);
 
   const companies = overview?.companies ?? [];
-  const company = selectedCompany ? companies.find((entry) => keyOf(entry) === selectedCompany) ?? null : null;
+  const company = selectedCompany ? companies.find((entry) => keyOf(entry) === selectedCompany || entry.id === selectedCompany) ?? null : null;
+  const selectedUserKind = USER_KIND_OPTIONS.find((option) => option.value === userKindFilter) ?? USER_KIND_OPTIONS[0];
+  const requiresCompany = mode === "user" && selectedUserKind.requiresCompany === true;
+  const missingRequiredCompany = requiresCompany && !company;
   const releases = company ? company.releases : companies.flatMap((entry) => entry.releases);
   const stats = company ? mergeStats(company.releases) : overview?.globalStats ?? null;
   const filteredCompanies = companies.filter((entry) => normalize(`${entry.name} ${entry.slug ?? ""}`).includes(normalize(query)));
   const shownCompanies = filteredCompanies.slice(0, visibleCards);
-  const filteredUsers = adminUsers.filter((user) => normalize(`${user.name ?? ""} ${user.email ?? ""}`).includes(normalize(query)));
+  const filteredUsers = adminUsers
+    .filter((user) => userKindFilter === "all" || userKindOf(user) === userKindFilter)
+    .filter((user) => !company || userMatchesCompany(user, company))
+    .filter((user) => !missingRequiredCompany)
+    .filter((user) => normalize(`${user.name ?? ""} ${user.email ?? ""} ${user.company_name ?? ""}`).includes(normalize(query)));
   const shownUsers = filteredUsers.slice(0, visibleCards);
+  const scopedUserEmails = useMemo(() => new Set(filteredUsers.map(userEmailOf).filter(Boolean)), [filteredUsers]);
   const filteredEvents = audit
     .filter((event) => isInsidePeriod(event.created_at, effectivePeriod, from, to))
     .filter((event) => eventMatchesCompany(event, company))
-    .filter((event) => !selectedUser || event.actor_email === selectedUser);
+    .filter((event) => !missingRequiredCompany)
+    .filter((event) => !selectedUser || event.actor_email === selectedUser)
+    .filter((event) => {
+      if (mode !== "user" || selectedUser) return true;
+      if (userKindFilter === "technical_support" && !supportRelevantAction(event)) return false;
+      if (userKindFilter === "all" && !company) return true;
+      return event.actor_email ? scopedUserEmails.has(event.actor_email) : false;
+    });
   const shownEvents = filteredEvents.slice(0, visibleEvents);
   const linkedDefects = defects
     .filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to))
@@ -380,6 +496,9 @@ export default function VisaoGeralCompacta() {
   const testCaseCount = total(stats);
   const planCount = company ? Math.max(0, new Set(company.releases.map((release) => release.project || release.app || release.qaseProject || release.title).filter(Boolean)).size) : overview?.projectRows?.length ?? 0;
   const hasInsightCards = total(stats) > 0 || defectsInPeriod.length > 0;
+  const contextTitle = mode === "user"
+    ? `${userKindLabel(userKindFilter)}${company ? ` · ${company.name}` : ""}`
+    : company?.name ?? "Operação geral";
 
   return (
     <div className="text-[#011848] dark:text-white">
@@ -390,7 +509,7 @@ export default function VisaoGeralCompacta() {
               <div>
                 <h1 className="tc-hero-title">Visão Geral</h1>
                 <p className="mt-1 text-sm font-semibold text-white/70">
-                  {company?.name ?? "Operação geral"} · {hasRange ? `${shortDate(from)} até ${shortDate(to)}` : `últimos ${period} dias`}
+                  {contextTitle} · {hasRange ? `${shortDate(from)} até ${shortDate(to)}` : `últimos ${period} dias`}
                 </p>
               </div>
               <div className="relative flex flex-wrap gap-2">
@@ -432,10 +551,54 @@ export default function VisaoGeralCompacta() {
 
         <section className="space-y-4">
           <div className="flex flex-col gap-3">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => { setMode("company"); setSelectedUser(null); }} className={`tc-button-${mode === "company" ? "primary" : "secondary"}`}><FiBriefcase /> Empresa</button>
-              <button type="button" onClick={() => { setMode("user"); setSelectedCompany(null); }} className={`tc-button-${mode === "user" ? "primary" : "secondary"}`}><FiUsers /> Usuário</button>
+              <button type="button" onClick={() => { setMode("user"); setSelectedUser(null); }} className={`tc-button-${mode === "user" ? "primary" : "secondary"}`}><FiUsers /> Usuário</button>
             </div>
+
+            {mode === "user" ? (
+              <div className="grid gap-3 lg:grid-cols-[minmax(220px,300px)_minmax(220px,320px)_1fr]">
+                <label className="flex items-center gap-2 rounded-[20px] border border-[var(--tc-border)] bg-white/45 px-4 py-3 dark:bg-white/[0.03]">
+                  <FiFilter className="shrink-0" />
+                  <select
+                    value={userKindFilter}
+                    onChange={(event) => {
+                      setUserKindFilter(event.target.value as UserKind);
+                      setSelectedUser(null);
+                    }}
+                    className="w-full bg-transparent text-sm font-black outline-none"
+                    aria-label="Selecionar tipo de usuário"
+                  >
+                    {USER_KIND_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="flex items-center gap-2 rounded-[20px] border border-[var(--tc-border)] bg-white/45 px-4 py-3 dark:bg-white/[0.03]">
+                  <FiBriefcase className="shrink-0" />
+                  <select
+                    value={selectedCompany ?? "all"}
+                    onChange={(event) => {
+                      setSelectedCompany(event.target.value === "all" ? null : event.target.value);
+                      setSelectedUser(null);
+                    }}
+                    className="w-full bg-transparent text-sm font-black outline-none"
+                    aria-label="Selecionar empresa para usuários"
+                  >
+                    <option value="all">{selectedUserKind.requiresCompany ? "Selecione uma empresa" : "Todas as empresas"}</option>
+                    {companies.map((entry) => (
+                      <option key={keyOf(entry)} value={keyOf(entry)}>{entry.name}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="rounded-[20px] border border-[var(--tc-border)] bg-white/45 px-4 py-3 text-sm font-semibold text-[#64748b] dark:bg-white/[0.03] dark:text-white/60">
+                  {selectedUserKind.description}
+                </div>
+              </div>
+            ) : null}
+
             <label className="w-full">
               <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-white/45 px-4 py-3 dark:bg-white/[0.03]">
                 <FiSearch />
@@ -443,6 +606,13 @@ export default function VisaoGeralCompacta() {
               </div>
             </label>
           </div>
+
+          {missingRequiredCompany ? (
+            <div className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100">
+              Selecione uma empresa para visualizar usuários empresariais, perfil empresa e as métricas desse escopo.
+            </div>
+          ) : null}
+
           <div className="overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex min-w-max gap-3">
               {mode === "company" ? (
@@ -462,17 +632,17 @@ export default function VisaoGeralCompacta() {
               ) : (
                 <>
                   <button type="button" onClick={() => setSelectedUser(null)} className={selectedUser === null ? contextCardSelected : contextCard}>
-                    <RoundUserAvatar name="Todos os usuários" />
-                    <span><b>Todos os usuários</b><p className="text-sm text-[#64748b] dark:text-white/60">Histórico geral</p></span>
+                    <RoundUserAvatar name={userKindLabel(userKindFilter)} />
+                    <span><b>{userKindFilter === "all" ? "Todos os usuários" : userKindLabel(userKindFilter)}</b><p className="text-sm text-[#64748b] dark:text-white/60">{company?.name ?? "Histórico geral"}</p></span>
                   </button>
                   {shownUsers.map((user) => {
-                    const email = user.email?.trim() ?? user.id ?? "";
+                    const email = userEmailOf(user);
                     const selected = selectedUser === email;
                     const name = user.name?.trim() || nameFromEmail(email);
                     return (
                       <button key={email} type="button" onClick={() => setSelectedUser(email)} className={selected ? contextCardSelected : contextCard}>
                         <RoundUserAvatar src={avatarFromUser(user)} name={name} />
-                        <span className="min-w-0"><b className="line-clamp-1">{name}</b><p className="truncate text-xs text-[#64748b] dark:text-white/60">{email}</p></span>
+                        <span className="min-w-0"><b className="line-clamp-1">{name}</b><p className="truncate text-xs text-[#64748b] dark:text-white/60">{userKindLabel(userKindOf(user))} · {email}</p></span>
                       </button>
                     );
                   })}
@@ -486,7 +656,7 @@ export default function VisaoGeralCompacta() {
         <div className={hasInsightCards ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]" : "grid gap-6"}>
           <section className="min-w-0">
             <h2 className="text-xl font-black tracking-[-.04em]">Eventos recentes</h2>
-            <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Exibindo ações do período filtrado: criação, status, runs, planos, testes, defeitos, suporte, usuários e permissões.</p>
+            <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Exibindo ações do período filtrado: criação, status, runs, planos, testes, defeitos, suporte, usuários, vínculos, comentários e permissões.</p>
             <div className="mt-5 space-y-0">
               {shownEvents.length ? (
                 shownEvents.map((event, index) => {

@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
@@ -10,11 +10,10 @@ import {
 } from "@/lib/permissionMatrix";
 import { prisma } from "@/lib/prismaClient";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
-import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { resolveProfilePermissionDefaults } from "@/lib/store/profilePermissionsStore";
 import { invalidateBrainCache } from "@/lib/brain/cache";
+import { invalidatePermissionAccessCache } from "@/lib/serverPermissionAccess";
 import {
   countPermissionActions,
   deleteUserPermissionOverride,
@@ -30,38 +29,28 @@ async function resolveUserId(params: Promise<{ userId: string }>) {
 }
 
 async function requirePermissionManager(req: NextRequest) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
+  const accessContext = await getAccessContext(req);
+  if (!accessContext) {
     return {
       admin: null,
       access: null,
       response: NextResponse.json(
-        { error: status === 401 ? "Você precisa estar autenticado para acessar a Gestão de Perfis." : "Você não tem permissão para acessar a Gestão de Perfis." },
-        { status },
+        { error: "Você precisa estar autenticado para acessar a Gestão de Perfis." },
+        { status: 401 },
       ),
     };
   }
 
-  const accessContext = await getAccessContext(req);
-  const access = accessContext
-    ? await validarAcessoUsuariosNoServidor(accessContext)
-    : resolverAcessoUsuarios({
-        permissionRole: admin.role,
-        role: admin.role,
-        companyRole: admin.companyRole,
-        globalRole: admin.globalRole,
-        isGlobalAdmin: admin.isGlobalAdmin,
-      });
-
+  const access = await validarAcessoUsuariosNoServidor(accessContext);
   if (!access.canViewPermissions) {
     return {
-      admin,
+      admin: accessContext,
       access,
       response: NextResponse.json({ error: "Você não tem permissão para visualizar a matriz de usuários." }, { status: 403 }),
     };
   }
 
-  return { admin, access, response: null };
+  return { admin: accessContext, access, response: null };
 }
 
 function resolveUserRole(user: {
@@ -205,12 +194,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
       updatedBy: guard.admin?.email ?? null,
     });
 
+    invalidatePermissionAccessCache(userId);
+
     const systemDefaults = normalizePermissionMatrix(resolveRoleDefaults(resolved.role));
     const profilePermissions = await resolveProfilePermissionDefaults(resolved.role);
     const permissions = applyPermissionOverride(profilePermissions, saved);
 
     await addAuditLogSafe({
-      actorUserId: guard.admin?.id ?? null,
+      actorUserId: guard.admin?.userId ?? null,
       actorEmail: guard.admin?.email ?? null,
       action: "user.permissions.updated",
       entityType: "user",
@@ -261,13 +252,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ u
     if (!resolved?.role) return NextResponse.json({ error: "Usuário não encontrado ou sem perfil válido." }, { status: 404 });
 
     await deleteUserPermissionOverride(userId);
+    invalidatePermissionAccessCache(userId);
 
     const systemDefaults = normalizePermissionMatrix(resolveRoleDefaults(resolved.role));
     const profilePermissions = await resolveProfilePermissionDefaults(resolved.role);
     const permissions = profilePermissions;
 
     await addAuditLogSafe({
-      actorUserId: guard.admin?.id ?? null,
+      actorUserId: guard.admin?.userId ?? null,
       actorEmail: guard.admin?.email ?? null,
       action: "user.permissions.reset",
       entityType: "user",
@@ -288,4 +280,3 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ u
     return NextResponse.json({ error: "Não foi possível restaurar permissões do usuário agora." }, { status: 500 });
   }
 }
-

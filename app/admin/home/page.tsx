@@ -1,4 +1,4 @@
-import HomeContent from "../../home/HomeContent";
+import NewHomeContent from "./NewHomeContent";
 import HomeRouteWarmup from "./HomeRouteWarmup";
 
 export default function AdminHomePage() {
@@ -6,7 +6,7 @@ export default function AdminHomePage() {
     <>
       <link rel="stylesheet" href="/brain-home-orb-reference.css" />
       <HomeRouteWarmup />
-      <HomeContent />
+      <NewHomeContent />
     </>
   );
 }

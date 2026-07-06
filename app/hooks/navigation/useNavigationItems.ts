@@ -48,13 +48,13 @@ const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "documents",
 ]);
 const PROJECT_SCOPED_ITEM_IDS = new Set([
-  "quality-cases",
   "quality-plans",
   "quality-runs",
   "quality-defects",
   "docs-central",
   "docs-repository",
 ]);
+const PROJECT_OPTIONAL_SCOPED_ITEM_IDS = new Set(["quality-cases"]);
 const ENABLED_NAV_CATALOG = NAV_CATALOG;
 
 function withScopeQuery(
@@ -99,7 +99,7 @@ function resolveItemHref(
   projectSlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
 ): string | undefined {
-  const includeProject = PROJECT_SCOPED_ITEM_IDS.has(item.id);
+  const includeProject = PROJECT_SCOPED_ITEM_IDS.has(item.id) || PROJECT_OPTIONAL_SCOPED_ITEM_IDS.has(item.id);
 
   if (item.id === "admin-permissions-profile") {
     return "/admin/permissions";
@@ -111,6 +111,11 @@ function resolveItemHref(
 
   if (item.id === "quality-projects" && companySlug) {
     return buildCompanyPathForAccess(companySlug, "projetos", companyRouteInput);
+  }
+
+  if (item.id === "quality-cases" && companySlug) {
+    const href = buildCompanyPathForAccess(companySlug, "casos-de-teste", companyRouteInput);
+    return withScopeQuery(href, companySlug, projectSlug, includeProject);
   }
 
   if (item.companyRoute && companySlug) {

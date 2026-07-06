@@ -1,6 +1,7 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
+import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -11,7 +12,15 @@ async function getDb() {
   return prisma;
 }
 
-// â”€â”€ GET /api/projects?companySlug= â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function forbiddenCompanyResponse(error: unknown) {
+  const message = error instanceof Error ? error.message : "FORBIDDEN_COMPANY_ACCESS";
+  if (message === "MISSING_COMPANY_ID") {
+    return NextResponse.json({ error: "Empresa obrigatória" }, { status: 400 });
+  }
+  return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
+}
+
+// GET /api/projects?companySlug=
 
 export async function GET(request: Request) {
   const user = await authenticateRequest(request);
@@ -38,9 +47,16 @@ export async function GET(request: Request) {
       ],
     });
   }
+
   const db = await getDb();
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ projects: [] });
+
+  try {
+    await assertCompanyAccess(user, company.id);
+  } catch (error) {
+    return forbiddenCompanyResponse(error);
+  }
 
   const projects = await db.project.findMany({
     where: { companyId: company.id, status: "active" },
@@ -63,7 +79,7 @@ export async function GET(request: Request) {
   });
 }
 
-// â”€â”€ POST /api/projects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// POST /api/projects
 
 const CreateSchema = z.object({
   companySlug: z.string().trim().min(1),
@@ -82,21 +98,28 @@ export async function POST(request: Request) {
   const user = await authenticateRequest(request);
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  // Líder TC, suporte técnico e empresa podem cadastrar projetos no contexto permitido.
-  const role = (user.role ?? "").toLowerCase();
-  const canCreate = ["admin", "leader_tc", "technical_support", "support", "company_admin", "empresa", "it_dev"].includes(role);
-  if (!canCreate) return NextResponse.json({ error: "Sem permissão para criar projetos" }, { status: 403 });
-
   const body = await request.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
-  if (!parsed.success)
+  if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
+  }
 
   const { companySlug, slug, name, description, color, iconKey } = parsed.data;
 
   const db = await getDb();
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
+
+  try {
+    await assertCompanyAccess(user, company.id);
+  } catch (error) {
+    return forbiddenCompanyResponse(error);
+  }
+
+  const canCreateProject =
+    user.isGlobalAdmin === true ||
+    ["leader_tc", "technical_support", "empresa"].includes(String(user.permissionRole ?? user.role ?? user.companyRole ?? "").toLowerCase());
+  if (!canCreateProject) return NextResponse.json({ error: "Sem permissão para criar projetos" }, { status: 403 });
 
   const existing = await db.project.findUnique({
     where: { companyId_slug: { companyId: company.id, slug } },
@@ -147,4 +170,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ project: { ...project, createdAt: project.createdAt.toISOString() } }, { status: 201 });
 }
-

@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prismaClient";
 
 export type ChatPresenceStatus = "online" | "busy" | "offline";
+export type ChatScheduleType = "meeting" | "internal_appointment" | "task" | "run_delivery" | "follow_up";
 
 type ChatPresenceEntry = {
   userId: string;
@@ -14,7 +15,7 @@ type ChatPresenceEntry = {
 export type ChatScheduleEntry = {
   id: string;
   title: string;
-  type: "meeting" | "run_delivery" | "follow_up";
+  type: ChatScheduleType;
   startAt: string;
   endAt: string;
   userIds: string[];
@@ -132,7 +133,7 @@ export async function registerChatSchedule(input: {
     companyName: input.companyName ?? null,
     projectName: input.projectName ?? null,
     notes: input.notes ?? null,
-    meet: input.meet ?? false,
+    meet: input.type === "meeting" ? input.meet ?? false : false,
     createdById: input.createdById,
     createdAt: new Date().toISOString(),
   };
@@ -260,7 +261,7 @@ export async function resolveChatPresenceForUsers(userIds: string[]) {
       result[userId] = {
         userId,
         status: "busy",
-        label: "Em agendamento",
+        label: busySchedule.type === "task" ? "Em tarefa" : busySchedule.meet ? "Em Meet" : "Em agendamento",
         lastSeenAt: presence[userId]?.lastSeenAt ?? null,
         busyUntil: busySchedule.endAt,
         busyTitle: busySchedule.title,

@@ -330,17 +330,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
         favoriteEnabled: true,
         testId: "nav-requests-list",
       },
-      {
-        id: "requests-search",
-        routeId: "solicitacoes.buscar",
-        label: "Buscar solicitação",
-        iconKey: "search",
-        module: "requests",
-        href: "/solicitacoes?focus=search",
-        action: "focusSearch",
-        favoriteEnabled: true,
-        testId: "nav-requests-search",
-      },
     ],
   },
 

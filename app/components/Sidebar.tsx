@@ -14,6 +14,7 @@ import SidebarFlyout from "./navigation/SidebarFlyout";
 import SidebarFavorites from "./navigation/SidebarFavorites";
 import SidebarFooter from "./navigation/SidebarFooter";
 import ProjectSelector from "./ProjectSelector";
+import CreateSupportTicketButton from "./CreateSupportTicketButton";
 import type { NavModuleDef } from "@/lib/navigation/navigationCatalog";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
@@ -352,6 +353,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
   return (
     <>
+      <CreateSupportTicketButton hiddenTrigger />
       <div className="hidden h-full shrink-0 lg:block">{sidebarBody}</div>
       {mobileOpen && onClose ? (
         <div

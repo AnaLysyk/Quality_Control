@@ -76,52 +76,6 @@ function withScopeQuery(
   return serialized ? `${path}?${serialized}` : path;
 }
 
-function buildAgendaItems(effectiveRole: SystemRole | null, companySlug: string | null, projectSlug: string | null): NavItemDef[] {
-  const basePermission = { moduleId: "release_calendar", action: "view" } as const;
-
-  const meusHref = withScopeQuery("/agenda/meus-agendamentos?scope=mine", companySlug, projectSlug);
-  const geralScope =
-    effectiveRole === SYSTEM_ROLES.LEADER_TC || effectiveRole === SYSTEM_ROLES.TECHNICAL_SUPPORT
-      ? "global"
-      : effectiveRole === SYSTEM_ROLES.TESTING_COMPANY_USER
-        ? "companies"
-        : "company";
-
-  const geralLabel =
-    effectiveRole === SYSTEM_ROLES.EMPRESA || effectiveRole === SYSTEM_ROLES.COMPANY_USER
-      ? "Calendário da empresa"
-      : "Calendário geral";
-
-  const geralHref = withScopeQuery(`/agenda/calendario-geral?scope=${geralScope}`, companySlug, projectSlug);
-
-  return [
-    {
-      id: "agenda-meus-agendamentos" as NavItemDef["id"],
-      routeId: "agenda.meus",
-      label: "Meus agendamentos",
-      iconKey: "calendar",
-      module: "agenda",
-      href: meusHref,
-      requiredPermission: basePermission,
-      allowedRoles: AGENDA_ROLES,
-      favoriteEnabled: true,
-      testId: "nav-agenda-meus-agendamentos",
-    },
-    {
-      id: "agenda-calendario-geral" as NavItemDef["id"],
-      routeId: "agenda.geral",
-      label: geralLabel,
-      iconKey: "calendar",
-      module: "agenda",
-      href: geralHref,
-      requiredPermission: basePermission,
-      allowedRoles: AGENDA_ROLES,
-      favoriteEnabled: true,
-      testId: "nav-agenda-calendario-geral",
-    },
-  ];
-}
-
 function resolveCompanyRouteHref(
   mappedPath: string | undefined,
   fallbackHref: string | undefined,
@@ -206,6 +160,10 @@ function resolveModuleHref(
     return withScopeQuery("/brain", companySlug, projectSlug, true);
   }
 
+  if (mod.id === "agenda") {
+    return withScopeQuery("/agenda", companySlug, projectSlug);
+  }
+
   return resolveCompanyRouteHref(getNavigationRoute(mod)?.path, mod.href, companySlug, companyRouteInput);
 }
 
@@ -269,11 +227,13 @@ function resolveModuleItems(
   const usesCompanyCentral =
     mod.id === "home" && effectiveRole != null && COMPANY_DASHBOARD_ROLES.has(effectiveRole);
   const dynamicItems =
-    mod.id === "brain"
-      ? buildBrainItems(effectiveRole, companySlug, projectSlug)
-      : mod.id === "quality"
-        ? buildQualityItems(mod.items, companySlug)
-        : mod.items;
+    mod.id === "agenda"
+      ? []
+      : mod.id === "brain"
+        ? buildBrainItems(effectiveRole, companySlug, projectSlug)
+        : mod.id === "quality"
+          ? buildQualityItems(mod.items, companySlug)
+          : mod.items;
 
   return {
     ...mod,

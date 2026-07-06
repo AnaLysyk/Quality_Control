@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
-import { createTicket, listAllTickets, listTicketsForUser } from "@/lib/ticketsStore";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { createTicket, listAllTickets, listTicketsForUser, type TicketRecord } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
@@ -19,6 +20,37 @@ import {
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
+}
+
+function normalizeKey(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function resolveRole(user: AuthUser) {
+  return normalizeLegacyRole(user.permissionRole) ?? normalizeLegacyRole(user.role) ?? normalizeLegacyRole(user.companyRole);
+}
+
+function isCompanyTicketScope(user: AuthUser) {
+  return resolveRole(user) === SYSTEM_ROLES.EMPRESA;
+}
+
+function isOwnTicketScope(user: AuthUser) {
+  const role = resolveRole(user);
+  return role === SYSTEM_ROLES.TESTING_COMPANY_USER || role === SYSTEM_ROLES.COMPANY_USER;
+}
+
+function ticketMatchesCompany(ticket: TicketRecord, companyKey?: string | null) {
+  const key = normalizeKey(companyKey);
+  if (!key) return true;
+  return normalizeKey(ticket.companyId) === key || normalizeKey(ticket.companySlug) === key;
+}
+
+function userCanFilterCompany(user: AuthUser, companyKey?: string | null) {
+  const key = normalizeKey(companyKey);
+  if (!key) return true;
+  if (canAccessGlobalTicketWorkspace(user)) return true;
+  if (normalizeKey(user.companyId) === key || normalizeKey(user.companySlug) === key) return true;
+  return (user.companySlugs ?? []).map(normalizeKey).includes(key);
 }
 
 export async function GET(req: Request) {
@@ -51,7 +83,22 @@ export async function GET(req: Request) {
   const search = url.searchParams.get("search");
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
 
-  let items = canUseGlobalScope ? await listAllTickets() : await listTicketsForUser(user.id);
+  if (companyFilter && !userCanFilterCompany(user, companyFilter)) {
+    return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
+  }
+
+  let items: TicketRecord[];
+  if (canUseGlobalScope) {
+    items = await listAllTickets();
+  } else if (isCompanyTicketScope(user)) {
+    const companyKey = companyFilter || user.companyId || user.companySlug;
+    items = (await listAllTickets()).filter((ticket) => ticketMatchesCompany(ticket, companyKey));
+  } else if (isOwnTicketScope(user)) {
+    items = await listTicketsForUser(user.id);
+  } else {
+    items = await listTicketsForUser(user.id);
+  }
+
   if (statusFilter) {
     const statuses = statusFilter.split(",").map((value) => value.trim()).filter(Boolean);
     if (statuses.length) {
@@ -59,9 +106,7 @@ export async function GET(req: Request) {
     }
   }
   if (companyFilter) {
-    items = items.filter(
-      (ticket) => ticket.companyId === companyFilter || ticket.companySlug === companyFilter,
-    );
+    items = items.filter((ticket) => ticketMatchesCompany(ticket, companyFilter));
   }
   if (assignedTo) {
     items = items.filter((ticket) => ticket.assignedToUserId === assignedTo);
@@ -103,12 +148,17 @@ export async function POST(req: Request) {
     }
     const body = await req.json().catch(() => ({}));
     const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
+    const requestedCompanySlug = typeof body?.companySlug === "string" ? body.companySlug : null;
     const targetCompanyId = requestedCompanyId ?? user.companyId ?? null;
+    const targetCompanySlug = requestedCompanySlug ?? user.companySlug ?? resolvePrimaryCompanySlug(user);
     if (requestedCompanyId) {
       await assertCompanyAccess(user, requestedCompanyId);
     }
+    if (requestedCompanySlug && !userCanFilterCompany(user, requestedCompanySlug)) {
+      return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
+    }
+
     const localUser = await getLocalUserById(user.id);
-    const normalizedCompanySlug = resolvePrimaryCompanySlug(user);
     const assignedToUserId =
       canAccessGlobalTicketWorkspace(user) &&
       typeof body?.assignedToUserId === "string"
@@ -127,7 +177,7 @@ export async function POST(req: Request) {
       createdBy: user.id,
       createdByName: resolveDisplayName(localUser),
       createdByEmail: localUser?.email ?? null,
-      companySlug: normalizedCompanySlug,
+      companySlug: targetCompanySlug,
       companyId: targetCompanyId,
     });
 

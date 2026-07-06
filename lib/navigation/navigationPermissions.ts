@@ -18,7 +18,7 @@ const OPERATIONS_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: s
 
 const MANAGEMENT_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
   "gestao.perfil": { moduleId: "permissions", action: "view" },
-  "gestao.usuarios": { moduleId: "permissions", action: "view" },
+  "gestao.usuarios": { moduleId: "users", action: "view" },
   "permissoes.perfil": { moduleId: "permissions", action: "view" },
   "permissoes.matriz": { moduleId: "permissions", action: "view" },
 };

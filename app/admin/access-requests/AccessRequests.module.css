@@ -27,11 +27,13 @@
   --tc-border: rgb(15 23 42 / 12%);
   --tc-primary: #011848;
   --tc-primary-dark: #061b4d;
-  --tc-surface: rgb(255 255 255 / 96%);
-  --tc-surface-2: rgb(248 250 252 / 94%);
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f8fafc;
+  --tc-surface-3: #eef4ff;
   --tc-text-muted: rgb(71 85 105 / 86%);
   --tc-text-primary: #0f172a;
   --tc-text-secondary: #475569;
+  --tc-overlay: rgb(15 23 42 / 45%);
   background: linear-gradient(135deg, #f8fbff 0%, #ffffff 54%, #fff7f7 100%) !important;
   color: var(--tc-text-primary) !important;
   color-scheme: light;
@@ -44,51 +46,56 @@
   --tc-border: rgb(226 232 240 / 12%);
   --tc-primary: #f8fafc;
   --tc-primary-dark: #dbeafe;
-  --tc-surface: rgb(11 18 32 / 94%);
-  --tc-surface-2: rgb(2 6 23 / 72%);
+  --tc-surface: #0b1220;
+  --tc-surface-2: #020617;
+  --tc-surface-3: #111827;
   --tc-text-muted: rgb(203 213 225 / 78%);
   --tc-text-primary: #f8fafc;
   --tc-text-secondary: #cbd5e1;
+  --tc-overlay: rgb(2 6 23 / 62%);
   background: linear-gradient(135deg, #030712 0%, #07111f 54%, #120718 100%) !important;
   color: var(--tc-text-primary) !important;
   color-scheme: dark;
 }
 
+.queueShell :global(*) {
+  border-color: var(--tc-border);
+}
+
 .queueShell :global(section),
 .queueShell :global(article),
 .queueShell :global(aside),
-.queueShell :global(label > div),
 .queueShell :global(table),
 .queueShell :global(thead),
 .queueShell :global(tbody),
-.queueShell :global(tr),
 .queueShell :global(td),
-.queueShell :global(th) {
+.queueShell :global(th),
+.queueShell :global([role="dialog"]),
+.queueShell :global([data-access-requests-dialog]) {
+  color: var(--tc-text-primary) !important;
   border-color: var(--tc-border) !important;
 }
 
-.queueShell :global(section:not(:first-child)),
-.queueShell :global(article),
-.queueShell :global(aside),
-.queueShell :global(label > div),
-.queueShell :global(table) {
+.queueShell :global(table),
+.queueShell :global(thead),
+.queueShell :global([data-access-requests-dialog]),
+.queueShell :global([class*="bg-(--tc-surface)"]),
+.queueShell :global([class*="bg-\(--tc-surface\)"]),
+.queueShell :global([class*="bg-\[var\(--tc-surface"]),
+.queueShell :global([class*="bg-white"]) {
   background: var(--tc-surface) !important;
-  color: var(--tc-text-primary) !important;
 }
 
-.queueShell :global(thead),
-.queueShell :global([class*="bg-slate-50"]),
-.queueShell :global([class*="bg-slate-100"]),
-.queueShell :global([class*="bg-white"]),
-.queueShell :global([class*="bg-\[var\(--tc-surface"]),
+.queueShell :global([class*="bg-(--tc-surface-2)"]),
+.queueShell :global([class*="bg-\(--tc-surface-2\)"]),
 .queueShell :global([class*="bg-\[var\(--tc-surface-2"]),
-.queueShell :global([class*="bg-\(--tc-surface"]),
-.queueShell :global([class*="bg-\(--tc-surface-2"]) {
+.queueShell :global([class*="bg-slate-50"]),
+.queueShell :global([class*="bg-slate-100"]) {
   background: var(--tc-surface-2) !important;
 }
 
 .queueShell :global(tbody tr) {
-  background: color-mix(in srgb, var(--tc-surface) 90%, transparent) !important;
+  background: var(--tc-surface) !important;
   color: var(--tc-text-primary) !important;
 }
 
@@ -116,8 +123,8 @@
 .queueShell :global(.text-slate-950),
 .queueShell :global(.text-slate-900),
 .queueShell :global(.text-slate-800),
-.queueShell :global([class*="text-\[var\(--tc-text-primary"]),
-.queueShell :global([class*="text-\(--tc-text-primary"]) {
+.queueShell :global([class*="text-\(--tc-text-primary\)" ]),
+.queueShell :global([class*="text-\[var\(--tc-text-primary"] ) {
   color: var(--tc-text-primary) !important;
 }
 
@@ -126,10 +133,10 @@
 .queueShell :global(.text-slate-700),
 .queueShell :global(.text-slate-600),
 .queueShell :global(.text-slate-500),
-.queueShell :global([class*="text-\[var\(--tc-text-secondary"]),
-.queueShell :global([class*="text-\[var\(--tc-text-muted"]),
-.queueShell :global([class*="text-\(--tc-text-secondary"]),
-.queueShell :global([class*="text-\(--tc-text-muted"]) {
+.queueShell :global([class*="text-\(--tc-text-secondary\)" ]),
+.queueShell :global([class*="text-\(--tc-text-muted\)" ]),
+.queueShell :global([class*="text-\[var\(--tc-text-secondary"] ),
+.queueShell :global([class*="text-\[var\(--tc-text-muted"] ) {
   color: var(--tc-text-secondary) !important;
 }
 
@@ -179,30 +186,47 @@
   color: #be123c !important;
 }
 
+.queueShell :global([class*="bg-violet-50"]) {
+  background: rgb(237 233 254 / 88%) !important;
+  color: #6d28d9 !important;
+}
+
 :global(html.dark) .queueShell :global([class*="bg-sky-50"]),
 :global(.dark) .queueShell :global([class*="bg-sky-50"]),
-:global([data-theme="dark"]) .queueShell :global([class*="bg-sky-50"]) {
+:global([data-theme="dark"]) .queueShell :global([class*="bg-sky-50"]),
+:global([data-mode="dark"]) .queueShell :global([class*="bg-sky-50"]) {
   background: rgb(8 47 73 / 55%) !important;
   color: #bae6fd !important;
 }
 
 :global(html.dark) .queueShell :global([class*="bg-amber-50"]),
 :global(.dark) .queueShell :global([class*="bg-amber-50"]),
-:global([data-theme="dark"]) .queueShell :global([class*="bg-amber-50"]) {
+:global([data-theme="dark"]) .queueShell :global([class*="bg-amber-50"]),
+:global([data-mode="dark"]) .queueShell :global([class*="bg-amber-50"]) {
   background: rgb(120 53 15 / 34%) !important;
   color: #fbbf24 !important;
 }
 
 :global(html.dark) .queueShell :global([class*="bg-emerald-50"]),
 :global(.dark) .queueShell :global([class*="bg-emerald-50"]),
-:global([data-theme="dark"]) .queueShell :global([class*="bg-emerald-50"]) {
+:global([data-theme="dark"]) .queueShell :global([class*="bg-emerald-50"]),
+:global([data-mode="dark"]) .queueShell :global([class*="bg-emerald-50"]) {
   background: rgb(6 78 59 / 30%) !important;
   color: #6ee7b7 !important;
 }
 
 :global(html.dark) .queueShell :global([class*="bg-rose-50"]),
 :global(.dark) .queueShell :global([class*="bg-rose-50"]),
-:global([data-theme="dark"]) .queueShell :global([class*="bg-rose-50"]) {
+:global([data-theme="dark"]) .queueShell :global([class*="bg-rose-50"]),
+:global([data-mode="dark"]) .queueShell :global([class*="bg-rose-50"]) {
   background: rgb(76 5 25 / 34%) !important;
   color: #fda4af !important;
+}
+
+:global(html.dark) .queueShell :global([class*="bg-violet-50"]),
+:global(.dark) .queueShell :global([class*="bg-violet-50"]),
+:global([data-theme="dark"]) .queueShell :global([class*="bg-violet-50"]),
+:global([data-mode="dark"]) .queueShell :global([class*="bg-violet-50"]) {
+  background: rgb(76 29 149 / 34%) !important;
+  color: #ddd6fe !important;
 }

@@ -129,6 +129,9 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
   const size = isCore ? "h-[136px] w-[190px]" : isBig ? "h-[124px] w-[176px]" : isSmall ? "h-[96px] w-[150px]" : "h-[110px] w-[164px]";
   const chromeClass = darkMode ? "bg-black/42 text-white" : "bg-[#011848]/8 text-[#011848]";
   const metaChipClass = darkMode ? "bg-black/46 text-white" : "bg-[#011848]/8 text-[#011848]";
+  const contextChipClass = darkMode
+    ? "border border-cyan-100/14 bg-slate-950/58 text-cyan-50 shadow-[inset_0_0_12px_rgba(34,211,238,.10)]"
+    : "border border-[#011848]/10 bg-white/88 text-[#011848] shadow-[inset_0_0_10px_rgba(1,24,72,.05)]";
   const flowChipClass = darkMode ? "border-white/18 bg-black/54 text-white/86" : "border-[#011848]/10 bg-white/90 text-[#011848]/76";
   const ringClass = darkMode ? "border-white/12" : "border-[#011848]/8";
   const glowClass = darkMode ? "bg-cyan-300/18" : "bg-cyan-200/14";
@@ -139,6 +142,7 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
       data-brain-node-id={node.id}
       data-brain-node-status={node.status}
       data-brain-node-type={node.type}
+      data-brain-node-theme={darkMode ? "dark" : "light"}
       title={`${node.label} · ${nodeKicker(node)} · ${nodeInstruction(node)} · ${statusLabel(node, nodeData.connectedCount)}`}
       style={color && !isSelected ? { borderColor: color, boxShadow: darkMode ? `0 0 44px ${color}55, inset 0 0 22px ${color}24` : `0 0 28px ${color}28, inset 0 0 16px ${color}14` } : undefined}
       className={`brain-orb-node relative flex ${size} cursor-grab select-none flex-col items-center justify-center rounded-[32px] border px-3 text-center backdrop-blur-md transition duration-300 active:cursor-grabbing ${theme(node, isSelected, nodeData.orphan, darkMode)} ${dimmed ? "scale-75 opacity-35 blur-[1px]" : "opacity-100"} ${isSelected ? "z-30 scale-105" : "z-10"}`}
@@ -152,7 +156,7 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
       <span className="relative z-10 w-full break-words text-[13px] font-black leading-[1.08] tracking-[-0.02em]">{node.label}</span>
       <span className="relative z-10 mt-1 w-full truncate text-[8px] font-black uppercase tracking-[0.12em] opacity-75">{labelize(nodeKicker(node))}</span>
       <span className={`relative z-10 mt-1 max-w-full rounded-full ${metaChipClass} px-2.5 py-1 text-[8.5px] font-black uppercase tracking-[0.08em] opacity-95`}>{statusLabel(node, nodeData.connectedCount)}</span>
-      <span className="relative z-10 mt-1 w-full truncate text-[9px] font-black uppercase opacity-82">{nodeInstruction(node)}</span>
+      <span className={`relative z-10 mt-1 max-w-full rounded-full px-2.5 py-1 text-[8.5px] font-black uppercase tracking-[0.07em] ${contextChipClass}`}>{nodeInstruction(node)}</span>
       {isBig ? <span className="relative z-10 mt-1 max-w-full truncate text-[9px] font-black uppercase opacity-80">{count} nós{pendingCount ? ` · ${pendingCount} pend.` : ""}</span> : null}
       <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !border-cyan-100 !bg-cyan-300" />
     </div>

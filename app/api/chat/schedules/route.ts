@@ -27,7 +27,7 @@ function normalizeType(value: string): ChatScheduleType {
 }
 
 function actorLabel(access: NonNullable<Awaited<ReturnType<typeof getAccessContext>>>) {
-  return access.name ?? access.email ?? access.user ?? access.userId;
+  return access.email || access.user || access.userId;
 }
 
 function isMeetSchedule(type: ChatScheduleType, payload: Record<string, unknown>) {
@@ -40,9 +40,9 @@ function calendarCopy(type: ChatScheduleType, meet: boolean) {
       eventType: "delivery" as const,
       markerLabel: "Tarefa",
       releaseName: "Tarefa criada pelo chat",
-      checklist: ["Responsável confirmado", "Prazo registrado", "Atualizar status da tarefa"],
-      notificationRules: ["Notificar responsável", "Exibir em Meus agendamentos", "Exibir na agenda da empresa quando houver empresa"],
-      brianRules: ["Relacionar tarefa com a conversa", "Guardar responsável, prazo e contexto"],
+      checklist: ["Responsavel confirmado", "Prazo registrado", "Atualizar status da tarefa"],
+      notificationRules: ["Notificar responsavel", "Exibir em Meus agendamentos", "Exibir na agenda da empresa quando houver empresa"],
+      brianRules: ["Relacionar tarefa com a conversa", "Guardar responsavel, prazo e contexto"],
     };
   }
 
@@ -50,10 +50,10 @@ function calendarCopy(type: ChatScheduleType, meet: boolean) {
     return {
       eventType: "meeting" as const,
       markerLabel: "Meet",
-      releaseName: "Ligação Google Meet criada pelo chat",
-      checklist: ["Confirmar participantes", "Gerar/abrir link do Meet", "Registrar decisão da ligação"],
+      releaseName: "Ligacao Google Meet criada pelo chat",
+      checklist: ["Confirmar participantes", "Gerar ou abrir link do Meet", "Registrar decisao da ligacao"],
       notificationRules: ["Notificar as duas partes", "Exibir em Meus agendamentos", "Exibir nos agendamentos gerais da empresa"],
-      brianRules: ["Relacionar Meet com a conversa", "Guardar pauta, participantes e decisão"],
+      brianRules: ["Relacionar Meet com a conversa", "Guardar pauta, participantes e decisao"],
     };
   }
 
@@ -61,7 +61,7 @@ function calendarCopy(type: ChatScheduleType, meet: boolean) {
     eventType: "meeting" as const,
     markerLabel: "Agenda",
     releaseName: "Agendamento interno criado pelo chat",
-    checklist: ["Confirmar horário", "Confirmar participante", "Atualizar status depois do compromisso"],
+    checklist: ["Confirmar horario", "Confirmar participante", "Atualizar status depois do compromisso"],
     notificationRules: ["Notificar participante", "Exibir em Meus agendamentos", "Exibir na agenda da empresa quando houver empresa"],
     brianRules: ["Relacionar agendamento com a conversa", "Guardar contexto interno sem abrir Meet"],
   };
@@ -83,7 +83,7 @@ async function mirrorChatScheduleToInternalAgenda(input: {
     ].filter(Boolean)),
   );
   const notes = input.schedule.notes?.trim();
-  const meetLine = meet ? "Google Meet: sim. Link deve ser gerado/associado pelo calendário." : "Google Meet: não. Fluxo permanece interno no sistema.";
+  const meetLine = meet ? "Google Meet: sim. Link deve ser gerado/associado pelo calendario." : "Google Meet: nao. Fluxo permanece interno no sistema.";
 
   return upsertReleaseCalendarEvent({
     id: `chat-${input.schedule.id}`,

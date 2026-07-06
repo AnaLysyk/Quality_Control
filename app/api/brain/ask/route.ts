@@ -9,6 +9,7 @@ import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
 import { filterBrainDomainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
 import { answerBrainChatQuestion } from "@/lib/brain/chat";
+import { formatWebSearchForBrain, searchBrainWeb, shouldUseWebSearch } from "@/lib/brain/webSearch";
 
 function isE2eJsonMode() {
   return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true";
@@ -24,9 +25,9 @@ export async function POST(req: NextRequest) {
 
   if (typeof lightweightBody.message === "string") {
     const accessResult = await resolveBrainAccess(req);
-  if (!accessResult.ok) {
-    return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
-  }
+    if (!accessResult.ok) {
+      return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
+    }
     const graph = buildMockBrainGraph();
     const visibleGraph = filterBrainDomainGraphByAccess(graph.nodes, graph.edges, accessResult.context);
     const text = normalizeBrainText(lightweightBody.message);
@@ -96,13 +97,28 @@ export async function POST(req: NextRequest) {
         : null,
     });
 
+    const needsWebSearch = shouldUseWebSearch(lightweightBody.message);
+    const webSearch = needsWebSearch ? await searchBrainWeb(lightweightBody.message).catch((error) => ({
+      enabled: false,
+      provider: "none" as const,
+      query: lightweightBody.message ?? "",
+      results: [],
+      warning: `Busca web indisponivel agora: ${String(error)}`,
+    })) : null;
+    const webContext = webSearch ? formatWebSearchForBrain(webSearch) : null;
+    const baseReply = brainAnswer.foundNodes.length
+      ? brainAnswer.answer
+      : `Oi. No Brain encontrei ${visibleNodes.length} nos e ${visibleGraph.edges.length} conexoes neste recorte. Existem ${pending.length} pendencia(s). Posso mostrar modulos, empresas, projetos, nos orfaos, pendencias, criado hoje ou explicar o no selecionado.`;
+    const reply = webContext
+      ? `${baseReply}\n\nBusca na internet:\n${webContext}`
+      : baseReply;
+
     return NextResponse.json({
-      reply: brainAnswer.foundNodes.length
-        ? brainAnswer.answer
-        : `Oi. No Brain encontrei ${visibleNodes.length} nos e ${visibleGraph.edges.length} conexoes neste recorte. Existem ${pending.length} pendencia(s). Posso mostrar modulos, empresas, projetos, nos orfaos, pendencias, criado hoje ou explicar o no selecionado.`,
-      action: brainAnswer.navigation ? "navigate" : "summarize_context",
+      reply,
+      action: brainAnswer.navigation ? "navigate" : webSearch ? "web_search_context" : "summarize_context",
       navigation: brainAnswer.navigation ?? null,
       foundNodes: brainAnswer.foundNodes,
+      webSearch,
       suggestedActions: brainAnswer.suggestedActions.map((action) => action.label).slice(0, 5),
       filters: lightweightBody.visibleFilters ?? {},
       requiresConfirmation: false,
@@ -213,4 +229,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erro ao processar agente" }, { status: 500 });
   }
 }
-

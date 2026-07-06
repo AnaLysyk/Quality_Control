@@ -4,6 +4,8 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FiClock, FiMessageCircle, FiMic, FiPlus, FiSend, FiVolume2, FiVolumeX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
+import { buildBrainHomeActions, type BrainHomeAction } from "./brainHomeActions";
 
 type BrainSuggestion = { label: string; prompt: string; description: string };
 type BrainMessage = { id: string; role: "assistant" | "user"; text: string };
@@ -30,6 +32,7 @@ function titleFromMessages(messages: BrainMessage[]) { const firstUserMessage = 
 
 export default function NewHomeContent() {
   const { user } = useAuthUser();
+  const { modules, effectiveRole } = useNavigationItems();
   const [command, setCommand] = useState("");
   const [listening, setListening] = useState(false);
   const [directVoiceMode, setDirectVoiceMode] = useState(false);
@@ -44,9 +47,10 @@ export default function NewHomeContent() {
   const [currentSessionId, setCurrentSessionId] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const firstName = resolveFirstName(user);
-  const roleLabel = resolveRoleLabel(user);
+  const roleLabel = effectiveRole ? resolveRoleLabel({ role: effectiveRole }) : resolveRoleLabel(user);
   const greeting = useMemo(() => resolveGreeting(), []);
-  const suggestions = useMemo(() => buildSuggestions(roleLabel), [roleLabel]);
+  const navActions = useMemo(() => buildBrainHomeActions(modules).slice(0, 8), [modules]);
+  const suggestions = useMemo<(BrainSuggestion | BrainHomeAction)[]>(() => navActions.length ? navActions : buildSuggestions(roleLabel), [navActions, roleLabel]);
   const initialAssistantText = useMemo(() => buildInitialMessage(greeting, firstName, roleLabel), [firstName, greeting, roleLabel]);
   const currentSession = sessions.find((session) => session.id === currentSessionId);
   const messages = currentSession?.messages ?? [];
@@ -63,10 +67,10 @@ export default function NewHomeContent() {
 
   function updateCurrentSession(updater: (session: BrainSession) => BrainSession) { setSessions((current) => current.map((session) => (session.id === currentSessionId ? updater(session) : session))); }
   function speakBrain(text: string) { if (typeof window === "undefined" || !window.speechSynthesis || !text.trim()) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang = "pt-BR"; utterance.rate = 0.92; utterance.pitch = 1.02; utterance.volume = volume; const voice = resolveVoice(window.speechSynthesis.getVoices(), selectedVoice); if (voice) utterance.voice = voice; utterance.onstart = () => setSpeaking(true); utterance.onend = () => setSpeaking(false); utterance.onerror = () => setSpeaking(false); window.speechSynthesis.speak(utterance); }
-  function openAssistant(prompt: string) { window.dispatchEvent(new CustomEvent("assistant:open", { detail: { source: "admin-home", route: "/admin/home", panelMode: "side", agentMode: "qa", focusInput: true, initialMessage: prompt, context: { module: "home", screenLabel: "Brain Home", metadata: { roleLabel } } } })); }
-  function sendPrompt(prompt: string) { const cleanPrompt = prompt.trim(); if (!cleanPrompt || !currentSessionId) return; const now = Date.now(); const assistantText = buildAssistantReply(cleanPrompt, roleLabel); updateCurrentSession((session) => ({ ...session, title: titleFromMessages([...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }]), updatedAt: new Date().toISOString(), messages: [...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }, { id: `assistant-${now}`, role: "assistant", text: assistantText }] })); openAssistant(cleanPrompt); setCommand(""); }
+  function openAssistant(prompt: string, action?: BrainHomeAction | null) { window.dispatchEvent(new CustomEvent("assistant:open", { detail: { source: "admin-home", route: "/admin/home", panelMode: "side", agentMode: "qa", focusInput: true, initialMessage: prompt, context: { module: "home", screenLabel: "Brain Home", metadata: { roleLabel, action, availableActions: suggestions.map((item) => item.label) } } } })); }
+  function sendPrompt(prompt: string, action?: BrainHomeAction | null) { const cleanPrompt = prompt.trim(); if (!cleanPrompt || !currentSessionId) return; const now = Date.now(); const assistantText = buildAssistantReply(cleanPrompt, roleLabel); updateCurrentSession((session) => ({ ...session, title: titleFromMessages([...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }]), updatedAt: new Date().toISOString(), messages: [...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }, { id: `assistant-${now}`, role: "assistant", text: assistantText }] })); openAssistant(cleanPrompt, action); setCommand(""); }
   function handleSubmit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); sendPrompt(command); }
-  function handleSuggestion(item: BrainSuggestion) { setVoiceEnabled(true); sendPrompt(item.prompt); }
+  function handleSuggestion(item: BrainSuggestion | BrainHomeAction) { setVoiceEnabled(true); sendPrompt(item.prompt, "id" in item ? item as BrainHomeAction : null); }
   function startNewConversation() { const next = createSession(initialAssistantText); setSessions((current) => [next, ...current]); setCurrentSessionId(next.id); setHistoryOpen(false); setCommand(""); }
   function openSession(sessionId: string) { setCurrentSessionId(sessionId); setHistoryOpen(false); setCommand(""); }
   function handleVoiceInput(sendDirectly: boolean) { const SpeechRecognition = resolveSpeechRecognition(); if (!SpeechRecognition) { setSpeechSupported(false); updateCurrentSession((session) => ({ ...session, messages: [...session.messages, { id: `assistant-speech-${Date.now()}`, role: "assistant", text: "Seu navegador não liberou reconhecimento de voz agora. Digite a mensagem ou use o chat lateral." }] })); return; } const recognition = new SpeechRecognition(); let finalTranscript = ""; recognition.lang = "pt-BR"; recognition.interimResults = true; recognition.continuous = false; setListening(true); setDirectVoiceMode(sendDirectly); if (sendDirectly) setVoiceEnabled(true); recognition.onresult = (event) => { let transcript = ""; for (let index = event.resultIndex; index < event.results.length; index += 1) { transcript += event.results[index][0].transcript; if (event.results[index].isFinal) finalTranscript = transcript.trim(); } setCommand(transcript.trim()); }; recognition.onerror = () => { setListening(false); setDirectVoiceMode(false); updateCurrentSession((session) => ({ ...session, messages: [...session.messages, { id: `assistant-error-${Date.now()}`, role: "assistant", text: "Não consegui captar o áudio. Tente novamente ou digite sua mensagem." }] })); }; recognition.onend = () => { setListening(false); setDirectVoiceMode(false); if (sendDirectly && finalTranscript) sendPrompt(finalTranscript); }; recognition.start(); }
@@ -74,8 +78,8 @@ export default function NewHomeContent() {
   return (
     <section className="admin-brain-home relative min-h-[calc(100vh-7rem)] w-full overflow-hidden bg-transparent px-4 pb-28 pt-5 sm:px-8 lg:px-10">
       <div className="admin-brain-session-controls fixed right-8 top-24 z-30 flex items-center gap-2 max-md:right-4 max-md:top-20">
-        <button type="button" onClick={startNewConversation} className="admin-brain-icon-action" title="Nova conversa" aria-label="Nova conversa"><FiPlus className="h-4 w-4" /></button>
         <button type="button" onClick={() => setHistoryOpen((current) => !current)} className="admin-brain-icon-action" title="Histórico de conversas" aria-label="Histórico de conversas"><FiClock className="h-4 w-4" /></button>
+        <button type="button" onClick={startNewConversation} className="admin-brain-icon-action" title="Nova conversa" aria-label="Nova conversa"><FiPlus className="h-4 w-4" /></button>
       </div>
       <div className="relative z-10 grid min-h-[500px] grid-cols-1 gap-6 lg:grid-cols-[330px_minmax(0,1fr)] lg:items-start">
         <aside className="flex justify-center pt-2 lg:justify-start lg:pl-2"><BrainOrb listening={listening} speaking={speaking || isTyping} /></aside>

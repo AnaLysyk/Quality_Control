@@ -12,7 +12,7 @@ type BrainMessage = { id: string; role: "assistant" | "user"; text: string };
 type BrainSession = { id: string; title: string; createdAt: string; updatedAt: string; messages: BrainMessage[] };
 type BrainAskPayload = { reply?: string; webSearch?: { enabled?: boolean; provider?: string; results?: Array<{ title?: string; url?: string; content?: string }> } | null };
 type SpeechRecognitionEventLike = { resultIndex: number; results: { length: number; [index: number]: { isFinal?: boolean; [index: number]: { transcript: string } } } };
-type SpeechRecognitionLike = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; abort: () => void; onresult: ((event: SpeechRecognitionEventLike) => void) | null; onend: (() => void) | null; onerror: ((event?: unknown) => void) | null };
+type SpeechRecognitionLike = { lang: string; interimResults: boolean; continuous: boolean; maxAlternatives?: number; start: () => void; stop: () => void; abort: () => void; onstart: (() => void) | null; onresult: ((event: SpeechRecognitionEventLike) => void) | null; onend: (() => void) | null; onerror: ((event?: unknown) => void) | null };
 
 const STORAGE_KEY = "admin-home-brain-conversations";
 const DAILY_KEY = "admin-home-brain-current-day";
@@ -32,6 +32,7 @@ function buildInitialMessage(greeting: string, firstName: string, roleLabel: str
 function createSession(initialText: string): BrainSession { const now = new Date().toISOString(); return { id: `brain-session-${Date.now()}`, title: "Nova conversa", createdAt: now, updatedAt: now, messages: [{ id: `assistant-${Date.now()}`, role: "assistant", text: initialText }] }; }
 function titleFromMessages(messages: BrainMessage[]) { const firstUserMessage = messages.find((message) => message.role === "user")?.text; return firstUserMessage ? firstUserMessage.slice(0, 48) : "Conversa do Brain"; }
 function formatHomeReply(prompt: string, fallbackRole: string, payload: BrainAskPayload | null) { if (payload?.reply) return payload.reply; return `Certo. Vou trabalhar com este contexto: ${prompt}.\n\nO que vou considerar:\n- permissões reais do seu perfil de ${fallbackRole};\n- módulos visíveis na Home;\n- nós do Brain/RAG disponíveis;\n- APIs internas liberadas para sua conta.\n\nMe diga a empresa, projeto ou item que quer executar.`; }
+function voiceErrorMessage(error: unknown) { const name = typeof error === "object" && error && "error" in error ? String((error as { error?: unknown }).error) : ""; if (name === "not-allowed" || name === "service-not-allowed") return "O navegador bloqueou o microfone. Libere o microfone nas permissões do site e tente novamente."; if (name === "no-speech") return "Não ouvi nenhuma fala. Clique no botão de áudio e fale quando ele ficar vermelho."; if (name === "audio-capture") return "Não encontrei microfone ativo neste dispositivo."; return "Não consegui captar o áudio. Tente pelo Chrome/Edge, permita o microfone ou use o microfone do teclado para ditar no campo."; }
 
 export default function NewHomeContent() {
   const { user } = useAuthUser();
@@ -43,6 +44,7 @@ export default function NewHomeContent() {
   const [speaking, setSpeaking] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState("");
   const [volume, setVolume] = useState(0.85);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState("");
@@ -76,15 +78,18 @@ export default function NewHomeContent() {
   function speakBrain(text: string) { if (typeof window === "undefined" || !window.speechSynthesis || !text.trim()) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang = "pt-BR"; utterance.rate = 0.92; utterance.pitch = 1.02; utterance.volume = volume; const voice = resolveVoice(window.speechSynthesis.getVoices(), selectedVoice); if (voice) utterance.voice = voice; utterance.onstart = () => setSpeaking(true); utterance.onend = () => setSpeaking(false); utterance.onerror = () => setSpeaking(false); window.speechSynthesis.speak(utterance); }
   function openAssistant(prompt: string, action?: BrainHomeAction | null) { window.dispatchEvent(new CustomEvent("assistant:open", { detail: { source: "admin-home", route: "/admin/home", panelMode: "side", agentMode: "qa", focusInput: true, initialMessage: prompt, context: { module: "home", screenLabel: "Brain Home", metadata: { roleLabel, action, availableActions: suggestions.map((item) => item.label) } } } })); }
   async function askBrain(prompt: string, action?: BrainHomeAction | null) { try { const response = await fetch("/api/brain/ask", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ message: prompt, activeContext: { module: "home" }, visibleFilters: { route: "/admin/home", selectedAction: action ? { id: action.id, label: action.label, href: action.href, moduleLabel: action.moduleLabel } : null, availableActions: suggestions.map((item) => ({ label: item.label, description: item.description })).slice(0, 20) } }) }); const payload = (await response.json().catch(() => null)) as BrainAskPayload | null; return formatHomeReply(prompt, roleLabel, payload); } catch { return formatHomeReply(prompt, roleLabel, null); } }
-  async function sendPrompt(prompt: string, action?: BrainHomeAction | null) { const cleanPrompt = prompt.trim(); if (!cleanPrompt || !currentSessionId) return; const now = Date.now(); const assistantId = `assistant-${now}`; updateCurrentSession((session) => ({ ...session, title: titleFromMessages([...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }]), updatedAt: new Date().toISOString(), messages: [...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }, { id: assistantId, role: "assistant", text: LOADING_TEXT }] })); openAssistant(cleanPrompt, action); setCommand(""); const assistantText = await askBrain(cleanPrompt, action); updateCurrentSession((session) => ({ ...session, updatedAt: new Date().toISOString(), messages: session.messages.map((message) => message.id === assistantId ? { ...message, text: assistantText } : message) })); }
+  async function sendPrompt(prompt: string, action?: BrainHomeAction | null) { const cleanPrompt = prompt.trim(); if (!cleanPrompt || !currentSessionId) return; const now = Date.now(); const assistantId = `assistant-${now}`; updateCurrentSession((session) => ({ ...session, title: titleFromMessages([...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }]), updatedAt: new Date().toISOString(), messages: [...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }, { id: assistantId, role: "assistant", text: LOADING_TEXT }] })); openAssistant(cleanPrompt, action); setCommand(""); setVoiceStatus(""); const assistantText = await askBrain(cleanPrompt, action); updateCurrentSession((session) => ({ ...session, updatedAt: new Date().toISOString(), messages: session.messages.map((message) => message.id === assistantId ? { ...message, text: assistantText } : message) })); }
   function handleSubmit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); void sendPrompt(command); }
   function handleSuggestion(item: BrainSuggestion | BrainHomeAction) { void sendPrompt(item.prompt, "id" in item ? item as BrainHomeAction : null); }
-  function startNewConversation() { const next = createSession(initialAssistantText); setSessions((current) => [next, ...current]); setCurrentSessionId(next.id); setHistoryOpen(false); setCommand(""); }
-  function openSession(sessionId: string) { setCurrentSessionId(sessionId); setHistoryOpen(false); setCommand(""); }
-  function handleVoiceInput(sendDirectly: boolean) {
-    if (listening) { recognitionRef.current?.stop(); return; }
+  function startNewConversation() { const next = createSession(initialAssistantText); setSessions((current) => [next, ...current]); setCurrentSessionId(next.id); setHistoryOpen(false); setCommand(""); setVoiceStatus(""); }
+  function openSession(sessionId: string) { setCurrentSessionId(sessionId); setHistoryOpen(false); setCommand(""); setVoiceStatus(""); }
+  async function requestMicrophonePermission() { if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) return true; const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); stream.getTracks().forEach((track) => track.stop()); return true; }
+  async function handleVoiceInput(sendDirectly: boolean) {
+    if (listening) { recognitionRef.current?.stop(); setVoiceStatus("Processando o que eu ouvi..."); return; }
     const SpeechRecognition = resolveSpeechRecognition();
-    if (!SpeechRecognition) { setSpeechSupported(false); appendAssistantMessage("Seu navegador não liberou reconhecimento de voz agora. No celular, use Chrome/Edge e permita o microfone do site."); return; }
+    if (!SpeechRecognition) { setSpeechSupported(false); setVoiceStatus("Reconhecimento de voz indisponível neste navegador."); appendAssistantMessage("Seu navegador não suporta conversa por voz aqui. Use Chrome/Edge ou toque no campo e use o microfone do teclado para ditar."); return; }
+    if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+    try { await requestMicrophonePermission(); } catch { setSpeechSupported(false); setVoiceStatus("Microfone bloqueado pelo navegador."); appendAssistantMessage("O microfone está bloqueado. Libere o microfone nas permissões do site e tente novamente."); return; }
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
     let latestTranscript = "";
@@ -92,10 +97,12 @@ export default function NewHomeContent() {
     recognition.lang = "pt-BR";
     recognition.interimResults = true;
     recognition.continuous = false;
+    recognition.maxAlternatives = 1;
     setSpeechSupported(true);
-    setListening(true);
     setDirectVoiceMode(sendDirectly);
+    setVoiceStatus("Preparando microfone...");
     if (sendDirectly) setVoiceEnabled(true);
+    recognition.onstart = () => { setListening(true); setVoiceStatus("Estou ouvindo... fale agora."); };
     recognition.onresult = (event) => {
       let fullTranscript = "";
       for (let index = 0; index < event.results.length; index += 1) {
@@ -105,22 +112,26 @@ export default function NewHomeContent() {
       }
       latestTranscript = fullTranscript.trim();
       setCommand(latestTranscript);
+      if (latestTranscript) setVoiceStatus(sendDirectly ? "Entendi. Vou enviar quando você parar de falar." : "Transcrevendo na barra. Revise e envie.");
     };
-    recognition.onerror = () => {
+    recognition.onerror = (event) => {
+      const message = voiceErrorMessage(event);
       setListening(false);
       setDirectVoiceMode(false);
       recognitionRef.current = null;
-      appendAssistantMessage("Não consegui captar o áudio. Verifique se o microfone foi permitido no navegador e tente novamente.");
+      setVoiceStatus(message);
+      appendAssistantMessage(message);
     };
     recognition.onend = () => {
       setListening(false);
       setDirectVoiceMode(false);
       recognitionRef.current = null;
       const transcript = (finalTranscript || latestTranscript).trim();
-      if (sendDirectly && transcript) void sendPrompt(transcript);
-      if (sendDirectly && !transcript) appendAssistantMessage("Não ouvi nenhuma frase. Clique no botão de conversa por áudio e fale depois que o microfone ficar vermelho.");
+      if (sendDirectly && transcript) { setVoiceStatus("Enviando sua fala para o Brian..."); void sendPrompt(transcript); return; }
+      if (!sendDirectly && transcript) { setVoiceStatus("Texto capturado. Clique em Enviar para o Brian responder."); return; }
+      setVoiceStatus("Não ouvi nenhuma frase. Tente novamente falando depois que o microfone ficar vermelho.");
     };
-    try { recognition.start(); } catch { setListening(false); setDirectVoiceMode(false); recognitionRef.current = null; appendAssistantMessage("O microfone não iniciou. Atualize a página e tente novamente."); }
+    try { recognition.start(); } catch { setListening(false); setDirectVoiceMode(false); recognitionRef.current = null; setVoiceStatus("O microfone não iniciou. Atualize a página e tente novamente."); appendAssistantMessage("O microfone não iniciou. Atualize a página e tente novamente."); }
   }
 
   return (
@@ -138,19 +149,20 @@ export default function NewHomeContent() {
           </div>
         </main>
       </div>
-      <div className="admin-brain-actions fixed bottom-[6.25rem] left-3 right-3 z-30 flex max-h-24 flex-wrap items-stretch gap-2 overflow-y-auto sm:left-6 sm:right-6 lg:left-[13.25rem] lg:right-[6.25rem]">
+      <div className="admin-brain-actions fixed bottom-[7.1rem] left-3 right-3 z-30 flex max-h-24 flex-wrap items-stretch gap-2 overflow-y-auto sm:left-6 sm:right-6 lg:left-[13.25rem] lg:right-[6.25rem]">
         {suggestions.map((item) => <button key={item.label} type="button" onClick={() => handleSuggestion(item)} className="admin-brain-action min-w-[7.5rem] flex-1 rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-2 text-left transition hover:border-red-400/50 hover:bg-red-500/10 sm:flex-none"><span className="block text-xs font-bold text-white">{item.label}</span><span className="mt-0.5 block truncate text-[10px] text-slate-400">{item.description}</span></button>)}
       </div>
       {historyOpen ? <div className="admin-brain-history fixed right-4 top-32 z-40 w-[min(360px,calc(100vw-2rem))] rounded-3xl border border-white/10 bg-slate-950/90 p-3 shadow-2xl backdrop-blur-xl sm:right-8 sm:top-36"><p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Histórico</p><div className="max-h-64 space-y-2 overflow-y-auto pr-1">{sessions.map((session) => <button key={session.id} type="button" onClick={() => openSession(session.id)} className={`w-full rounded-2xl border px-3 py-2 text-left transition ${session.id === currentSessionId ? "border-red-400/40 bg-red-500/10" : "border-white/10 bg-white/[0.035] hover:border-white/25"}`}><span className="block truncate text-xs font-semibold text-white">{session.title}</span><span className="mt-0.5 block text-[10px] text-slate-400">{new Date(session.updatedAt).toLocaleString("pt-BR")}</span></button>)}</div></div> : null}
       <form onSubmit={handleSubmit} className="admin-brain-command fixed bottom-3 left-3 right-3 z-30 flex items-center gap-2 rounded-3xl border border-white/10 bg-[#0f172a]/90 px-3 py-3 shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:left-6 sm:right-6 sm:rounded-full sm:px-5 lg:left-[13.25rem] lg:right-4">
         <input value={command} onChange={(event) => setCommand(event.target.value)} placeholder={listening ? "Estou ouvindo... fale agora" : "Digite ou fale com o Brian..."} className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500" />
-        <button type="button" onClick={() => handleVoiceInput(false)} className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition ${listening && !directVoiceMode ? "bg-red-500/20 text-red-200" : "text-slate-400 hover:bg-white/5 hover:text-white"}`} title="Transcrever áudio na barra"><FiMic className="h-5 w-5" /></button>
-        <button type="button" onClick={() => handleVoiceInput(true)} className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition ${listening && directVoiceMode ? "bg-red-500/20 text-red-200" : "text-slate-400 hover:bg-white/5 hover:text-white"}`} title="Conversar por áudio direto"><FiMessageCircle className="h-5 w-5" /></button>
+        <button type="button" onClick={() => { void handleVoiceInput(false); }} className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition ${listening && !directVoiceMode ? "bg-red-500/20 text-red-200" : "text-slate-400 hover:bg-white/5 hover:text-white"}`} title="Transcrever áudio na barra"><FiMic className="h-5 w-5" /></button>
+        <button type="button" onClick={() => { void handleVoiceInput(true); }} className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition ${listening && directVoiceMode ? "bg-red-500/20 text-red-200" : "text-slate-400 hover:bg-white/5 hover:text-white"}`} title="Conversar por áudio direto"><FiMessageCircle className="h-5 w-5" /></button>
         <button type="button" onClick={() => setVoiceEnabled((current) => !current)} className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition ${voiceEnabled ? "bg-blue-500/20 text-blue-100" : "text-slate-400 hover:bg-white/5 hover:text-white"}`} title="Ativar ou pausar voz do Brain">{voiceEnabled ? <FiVolume2 className="h-5 w-5" /> : <FiVolumeX className="h-5 w-5" />}</button>
         <input aria-label="Volume do Brain" title="Volume do Brain" type="range" min="0" max="1" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} className="hidden w-20 accent-red-500 xl:block" />
         {availableVoices.length ? <select aria-label="Voz do Brain" value={selectedVoice} onChange={(event) => setSelectedVoice(event.target.value)} className="hidden max-w-36 rounded-full border border-white/10 bg-transparent px-2 py-2 text-xs text-slate-300 outline-none 2xl:block"><option value="">Voz padrão</option>{availableVoices.map((voice) => <option key={voice.name} value={voice.name}>{voice.name}</option>)}</select> : null}
         <button type="submit" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(239,68,68,0.18)] transition hover:scale-[1.02] sm:px-5"><span className="hidden sm:inline">Enviar</span><FiSend className="h-4 w-4" /></button>
       </form>
+      {voiceStatus ? <p className="fixed bottom-[5.25rem] left-4 right-4 z-30 rounded-2xl border border-white/10 bg-slate-950/80 px-3 py-2 text-xs text-slate-200 shadow-xl backdrop-blur lg:left-[13.25rem] lg:right-4">{voiceStatus}</p> : null}
       {!speechSupported ? <p className="fixed bottom-[9.5rem] left-4 right-4 z-30 text-xs text-amber-200 lg:left-[13.25rem]">Reconhecimento de voz indisponível neste navegador. Use Chrome/Edge e permita o microfone.</p> : null}
     </section>
   );

@@ -40,12 +40,14 @@ export default function CreateSupportTicketButton({ hiddenTrigger = false }: Cre
       const bodyPayload: any = {
         title: form.title.trim(),
         description: form.description.trim(),
+        type: "tarefa",
+        priority: "medium",
         companySlug: activeClientSlug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? null,
         companyId: activeClientId ?? (user as any)?.company?.id ?? (user as any)?.companyId ?? null,
       };
       if (assignedTo) bodyPayload.assignedToUserId = assignedTo;
 
-      const res = await fetch("/api/chamados", {
+      const res = await fetch("/api/suportes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

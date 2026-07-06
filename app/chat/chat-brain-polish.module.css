@@ -1,0 +1,159 @@
+.chatBrainPolish {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(59, 130, 246, 0.15), transparent 30%),
+    radial-gradient(circle at 92% 92%, rgba(239, 0, 1, 0.08), transparent 25%),
+    linear-gradient(135deg, #ffffff 0%, #f7faff 50%, #edf4ff 100%);
+}
+
+.chatBrainPolish :global(.qc-chat-page-shell),
+.chatBrainPolish :global(.qc-chat-shell) {
+  min-height: calc(100vh - var(--topbar-h, 0px));
+  background: transparent !important;
+}
+
+.chatBrainPolish :global(.qc-chat-shell) {
+  border-radius: 0 0 28px 28px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 28px 90px rgba(1, 24, 72, 0.10);
+}
+
+.chatBrainPolish :global(.qc-chat-shell aside) {
+  width: min(360px, 31vw) !important;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(239, 0, 1, 0.05), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(247,250,255,0.92)) !important;
+  box-shadow: 18px 0 44px rgba(15,23,42,0.08);
+}
+
+.chatBrainPolish :global(.qc-chat-shell main) {
+  position: relative;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(59,130,246,0.12), transparent 28%),
+    radial-gradient(circle at 96% 78%, rgba(239,0,1,0.055), transparent 25%),
+    linear-gradient(180deg, rgba(255,255,255,0.76), rgba(247,250,255,0.96)) !important;
+}
+
+.chatBrainPolish :global(.qc-chat-shell main::before) {
+  content: "";
+  position: absolute;
+  inset: 74px 0 88px 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 48% 44%, rgba(1,24,72,0.035), transparent 22%),
+    radial-gradient(circle at 58% 54%, rgba(239,0,1,0.028), transparent 20%);
+  opacity: 0.9;
+}
+
+.chatBrainPolish :global(.qc-chat-shell header) {
+  min-height: 94px;
+  background: rgba(255,255,255,0.86) !important;
+  border-bottom: 1px solid rgba(15,23,42,0.10) !important;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 14px 38px rgba(15,23,42,0.055);
+}
+
+.chatBrainPolish :global(.qc-chat-shell header h1) {
+  font-size: clamp(1.35rem, 2vw, 2rem) !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em;
+}
+
+.chatBrainPolish :global(.qc-chat-shell [class*="Selecione"]),
+.chatBrainPolish :global(.qc-chat-shell h2) {
+  font-weight: 900 !important;
+  letter-spacing: -0.035em;
+}
+
+.chatBrainPolish :global(.qc-chat-shell main > div[class*="chat-scroll"]) {
+  padding-top: 28px !important;
+  padding-bottom: 22px !important;
+}
+
+.chatBrainPolish :global(.qc-chat-shell main > div[class*="chat-scroll"] > div[class*="items-center"][class*="justify-center"]) {
+  min-height: min(520px, 58vh) !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.chatBrainPolish :global(.qc-chat-shell main > div[class*="chat-scroll"] > div[class*="items-center"][class*="justify-center"] > div:first-child) {
+  width: 88px !important;
+  height: 88px !important;
+  border-radius: 999px !important;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.96), rgba(255,255,255,0.48) 38%, rgba(239,0,1,0.10) 72%),
+    linear-gradient(135deg, rgba(1,24,72,0.08), rgba(59,130,246,0.06)) !important;
+  box-shadow: 0 18px 46px rgba(1,24,72,0.14), 0 0 60px rgba(239,0,1,0.10);
+}
+
+.chatBrainPolish :global(.qc-chat-shell form) {
+  margin: 0 auto 12px auto;
+  max-width: 960px;
+  border-radius: 26px !important;
+  border: 1px solid rgba(1,24,72,0.15) !important;
+  background: rgba(255,255,255,0.92) !important;
+  box-shadow: 0 20px 56px rgba(15,23,42,0.12), 0 0 0 1px rgba(255,255,255,0.55) inset !important;
+}
+
+.chatBrainPolish :global(.qc-chat-shell form textarea) {
+  min-height: 52px !important;
+  max-height: 128px;
+  font-size: 0.95rem !important;
+}
+
+.chatBrainPolish :global(.qc-chat-shell button[type="submit"]) {
+  background: linear-gradient(135deg, #ef0001, #a90018) !important;
+  box-shadow: 0 16px 34px rgba(239,0,1,0.24) !important;
+}
+
+.chatBrainPolish :global(.qc-chat-shell [class*="rounded-full"][class*="border"]) {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+:global(.dark) .chatBrainPolish,
+:global([data-theme="dark"]) .chatBrainPolish {
+  background:
+    radial-gradient(circle at 15% 12%, rgba(59,130,246,0.18), transparent 32%),
+    radial-gradient(circle at 88% 86%, rgba(239,0,1,0.14), transparent 28%),
+    linear-gradient(135deg, #020713 0%, #050914 52%, #0a1830 100%);
+}
+
+:global(.dark) .chatBrainPolish :global(.qc-chat-shell aside),
+:global([data-theme="dark"]) .chatBrainPolish :global(.qc-chat-shell aside) {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(96,165,250,0.16), transparent 34%),
+    linear-gradient(180deg, rgba(5,13,29,0.96), rgba(3,9,22,0.98)) !important;
+  box-shadow: 22px 0 52px rgba(0,0,0,0.32);
+}
+
+:global(.dark) .chatBrainPolish :global(.qc-chat-shell main),
+:global([data-theme="dark"]) .chatBrainPolish :global(.qc-chat-shell main) {
+  background:
+    radial-gradient(circle at 30% 18%, rgba(59,130,246,0.14), transparent 30%),
+    radial-gradient(circle at 96% 78%, rgba(239,0,1,0.10), transparent 25%),
+    linear-gradient(180deg, rgba(2,7,19,0.84), rgba(5,11,22,0.98)) !important;
+}
+
+:global(.dark) .chatBrainPolish :global(.qc-chat-shell header),
+:global(.dark) .chatBrainPolish :global(.qc-chat-shell form),
+:global([data-theme="dark"]) .chatBrainPolish :global(.qc-chat-shell header),
+:global([data-theme="dark"]) .chatBrainPolish :global(.qc-chat-shell form) {
+  background: rgba(9,17,32,0.84) !important;
+  border-color: rgba(148,163,184,0.20) !important;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.24) !important;
+}
+
+@media (max-width: 1024px) {
+  .chatBrainPolish :global(.qc-chat-shell aside) {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .chatBrainPolish :global(.qc-chat-shell form) {
+    max-width: none;
+    margin-bottom: 0;
+  }
+}

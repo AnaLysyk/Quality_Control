@@ -8,6 +8,10 @@ const globalForBrainPrisma = globalThis as unknown as {
   brainPrismaAdapter?: PrismaPg;
 };
 
+function readEnv(name: string) {
+  return process.env[name]?.trim() || null;
+}
+
 function normalizeDatabaseUrl(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return trimmed;
@@ -22,25 +26,27 @@ function normalizeDatabaseUrl(value: string) {
 }
 
 function getPrimaryDatabaseUrl() {
-  return process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL ?? null;
+  return readEnv("DATABASE_URL") ?? readEnv("POSTGRES_PRISMA_URL") ?? readEnv("POSTGRES_URL");
 }
 
 function resolveBrainDatabaseUrl() {
-  const brainDatabaseUrl = process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL;
+  const primaryDatabaseUrl = getPrimaryDatabaseUrl();
+  const explicitBrainDatabaseUrl = readEnv("BRAIN_DATABASE_URL") ?? readEnv("BRAIN_RAG_DATABASE_URL");
+  const brainDatabaseUrl = explicitBrainDatabaseUrl ?? primaryDatabaseUrl;
 
   if (!brainDatabaseUrl) return null;
 
-  const primaryDatabaseUrl = getPrimaryDatabaseUrl();
-  const allowSameDatabase = process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
-
   if (
     primaryDatabaseUrl &&
-    normalizeDatabaseUrl(primaryDatabaseUrl) === normalizeDatabaseUrl(brainDatabaseUrl) &&
-    !allowSameDatabase
+    explicitBrainDatabaseUrl &&
+    normalizeDatabaseUrl(primaryDatabaseUrl) === normalizeDatabaseUrl(explicitBrainDatabaseUrl) &&
+    process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "false"
   ) {
-    throw new Error(
-      "Brain RAG database must be separated from the production/system database. Set BRAIN_ALLOW_PRIMARY_DATABASE=true only for local development.",
-    );
+    throw new Error("Brain RAG database cannot use the primary database when BRAIN_ALLOW_PRIMARY_DATABASE=false.");
+  }
+
+  if (!explicitBrainDatabaseUrl) {
+    console.warn("[brainPrisma] Using primary database as Brain fallback. Set BRAIN_RAG_DATABASE_URL later to separate it.");
   }
 
   return brainDatabaseUrl;
@@ -60,7 +66,7 @@ function createDisabledBrainPrisma() {
 function createBrainPrismaClient() {
   const databaseUrl = resolveBrainDatabaseUrl();
   if (!databaseUrl) {
-    console.warn("[brainPrisma] Brain RAG disabled: configure BRAIN_DATABASE_URL or BRAIN_RAG_DATABASE_URL to enable it.");
+    console.warn("[brainPrisma] Brain database disabled because no database URL is available.");
     return createDisabledBrainPrisma();
   }
 

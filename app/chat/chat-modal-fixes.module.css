@@ -1,0 +1,390 @@
+.chatModalFixes :global(.qc-chat-schedule-modal),
+.chatModalFixes :global(.qc-chat-unified-action-modal),
+.chatModalFixes :global(.qc-chat-message-reaction-modal),
+.chatModalFixes :global(.qc-chat-reaction-modal) {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 80 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  pointer-events: auto !important;
+}
+
+.chatModalFixes :global(.qc-chat-modal-backdrop),
+.chatModalFixes :global(.qc-chat-reaction-modal__backdrop) {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  background: rgba(2, 6, 23, 0.62) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__panel),
+.chatModalFixes :global(.qc-chat-unified-action-modal__panel),
+.chatModalFixes :global(.qc-chat-modal-panel),
+.chatModalFixes :global(.qc-chat-reaction-modal__panel) {
+  position: relative !important;
+  z-index: 1 !important;
+  width: min(760px, calc(100vw - 32px)) !important;
+  max-height: min(86vh, 760px) !important;
+  overflow: hidden auto !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 30px !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.18), transparent 36%),
+    radial-gradient(circle at 94% 98%, rgba(239, 68, 68, 0.18), transparent 32%),
+    #0b1220 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.46) !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__header),
+.chatModalFixes :global(.qc-chat-unified-action-modal__header),
+.chatModalFixes :global(.qc-chat-modal-header),
+.chatModalFixes :global(.qc-chat-reaction-modal__header) {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 24px 26px 18px !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+  background: rgba(15, 23, 42, 0.38) !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__header span),
+.chatModalFixes :global(.qc-chat-unified-action-modal__header span),
+.chatModalFixes :global(.qc-chat-modal-eyebrow),
+.chatModalFixes :global(.qc-chat-reaction-modal__eyebrow) {
+  display: block !important;
+  margin-bottom: 6px !important;
+  color: #93c5fd !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__header h2),
+.chatModalFixes :global(.qc-chat-unified-action-modal__header h2),
+.chatModalFixes :global(.qc-chat-modal-header h2),
+.chatModalFixes :global(.qc-chat-reaction-modal__header h2) {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-size: clamp(24px, 3vw, 34px) !important;
+  font-weight: 950 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__header p),
+.chatModalFixes :global(.qc-chat-unified-action-modal__header p),
+.chatModalFixes :global(.qc-chat-modal-header p),
+.chatModalFixes :global(.qc-chat-reaction-modal__header p) {
+  margin-top: 8px !important;
+  max-width: 58ch !important;
+  color: #cbd5e1 !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__header button),
+.chatModalFixes :global(.qc-chat-unified-action-modal__header button),
+.chatModalFixes :global(.qc-chat-modal-header button),
+.chatModalFixes :global(.qc-chat-reaction-modal__header button) {
+  display: grid !important;
+  width: 40px !important;
+  height: 40px !important;
+  flex: 0 0 auto !important;
+  place-items: center !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #e2e8f0 !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__quick) {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  padding: 18px 26px 0 !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__quick button),
+.chatModalFixes :global(.qc-chat-schedule-modal__quick > div) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 88px !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  padding: 16px !important;
+  text-align: left !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__quick strong),
+.chatModalFixes :global(.qc-chat-unified-action-modal__grid strong),
+.chatModalFixes :global(.qc-chat-modal-grid strong),
+.chatModalFixes :global(.qc-chat-reaction-modal__grid strong) {
+  display: block !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__quick small),
+.chatModalFixes :global(.qc-chat-unified-action-modal__grid small),
+.chatModalFixes :global(.qc-chat-modal-grid small),
+.chatModalFixes :global(.qc-chat-reaction-modal__grid small) {
+  display: block !important;
+  margin-top: 4px !important;
+  color: #cbd5e1 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__body) {
+  display: grid !important;
+  grid-template-columns: 1fr 240px !important;
+  gap: 14px !important;
+  padding: 18px 26px 22px !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__body > label),
+.chatModalFixes :global(.qc-chat-schedule-modal__body > .qc-chat-schedule-modal__linked) {
+  min-width: 0 !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__body label > span) {
+  display: block !important;
+  margin-bottom: 8px !important;
+  color: #cbd5e1 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__body input),
+.chatModalFixes :global(.qc-chat-schedule-modal__body select),
+.chatModalFixes :global(.qc-chat-schedule-modal__body textarea) {
+  width: 100% !important;
+  min-width: 0 !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 18px !important;
+  background: rgba(2, 6, 23, 0.52) !important;
+  color: #ffffff !important;
+  padding: 13px 14px !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+  outline: none !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__body textarea) {
+  min-height: 112px !important;
+  resize: vertical !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__row) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 140px !important;
+  gap: 12px !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__check) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 76px !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  padding: 16px !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__check input) {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 auto !important;
+  accent-color: #60a5fa !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__linked) {
+  grid-column: 1 / -1 !important;
+  border: 1px solid rgba(96, 165, 250, 0.2) !important;
+  border-radius: 22px !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(239, 68, 68, 0.08)) !important;
+  padding: 16px !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__linked strong) {
+  display: block !important;
+  color: #93c5fd !important;
+  font-size: 10px !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__linked span) {
+  display: block !important;
+  margin-top: 8px !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__linked small) {
+  display: block !important;
+  margin-top: 4px !important;
+  color: #cbd5e1 !important;
+  font-size: 12px !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__footer),
+.chatModalFixes :global(.qc-chat-reaction-modal__footer) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.16) !important;
+  padding: 16px 26px 22px !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__footer button),
+.chatModalFixes :global(.qc-chat-reaction-modal__footer button) {
+  min-height: 42px !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 999px !important;
+  padding: 0 18px !important;
+  color: #e2e8f0 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+.chatModalFixes :global(.qc-chat-schedule-modal__footer button:last-child) {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border: 0 !important;
+  background: linear-gradient(135deg, #2563eb, #dc2626) !important;
+  color: #ffffff !important;
+}
+
+.chatModalFixes :global(.qc-chat-unified-action-modal__section),
+.chatModalFixes :global(.qc-chat-message-reaction-preview),
+.chatModalFixes :global(.qc-chat-modal-grid),
+.chatModalFixes :global(.qc-chat-reaction-modal__grid),
+.chatModalFixes :global(.qc-chat-unified-action-modal__preview) {
+  padding: 18px 26px !important;
+}
+
+.chatModalFixes :global(.qc-chat-unified-action-modal__section h3) {
+  margin: 0 0 12px !important;
+  color: #dbeafe !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+}
+
+.chatModalFixes :global(.qc-chat-unified-action-modal__grid),
+.chatModalFixes :global(.qc-chat-modal-grid),
+.chatModalFixes :global(.qc-chat-reaction-modal__grid) {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.chatModalFixes :global(.qc-chat-unified-action-modal__grid button),
+.chatModalFixes :global(.qc-chat-modal-grid button),
+.chatModalFixes :global(.qc-chat-reaction-modal__grid button) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #f8fafc !important;
+  padding: 14px !important;
+  text-align: left !important;
+}
+
+.chatModalFixes :global(.qc-chat-unified-action-modal__emoji),
+.chatModalFixes :global(.qc-chat-modal-emoji),
+.chatModalFixes :global(.qc-chat-reaction-modal__emoji),
+.chatModalFixes :global(.qc-chat-message-reactions span),
+.chatModalFixes :global(.qc-chat-message-reaction-plus svg) {
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif !important;
+  line-height: 1 !important;
+}
+
+.chatModalFixes :global(.qc-chat-unified-action-modal__emoji),
+.chatModalFixes :global(.qc-chat-modal-emoji),
+.chatModalFixes :global(.qc-chat-reaction-modal__emoji) {
+  display: grid !important;
+  min-width: 42px !important;
+  height: 42px !important;
+  place-items: center !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  font-size: 24px !important;
+}
+
+.chatModalFixes :global(.qc-chat-message-bubble img) {
+  display: block !important;
+  width: 100% !important;
+  max-height: 280px !important;
+  object-fit: contain !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+}
+
+.chatModalFixes :global(.qc-chat-audio-attachment audio) {
+  display: block !important;
+  width: 100% !important;
+  min-width: 240px !important;
+}
+
+@media (max-width: 720px) {
+  .chatModalFixes :global(.qc-chat-schedule-modal),
+  .chatModalFixes :global(.qc-chat-unified-action-modal),
+  .chatModalFixes :global(.qc-chat-message-reaction-modal),
+  .chatModalFixes :global(.qc-chat-reaction-modal) {
+    align-items: flex-end !important;
+    padding: 10px !important;
+  }
+
+  .chatModalFixes :global(.qc-chat-schedule-modal__panel),
+  .chatModalFixes :global(.qc-chat-unified-action-modal__panel),
+  .chatModalFixes :global(.qc-chat-modal-panel),
+  .chatModalFixes :global(.qc-chat-reaction-modal__panel) {
+    width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 26px 26px 18px 18px !important;
+  }
+
+  .chatModalFixes :global(.qc-chat-schedule-modal__quick),
+  .chatModalFixes :global(.qc-chat-schedule-modal__body),
+  .chatModalFixes :global(.qc-chat-schedule-modal__row),
+  .chatModalFixes :global(.qc-chat-unified-action-modal__grid),
+  .chatModalFixes :global(.qc-chat-modal-grid),
+  .chatModalFixes :global(.qc-chat-reaction-modal__grid) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .chatModalFixes :global(.qc-chat-schedule-modal__footer),
+  .chatModalFixes :global(.qc-chat-reaction-modal__footer) {
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+  }
+
+  .chatModalFixes :global(.qc-chat-schedule-modal__footer button),
+  .chatModalFixes :global(.qc-chat-reaction-modal__footer button) {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}

@@ -233,12 +233,21 @@ async function recordCalendarNotification(input: {
   });
 }
 
+function isMeetSchedule(body: Record<string, unknown>) {
+  return body.meet === true || body.meetingType === "meet" || body.location === "Google Meet";
+}
+
 function buildMeetDescription(body: Record<string, unknown>, baseDescription: unknown) {
-  const wantsMeet = body.type === "meeting" || body.meet === true || body.meetingType === "meet";
   const description = typeof baseDescription === "string" ? baseDescription.trim() : "";
-  if (!wantsMeet) return description;
+  if (!isMeetSchedule(body)) return description;
   const meetLine = "Reunião via Google Meet. Link do Meet deve ser gerado/associado pelo calendário.";
   return description.includes("Google Meet") ? description : [description, meetLine].filter(Boolean).join("\n");
+}
+
+function getNotificationTitle(event: ReleaseCalendarEvent, body: Record<string, unknown>) {
+  if (event.type === "meeting" && isMeetSchedule(body)) return `Reunião Meet agendada: ${event.title}`;
+  if (event.type === "meeting") return `Agendamento interno criado: ${event.title}`;
+  return `Entrega agendada: ${event.title}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -300,7 +309,7 @@ export async function POST(req: NextRequest) {
     workflowId: event.status === "blocked" ? "release-calendar-blocked" : event.criticality === "critical" ? "release-calendar-critical" : "release-calendar-updated",
     event,
     user,
-    title: `${event.type === "meeting" ? "Reunião Meet" : "Entrega"} agendada: ${event.title}`,
+    title: getNotificationTitle(event, body),
     description: `${event.title} foi registrado na agenda com status ${event.status}.`,
   });
 

@@ -1,6 +1,6 @@
 .homeTheme {
-  --home-bg-light: linear-gradient(135deg, #ffffff 0%, #f6f8fc 52%, #eef3ff 100%);
-  --home-bg-dark: linear-gradient(135deg, #050713 0%, #070b18 52%, #0a1020 100%);
+  --home-bg-light: transparent;
+  --home-bg-dark: transparent;
   --home-text-light: #0f172a;
   --home-muted-light: #52627a;
   --home-border-light: rgba(15, 23, 42, 0.12);
@@ -13,19 +13,19 @@
   --home-soft-dark: rgba(0, 0, 0, 0.18);
 
   min-height: 100%;
-  background: var(--home-bg-light) !important;
+  background: transparent !important;
   color: var(--home-text-light) !important;
 }
 
 .homeTheme :global(main),
 .homeTheme :global(main > section) {
-  background: var(--home-bg-light) !important;
+  background: transparent !important;
   color: var(--home-text-light) !important;
 }
 
 .homeTheme :global(main > section) {
-  border-color: var(--home-border-light) !important;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .homeTheme :global(main > section > div.pointer-events-none) {
@@ -43,11 +43,24 @@
 
 .homeTheme :global(.brain-caption),
 .homeTheme :global(section section),
-.homeTheme :global(form),
 .homeTheme :global([class*="bg-white/"]),
 .homeTheme :global([class*="bg-black/"]) {
-  background: var(--home-card-light) !important;
+  background: transparent !important;
   color: var(--home-text-light) !important;
+}
+
+.homeTheme :global(form) {
+  background: rgba(255, 255, 255, 0.88) !important;
+  color: var(--home-text-light) !important;
+}
+
+.homeTheme :global(.admin-brain-home),
+.homeTheme :global(.admin-brain-copy),
+.homeTheme :global(.admin-brain-copy p),
+.homeTheme :global(.admin-brain-copy section),
+.homeTheme :global(.admin-brain-copy div) {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .homeTheme :global([class*="text-white"]),
@@ -75,7 +88,9 @@
 }
 
 .homeTheme :global(.brain-orb-wrap),
-.homeTheme :global(.brain-orb-wrap *) {
+.homeTheme :global(.brain-orb-wrap *),
+.homeTheme :global([aria-label="Brain visual"]),
+.homeTheme :global([aria-label="Brain visual"] *) {
   color: #ffffff !important;
 }
 
@@ -94,28 +109,46 @@
 :global(.dark) .homeTheme :global(main > section),
 :global([data-theme="dark"]) .homeTheme :global(main),
 :global([data-theme="dark"]) .homeTheme :global(main > section) {
-  background: var(--home-bg-dark) !important;
+  background: transparent !important;
   color: var(--home-text-dark) !important;
 }
 
 :global(.dark) .homeTheme :global(main > section),
 :global([data-theme="dark"]) .homeTheme :global(main > section) {
-  border-color: var(--home-border-dark) !important;
-  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.34) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
 :global(.dark) .homeTheme :global(.brain-caption),
 :global(.dark) .homeTheme :global(section section),
-:global(.dark) .homeTheme :global(form),
 :global(.dark) .homeTheme :global([class*="bg-white/"]),
 :global(.dark) .homeTheme :global([class*="bg-black/"]),
 :global([data-theme="dark"]) .homeTheme :global(.brain-caption),
 :global([data-theme="dark"]) .homeTheme :global(section section),
-:global([data-theme="dark"]) .homeTheme :global(form),
 :global([data-theme="dark"]) .homeTheme :global([class*="bg-white/"]),
 :global([data-theme="dark"]) .homeTheme :global([class*="bg-black/"]) {
-  background: var(--home-card-dark) !important;
+  background: transparent !important;
   color: var(--home-text-dark) !important;
+}
+
+:global(.dark) .homeTheme :global(form),
+:global([data-theme="dark"]) .homeTheme :global(form) {
+  background: rgba(9, 17, 32, 0.90) !important;
+  color: var(--home-text-dark) !important;
+}
+
+:global(.dark) .homeTheme :global(.admin-brain-home),
+:global(.dark) .homeTheme :global(.admin-brain-copy),
+:global(.dark) .homeTheme :global(.admin-brain-copy p),
+:global(.dark) .homeTheme :global(.admin-brain-copy section),
+:global(.dark) .homeTheme :global(.admin-brain-copy div),
+:global([data-theme="dark"]) .homeTheme :global(.admin-brain-home),
+:global([data-theme="dark"]) .homeTheme :global(.admin-brain-copy),
+:global([data-theme="dark"]) .homeTheme :global(.admin-brain-copy p),
+:global([data-theme="dark"]) .homeTheme :global(.admin-brain-copy section),
+:global([data-theme="dark"]) .homeTheme :global(.admin-brain-copy div) {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 :global(.dark) .homeTheme :global([class*="text-white"]),

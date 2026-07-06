@@ -1,4 +1,4 @@
-﻿import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
+import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import { resolveRoleDefaults, type Role } from "@/lib/permissions/roleDefaults";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
@@ -73,11 +73,11 @@ export function isSupportOperatorUser(user: SupportAccessUser) {
 
 export function canAccessGlobalSupportScope(user: SupportAccessUser) {
   if (!canViewSupportBoard(user)) return false;
-  return isSupportOperatorUser(user);
+  return isSupportAdminUser(user) || isSupportOperatorUser(user);
 }
 
 export function canManageSupportWorkflow(user: SupportAccessUser) {
-  if (!isSupportOperatorUser(user)) return false;
+  if (!(isSupportAdminUser(user) || isSupportOperatorUser(user))) return false;
   return (
     hasSupportAccess(user, "tickets", "assign") ||
     hasSupportAccess(user, "tickets", "status") ||
@@ -85,4 +85,3 @@ export function canManageSupportWorkflow(user: SupportAccessUser) {
     hasSupportAccess(user, "support", "status")
   );
 }
-

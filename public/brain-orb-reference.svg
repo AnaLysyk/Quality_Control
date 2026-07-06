@@ -1,22 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
   <defs>
     <style>
-      .brain-orbit-soft { transform-origin: 120px 120px; animation: brainOrbitDrift 8.6s ease-in-out infinite; }
-      .brain-orbit-led { transform-origin: 120px 120px; animation: brainOrbitSpeak 3.2s ease-in-out infinite; }
+      .brain-orbit-moon { transform-origin: 120px 120px; animation: brainMoonSweep 3.4s ease-in-out infinite; }
       .brain-face { transform-origin: 120px 120px; animation: brainFaceIdle 4.8s ease-in-out infinite; }
       .brain-eye-left { transform-origin: 105px 119px; animation: brainBlinkLeft 5.6s ease-in-out infinite; }
       .brain-eye-right { transform-origin: 143px 119px; animation: brainBlinkRight 5.6s ease-in-out infinite; }
       .brain-star { animation: brainStarPulse 4.2s ease-in-out infinite; }
-      @keyframes brainOrbitDrift {
-        0%, 100% { transform: rotate(0deg) scale(1); opacity: .45; }
-        44% { transform: rotate(2.6deg) scale(1.01); opacity: .58; }
-        72% { transform: rotate(-1.8deg) scale(.996); opacity: .50; }
-      }
-      @keyframes brainOrbitSpeak {
-        0%, 100% { transform: rotate(0deg) scale(1); opacity: .88; }
-        28% { transform: rotate(4deg) scale(1.015); opacity: 1; }
-        55% { transform: rotate(-3deg) scale(.998); opacity: .72; }
-        78% { transform: rotate(2deg) scale(1.006); opacity: .95; }
+      @keyframes brainMoonSweep {
+        0%, 100% { transform: rotate(-14deg) scale(1); opacity: .70; }
+        38% { transform: rotate(20deg) scale(1.018); opacity: 1; }
+        68% { transform: rotate(-7deg) scale(1.006); opacity: .82; }
       }
       @keyframes brainFaceIdle {
         0%, 100% { transform: translate(0,0); }
@@ -34,13 +27,13 @@
         94% { transform: scaleX(1); opacity: 1; }
       }
       @keyframes brainStarPulse {
-        0%, 100% { opacity: .42; }
-        48% { opacity: .72; }
+        0%, 100% { opacity: .36; }
+        48% { opacity: .62; }
       }
     </style>
     <radialGradient id="space" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 120) scale(122)">
-      <stop stop-color="#060b18" stop-opacity="0.24"/>
-      <stop offset="0.72" stop-color="#060814" stop-opacity="0.08"/>
+      <stop stop-color="#060b18" stop-opacity="0.18"/>
+      <stop offset="0.72" stop-color="#060814" stop-opacity="0.06"/>
       <stop offset="1" stop-color="#050713" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="orb" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(124 116) rotate(124) scale(68 70)">
@@ -49,29 +42,25 @@
       <stop offset="0.72" stop-color="#050914"/>
       <stop offset="1" stop-color="#01030a"/>
     </radialGradient>
-    <radialGradient id="softReflection" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(151 79) rotate(-28) scale(31 21)">
-      <stop stop-color="#c7d7ea" stop-opacity="0.22"/>
-      <stop offset="0.55" stop-color="#7993b4" stop-opacity="0.06"/>
-      <stop offset="1" stop-color="#7993b4" stop-opacity="0"/>
-    </radialGradient>
     <radialGradient id="depth" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(101 154) rotate(40) scale(42 36)">
       <stop stop-color="#264158" stop-opacity="0.08"/>
       <stop offset="1" stop-color="#264158" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="edge" x1="82" y1="65" x2="167" y2="177" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#dbeafe" stop-opacity="0.30"/>
-      <stop offset="0.44" stop-color="#8aa4c8" stop-opacity="0.10"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0.02"/>
+      <stop stop-color="#dbeafe" stop-opacity="0.18"/>
+      <stop offset="0.44" stop-color="#8aa4c8" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.01"/>
     </linearGradient>
-    <linearGradient id="tcLed" x1="42" y1="74" x2="198" y2="186" gradientUnits="userSpaceOnUse">
+    <linearGradient id="tcMoon" x1="48" y1="163" x2="196" y2="63" gradientUnits="userSpaceOnUse">
       <stop stop-color="#ef0001" stop-opacity="0"/>
-      <stop offset="0.30" stop-color="#ef0001" stop-opacity="0.78"/>
-      <stop offset="0.66" stop-color="#ef0001" stop-opacity="0.32"/>
+      <stop offset="0.18" stop-color="#ef0001" stop-opacity="0.95"/>
+      <stop offset="0.48" stop-color="#8b1cf6" stop-opacity="0.78"/>
+      <stop offset="0.74" stop-color="#2563eb" stop-opacity="0.72"/>
       <stop offset="1" stop-color="#ef0001" stop-opacity="0"/>
     </linearGradient>
-    <filter id="tcGlow" x="12" y="12" width="216" height="216" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="0" stdDeviation="2.8" flood-color="#ef0001" flood-opacity="0.50"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="11" flood-color="#ef0001" flood-opacity="0.18"/>
+    <filter id="tcGlow" x="8" y="8" width="224" height="224" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#ef0001" flood-opacity="0.58"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#2563eb" flood-opacity="0.18"/>
     </filter>
     <filter id="eyeGlow" x="78" y="92" width="88" height="62" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="0" stdDeviation="1.8" flood-color="#ffffff" flood-opacity="0.92"/>
@@ -82,14 +71,9 @@
   <rect width="240" height="240" fill="transparent"/>
   <circle cx="120" cy="120" r="118" fill="url(#space)"/>
 
-  <g class="brain-orbit-soft" opacity="0.45">
-    <path d="M42 126a83 83 0 0 1 144-61" stroke="#ef0001" stroke-opacity="0.14" stroke-width="1" stroke-linecap="round"/>
-    <path d="M188 72a76 76 0 0 1 15 56" stroke="#64748b" stroke-opacity="0.07" stroke-width="1" stroke-linecap="round"/>
-  </g>
-
-  <g class="brain-orbit-led" filter="url(#tcGlow)">
-    <path d="M56 128a69 69 0 0 0 43 56" stroke="url(#tcLed)" stroke-width="2.7" stroke-linecap="round"/>
-    <path d="M190 176a77 77 0 0 0 13-19" stroke="#ef0001" stroke-opacity="0.35" stroke-width="1.7" stroke-linecap="round"/>
+  <g class="brain-orbit-moon" filter="url(#tcGlow)">
+    <path d="M48 127a74 74 0 0 0 48 64" stroke="url(#tcMoon)" stroke-width="3.3" stroke-linecap="round"/>
+    <path d="M190 174a79 79 0 0 0 16-34" stroke="url(#tcMoon)" stroke-width="2.2" stroke-linecap="round" opacity="0.58"/>
   </g>
 
   <g>
@@ -97,7 +81,6 @@
     <circle cx="120" cy="120" r="53" fill="url(#depth)"/>
     <circle cx="120" cy="120" r="55" stroke="url(#edge)" stroke-width="1.4"/>
     <circle cx="120" cy="120" r="53" stroke="#000" stroke-opacity="0.32" stroke-width="2"/>
-    <ellipse cx="148" cy="80" rx="19" ry="13" fill="url(#softReflection)" transform="rotate(-30 148 80)"/>
   </g>
 
   <g class="brain-face" filter="url(#eyeGlow)" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
@@ -105,10 +88,10 @@
     <path class="brain-eye-right" d="M136 119h15" stroke-width="4"/>
   </g>
 
-  <g class="brain-star" opacity="0.5">
-    <circle cx="52" cy="40" r="1.1" fill="#fff" opacity="0.16"/>
-    <circle cx="83" cy="39" r="1.3" fill="#ef0001" opacity="0.34"/>
-    <circle cx="198" cy="92" r="1.1" fill="#fff" opacity="0.18"/>
-    <circle cx="194" cy="185" r="1.3" fill="#ef0001" opacity="0.36"/>
+  <g class="brain-star" opacity="0.45">
+    <circle cx="52" cy="40" r="1.1" fill="#fff" opacity="0.14"/>
+    <circle cx="83" cy="39" r="1.3" fill="#ef0001" opacity="0.26"/>
+    <circle cx="198" cy="92" r="1.1" fill="#fff" opacity="0.16"/>
+    <circle cx="194" cy="185" r="1.3" fill="#ef0001" opacity="0.30"/>
   </g>
 </svg>

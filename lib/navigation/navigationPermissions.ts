@@ -1,4 +1,4 @@
-import type { SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 import { canAccess } from "@/lib/permissions/can-access";
 import {
@@ -9,12 +9,17 @@ import { getVisibleRouteIds } from "./get-visible-routes";
 import { SYSTEM_ROUTE_BY_ID } from "./route-map";
 import type { NavItemDef, NavModuleDef } from "./navigationCatalog";
 
-const OPERATIONS_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
-  "operacao.inicio": { moduleId: "operations", action: "view" },
-  "operacao.dashboard": { moduleId: "operations", action: "dashboard" },
-  "operacao.metricas": { moduleId: "operations", action: "metrics" },
-  "operacao.busca": { moduleId: "operations", action: "search" },
-};
+const INTERNAL_ADMIN_ROLES = new Set<SystemRole>([
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+]);
+
+const HIDDEN_MENU_ROUTE_IDS = new Set([
+  "operacao.inicio",
+  "operacao.dashboard",
+  "operacao.metricas",
+  "operacao.busca",
+]);
 
 const MANAGEMENT_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
   "gestao.perfil": { moduleId: "permissions", action: "view" },
@@ -25,9 +30,7 @@ const MANAGEMENT_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: s
 };
 
 const MENU_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
-  ...OPERATIONS_ROUTE_PERMISSIONS,
   ...MANAGEMENT_ROUTE_PERMISSIONS,
-  "logs.sistema": { moduleId: "audit", action: "view" },
   "brain.grafo": { moduleId: "brain", action: "graph" },
   "brain.admin": { moduleId: "brain", action: "admin" },
   "brain.mapa-sistema": { moduleId: "brain", action: "admin" },
@@ -59,8 +62,14 @@ function canSeeNavigationDefinition(
 ) {
   if (!userRole || !context) return false;
 
+  if (item.routeId && HIDDEN_MENU_ROUTE_IDS.has(item.routeId)) return false;
+
   const allowedRoles = item.allowedRoles;
   if (allowedRoles && !allowedRoles.includes(userRole)) return false;
+
+  if (item.routeId === "logs.sistema") {
+    return INTERNAL_ADMIN_ROLES.has(userRole);
+  }
 
   if (item.routeId) {
     const menuPermission = MENU_ROUTE_PERMISSIONS[item.routeId];

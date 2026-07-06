@@ -1,0 +1,361 @@
+.chatBrainFinal {
+  --chat-final-light-text: #020617;
+  --chat-final-light-muted: #334155;
+  --chat-final-light-border: rgba(2, 6, 23, 0.14);
+  --chat-final-light-panel: #ffffff;
+  min-height: 100vh;
+  background: #ffffff !important;
+  color: var(--chat-final-light-text) !important;
+}
+
+.chatBrainFinal :global(.qc-chat-page-shell),
+.chatBrainFinal :global(.qc-chat-shell) {
+  background: #ffffff !important;
+  color: var(--chat-final-light-text) !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell) {
+  min-height: calc(100vh - var(--topbar-h, 0px));
+  overflow: hidden;
+}
+
+.chatBrainFinal :global(.qc-chat-shell section) {
+  gap: 0 !important;
+  column-gap: 0 !important;
+  background: #ffffff !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside) {
+  width: min(380px, 31vw) !important;
+  min-width: 330px;
+  background: #ffffff !important;
+  color: #020617 !important;
+  border-right: 1px solid rgba(2, 6, 23, 0.12) !important;
+  box-shadow: none !important;
+}
+
+.chatBrainFinal :global(.qc-chat-sidebar-resizer) {
+  position: relative !important;
+  z-index: 5 !important;
+  width: 1px !important;
+  min-width: 1px !important;
+  max-width: 1px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgba(2, 6, 23, 0.12) !important;
+  color: transparent !important;
+  box-shadow: none !important;
+  cursor: col-resize !important;
+}
+
+.chatBrainFinal :global(.qc-chat-sidebar-resizer span) {
+  display: none !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child) {
+  padding: 14px !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child) {
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2)) {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  max-width: calc(100% - 92px) !important;
+  overflow: visible !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:first-child) {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #020617 !important;
+  font-size: 13px !important;
+  line-height: 1.15 !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:nth-child(2)) {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #334155 !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > button) {
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  color: #061225 !important;
+  background: #ffffff !important;
+  border-color: rgba(2, 6, 23, 0.14) !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside *),
+.chatBrainFinal :global(.qc-chat-shell main *) {
+  color: inherit;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside [class*="text-white/"]),
+.chatBrainFinal :global(.qc-chat-shell aside [class*="text-slate"]),
+.chatBrainFinal :global(.qc-chat-shell main [class*="text-white/"]),
+.chatBrainFinal :global(.qc-chat-shell main [class*="text-slate"]),
+.chatBrainFinal :global(.qc-chat-sidebar-presence-label) {
+  color: var(--chat-final-light-muted) !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell main) {
+  position: relative;
+  color: #020617 !important;
+  background: #ffffff !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell main::before),
+.chatBrainFinal :global(.qc-chat-shell main::after) {
+  display: none !important;
+  content: none !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell header) {
+  background: #ffffff !important;
+  border-color: rgba(2, 6, 23, 0.14) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell header h1),
+.chatBrainFinal :global(.qc-chat-shell h2),
+.chatBrainFinal :global(.qc-chat-shell h3),
+.chatBrainFinal :global(.qc-chat-shell strong) {
+  color: #020617 !important;
+  font-weight: 900 !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell p),
+.chatBrainFinal :global(.qc-chat-shell span),
+.chatBrainFinal :global(.qc-chat-shell small),
+.chatBrainFinal :global(.qc-chat-shell label) {
+  color: inherit;
+}
+
+.chatBrainFinal :global(.qc-chat-shell input),
+.chatBrainFinal :global(.qc-chat-shell textarea),
+.chatBrainFinal :global(.qc-chat-shell select) {
+  color: #020617 !important;
+  background: #ffffff !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell input::placeholder),
+.chatBrainFinal :global(.qc-chat-shell textarea::placeholder) {
+  color: #475569 !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell [class*="bg-(--tc-surface"]),
+.chatBrainFinal :global(.qc-chat-shell [class*="bg-white/"]),
+.chatBrainFinal :global(.qc-chat-shell [class*="border-(--tc-border"]) {
+  background: #ffffff !important;
+  border-color: rgba(2, 6, 23, 0.14) !important;
+  color: #020617 !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell [class*="border-dashed"]) {
+  background: #ffffff !important;
+  border-color: rgba(2, 6, 23, 0.14) !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell main > div[class*="chat-scroll"] > div[class*="items-center"][class*="justify-center"]) {
+  border: 0 !important;
+  background: #ffffff !important;
+  min-height: min(54vh, 520px) !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell main > div[class*="chat-scroll"] > div[class*="items-center"][class*="justify-center"] > div:first-child) {
+  width: 84px !important;
+  height: 84px !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(2, 6, 23, 0.14) !important;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.10);
+}
+
+.chatBrainFinal :global(.qc-chat-shell form) {
+  width: calc(100% - 32px) !important;
+  max-width: none !important;
+  margin: 0 16px 12px !important;
+  border-radius: 28px !important;
+  border: 1px solid rgba(2, 6, 23, 0.18) !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 46px rgba(15,23,42,0.12) !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell form > div),
+.chatBrainFinal :global(.qc-chat-shell form div[class*="rounded"]) {
+  background: #ffffff !important;
+  border-color: rgba(2, 6, 23, 0.18) !important;
+  color: #020617 !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell form textarea) {
+  min-height: 46px !important;
+  max-height: 132px;
+  color: #020617 !important;
+  background: #ffffff !important;
+  font-size: 0.95rem !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell button[type="submit"]) {
+  background: linear-gradient(135deg, #ef0001, #991b1b) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 34px rgba(239,0,1,0.24) !important;
+}
+
+.chatBrainFinal :global(.qc-chat-action-pill),
+.chatBrainFinal :global(.qc-chat-message-reaction-plus) {
+  background: #ffffff !important;
+  color: #061225 !important;
+  border-color: rgba(2, 6, 23, 0.14) !important;
+}
+
+:global(.dark) .chatBrainFinal,
+:global([data-theme="dark"]) .chatBrainFinal {
+  background:
+    radial-gradient(circle at 16% 14%, rgba(59, 130, 246, 0.18), transparent 30%),
+    radial-gradient(circle at 90% 84%, rgba(239, 0, 1, 0.15), transparent 28%),
+    linear-gradient(135deg, #020713 0%, #050914 54%, #0a1830 100%) !important;
+  color: #f8fafc !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell) {
+  background: transparent !important;
+  color: #f8fafc !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell section),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell section) {
+  gap: 0 !important;
+  column-gap: 0 !important;
+  background: #020713 !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell aside),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell aside) {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(5,13,29,0.98), rgba(3,9,22,0.98)) !important;
+  color: #f8fafc !important;
+  border-right: 1px solid rgba(148,163,184,0.22) !important;
+  box-shadow: none !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-sidebar-resizer),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-sidebar-resizer) {
+  width: 1px !important;
+  min-width: 1px !important;
+  max-width: 1px !important;
+  background: rgba(148,163,184,0.22) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: transparent !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:first-child),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:first-child) {
+  color: #ffffff !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:nth-child(2)),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:nth-child(2)) {
+  color: rgba(248,250,252,0.68) !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > button),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > button) {
+  color: #f8fafc !important;
+  background: rgba(15,23,42,0.9) !important;
+  border-color: rgba(148,163,184,0.22) !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell main),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell main) {
+  background:
+    radial-gradient(circle at 42% 18%, rgba(59,130,246,0.13), transparent 30%),
+    radial-gradient(circle at 90% 80%, rgba(239,0,1,0.11), transparent 28%),
+    linear-gradient(180deg, rgba(2,7,19,0.88), rgba(5,11,22,0.98)) !important;
+  color: #f8fafc !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell main::before),
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell main::after),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell main::before),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell main::after) {
+  display: none !important;
+  content: none !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell header),
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell form),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell header),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell form) {
+  background: rgba(9,17,32,0.88) !important;
+  border-color: rgba(148,163,184,0.22) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell header h1),
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell h2),
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell h3),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell header h1),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell h2),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell h3) {
+  color: #ffffff !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell form textarea),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell form textarea) {
+  color: #f8fafc !important;
+  background: transparent !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell form > div),
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell form div[class*="rounded"]),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell form > div),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell form div[class*="rounded"]) {
+  background: rgba(15,23,42,0.92) !important;
+  border-color: rgba(148,163,184,0.22) !important;
+  color: #f8fafc !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell aside [class*="text-white/"]),
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell main [class*="text-white/"]),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell aside [class*="text-white/"]),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell main [class*="text-white/"]) {
+  color: rgba(248,250,252,0.72) !important;
+}
+
+@media (max-width: 1024px) {
+  .chatBrainFinal :global(.qc-chat-shell aside) {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .chatBrainFinal :global(.qc-chat-shell form) {
+    width: calc(100% - 20px) !important;
+    margin: 0 10px 10px !important;
+  }
+}

@@ -18,7 +18,7 @@ import CreateSupportTicketButton from "./CreateSupportTicketButton";
 import type { NavModuleDef } from "@/lib/navigation/navigationCatalog";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
-const REMOVED_MODULE_IDS = new Set<string>();
+const REMOVED_MODULE_IDS = new Set<string>(["operations"]);
 const SUPPORT_MENU_ITEM_IDS = new Set(["support-create", "support-kanban"]);
 const HOME_HREF = "/";
 

@@ -75,9 +75,9 @@ export function profileTypeForNode(node: BrainNode) {
   return profileLabel(found);
 }
 
-function userTypeForNode(node: BrainNode) {
-  const metadata = node.metadata ?? {};
-  const candidates = [metadata.userType, metadata.profileType, metadata.accessType, metadata.permissionRole, metadata.companyRole, metadata.role, metadata.requestedRole, node.type === "profile" ? node.label : null];
+function userTypeForNode(node: BrainNode | null | undefined) {
+  const metadata = node?.metadata ?? {};
+  const candidates = [metadata.userType, metadata.profileType, metadata.accessType, metadata.permissionRole, metadata.companyRole, metadata.role, metadata.requestedRole, node?.type === "profile" ? node.label : null];
   const found = candidates.find((value): value is string => typeof value === "string" && value.trim().length > 0);
   return userTypeLabel(found);
 }
@@ -214,13 +214,7 @@ function profileRoot(profile: string, nodes: BrainNode[]): BrainNode {
 function scopeHub(profile: string, scopeType: "companies" | "users" | "requests" | "agenda" | "modules", nodes: BrainNode[], viewerMode: BrainViewerMode, selectedCompanyId: string | null): BrainNode {
   const isTcUser = viewerMode === "tc_user";
   const isCompanyUser = viewerMode === "company_user";
-  const labels = {
-    companies: isTcUser ? "Empresas vinculadas" : isCompanyUser ? "Minha empresa" : "Empresas",
-    users: "Usuários",
-    modules: "Módulos",
-    requests: "Solicitações Quality Control",
-    agenda: "Agenda operacional",
-  };
+  const labels = { companies: isTcUser ? "Empresas vinculadas" : isCompanyUser ? "Minha empresa" : "Empresas", users: "Usuários", modules: "Módulos", requests: "Solicitações Quality Control", agenda: "Agenda operacional" };
   const descriptions = {
     companies: isTcUser ? "Selecione a empresa vinculada para ver o que o usuário Test Company criou nela." : isCompanyUser ? "Visão geral da própria empresa, sem precisar escolher outra empresa." : "Visão geral das empresas. Ao clicar, mostra módulos e tudo que foi criado naquela empresa.",
     users: "Usuários ficam separados por tipo: Líder TC, Suporte técnico, Usuário Test Company e Usuário empresarial.",
@@ -230,49 +224,17 @@ function scopeHub(profile: string, scopeType: "companies" | "users" | "requests"
   };
   const scoped = scopeType === "requests" ? nodes.filter((node) => node.type === "access_request") : scopeType === "users" ? nodes.filter((node) => creatorKey(node)) : nodes;
   const guidance = isTcUser && scopeType === "companies" && !selectedCompanyId ? " Primeiro selecione a empresa." : "";
-  return {
-    id: stableId(`scope:${profile}`, scopeType),
-    type: "module",
-    module: "1. Gestão",
-    label: labels[scopeType],
-    description: `${descriptions[scopeType]}${guidance}`,
-    status: statusFor(scoped),
-    size: "lg",
-    information: `${descriptions[scopeType]}${guidance}`,
-    metadata: { isScopeHub: true, scopeType, profileType: profile, layer: 1, layerLabel: "1. Gestão", count: scoped.length, pendingCount: pendingCount(scoped), requiresCompanySelection: isTcUser && scopeType === "companies" },
-  };
+  return { id: stableId(`scope:${profile}`, scopeType), type: "module", module: "1. Gestão", label: labels[scopeType], description: `${descriptions[scopeType]}${guidance}`, status: statusFor(scoped), size: "lg", information: `${descriptions[scopeType]}${guidance}`, metadata: { isScopeHub: true, scopeType, profileType: profile, layer: 1, layerLabel: "1. Gestão", count: scoped.length, pendingCount: pendingCount(scoped), requiresCompanySelection: isTcUser && scopeType === "companies" } };
 }
 
 function userTypeHub(type: string, nodes: BrainNode[]): BrainNode {
   const scoped = nodes.filter((node) => normalize(userTypeForNode(node)) === normalize(type));
-  return {
-    id: stableId("user-type", type),
-    type: "profile",
-    module: "2. Tipo de usuário",
-    label: type,
-    description: isTcUserType(type) ? "Clique para listar os usuários Test Company. Depois escolha o usuário e a empresa vinculada para abrir os módulos criados naquela empresa." : type === "Usuário empresarial" ? "Clique para listar os usuários empresariais. Depois escolha o usuário para abrir direto os módulos que ele criou." : "Clique para listar usuários deste tipo. Depois escolha a pessoa para abrir módulos e itens criados.",
-    status: statusFor(scoped),
-    size: "lg",
-    information: `${type}: ${scoped.length} item(ns) vinculados.`,
-    metadata: { isUserTypeHub: true, userType: type, layer: 2, layerLabel: "2. Tipo de usuário", count: scoped.length, pendingCount: pendingCount(scoped) },
-  };
+  return { id: stableId("user-type", type), type: "profile", module: "2. Tipo de usuário", label: type, description: isTcUserType(type) ? "Clique para listar os usuários Test Company. Depois escolha o usuário e a empresa vinculada para abrir os módulos criados naquela empresa." : type === "Usuário empresarial" ? "Clique para listar os usuários empresariais. Depois escolha o usuário para abrir direto os módulos que ele criou." : "Clique para listar usuários deste tipo. Depois escolha a pessoa para abrir módulos e itens criados.", status: statusFor(scoped), size: "lg", information: `${type}: ${scoped.length} item(ns) vinculados.`, metadata: { isUserTypeHub: true, userType: type, layer: 2, layerLabel: "2. Tipo de usuário", count: scoped.length, pendingCount: pendingCount(scoped) } };
 }
 
 function companyHub(company: BrainContextCompany, nodes: BrainNode[]): BrainNode {
   const scoped = nodes.filter((node) => node.companyId === company.id || companyKeyForNode(node) === company.id || companyNameForNode(node) === company.name);
-  return {
-    id: `company:${company.id}`,
-    type: "company",
-    module: "2. Empresa",
-    label: company.name,
-    description: "Empresa selecionada. A visão geral mostra todos os módulos e itens criados nessa empresa; a visão por usuário mostra só o que aquela pessoa criou.",
-    status: statusFor(scoped),
-    size: "lg",
-    companyId: company.id,
-    companyName: company.name,
-    information: `${company.name} possui ${scoped.length} nó(s) visíveis neste recorte.`,
-    metadata: { isCompanyHub: true, layer: 2, layerLabel: "2. Empresa", companyColor: colorForCompany(company.id), count: scoped.length, pendingCount: pendingCount(scoped) },
-  };
+  return { id: `company:${company.id}`, type: "company", module: "2. Empresa", label: company.name, description: "Empresa selecionada. A visão geral mostra todos os módulos e itens criados nessa empresa; a visão por usuário mostra só o que aquela pessoa criou.", status: statusFor(scoped), size: "lg", companyId: company.id, companyName: company.name, information: `${company.name} possui ${scoped.length} nó(s) visíveis neste recorte.`, metadata: { isCompanyHub: true, layer: 2, layerLabel: "2. Empresa", companyColor: colorForCompany(company.id), count: scoped.length, pendingCount: pendingCount(scoped) } };
 }
 
 function projectHub(project: BrainContextProject, company: BrainContextCompany | null, nodes: BrainNode[]): BrainNode {
@@ -300,11 +262,7 @@ export function getBrainProfileTypes(nodes: BrainNode[]) {
 
 function groupNodesByUser(nodes: BrainNode[]) {
   const groups = new Map<string, BrainNode[]>();
-  nodes.forEach((node) => {
-    const key = creatorKey(node);
-    if (!key) return;
-    groups.set(key, [...(groups.get(key) ?? []), node]);
-  });
+  nodes.forEach((node) => { const key = creatorKey(node); if (!key) return; groups.set(key, [...(groups.get(key) ?? []), node]); });
   return groups;
 }
 
@@ -326,7 +284,6 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
   const currentProfile = profile ?? defaultProfile;
   const clickedUserType = selectedNode?.metadata?.isUserTypeHub ? String(selectedNode.metadata.userType ?? selectedNode.label) : null;
   const clickedUserKey = selectedNode?.metadata?.isUserHub ? String(selectedNode.metadata.userKey ?? "") : null;
-
   const baseNodes = nodes.filter((node) => profileMatches(node, profile)).filter((node) => companyMatches(node, selectedCompanyId)).filter((node) => projectMatches(node, selectedProjectId)).filter((node) => moduleMatches(node, activeModule)).map(withCompanyColor);
   const viewerOwnNodes = effectiveViewerMode === "tc_user" || effectiveViewerMode === "company_user" ? baseNodes.filter((node) => creatorMatchesViewer(node, viewerEmail)) : baseNodes;
   const currentUserItemsAllCompanies = clickedUserKey ? baseNodes.filter((node) => creatorKey(node) === clickedUserKey) : [];
@@ -334,51 +291,40 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
   const clickedTcUserNeedsCompany = clickedUserKey && isTcUserType(currentUserType) && !selectedCompanyId;
   const requiresCompanyForItems = (effectiveViewerMode === "tc_user" && !selectedCompanyId) || Boolean(clickedTcUserNeedsCompany);
   const operationalNodes = requiresCompanyForItems ? [] : clickedUserKey ? currentUserItemsAllCompanies.filter((node) => companyMatches(node, selectedCompanyId)) : viewerOwnNodes;
-
   const viewNodes: BrainNode[] = [];
   const viewEdges: BrainEdge[] = [];
   const coreNode = qualityControlCore(nodes);
   viewNodes.push(coreNode);
-
   const companiesScope = scopeHub(currentProfile, "companies", baseNodes, effectiveViewerMode, selectedCompanyId);
   const usersScope = scopeHub(currentProfile, "users", baseNodes, effectiveViewerMode, selectedCompanyId);
   const modulesScope = scopeHub(currentProfile, "modules", operationalNodes.length ? operationalNodes : baseNodes, effectiveViewerMode, selectedCompanyId);
   const requestsScope = scopeHub(currentProfile, "requests", baseNodes, effectiveViewerMode, selectedCompanyId);
   const agendaScope = scopeHub(currentProfile, "agenda", operationalNodes.filter((node) => moduleLabel(node.module) === "Agenda" || node.type === "event"), effectiveViewerMode, selectedCompanyId);
-
   if (!profile && !selectedNode && !activeModule && !hasActiveFilter) {
-    const rootScopes = effectiveViewerMode === "company_user" || effectiveViewerMode === "company" ? [companiesScope, usersScope] : [companiesScope, usersScope];
+    const rootScopes = [companiesScope, usersScope];
     viewNodes.push(...rootScopes);
     rootScopes.forEach((scope) => viewEdges.push({ id: `${CORE_ID}-${scope.id}`, source: CORE_ID, target: scope.id, label: String(scope.metadata?.scopeType), type: "relation", status: scope.status }));
     return { nodes: uniqueById(viewNodes), edges: uniqueById(viewEdges), focusNodeId: CORE_ID, focusModule: "Quality Control" };
   }
-
   const currentProfileNode = profileRoot(currentProfile, operationalNodes.length ? operationalNodes : baseNodes.length ? baseNodes : nodes);
   const isLeadership = effectiveViewerMode === "leadership" || isLeadershipProfile(currentProfile);
   const isCompanyLike = effectiveViewerMode === "company" || effectiveViewerMode === "company_user" || isCompanyManagementProfile(currentProfile);
   const isIndividualUser = effectiveViewerMode === "tc_user" || effectiveViewerMode === "company_user";
-
   viewNodes.push(currentProfileNode);
   viewEdges.push({ id: `${CORE_ID}-${currentProfileNode.id}`, source: CORE_ID, target: currentProfileNode.id, label: "perfil", type: "relation", status: currentProfileNode.status });
   const scopeNodes = isLeadership ? [companiesScope, usersScope, requestsScope, agendaScope] : isCompanyLike ? [companiesScope, usersScope] : [companiesScope, usersScope];
   viewNodes.push(...scopeNodes);
   scopeNodes.forEach((scope) => viewEdges.push({ id: `${currentProfileNode.id}-${scope.id}`, source: currentProfileNode.id, target: scope.id, label: String(scope.metadata?.scopeType) === "requests" ? "analisa" : "abre", type: "relation", status: scope.status }));
-
   const userGroupsSource = clickedUserType ? baseNodes.filter((node) => normalize(userTypeForNode(node)) === normalize(clickedUserType)) : baseNodes;
   const userGroups = groupNodesByUser(userGroupsSource);
   const userTypeNodes = USER_TYPE_FLOW.map((type) => userTypeHub(type, baseNodes));
   viewNodes.push(...userTypeNodes);
   userTypeNodes.forEach((node) => viewEdges.push({ id: `${usersScope.id}-${node.id}`, source: usersScope.id, target: node.id, label: "tipo", type: "relation", status: node.status }));
-
   const userNodes = Array.from(userGroups.entries()).slice(0, selectedCompany ? 24 : 18).map(([userKey, items]) => userHub(userKey, items, selectedCompany));
   if (clickedUserType || selectedNode?.metadata?.scopeType === "users" || clickedUserKey || isCompanyLike || isLeadership) {
     viewNodes.push(...userNodes);
-    userNodes.forEach((user) => {
-      const typeNode = userTypeNodes.find((node) => normalize(node.metadata?.userType) === normalize(user.metadata?.userType));
-      viewEdges.push({ id: `${typeNode?.id ?? usersScope.id}-${user.id}`, source: typeNode?.id ?? usersScope.id, target: user.id, label: "usuário", type: "created_by", status: user.status, companyId: user.companyId, metadata: { companyColor: user.metadata?.companyColor } });
-    });
+    userNodes.forEach((user) => { const typeNode = userTypeNodes.find((node) => normalize(node.metadata?.userType) === normalize(user.metadata?.userType)); viewEdges.push({ id: `${typeNode?.id ?? usersScope.id}-${user.id}`, source: typeNode?.id ?? usersScope.id, target: user.id, label: "usuário", type: "created_by", status: user.status, companyId: user.companyId, metadata: { companyColor: user.metadata?.companyColor } }); });
   }
-
   const companiesForSelectedUser = clickedUserKey ? companyNodesForItems(currentUserItemsAllCompanies, companies) : [];
   const companyOptions = clickedUserKey && isTcUserType(currentUserType) ? (selectedCompany ? [selectedCompany] : companiesForSelectedUser) : selectedCompany ? [selectedCompany] : effectiveViewerMode === "company_user" || effectiveViewerMode === "company" ? companies.slice(0, 1) : companies;
   const companySourceNodes = clickedUserKey ? currentUserItemsAllCompanies : selectedCompanyId || effectiveViewerMode === "company_user" ? operationalNodes : baseNodes;
@@ -386,14 +332,9 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
   viewNodes.push(...companyHubs);
   const companyParent = clickedUserKey && isTcUserType(currentUserType) ? userNodes.find((user) => String(user.metadata?.userKey) === clickedUserKey)?.id ?? usersScope.id : companiesScope.id;
   companyHubs.forEach((company) => viewEdges.push({ id: `${companyParent}-${company.id}`, source: companyParent, target: company.id, label: clickedUserKey && isTcUserType(currentUserType) ? "empresa do usuário" : "empresa", type: "belongs_to_company", status: company.status, companyId: company.companyId, metadata: { companyColor: company.metadata?.companyColor } }));
-
   const selectedCompanyHub = selectedCompany ? companyHubs.find((company) => company.companyId === selectedCompany.id) ?? null : companyHubs[0] ?? null;
   const selectedProjectHub = selectedProject ? projectHub(selectedProject, selectedCompany, operationalNodes) : null;
-  if (selectedProjectHub) {
-    viewNodes.push(selectedProjectHub);
-    viewEdges.push({ id: `${selectedCompanyHub?.id ?? companiesScope.id}-${selectedProjectHub.id}`, source: selectedCompanyHub?.id ?? companiesScope.id, target: selectedProjectHub.id, label: "projeto", type: "belongs_to_project", status: selectedProjectHub.status, companyId: selectedCompany?.id, projectId: selectedProjectHub.projectId, metadata: { companyColor: selectedProjectHub.metadata?.companyColor } });
-  }
-
+  if (selectedProjectHub) { viewNodes.push(selectedProjectHub); viewEdges.push({ id: `${selectedCompanyHub?.id ?? companiesScope.id}-${selectedProjectHub.id}`, source: selectedCompanyHub?.id ?? companiesScope.id, target: selectedProjectHub.id, label: "projeto", type: "belongs_to_project", status: selectedProjectHub.status, companyId: selectedCompany?.id, projectId: selectedProjectHub.projectId, metadata: { companyColor: selectedProjectHub.metadata?.companyColor } }); }
   const moduleSourceNodes = clickedUserKey ? operationalNodes : isIndividualUser ? operationalNodes : selectedCompanyId ? baseNodes : baseNodes;
   const moduleNames = Array.from(new Set(moduleSourceNodes.map((node) => node.module).filter(Boolean))).sort((a, b) => moduleOrder(moduleLabel(a)) - moduleOrder(moduleLabel(b)) || moduleLabel(a).localeCompare(moduleLabel(b), "pt-BR"));
   const moduleHubs = moduleNames.map((module) => moduleHub(module, moduleSourceNodes, selectedCompany));
@@ -404,7 +345,6 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
     if (!clickedUserKey && !selectedProjectHub && !selectedCompanyHub) viewEdges.push({ id: `${currentProfileNode.id}-${modulesScope.id}`, source: currentProfileNode.id, target: modulesScope.id, label: "módulos", type: "relation", status: modulesScope.status });
     moduleHubs.forEach((module) => viewEdges.push({ id: `${moduleParent}-${module.id}`, source: moduleParent, target: module.id, label: "módulo", type: "belongs_to_module", status: module.status, companyId: selectedCompany?.id, metadata: { companyColor: module.metadata?.companyColor } }));
   }
-
   const clickedModule = selectedNode?.metadata?.isModuleHub ? String(selectedNode.metadata.module ?? selectedNode.module) : null;
   const moduleFocus = activeModule ?? clickedModule;
   const itemCandidatesByModule = moduleFocus ? moduleSourceNodes.filter((node) => node.module === moduleFocus || moduleLabel(node.module) === moduleFocus || moduleLabel(node.module) === moduleLabel(moduleFocus)) : moduleSourceNodes;
@@ -414,13 +354,8 @@ export function buildBrainProfileGraphView(options: BrainProfileGraphOptions) {
   viewNodes.push(...detailItems.map((node) => ({ ...node, metadata: { ...node.metadata, isDetailNode: true, layer: 6, layerLabel: clickedUserKey ? "6. Item criado pelo usuário" : "6. Item" } })));
   const moduleTarget = moduleFocus ? moduleHubs.find((module) => module.metadata?.module === moduleFocus || module.metadata?.moduleLabel === moduleLabel(moduleFocus))?.id ?? selectedProjectHub?.id ?? selectedCompanyHub?.id ?? modulesScope.id : modulesScope.id;
   detailItems.forEach((node) => viewEdges.push({ id: `${moduleTarget}-${node.id}`, source: moduleTarget, target: node.id, label: clickedUserKey ? "criou" : "item", type: "contains", status: node.status, companyId: node.companyId, projectId: node.projectId, module: node.module, metadata: { companyColor: node.metadata?.companyColor } }));
-
   const accessRequestItems = baseNodes.filter((node) => node.type === "access_request").slice(0, hasActiveFilter ? 24 : 10);
-  if (isLeadership && selectedNode?.metadata?.scopeType === "requests") {
-    viewNodes.push(...accessRequestItems.map((node) => ({ ...node, metadata: { ...node.metadata, isDetailNode: true, layer: 4, layerLabel: "4. Solicitação" } })));
-    accessRequestItems.forEach((node) => viewEdges.push({ id: `${requestsScope.id}-${node.id}`, source: requestsScope.id, target: node.id, label: "solicitação", type: "contains", status: node.status, companyId: node.companyId, projectId: node.projectId, module: node.module, metadata: { companyColor: node.metadata?.companyColor } }));
-  }
-
+  if (isLeadership && selectedNode?.metadata?.scopeType === "requests") { viewNodes.push(...accessRequestItems.map((node) => ({ ...node, metadata: { ...node.metadata, isDetailNode: true, layer: 4, layerLabel: "4. Solicitação" } }))); accessRequestItems.forEach((node) => viewEdges.push({ id: `${requestsScope.id}-${node.id}`, source: requestsScope.id, target: node.id, label: "solicitação", type: "contains", status: node.status, companyId: node.companyId, projectId: node.projectId, module: node.module, metadata: { companyColor: node.metadata?.companyColor } })); }
   const retainedIds = new Set(viewNodes.map((node) => node.id));
   const retainedEdges = edges.filter((edge) => retainedIds.has(edge.source) && retainedIds.has(edge.target)).map((edge) => ({ ...edge, metadata: { ...edge.metadata, companyColor: colorForCompany(edge.companyId ?? null) } }));
   return { nodes: uniqueById(viewNodes), edges: uniqueById([...viewEdges, ...retainedEdges]), focusNodeId: selectedNode?.id ?? currentProfileNode.id, focusModule: moduleLabel(moduleFocus ?? clickedUserType ?? selectedProfileType ?? "Quality Control") };

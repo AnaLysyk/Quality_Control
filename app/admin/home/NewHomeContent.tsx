@@ -1,8 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FiMic, FiSend } from "react-icons/fi";
-import { useState, useMemo } from "react";
 
 function resolveGreeting() {
   const hour = Number(
@@ -10,67 +10,84 @@ function resolveGreeting() {
       hour: "2-digit",
       hour12: false,
       timeZone: "America/Sao_Paulo",
-    }).format(new Date())
+    }).format(new Date()),
   );
   if (hour >= 5 && hour < 12) return "Bom dia";
   if (hour >= 12 && hour < 18) return "Boa tarde";
   return "Boa noite";
 }
 
-export default function NewHomeContent() {
-  const greeting = useMemo(() => resolveGreeting(), []);
-  const [msg, setMsg] = useState("");
+function Typing({ text }: { text: string }) {
+  const [shown, setShown] = useState("");
+  useEffect(() => {
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      setShown(text.slice(0, i));
+      if (i >= text.length) clearInterval(id);
+    }, 40);
+    return () => clearInterval(id);
+  }, [text]);
+  return <span>{shown}</span>;
+}
 
-  const suggestions = [
-    "Buscar pendências",
-    "Ver empresas",
-    "Analisar fluxo",
-  ];
+export default function NewHomeContent() {
+  /* chat input */
+  const [msg, setMsg] = useState("");
+  const greeting = `${resolveGreeting()}, Ana.`;
+  const intro = "Eu sou o Brain. Posso buscar dados, gerar relatórios ou responder dúvidas. Como posso ajudar?";
+  const suggestions = ["Buscar pendências", "Ver empresas", "Analisar fluxo"];
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!msg.trim()) return;
-    /* TODO: integrar com assistente */
+    // TODO: integrate with Brain API
     console.log("send", msg);
     setMsg("");
   }
 
   return (
-    <div className="relative flex flex-col h-full min-h-[650px] w-full pb-24 px-4 lg:px-12">
-      {/* ORB */}
-      <div className="absolute right-8 top-6 z-10 select-none pointer-events-none">
+    <>
+      {/* Orb */}
+      <motion.div
+        className="fixed top-24 left-[calc(72px+1.5rem)] z-20"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+      >
         <motion.div
-          className="w-[260px] h-[260px] bg-gradient-to-br from-[#0B1020] to-[#000815] rounded-full relative overflow-hidden"
+          className="relative w-[260px] h-[260px] rounded-full bg-gradient-to-br from-[#0B1020] to-[#000815] overflow-hidden shadow-[0_0_40px_-10px_rgba(239,0,1,0.6)]"
           animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, ease: "linear", duration: 60 }}
+          transition={{ repeat: Infinity, ease: "linear", duration: 40 }}
         >
+          {/* orbit ring */}
           <motion.div
-            className="absolute inset-0 m-auto w-[240px] h-[240px] rounded-full border border-red-600/30"
-            animate={{ scale: [1, 1.12, 1] }}
-            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+            className="absolute inset-0 m-auto w-full h-full rounded-full border border-red-600/40"
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
           />
-          <div className="absolute inset-0 flex items-center justify-center text-white text-4xl font-mono">
+          {/* face */}
+          <div className="absolute inset-0 flex items-center justify-center text-white text-4xl font-mono select-none pointer-events-none">
             ^_-
           </div>
         </motion.div>
-      </div>
+      </motion.div>
 
-      {/* Conversation area */}
-      <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
-        <h1 className="text-3xl sm:text-4xl font-extrabold">
-          {greeting}, <span className="text-red-500">Ana</span>.
+      {/* Center content */}
+      <div className="flex flex-col items-center justify-center text-center pt-32 space-y-6 select-none">
+        <h1 className="text-4xl sm:text-5xl font-extrabold">
+          <Typing text={greeting} />
         </h1>
-        <p className="max-w-xl text-sm text-slate-400">
-          Eu sou o Brain. Posso buscar dados, gerar relatórios ou responder dúvidas.
-          Como posso ajudar?
+        <p className="text-sm text-slate-400 w-full max-w-xl">
+          <Typing text={intro} />
         </p>
         {/* suggestion chips */}
-        <div className="flex flex-wrap justify-center gap-2 max-w-xl">
+        <div className="flex gap-3 flex-wrap justify-center">
           {suggestions.map((s) => (
             <button
               key={s}
+              className="rounded-full bg-white/5 hover:bg-white/10 text-xs px-4 py-1 border border-white/10 backdrop-blur-sm transition-colors"
               onClick={() => setMsg(s)}
-              className="px-4 py-1 rounded-full bg-[#ffffff0d] hover:bg-[#ffffff14] text-xs text-slate-300 border border-white/10 backdrop-blur-sm"
             >
               {s}
             </button>
@@ -78,10 +95,11 @@ export default function NewHomeContent() {
         </div>
       </div>
 
-      {/* Chat bar fixed bottom */}
+      {/* Chat bar */}
       <form
         onSubmit={handleSubmit}
-        className="fixed bottom-8 left-0 right-0 mx-auto w-full max-w-5xl flex items-center gap-4 bg-[#0f172a]/70 border border-white/5 backdrop-blur-sm rounded-full px-6 py-4"
+        className="fixed inset-x-0 bottom-8 mx-auto w-[min(90vw,1440px)] flex items-center gap-4 bg-[#0f172a]/60 border border-white/5 backdrop-blur-sm rounded-full px-6 py-4"
+        style={{ left: "50%", transform: "translateX(-50%)" }}
       >
         <input
           value={msg}
@@ -89,12 +107,8 @@ export default function NewHomeContent() {
           placeholder="Pergunte algo ao Brain…"
           className="flex-1 bg-transparent outline-none text-sm sm:text-base placeholder:text-slate-500"
         />
-        <button
-          type="button"
-          className="p-2 text-slate-400 hover:text-white"
-          title="Gravar áudio (em breve)"
-        >
-          <FiMic className="w-5 h-5" />
+        <button type="button" className="p-2" title="Gravar áudio (em breve)">
+          <FiMic className="w-5 h-5 text-slate-400" />
         </button>
         <button
           type="submit"
@@ -103,6 +117,6 @@ export default function NewHomeContent() {
           Enviar <FiSend className="w-4 h-4" />
         </button>
       </form>
-    </div>
+    </>
   );
 }

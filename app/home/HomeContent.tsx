@@ -459,9 +459,11 @@ function BrainConsole({
   }
 
   return (
-    <section className="relative ml-0 w-full max-w-none overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_13%_18%,rgba(239,0,1,0.14),transparent_24%),radial-gradient(circle_at_80%_20%,rgba(147,197,253,0.12),transparent_28%),linear-gradient(135deg,#050713_0%,#070b18_46%,#0a1020_100%)] p-4 text-white shadow-[0_30px_100px_rgba(0,0,0,0.34)] lg:p-6">
+    <section className="brain-home-shell relative ml-0 flex min-h-[calc(100vh-4.75rem)] w-full max-w-none overflow-hidden rounded-none border border-[var(--brain-border)] bg-[var(--brain-bg)] p-4 text-[var(--brain-text)] shadow-[0_30px_100px_var(--brain-shadow)] sm:rounded-[2rem] lg:min-h-[calc(100vh-5.5rem)] lg:p-6">
       <style>{`
-        .brain-orb-wrap { position: relative; width: clamp(230px, 24vw, 330px); height: clamp(230px, 24vw, 330px); display: grid; place-items: center; isolation: isolate; animation: brainRobotHover 6.4s ease-in-out infinite; }
+        .brain-home-shell { --brain-bg: radial-gradient(circle at 10% 14%, rgba(239,0,1,.08), transparent 24%), radial-gradient(circle at 82% 20%, rgba(59,130,246,.13), transparent 30%), linear-gradient(135deg,#ffffff 0%,#f7faff 52%,#edf4ff 100%); --brain-text: #061225; --brain-muted: rgba(6,18,37,.62); --brain-panel: rgba(255,255,255,.84); --brain-panel-strong: rgba(255,255,255,.96); --brain-border: rgba(15,23,42,.12); --brain-chip: rgba(1,24,72,.06); --brain-input: rgba(255,255,255,.9); --brain-shadow: rgba(15,23,42,.10); }
+        .dark .brain-home-shell, [data-theme="dark"] .brain-home-shell { --brain-bg: radial-gradient(circle at 13% 18%,rgba(239,0,1,.14),transparent 24%),radial-gradient(circle at 80% 20%,rgba(147,197,253,.12),transparent 28%),linear-gradient(135deg,#050713 0%,#070b18 46%,#0a1020 100%); --brain-text: #ffffff; --brain-muted: rgba(255,255,255,.58); --brain-panel: rgba(255,255,255,.07); --brain-panel-strong: rgba(255,255,255,.09); --brain-border: rgba(255,255,255,.10); --brain-chip: rgba(0,0,0,.20); --brain-input: rgba(0,0,0,.20); --brain-shadow: rgba(0,0,0,.34); }
+        .brain-orb-wrap { position: relative; width: clamp(260px, 28vw, 430px); height: clamp(260px, 28vw, 430px); display: grid; place-items: center; isolation: isolate; animation: brainRobotHover 6.4s ease-in-out infinite; }
         .brain-wave-field { position: absolute; inset: 0; z-index: 1; border-radius: 999px; filter: drop-shadow(0 0 22px rgba(255,42,68,.22)); }
         .brain-wave { position: absolute; border-radius: 999px; opacity: .80; transform-origin: center; }
         .brain-wave::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: conic-gradient(from 128deg, transparent 0deg, transparent 34deg, rgba(255,52,82,.13) 52deg, rgba(255,52,82,.86) 72deg, rgba(255,52,82,.18) 102deg, transparent 140deg, rgba(180,212,255,.18) 218deg, transparent 272deg, rgba(255,52,82,.46) 320deg, transparent 360deg); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
@@ -503,54 +505,54 @@ function BrainConsole({
         @media (prefers-reduced-motion: reduce) { .brain-orb-wrap, .brain-orb, .brain-orb-aura, .brain-orb-liquid, .brain-wave, .brain-wave-light, .brain-face, .brain-dash { animation: none; } }
       `}</style>
 
-      <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[minmax(240px,360px)_minmax(0,1fr)]">
-        <div className="flex justify-center lg:justify-start">
+      <div className="relative z-10 grid min-h-full w-full flex-1 items-stretch gap-6 lg:grid-cols-[minmax(300px,38vw)_minmax(0,1fr)] xl:grid-cols-[minmax(360px,42vw)_minmax(0,1fr)]">
+        <div className="flex min-h-[260px] items-center justify-center rounded-[1.8rem] border border-[var(--brain-border)] bg-[var(--brain-chip)] p-4 lg:min-h-full">
           <BrainOrb active={sendingHome || dictating} />
         </div>
 
-        <div className="min-w-0">
+        <div className="flex min-h-full min-w-0 flex-col rounded-[1.8rem] border border-[var(--brain-border)] bg-[var(--brain-panel)] p-4 backdrop-blur lg:p-6">
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-white/55">
+            <span className="inline-flex rounded-full border border-[var(--brain-border)] bg-[var(--brain-chip)] px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-[var(--brain-muted)]">
               Brain
             </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/58">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--brain-border)] bg-[var(--brain-chip)] px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--brain-muted)]">
               <FiClock /> {hoursLabel}
             </span>
           </div>
-          <h1 className="text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl xl:text-5xl">
+          <h1 className="text-3xl font-black leading-tight tracking-tight text-[var(--brain-text)] sm:text-4xl xl:text-5xl">
             {greeting}, <span className="text-[var(--tc-accent,#ef0001)]">{userName}.</span>
           </h1>
 
-          <div className="mt-5 max-h-[390px] space-y-3 overflow-auto pr-1">
+          <div className="mt-5 min-h-[260px] flex-1 space-y-3 overflow-auto pr-1 lg:min-h-0">
             {updates.map((item) => (
               <article
                 key={item.id}
-                className="rounded-[1.35rem] rounded-bl-md border border-white/10 bg-white/[0.07] px-4 py-3 text-white/86 shadow-[0_18px_44px_rgba(0,0,0,0.16)] backdrop-blur"
+                className="rounded-[1.35rem] rounded-bl-md border border-[var(--brain-border)] bg-[var(--brain-panel-strong)] px-4 py-3 text-[var(--brain-text)] shadow-[0_18px_44px_var(--brain-shadow)] backdrop-blur"
               >
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1 rounded-full bg-[var(--tc-accent,#ef0001)]/16 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tc-accent,#ef0001)]">
                     <FiZap /> {item.scope}
                   </span>
-                  <h2 className="text-sm font-black text-white">{item.title}</h2>
+                  <h2 className="text-sm font-black text-[var(--brain-text)]">{item.title}</h2>
                 </div>
-                <p className="whitespace-pre-line text-sm font-semibold leading-6 sm:text-base">{item.text}</p>
+                <p className="whitespace-pre-line text-sm font-semibold leading-6 text-[var(--brain-text)] sm:text-base">{item.text}</p>
               </article>
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-5 flex items-center gap-3 rounded-full border border-[var(--tc-accent,#ef0001)]/55 bg-black/20 px-5 py-4 shadow-[0_0_42px_rgba(59,130,246,0.13)] backdrop-blur">
-            <FiCommand className="shrink-0 text-white/70" size={22} />
+          <form onSubmit={handleSubmit} className="mt-5 flex items-center gap-3 rounded-full border border-[var(--tc-accent,#ef0001)]/55 bg-[var(--brain-input)] px-5 py-4 shadow-[0_0_42px_rgba(59,130,246,0.13)] backdrop-blur">
+            <FiCommand className="shrink-0 text-[var(--brain-muted)]" size={22} />
             <input
               value={command}
               onChange={(event) => setCommand(event.target.value)}
               placeholder="Peça dados, atualizações ou informe horas. Ex: últimas 6h por empresa..."
-              className="min-w-0 flex-1 bg-transparent text-base font-semibold text-white outline-none placeholder:text-white/36"
+              className="min-w-0 flex-1 bg-transparent text-base font-semibold text-[var(--brain-text)] outline-none placeholder:text-[var(--brain-muted)]"
             />
             <button
               type="button"
               onClick={startHomeDictation}
               disabled={dictating || sendingHome}
-              className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/58 transition hover:border-[var(--tc-accent,#ef0001)]/55 hover:text-white sm:inline-flex ${dictating ? "animate-pulse border-[var(--tc-accent,#ef0001)]/60 text-[var(--tc-accent,#ef0001)]" : ""}`}
+              className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--brain-border)] bg-[var(--brain-chip)] text-[var(--brain-muted)] transition hover:border-[var(--tc-accent,#ef0001)]/55 hover:text-[var(--brain-text)] sm:inline-flex ${dictating ? "animate-pulse border-[var(--tc-accent,#ef0001)]/60 text-[var(--tc-accent,#ef0001)]" : ""}`}
               aria-label={dictating ? "Gravando áudio" : "Falar com o Brain"}
               title={dictating ? "Ouvindo..." : "Falar com o Brain"}
             >
@@ -565,7 +567,7 @@ function BrainConsole({
             <button
               type="button"
               onClick={() => openAssistantChat({ command, profile, updates, hoursLabel })}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:border-[var(--tc-accent,#ef0001)]/55"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--brain-border)] bg-[var(--brain-chip)] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[var(--brain-text)] transition hover:border-[var(--tc-accent,#ef0001)]/55"
             >
               Abrir conversa no chat
               <FiMessageCircle />
@@ -598,7 +600,7 @@ export default function HomeContent() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-[420px] w-full items-center justify-center rounded-[2rem] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-sm font-semibold text-[var(--tc-text-muted,#64748b)]">
+      <div className="flex min-h-[calc(100vh-5rem)] w-full items-center justify-center rounded-[2rem] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-sm font-semibold text-[var(--tc-text-muted,#64748b)]">
         Carregando Brain...
       </div>
     );

@@ -119,6 +119,19 @@ async function listUserLoginSummary(options?: { companyId?: string | null }) {
     }));
 }
 
+async function includeLoggedUserInList<T extends { id: string }>(
+  items: T[],
+  access: Awaited<ReturnType<typeof getAccessContext>>,
+) {
+  if (!access?.userId) return items;
+  if (items.some((item) => item.id === access.userId)) return items;
+
+  const currentUserItem = await getAdminUserItem(access.userId);
+  if (!currentUserItem) return items;
+
+  return [...items, currentUserItem as T];
+}
+
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
@@ -149,7 +162,7 @@ export async function GET(req: NextRequest) {
       const items = await listUserLoginSummary({ companyId: access.companyId });
       return NextResponse.json({ items }, { status: 200, headers: { "x-qc-mode": "logins" } });
     }
-    const items = await listAdminUserItems({ companyId: access.companyId });
+    const items = await includeLoggedUserInList(await listAdminUserItems({ companyId: access.companyId }), access);
     return NextResponse.json({ items }, { status: 200 });
   }
 
@@ -163,7 +176,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ items }, { status: 200 });
   }
 
-  const items = await listAdminUserItems();
+  const items = await includeLoggedUserInList(await listAdminUserItems(), access);
 
   return NextResponse.json({ items }, { status: 200 });
 }

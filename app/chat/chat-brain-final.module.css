@@ -20,12 +20,62 @@
 }
 
 .chatBrainFinal :global(.qc-chat-shell aside) {
-  width: min(360px, 30vw) !important;
-  min-width: 310px;
+  width: min(380px, 31vw) !important;
+  min-width: 330px;
   background: #ffffff !important;
   color: #020617 !important;
   border-color: rgba(2, 6, 23, 0.14) !important;
   box-shadow: 12px 0 32px rgba(15, 23, 42, 0.08);
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child) {
+  padding: 14px !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child) {
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2)) {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  max-width: calc(100% - 92px) !important;
+  overflow: visible !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:first-child) {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #020617 !important;
+  font-size: 13px !important;
+  line-height: 1.15 !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:nth-child(2)) {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #334155 !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+}
+
+.chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > button) {
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  color: #061225 !important;
+  background: #ffffff !important;
+  border-color: rgba(2, 6, 23, 0.14) !important;
 }
 
 .chatBrainFinal :global(.qc-chat-shell aside *),
@@ -177,6 +227,23 @@
     linear-gradient(180deg, rgba(5,13,29,0.98), rgba(3,9,22,0.98)) !important;
   color: #f8fafc !important;
   box-shadow: 22px 0 52px rgba(0,0,0,0.34);
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:first-child),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:first-child) {
+  color: #ffffff !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:nth-child(2)),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > div:nth-child(2) > div:nth-child(2)) {
+  color: rgba(248,250,252,0.68) !important;
+}
+
+:global(.dark) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > button),
+:global([data-theme="dark"]) .chatBrainFinal :global(.qc-chat-shell aside > div:first-child > div:first-child > button) {
+  color: #f8fafc !important;
+  background: rgba(15,23,42,0.9) !important;
+  border-color: rgba(148,163,184,0.22) !important;
 }
 
 :global(.dark) .chatBrainFinal :global(.qc-chat-shell main),

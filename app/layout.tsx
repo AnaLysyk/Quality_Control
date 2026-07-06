@@ -18,6 +18,7 @@ import "./globals.css";
 import "./operational-theme.css";
 import "./admin-permissions-theme.css";
 import "./agenda-global-theme.css";
+import "./brain-home-polish.css";
 import { ClientBootScripts } from "./_components/ClientBootScripts";
 
 export const metadata: Metadata = {

@@ -15,6 +15,10 @@ const Chat = loadDynamic(() => import("../components/TeamChat"), {
   loading: () => <div className="qc-chat-page-loading">Carregando chat...</div>,
 });
 
+const ChatRuntimeFixes = loadDynamic(() => import("./ChatRuntimeFixes"), {
+  ssr: false,
+});
+
 export default function ChatPage() {
   const className = [
     styles.chatTheme,
@@ -29,6 +33,7 @@ export default function ChatPage() {
   return (
     <div className={className}>
       <Chat />
+      <ChatRuntimeFixes />
     </div>
   );
 }

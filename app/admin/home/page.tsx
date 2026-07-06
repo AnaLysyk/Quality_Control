@@ -4,8 +4,8 @@ import HomeRouteWarmup from "./HomeRouteWarmup";
 export default function AdminHomePage() {
   return (
     <>
-      {/* Mantém estilos de referência do orb */}
       <link rel="stylesheet" href="/brain-home-orb-reference.css" />
+      <link rel="stylesheet" href="/admin-home-brain-reference.css" />
       <HomeRouteWarmup />
       <NewHomeContent />
     </>

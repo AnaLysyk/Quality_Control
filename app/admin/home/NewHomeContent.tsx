@@ -17,6 +17,7 @@ type SpeechRecognitionLike = { lang: string; interimResults: boolean; continuous
 const STORAGE_KEY = "admin-home-brain-conversations";
 const DAILY_KEY = "admin-home-brain-current-day";
 const LOADING_TEXT = "Estou consultando o Brain, RAG, APIs e contexto permitido para seu perfil...";
+const VOICE_UNSUPPORTED_TEXT = "Reconhecimento de voz indisponível neste navegador. Use Chrome/Edge e permita o microfone.";
 
 function todayBR() { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date()); }
 function resolveGreeting() { const hour = Number(new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" }).format(new Date())); if (hour >= 5 && hour < 12) return "Bom dia"; if (hour >= 12 && hour < 18) return "Boa tarde"; return "Boa noite"; }
@@ -65,6 +66,7 @@ export default function NewHomeContent() {
   const latestAssistantMessage = latestAssistantIndex >= 0 ? messages[latestAssistantIndex].text : "";
   const typedAssistantText = useTypewriter(latestAssistantMessage, 46);
   const isTyping = typedAssistantText.length < latestAssistantMessage.length;
+  const voiceNotice = voiceStatus || (!speechSupported ? VOICE_UNSUPPORTED_TEXT : "");
 
   useEffect(() => { setIsHydrated(true); }, []);
   useEffect(() => { if (!isHydrated) return; const today = todayBR(); const storedDay = window.localStorage.getItem(DAILY_KEY); const stored = window.localStorage.getItem(STORAGE_KEY); const parsed = stored ? (JSON.parse(stored) as BrainSession[]) : []; const shouldStartFresh = storedDay !== today || parsed.length === 0; const nextSessions = shouldStartFresh ? [createSession(initialAssistantText), ...parsed] : parsed; window.localStorage.setItem(DAILY_KEY, today); setSessions(nextSessions); setCurrentSessionId(nextSessions[0]?.id ?? ""); }, [initialAssistantText, isHydrated]);
@@ -87,9 +89,9 @@ export default function NewHomeContent() {
   async function handleVoiceInput(sendDirectly: boolean) {
     if (listening) { recognitionRef.current?.stop(); setVoiceStatus("Processando o que eu ouvi..."); return; }
     const SpeechRecognition = resolveSpeechRecognition();
-    if (!SpeechRecognition) { setSpeechSupported(false); setVoiceStatus("Reconhecimento de voz indisponível neste navegador."); appendAssistantMessage("Seu navegador não suporta conversa por voz aqui. Use Chrome/Edge ou toque no campo e use o microfone do teclado para ditar."); return; }
+    if (!SpeechRecognition) { setSpeechSupported(false); setVoiceStatus(VOICE_UNSUPPORTED_TEXT); appendAssistantMessage("Seu navegador não suporta conversa por voz aqui. Use Chrome/Edge ou toque no campo e use o microfone do teclado para ditar."); return; }
     if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
-    try { await requestMicrophonePermission(); } catch { setSpeechSupported(false); setVoiceStatus("Microfone bloqueado pelo navegador."); appendAssistantMessage("O microfone está bloqueado. Libere o microfone nas permissões do site e tente novamente."); return; }
+    try { await requestMicrophonePermission(); } catch { setVoiceStatus("Microfone bloqueado pelo navegador. Libere nas permissões do site e tente novamente."); appendAssistantMessage("O microfone está bloqueado. Libere o microfone nas permissões do site e tente novamente."); return; }
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
     let latestTranscript = "";
@@ -162,8 +164,7 @@ export default function NewHomeContent() {
         {availableVoices.length ? <select aria-label="Voz do Brain" value={selectedVoice} onChange={(event) => setSelectedVoice(event.target.value)} className="hidden max-w-36 rounded-full border border-white/10 bg-transparent px-2 py-2 text-xs text-slate-300 outline-none 2xl:block"><option value="">Voz padrão</option>{availableVoices.map((voice) => <option key={voice.name} value={voice.name}>{voice.name}</option>)}</select> : null}
         <button type="submit" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(239,68,68,0.18)] transition hover:scale-[1.02] sm:px-5"><span className="hidden sm:inline">Enviar</span><FiSend className="h-4 w-4" /></button>
       </form>
-      {voiceStatus ? <p className="fixed bottom-[5.25rem] left-4 right-4 z-30 rounded-2xl border border-white/10 bg-slate-950/80 px-3 py-2 text-xs text-slate-200 shadow-xl backdrop-blur lg:left-[13.25rem] lg:right-4">{voiceStatus}</p> : null}
-      {!speechSupported ? <p className="fixed bottom-[9.5rem] left-4 right-4 z-30 text-xs text-amber-200 lg:left-[13.25rem]">Reconhecimento de voz indisponível neste navegador. Use Chrome/Edge e permita o microfone.</p> : null}
+      {voiceNotice ? <p role="status" aria-live="polite" className="fixed bottom-[5.6rem] left-4 right-4 z-40 rounded-2xl border border-white/10 bg-slate-950/85 px-3 py-2 text-xs leading-snug text-slate-200 shadow-xl backdrop-blur lg:left-[13.25rem] lg:right-4">{voiceNotice}</p> : null}
     </section>
   );
 }

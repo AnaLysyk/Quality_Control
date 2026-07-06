@@ -11,6 +11,7 @@ import {
 } from "@/lib/chatStore";
 import { recordConversationBrainSignal } from "@/lib/conversationBrainFeed";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { fixMojibake, fixMojibakeDeep } from "@/lib/text/fixMojibake";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -70,7 +71,7 @@ function firstNonEmpty(...values: Array<string | null | undefined>) {
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const url = new URL(req.url);
@@ -78,20 +79,20 @@ export async function GET(req: NextRequest) {
   const cacheKey = `${access.userId}:${peerId || "threads"}`;
   const cached = readChatMessagesCache<Record<string, unknown>>(cacheKey);
   if (cached) {
-    return NextResponse.json(cached, {
+    return NextResponse.json(fixMojibakeDeep(cached), {
       headers: { ...NO_STORE_HEADERS, "x-qc-cache": "hit" },
     });
   }
 
   if (!peerId) {
     const threads = await listChatInboxSummaries(access.userId);
-    const payload = { threads };
+    const payload = fixMojibakeDeep({ threads });
     writeChatMessagesCache(cacheKey, payload);
     return NextResponse.json(payload, { headers: { ...NO_STORE_HEADERS, "x-qc-cache": "miss" } });
   }
 
   if (peerId === access.userId) {
-    return NextResponse.json({ error: "Escolha outro usuario para conversar" }, { status: 400 });
+    return NextResponse.json({ error: "Escolha outro usuário para conversar" }, { status: 400 });
   }
 
   const [contacts, peerUser] = await Promise.all([
@@ -100,14 +101,14 @@ export async function GET(req: NextRequest) {
   ]);
   const peerContact = contacts.find((item) => item.id === peerId) ?? null;
   if (!peerUser || !peerContact) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const messages = await listChatThreadMessages(access.userId, peerId);
-  const payload = {
+  const payload = fixMojibakeDeep({
     peer: peerContact,
     messages,
-  };
+  });
   writeChatMessagesCache(cacheKey, payload);
   return NextResponse.json(payload, { headers: { ...NO_STORE_HEADERS, "x-qc-cache": "miss" } });
 }
@@ -115,26 +116,28 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => null);
   const payload = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const peerId = readOptionalString(payload, "peerId") ?? "";
-  const text = readOptionalString(payload, "text") ?? "";
-  const attachments = Array.isArray(payload.attachments) ? (payload.attachments as ChatAttachment[]) : [];
+  const text = fixMojibake(readOptionalString(payload, "text") ?? "");
+  const attachments = fixMojibakeDeep(
+    Array.isArray(payload.attachments) ? (payload.attachments as ChatAttachment[]) : [],
+  );
   const projectId = readOptionalString(payload, "projectId");
   const projectSlug = readOptionalString(payload, "projectSlug");
   const forceBrainCandidate = payload.remember === true || payload.feedBrain === true;
 
   if (!peerId) {
-    return NextResponse.json({ error: "peerId obrigatorio" }, { status: 400 });
+    return NextResponse.json({ error: "peerId obrigatório" }, { status: 400 });
   }
   if (!text && attachments.length === 0) {
-    return NextResponse.json({ error: "Mensagem ou anexo obrigatorio" }, { status: 400 });
+    return NextResponse.json({ error: "Mensagem ou anexo obrigatório" }, { status: 400 });
   }
   if (peerId === access.userId) {
-    return NextResponse.json({ error: "Escolha outro usuario para conversar" }, { status: 400 });
+    return NextResponse.json({ error: "Escolha outro usuário para conversar" }, { status: 400 });
   }
 
   const [sender, contacts, peerUser] = await Promise.all([
@@ -145,7 +148,7 @@ export async function POST(req: NextRequest) {
 
   const peerContact = contacts.find((item) => item.id === peerId) ?? null;
   if (!sender || !peerUser || !peerContact) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const message = await appendChatMessage({
@@ -197,8 +200,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(
     {
       ok: true,
-      message,
-      brainSignal,
+      message: fixMojibakeDeep(message),
+      brainSignal: fixMojibakeDeep(brainSignal),
     },
     { headers: NO_STORE_HEADERS },
   );

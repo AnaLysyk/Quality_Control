@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import loadDynamic from "next/dynamic";
 import styles from "./chat-theme.module.css";
+import brainPolish from "./chat-brain-polish.module.css";
 import sidebarFixes from "./chat-sidebar-fixes.module.css";
 
 const Chat = loadDynamic(() => import("../components/TeamChat"), {
@@ -13,7 +14,7 @@ const Chat = loadDynamic(() => import("../components/TeamChat"), {
 
 export default function ChatPage() {
   return (
-    <div className={`${styles.chatTheme} ${sidebarFixes.chatSidebarFixes} qc-chat-page-shell`}>
+    <div className={`${styles.chatTheme} ${brainPolish.chatBrainPolish} ${sidebarFixes.chatSidebarFixes} qc-chat-page-shell`}>
       <Chat />
     </div>
   );

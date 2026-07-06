@@ -111,22 +111,24 @@ function readDocumentTheme(): "light" | "dark" | null {
   if (typeof document === "undefined") return null;
   const root = document.documentElement;
   const body = document.body;
-  const tokens = [
+
+  const explicitValues = [
+    root.dataset.themeResolved,
     root.dataset.theme,
     root.dataset.mode,
     root.dataset.appearance,
     body.dataset.theme,
     body.dataset.mode,
     body.dataset.appearance,
-    root.className,
-    body.className,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+  ];
 
-  if (tokens.includes("dark") || tokens.includes("theme-dark") || tokens.includes("modo-escuro")) return "dark";
-  if (tokens.includes("light") || tokens.includes("theme-light") || tokens.includes("modo-claro")) return "light";
+  if (explicitValues.some((value) => value === "dark" || value === "theme-dark" || value === "modo-escuro")) return "dark";
+  if (explicitValues.some((value) => value === "light" || value === "theme-light" || value === "modo-claro")) return "light";
+
+  const classTokens = new Set([...Array.from(root.classList), ...Array.from(body.classList)]);
+  if (classTokens.has("dark") || classTokens.has("theme-dark") || classTokens.has("modo-escuro")) return "dark";
+  if (classTokens.has("light") || classTokens.has("theme-light") || classTokens.has("modo-claro")) return "light";
+
   return null;
 }
 
@@ -146,7 +148,7 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
     const syncTheme = () => setDocumentTheme(readDocumentTheme());
     syncTheme();
     const observer = new MutationObserver(syncTheme);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme", "data-mode", "data-appearance"] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme", "data-theme-resolved", "data-mode", "data-appearance"] });
     observer.observe(document.body, { attributes: true, attributeFilter: ["class", "data-theme", "data-mode", "data-appearance"] });
     return () => observer.disconnect();
   }, []);
@@ -202,11 +204,11 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
   const handleNodeDragStop = (_: MouseEvent, node: Node) => setManualPositions((current) => ({ ...current, [node.id]: node.position }));
   const canvasStyle = isDarkMode
     ? { width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" as const, color: "#f8fafc", backgroundColor: "#020713", background: "radial-gradient(circle at 18% 28%, rgba(34,211,238,0.22), transparent 30%), radial-gradient(circle at 82% 24%, rgba(239,0,1,0.20), transparent 32%), radial-gradient(circle at 50% 45%, rgba(15,23,42,0.88), transparent 48%), linear-gradient(135deg, #020713 0%, #061326 44%, #120718 72%, #220006 100%)" }
-    : { width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" as const, color: "#0b1a3c", backgroundColor: "#ffffff", background: "radial-gradient(circle at 18% 28%, rgba(34,211,238,0.14), transparent 28%), radial-gradient(circle at 82% 32%, rgba(239,0,1,0.06), transparent 30%), linear-gradient(135deg, #ffffff 0%, #f6fbff 46%, #fff8f9 100%)" };
+    : { width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" as const, color: "#0b1a3c", backgroundColor: "#ffffff", background: "radial-gradient(circle at 18% 28%, rgba(34,211,238,0.12), transparent 28%), radial-gradient(circle at 82% 32%, rgba(239,0,1,0.05), transparent 30%), linear-gradient(135deg, #ffffff 0%, #f7fbff 46%, #fffafa 100%)" };
 
   return (
     <section ref={containerRef} data-brain-universe data-theme-mode={themeMode} className="brain-universe-canvas brain-universe-canvas-strong relative w-full overflow-hidden" style={canvasStyle}>
-      <style>{`.brain-universe-canvas .react-flow,.brain-universe-canvas .react-flow__renderer,.brain-universe-canvas .react-flow__pane,.brain-universe-canvas .react-flow__viewport{background:transparent!important}.brain-universe-canvas[data-theme-mode="light"] .react-flow__pane{background:transparent!important}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__pane{background:#020713!important}.brain-universe-canvas[data-theme-mode="light"] .react-flow__background{opacity:.28}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__background{opacity:.18}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__controls button{background:rgba(2,7,19,.82)!important;color:#e0f2fe!important;border-color:rgba(255,255,255,.08)!important}`}</style>
+      <style>{`.brain-universe-canvas .react-flow,.brain-universe-canvas .react-flow__renderer,.brain-universe-canvas .react-flow__pane,.brain-universe-canvas .react-flow__viewport{background:transparent!important}.brain-universe-canvas[data-theme-mode="light"] .react-flow__pane{background:#fff!important}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__pane{background:#020713!important}.brain-universe-canvas[data-theme-mode="light"] .react-flow__background{opacity:.22}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__background{opacity:.18}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__controls button{background:rgba(2,7,19,.82)!important;color:#e0f2fe!important;border-color:rgba(255,255,255,.08)!important}`}</style>
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute left-[-14%] top-[8%] h-[44vw] min-h-[380px] w-[44vw] min-w-[380px] rounded-full blur-3xl" style={{ background: isDarkMode ? "radial-gradient(circle, rgba(34,211,238,0.18), transparent 68%)" : "radial-gradient(circle, rgba(34,211,238,0.10), transparent 68%)" }} />
         <div className="absolute right-[-14%] top-[14%] h-[44vw] min-h-[380px] w-[44vw] min-w-[380px] rounded-full blur-3xl" style={{ background: isDarkMode ? "radial-gradient(circle, rgba(239,0,1,0.18), transparent 68%)" : "radial-gradient(circle, rgba(239,0,1,0.07), transparent 68%)" }} />

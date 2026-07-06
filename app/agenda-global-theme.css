@@ -1,0 +1,116 @@
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) {
+  --agenda-page-bg: linear-gradient(135deg, #f8fbff 0%, #ffffff 48%, #fff7f7 100%);
+  --agenda-card-bg: rgb(255 255 255 / 96%);
+  --agenda-card-border: rgb(15 23 42 / 10%);
+  --agenda-muted-bg: rgb(248 250 252 / 92%);
+  --agenda-day-bg: rgb(255 255 255 / 96%);
+  --agenda-day-muted-bg: rgb(241 245 249 / 88%);
+  --agenda-day-border: rgb(15 23 42 / 9%);
+  --agenda-text: #011848;
+  --agenda-muted-text: rgb(71 85 105 / 86%);
+  --agenda-soft-text: rgb(100 116 139 / 88%);
+  --agenda-control-bg: rgb(255 255 255 / 94%);
+  --agenda-control-border: rgb(15 23 42 / 12%);
+  --agenda-shadow: 0 18px 48px rgb(15 23 42 / 8%);
+  --agenda-bar-bg: #011848;
+  --agenda-bar-text: #ffffff;
+  background: var(--agenda-page-bg) !important;
+  color: var(--agenda-text) !important;
+}
+
+html.dark main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) {
+  --agenda-page-bg: linear-gradient(135deg, #030712 0%, #061326 52%, #120718 100%);
+  --agenda-card-bg: rgb(11 18 32 / 94%);
+  --agenda-card-border: rgb(226 232 240 / 12%);
+  --agenda-muted-bg: rgb(2 6 23 / 72%);
+  --agenda-day-bg: rgb(17 24 39 / 92%);
+  --agenda-day-muted-bg: rgb(15 23 42 / 76%);
+  --agenda-day-border: rgb(226 232 240 / 10%);
+  --agenda-text: #f8fafc;
+  --agenda-muted-text: rgb(203 213 225 / 82%);
+  --agenda-soft-text: rgb(148 163 184 / 88%);
+  --agenda-control-bg: rgb(2 6 23 / 82%);
+  --agenda-control-border: rgb(226 232 240 / 14%);
+  --agenda-shadow: 0 24px 70px rgb(0 0 0 / 30%);
+  --agenda-bar-bg: #020617;
+  --agenda-bar-text: #f8fafc;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) section,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) aside,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) article {
+  border-color: var(--agenda-card-border) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) > section > section,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) aside,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) article {
+  background: var(--agenda-card-bg) !important;
+  color: var(--agenda-text) !important;
+  box-shadow: var(--agenda-shadow) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) label,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) button:not(.bg-\[\#ef0001\]),
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .rounded-xl.bg-slate-50,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .rounded-xl.bg-white {
+  background: var(--agenda-control-bg) !important;
+  border-color: var(--agenda-control-border) !important;
+  color: var(--agenda-text) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .bg-slate-50,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .bg-slate-100 {
+  background: var(--agenda-muted-bg) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .text-slate-400,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .text-slate-500,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .text-slate-600,
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .text-slate-700 {
+  color: var(--agenda-muted-text) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .text-\[\#011848\] {
+  color: var(--agenda-text) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .bg-\[\#011848\],
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .grid.grid-cols-7.border-b {
+  background: var(--agenda-bar-bg) !important;
+  border-color: var(--agenda-card-border) !important;
+  color: var(--agenda-bar-text) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .grid.flex-1.grid-cols-7 {
+  background: var(--agenda-muted-bg) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .grid.flex-1.grid-cols-7 button {
+  background: var(--agenda-day-bg) !important;
+  border-color: var(--agenda-day-border) !important;
+  color: var(--agenda-text) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .grid.flex-1.grid-cols-7 button.text-slate-400 {
+  background: var(--agenda-day-muted-bg) !important;
+  color: var(--agenda-soft-text) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .grid.flex-1.grid-cols-7 button:hover {
+  background: rgb(254 242 242 / 92%) !important;
+}
+
+html.dark main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) .grid.flex-1.grid-cols-7 button:hover {
+  background: rgb(127 29 29 / 22%) !important;
+}
+
+main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) option {
+  color: #011848;
+  background: #ffffff;
+}
+
+html.dark main:has(input[placeholder="Buscar reunião, empresa, projeto ou pessoa..."]) option {
+  color: #f8fafc;
+  background: #020617;
+}

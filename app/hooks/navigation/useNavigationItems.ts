@@ -227,11 +227,13 @@ function resolveModuleItems(
   const usesCompanyCentral =
     mod.id === "home" && effectiveRole != null && COMPANY_DASHBOARD_ROLES.has(effectiveRole);
   const dynamicItems =
-    mod.id === "brain"
-      ? buildBrainItems(effectiveRole, companySlug, projectSlug)
-      : mod.id === "quality"
-        ? buildQualityItems(mod.items, companySlug)
-        : mod.items;
+    mod.id === "agenda"
+      ? []
+      : mod.id === "brain"
+        ? buildBrainItems(effectiveRole, companySlug, projectSlug)
+        : mod.id === "quality"
+          ? buildQualityItems(mod.items, companySlug)
+          : mod.items;
 
   return {
     ...mod,

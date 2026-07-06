@@ -1,7 +1,6 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
@@ -119,14 +118,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme-resolved={initialResolvedTheme}
     >
       <body className="min-h-screen bg-white text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-50">
-        <Script id="qc-theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <Script id="qc-storage-migration" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
         <AppSettingsProvider initialTheme={initialThemePreference} initialLanguage="pt-BR">
           <AuthProvider>
             <LanguageProvider>
               <ClientProvider>
                 <ProjectProvider>
-                  <ClientBootScripts />
+                  <ClientBootScripts migrateStorageScript={migrateStorageScript} themeInitScript={themeInitScript} />
                   <AppShell>{children}</AppShell>
                   <ToasterProvider />
                 </ProjectProvider>

@@ -30,6 +30,8 @@ const miniBaseClass =
 const flyoutItemClass =
   "flex w-full min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
+const selectedClass = "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)";
+
 export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, badgeLabel = "" }: SidebarFlyoutProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -78,7 +80,8 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
   }, []);
 
   const visibleItems = mod.items.filter((item) => item.href);
-  const baseClassName = `${miniBaseClass} ${isActive ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`;
+  const highlightModule = isActive && visibleItems.length === 0;
+  const baseClassName = `${miniBaseClass} ${highlightModule ? selectedClass : ""}`;
 
   if (visibleItems.length === 0 && mod.href) {
     const href = resolveSidebarHref(mod.href);
@@ -89,8 +92,8 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
         data-testid={mod.testId}
         title={mod.label}
         aria-label={mod.label}
-        data-active={isActive ? "true" : undefined}
-        aria-current={isActive ? "page" : undefined}
+        data-active={highlightModule ? "true" : undefined}
+        aria-current={highlightModule ? "page" : undefined}
         onClick={onClose}
         onPointerEnter={() => prefetchHref(mod.href)}
         onPointerDown={() => prefetchHref(mod.href)}
@@ -111,8 +114,8 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
         data-testid={mod.testId}
         title={mod.label}
         aria-label={mod.label}
-        data-active={isActive ? "true" : undefined}
-        className={`${baseClassName} relative`}
+        data-active={undefined}
+        className={`${miniBaseClass} relative`}
       >
         {createElement(getIcon(mod.iconKey), { size: 17, className: "text-current" })}
         {badgeLabel ? <span className="qc-sidebar-chat-badge qc-sidebar-chat-badge--mini">{badgeLabel}</span> : null}
@@ -138,8 +141,10 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
                   key={item.id}
                   type="button"
                   data-testid={item.testId}
+                  data-active={active ? "true" : undefined}
+                  aria-current={active ? "page" : undefined}
                   onClick={openSupportTicketModal}
-                  className={`${flyoutItemClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
+                  className={`${flyoutItemClass} ${active ? selectedClass : ""}`}
                 >
                   {createElement(Icon, { size: 14, className: "shrink-0 text-current opacity-75" })}
                   <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
@@ -159,7 +164,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
                   onPointerEnter={() => prefetchHref(item.href)}
                   onPointerDown={() => prefetchHref(item.href)}
                   onFocus={() => prefetchHref(item.href)}
-                  className={`${flyoutItemClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
+                  className={`${flyoutItemClass} ${active ? selectedClass : ""}`}
                 >
                   {createElement(Icon, { size: 14, className: "shrink-0 text-current opacity-75" })}
                   <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>

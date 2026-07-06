@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import AdminDashboardPrintShell from "../dashboard/AdminDashboardPrintShell";
-import styles from "./visao-geral-theme.module.css";
+import styles from "./visao-geral-clean.module.css";
 
 export default function AdminOverviewLayout({ children }: { children: ReactNode }) {
   return (
-    <div className={styles.overviewTheme}>
-      <AdminDashboardPrintShell>{children}</AdminDashboardPrintShell>
-    </div>
+    <AdminDashboardPrintShell>
+      <div className={styles.visaoGeralClean}>{children}</div>
+    </AdminDashboardPrintShell>
   );
 }

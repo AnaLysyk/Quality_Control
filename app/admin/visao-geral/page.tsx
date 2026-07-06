@@ -1,5 +1,11 @@
-import VisaoGeralComUsuarios from './VisaoGeralComUsuarios';
+import VisaoGeralPageClient from "./VisaoGeralCompacta";
+import OverviewRunAverageCard from "./OverviewRunAverageCard";
 
 export default function VisaoGeralPage() {
-  return <VisaoGeralComUsuarios />;
+  return (
+    <>
+      <VisaoGeralPageClient />
+      <OverviewRunAverageCard />
+    </>
+  );
 }

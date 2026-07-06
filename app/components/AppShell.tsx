@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -448,6 +448,7 @@ function isCompanyDashboardRoute(pathname: string) {
 function shouldHideShellCover(pathname: string) {
   const hasAdminHeroCover = /^\/admin\/(?:home|visao-geral|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
   return (
+    pathname.startsWith("/agenda") ||
     pathname.startsWith("/operacao") ||
     pathname.startsWith("/operacoes") ||
     pathname.startsWith("/admin/operacao") ||
@@ -616,7 +617,6 @@ export default function AppShell({ children }: AppShellProps) {
 
   const prevPathRef = useRef(pathname);
 
-  // Swipe/touch logic (deve estar dentro do componente)
   const touchStartX = useRef<number | null>(null);
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX;
@@ -656,7 +656,6 @@ export default function AppShell({ children }: AppShellProps) {
   }, [pathname, router, user, companies.length]);
 
   useEffect(() => {
-    // Close mobile menu only when the route actually changes.
     if (prevPathRef.current === pathname) return;
     prevPathRef.current = pathname;
     const frameId = window.requestAnimationFrame(() => setMobileOpen(false));
@@ -674,7 +673,6 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
       <NewVersionBanner />
-      {/* Detector de hover na lateral esquerda para telas pequenas */}
       {!isBrainCanvasRoute && !hideGlobalSidebar ? (
         <div
           className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area lg:hidden${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
@@ -685,7 +683,6 @@ export default function AppShell({ children }: AppShellProps) {
         />
       ) : null}
 
-      {/* Botão de menu mobile/hamburguer */}
       {!hideGlobalSidebar ? (
         <button
           type="button"
@@ -719,7 +716,6 @@ export default function AppShell({ children }: AppShellProps) {
 
       {hydrated ? <DeferredChatButton /> : null}
 
-      {/* Flex row: sidebar (desktop) + main content */}
       <div className="flex h-screen overflow-hidden">
         {hydrated && !hideGlobalSidebar ? (
           <Sidebar

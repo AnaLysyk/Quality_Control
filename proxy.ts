@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   canonicalizeCompanyPathnameForAccess,
   COMPANY_ROUTE_MODE_COOKIE,
@@ -31,7 +31,6 @@ function readJwtPayload(request: NextRequest) {
     null;
 
   if (!token) return null;
-
   const parts = token.split(".");
   if (parts.length < 2) return null;
 
@@ -169,7 +168,7 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-current-path", pathname);
   const isCompanyRouteRewrite = request.headers.get(COMPANY_ROUTE_REWRITE_HEADER) === "1";
 
-  if (pathname === "/audit-logs") {
+  if (pathname === "/audit-logs" || pathname === "/admin/logs") {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/audit-logs";
     url.search = search;
@@ -257,4 +256,3 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
-

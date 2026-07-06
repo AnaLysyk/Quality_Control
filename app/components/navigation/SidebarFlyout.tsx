@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import { getIcon } from "./iconRegistry";
 import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
+import { OPEN_SUPPORT_TICKET_MODAL_EVENT } from "@/components/CreateSupportTicketButton";
 
 type SidebarFlyoutProps = {
   mod: NavModuleDef;
@@ -17,6 +18,10 @@ type SidebarFlyoutProps = {
 function resolveSidebarHref(href: string) {
   if (href === "/suporte/kanban") return "/kanban-it";
   return href;
+}
+
+function shouldOpenSupportTicketModal(item: NavItemDef) {
+  return item.id === "support-create" || item.routeId === "suporte.criar";
 }
 
 const miniBaseClass =
@@ -59,6 +64,12 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
     setOpen(true);
     if (mod.href) prefetchHref(mod.href);
   }, [clearClose, mod.href, prefetchHref]);
+
+  const openSupportTicketModal = useCallback(() => {
+    window.dispatchEvent(new CustomEvent(OPEN_SUPPORT_TICKET_MODAL_EVENT));
+    setOpen(false);
+    onClose?.();
+  }, [onClose]);
 
   useEffect(() => {
     return () => {
@@ -120,7 +131,20 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
             {visibleItems.map((item) => {
               const active = isItemActive(item);
               const href = resolveSidebarHref(item.href!);
-              return (
+              const openModal = shouldOpenSupportTicketModal(item);
+              const Icon = getIcon(item.iconKey);
+              return openModal ? (
+                <button
+                  key={item.id}
+                  type="button"
+                  data-testid={item.testId}
+                  onClick={openSupportTicketModal}
+                  className={`${flyoutItemClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
+                >
+                  {createElement(Icon, { size: 14, className: "shrink-0 text-current opacity-75" })}
+                  <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
+                </button>
+              ) : (
                 <Link
                   key={item.id}
                   href={href}
@@ -137,7 +161,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose, ba
                   onFocus={() => prefetchHref(item.href)}
                   className={`${flyoutItemClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
                 >
-                  {createElement(getIcon(item.iconKey), { size: 14, className: "shrink-0 text-current opacity-75" })}
+                  {createElement(Icon, { size: 14, className: "shrink-0 text-current opacity-75" })}
                   <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
                 </Link>
               );

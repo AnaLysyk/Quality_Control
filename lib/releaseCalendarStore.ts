@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import { randomUUID } from "crypto";
 
@@ -17,11 +17,11 @@ import { getRedis } from "@/lib/redis";
 export type ReleaseCalendarEventInput = Partial<Omit<ReleaseCalendarEvent, "id">> & {
   id?: string;
   title: string;
-  type: ReleaseCalendarEventType;
-  releaseId: string;
-  releaseName: string;
-  startAt: string;
-  endAt: string;
+  type?: ReleaseCalendarEventType;
+  releaseId?: string;
+  releaseName?: string;
+  startAt?: string;
+  endAt?: string;
 };
 
 type ReleaseCalendarStore = {
@@ -31,6 +31,8 @@ type ReleaseCalendarStore = {
 const STORE_KEY = "qc:release_calendar:v1";
 
 const VALID_EVENT_TYPES: ReleaseCalendarEventType[] = [
+  "delivery",
+  "meeting",
   "discovery",
   "scope_cut",
   "dev_freeze",
@@ -42,7 +44,7 @@ const VALID_EVENT_TYPES: ReleaseCalendarEventType[] = [
   "post_release",
 ];
 
-const VALID_STATUSES: ReleaseCalendarStatus[] = ["planned", "at_risk", "blocked", "done", "cancelled"];
+const VALID_STATUSES: ReleaseCalendarStatus[] = ["pending", "ready", "planned", "at_risk", "blocked", "done", "delivered", "cancelled"];
 const VALID_CRITICALITIES: ReleaseCalendarCriticality[] = ["critical", "high", "normal", "low"];
 const VALID_CONTEXTS: ReleaseCalendarContext[] = ["company", "project", "user", "tc", "support", "release", "delivery"];
 const VALID_AUDIENCE_PROFILES: ReleaseCalendarAudienceProfile[] = [
@@ -112,31 +114,39 @@ function normalizeAudienceProfiles(value: unknown): ReleaseCalendarAudienceProfi
 
 function inferContext(input: Partial<ReleaseCalendarEvent>): ReleaseCalendarContext {
   if (sanitizeText(input.context) && isContext(sanitizeText(input.context))) return sanitizeText(input.context) as ReleaseCalendarContext;
+  if (sanitizeText(input.type) === "delivery" || sanitizeText(input.type) === "release") return "delivery";
   if (nullableText(input.ownerId) || nullableText(input.ownerName) || sanitizeList(input.participantNames).length) return "user";
   if (nullableText(input.projectId) || nullableText(input.projectSlug)) return "project";
   if (nullableText(input.companyId) || nullableText(input.companySlug) || nullableText(input.companyName)) return "company";
-  return input.type === "release" ? "delivery" : "release";
+  return "release";
+}
+
+function fallbackDateTime() {
+  return new Date().toISOString();
 }
 
 function normalizeEvent(input: Partial<ReleaseCalendarEvent> | null | undefined): ReleaseCalendarEvent | null {
   const title = sanitizeText(input?.title);
-  const type = sanitizeText(input?.type);
-  const releaseId = sanitizeText(input?.releaseId);
-  const releaseName = sanitizeText(input?.releaseName);
-  const startAt = sanitizeText(input?.startAt, 80);
-  const endAt = sanitizeText(input?.endAt, 80);
-  if (!title || !isEventType(type) || !releaseId || !releaseName || !startAt || !endAt) return null;
+  const type = sanitizeText(input?.type) || "delivery";
+  const releaseId = sanitizeText(input?.releaseId) || `agenda-${sanitizeText(input?.id, 80) || randomUUID()}`;
+  const releaseName = sanitizeText(input?.releaseName) || title || "Agendamento";
+  const rawStartAt = sanitizeText(input?.startAt, 80);
+  const rawEndAt = sanitizeText(input?.endAt, 80);
+  if (!title || !isEventType(type)) return null;
 
   const status = sanitizeText(input?.status);
   const criticality = sanitizeText(input?.criticality);
-  const context = inferContext(input ?? {});
-  const markerLabel = sanitizeText(input?.markerLabel, 48) || title;
+  const hasDateTime = Boolean(rawStartAt && rawEndAt);
+  const context = inferContext({ ...(input ?? {}), type } as Partial<ReleaseCalendarEvent>);
+  const markerLabel = sanitizeText(input?.markerLabel, 48) || (type === "meeting" ? "Meet" : title);
+  const eventStatus = isStatus(status) ? status : hasDateTime ? "ready" : "pending";
+
   return {
     id: sanitizeText(input?.id, 120) || randomUUID(),
     title,
     type,
-    status: isStatus(status) ? status : "planned",
-    criticality: isCriticality(criticality) ? criticality : "normal",
+    status: eventStatus,
+    criticality: isCriticality(criticality) ? criticality : type === "meeting" ? "normal" : "high",
     context,
     markerLabel,
     audienceProfiles: normalizeAudienceProfiles(input?.audienceProfiles),
@@ -147,8 +157,8 @@ function normalizeEvent(input: Partial<ReleaseCalendarEvent> | null | undefined)
     projectSlug: nullableText(input?.projectSlug),
     releaseId,
     releaseName,
-    startAt,
-    endAt,
+    startAt: rawStartAt || fallbackDateTime(),
+    endAt: rawEndAt || rawStartAt || fallbackDateTime(),
     ownerId: nullableText(input?.ownerId),
     ownerName: nullableText(input?.ownerName),
     participantNames: sanitizeList(input?.participantNames, 16),
@@ -245,6 +255,17 @@ export async function updateReleaseCalendarEventStatus(id: string, status: Relea
   return next;
 }
 
+export async function updateReleaseCalendarEvent(id: string, input: Partial<ReleaseCalendarEventInput>) {
+  const store = await readStore();
+  const idx = store.events.findIndex((event) => event.id === id);
+  if (idx === -1) return null;
+  const next = normalizeEvent({ ...store.events[idx], ...input, id });
+  if (!next) return null;
+  store.events[idx] = next;
+  await writeStore(store);
+  return next;
+}
+
 export async function getReleaseCalendarSummary() {
   const events = await listReleaseCalendarEvents();
   const companies = new Set(events.map((event) => event.companySlug ?? event.companyName).filter(Boolean));
@@ -259,19 +280,14 @@ export async function getReleaseCalendarSummary() {
 
   return {
     total: events.length,
-    planned: events.filter((event) => event.status === "planned").length,
+    planned: events.filter((event) => event.status === "planned" || event.status === "ready").length,
     atRisk: events.filter((event) => event.status === "at_risk").length,
     blocked: events.filter((event) => event.status === "blocked").length,
-    done: events.filter((event) => event.status === "done").length,
+    done: events.filter((event) => event.status === "done" || event.status === "delivered").length,
     critical: events.filter((event) => event.criticality === "critical").length,
-    releases: new Set(events.map((event) => event.releaseId)).size,
-    qaWindows: events.filter((event) => event.type === "qa_window").length,
     companies: companies.size,
     projects: projects.size,
     users: users.size,
     contexts: contexts.size,
-    leaderVisible: events.filter((event) => audienceMatches(event, "leader_tc")).length,
-    supportVisible: events.filter((event) => audienceMatches(event, "technical_support")).length,
   };
 }
-

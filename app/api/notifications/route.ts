@@ -5,11 +5,12 @@ import { countUnreadUserNotifications, createUserNotification, listUserNotificat
 import { canAdminReviewQueue, normalizeRequestProfileType, resolveReviewQueue } from "@/lib/requestRouting";
 
 const PENDING_RESET_SYNC_TTL_MS = 60_000;
-const UNREAD_COUNT_CACHE_TTL_MS = 60_000;
+const UNREAD_COUNT_CACHE_TTL_MS = 5 * 60_000;
 
 type NotificationsGlobalState = typeof globalThis & {
   __qcPendingResetSync?: Map<string, number>;
   __qcUnreadCountCache?: Map<string, { unreadCount: number; expiresAt: number }>;
+  __qcUnreadCountInflight?: Map<string, Promise<number>>;
 };
 
 function shouldSyncPendingResets(userId: string) {
@@ -34,6 +35,14 @@ function getUnreadCountCache() {
   return globalState.__qcUnreadCountCache;
 }
 
+function getUnreadCountInflight() {
+  const globalState = globalThis as NotificationsGlobalState;
+  if (!globalState.__qcUnreadCountInflight) {
+    globalState.__qcUnreadCountInflight = new Map();
+  }
+  return globalState.__qcUnreadCountInflight;
+}
+
 async function getCachedUnreadCount(userId: string) {
   const cache = getUnreadCountCache();
   const cached = cache.get(userId);
@@ -41,7 +50,16 @@ async function getCachedUnreadCount(userId: string) {
     return { unreadCount: cached.unreadCount, cache: "hit" as const };
   }
 
-  const unreadCount = await countUnreadUserNotifications(userId);
+  const inflight = getUnreadCountInflight();
+  let pending = inflight.get(userId);
+  if (!pending) {
+    pending = countUnreadUserNotifications(userId).finally(() => {
+      inflight.delete(userId);
+    });
+    inflight.set(userId, pending);
+  }
+
+  const unreadCount = await pending;
   cache.set(userId, {
     unreadCount,
     expiresAt: Date.now() + UNREAD_COUNT_CACHE_TTL_MS,
@@ -89,7 +107,7 @@ export async function GET(req: Request) {
     const result = await getCachedUnreadCount(user.id);
     return NextResponse.json(
       { unreadCount: result.unreadCount },
-      { status: 200, headers: { "x-qc-cache": result.cache } },
+      { status: 200, headers: { "x-qc-cache": result.cache, "Cache-Control": "private, max-age=30" } },
     );
   }
 

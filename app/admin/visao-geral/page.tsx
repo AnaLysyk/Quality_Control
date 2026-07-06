@@ -1,10 +1,10 @@
 import VisaoGeralPageClient from "./VisaoGeralCompacta";
-import styles from "./VisaoGeralTheme.module.css";
+import styles from "./visao-geral-theme.module.css";
 
 export default function VisaoGeralPage() {
   return (
-    <div className={styles.themeScope}>
+    <main className={styles.overviewTheme}>
       <VisaoGeralPageClient />
-    </div>
+    </main>
   );
 }

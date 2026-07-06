@@ -1,6 +1,8 @@
-﻿import "server-only";
+import "server-only";
 
 export type ReleaseCalendarEventType =
+  | "delivery"
+  | "meeting"
   | "discovery"
   | "scope_cut"
   | "dev_freeze"
@@ -11,7 +13,7 @@ export type ReleaseCalendarEventType =
   | "release"
   | "post_release";
 
-export type ReleaseCalendarStatus = "planned" | "at_risk" | "blocked" | "done" | "cancelled";
+export type ReleaseCalendarStatus = "pending" | "ready" | "planned" | "at_risk" | "blocked" | "done" | "delivered" | "cancelled";
 export type ReleaseCalendarCriticality = "critical" | "high" | "normal" | "low";
 export type ReleaseCalendarContext = "company" | "project" | "user" | "tc" | "support" | "release" | "delivery";
 export type ReleaseCalendarAudienceProfile =
@@ -78,6 +80,17 @@ export const releaseCalendarRules: ReleaseCalendarRule[] = [
     ],
   },
   {
+    id: "delivery-and-meeting-schedule",
+    title: "Agendamento de entrega e reuniao",
+    description: "Entrega pode ficar pendente sem data; quando tiver dia e horario, gera notificacao. Reuniao sempre nasce como Meet.",
+    acceptanceCriteria: [
+      "Entrega sem data fica pending.",
+      "Entrega com data pode ficar ready, blocked, cancelled, done ou delivered.",
+      "Reuniao usa tipo meeting e registra participantes, dia, horario e regra de Meet.",
+      "Alteracao de data, horario, participantes ou status gera evento de notificacao.",
+    ],
+  },
+  {
     id: "leader-support-overview",
     title: "Visao consolidada para Lider TC e Suporte Tecnico",
     description: "Perfis internos da TC precisam ver marcacoes de empresas, projetos e usuarios em uma camada visual compacta.",
@@ -124,7 +137,7 @@ export const releaseCalendarMetrics: ReleaseCalendarMetric[] = [
     id: "release-events-by-status",
     label: "Eventos por status",
     formula: "count(calendar_events grouped by status)",
-    description: "Mostra planejado, em risco, bloqueado, concluido e cancelado.",
+    description: "Mostra pendente, pode ir, em risco, bloqueado, concluido, entregue e cancelado.",
   },
   {
     id: "release-risk-rate",
@@ -239,38 +252,5 @@ export function getReleaseCalendarModel() {
     rules: releaseCalendarRules,
     metrics: releaseCalendarMetrics,
     templates: releaseCalendarTemplates,
-    eventTypes: [
-      "discovery",
-      "scope_cut",
-      "dev_freeze",
-      "qa_window",
-      "bug_bash",
-      "uat",
-      "release_candidate",
-      "release",
-      "post_release",
-    ] satisfies ReleaseCalendarEventType[],
-    statuses: ["planned", "at_risk", "blocked", "done", "cancelled"] satisfies ReleaseCalendarStatus[],
-    contexts: ["company", "project", "user", "tc", "support", "release", "delivery"] satisfies ReleaseCalendarContext[],
-    audienceProfiles: [
-      "all",
-      "empresa",
-      "company_user",
-      "testing_company_user",
-      "leader_tc",
-      "technical_support",
-      "release_actor",
-      "brain",
-    ] satisfies ReleaseCalendarAudienceProfile[],
-    summary: {
-      rules: releaseCalendarRules.length,
-      metrics: releaseCalendarMetrics.length,
-      templates: releaseCalendarTemplates.length,
-      eventTypes: 9,
-      statuses: 5,
-      contexts: 7,
-      audienceProfiles: 8,
-    },
   };
 }
-

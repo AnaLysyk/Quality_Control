@@ -12,12 +12,12 @@ import { getAccessContext } from "@/lib/auth/session";
 import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
-import { listReleaseCalendarEvents, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
+import { listReleaseCalendarEvents, updateReleaseCalendarEvent, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
 
-const VALID_STATUSES = ["planned", "at_risk", "blocked", "done", "cancelled"] as const;
+const VALID_STATUSES = ["pending", "ready", "planned", "at_risk", "blocked", "done", "delivered", "cancelled"] as const;
 const VALID_CRITICALITIES = ["critical", "high", "normal", "low"] as const;
 const VALID_CONTEXTS = ["company", "project", "user", "tc", "support", "release", "delivery"] as const;
 const VALID_AUDIENCE_PROFILES = [
@@ -150,13 +150,17 @@ function buildCalendarSummary(events: ReleaseCalendarEvent[]) {
 
   return {
     total: events.length,
-    planned: events.filter((event) => event.status === "planned").length,
+    pending: events.filter((event) => event.status === "pending").length,
+    planned: events.filter((event) => event.status === "planned" || event.status === "ready").length,
     atRisk: events.filter((event) => event.status === "at_risk").length,
     blocked: events.filter((event) => event.status === "blocked").length,
-    done: events.filter((event) => event.status === "done").length,
+    done: events.filter((event) => event.status === "done" || event.status === "delivered").length,
+    cancelled: events.filter((event) => event.status === "cancelled").length,
     critical: events.filter((event) => event.criticality === "critical").length,
     releases: new Set(events.map((event) => event.releaseId)).size,
     qaWindows: events.filter((event) => event.type === "qa_window").length,
+    meetings: events.filter((event) => event.type === "meeting").length,
+    deliveries: events.filter((event) => event.type === "delivery" || event.context === "delivery").length,
     companies: companies.size,
     projects: projects.size,
     users: users.size,
@@ -194,7 +198,7 @@ function buildRecipients(user: { name?: string | null; email?: string | null; id
 }
 
 async function recordCalendarNotification(input: {
-  workflowId: "release-calendar-critical" | "release-calendar-risk" | "release-calendar-blocked";
+  workflowId: "release-calendar-critical" | "release-calendar-risk" | "release-calendar-blocked" | "release-calendar-updated";
   event: ReleaseCalendarEvent;
   user: { name?: string | null; email?: string | null; id: string };
   title: string;
@@ -227,6 +231,14 @@ async function recordCalendarNotification(input: {
     },
     recipients: buildRecipients(input.user, input.event),
   });
+}
+
+function buildMeetDescription(body: Record<string, unknown>, baseDescription: unknown) {
+  const wantsMeet = body.type === "meeting" || body.meet === true || body.meetingType === "meet";
+  const description = typeof baseDescription === "string" ? baseDescription.trim() : "";
+  if (!wantsMeet) return description;
+  const meetLine = "Reunião via Google Meet. Link do Meet deve ser gerado/associado pelo calendário.";
+  return description.includes("Google Meet") ? description : [description, meetLine].filter(Boolean).join("\n");
 }
 
 export async function GET(req: NextRequest) {
@@ -271,28 +283,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!body) return NextResponse.json({ error: "Informe os dados do agendamento." }, { status: 400, headers: NO_STORE_HEADERS });
+
   const event = await upsertReleaseCalendarEvent({
     ...body,
-    ownerId: body?.ownerId ?? user.id,
-    ownerName: body?.ownerName ?? actorName(user),
+    type: body.type === "meeting" ? "meeting" : body.type === "delivery" ? "delivery" : body.type,
+    description: buildMeetDescription(body, body.description),
+    notificationRules: body.notificationRules ?? ["Notificar participantes", "Lembrar 5 minutos antes"],
+    brianRules: body.brianRules ?? ["Registrar contexto no Brain", "Relacionar participantes e decisão"],
+    ownerId: body.ownerId ?? user.id,
+    ownerName: body.ownerName ?? actorName(user),
   });
 
-  const notification = event.criticality === "critical"
-    ? await recordCalendarNotification({
-        workflowId: "release-calendar-critical",
-        event,
-        user,
-        title: `Evento critico criado: ${event.title}`,
-        description: `Evento critico da release ${event.releaseName} foi cadastrado na agenda para ${event.audienceProfiles.join(", ")}.`,
-      })
-    : null;
+  const notification = await recordCalendarNotification({
+    workflowId: event.status === "blocked" ? "release-calendar-blocked" : event.criticality === "critical" ? "release-calendar-critical" : "release-calendar-updated",
+    event,
+    user,
+    title: `${event.type === "meeting" ? "Reunião Meet" : "Entrega"} agendada: ${event.title}`,
+    description: `${event.title} foi registrado na agenda com status ${event.status}.`,
+  });
 
   return NextResponse.json({ event, notification }, { status: 201, headers: NO_STORE_HEADERS });
 }
 
 export async function PATCH(req: NextRequest) {
-  const { response } = await requireReleaseCalendarAccess(req, "status");
+  const { response } = await requireReleaseCalendarAccess(req, "edit");
   if (response) return response;
 
   const user = await authenticateRequest(req);
@@ -300,36 +316,35 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const id = typeof body?.id === "string" ? body.id.trim() : "";
   const status = normalizeStatus(body?.status);
 
-  if (!id || !status) {
-    return NextResponse.json({ error: "Informe id e status valido." }, { status: 400, headers: NO_STORE_HEADERS });
+  if (!id) {
+    return NextResponse.json({ error: "Informe o id do agendamento." }, { status: 400, headers: NO_STORE_HEADERS });
   }
 
-  const event = await updateReleaseCalendarEventStatus(id, status);
+  const event = Object.keys(body ?? {}).some((key) => key !== "id" && key !== "status")
+    ? await updateReleaseCalendarEvent(id, {
+        ...body,
+        description: buildMeetDescription(body ?? {}, body?.description),
+        status: status ?? undefined,
+      })
+    : status
+      ? await updateReleaseCalendarEventStatus(id, status)
+      : null;
+
   if (!event) {
     return NextResponse.json({ error: "Evento de agenda nao encontrado." }, { status: 404, headers: NO_STORE_HEADERS });
   }
 
-  const notification = status === "blocked"
-    ? await recordCalendarNotification({
-        workflowId: "release-calendar-blocked",
-        event,
-        user,
-        title: `Release bloqueada: ${event.title}`,
-        description: `Evento da release ${event.releaseName} mudou para bloqueado.`,
-      })
-    : status === "at_risk"
-      ? await recordCalendarNotification({
-          workflowId: "release-calendar-risk",
-          event,
-          user,
-          title: `Release em risco: ${event.title}`,
-          description: `Evento da release ${event.releaseName} mudou para em risco.`,
-        })
-      : null;
+  const notification = await recordCalendarNotification({
+    workflowId: event.status === "blocked" ? "release-calendar-blocked" : event.status === "at_risk" ? "release-calendar-risk" : "release-calendar-updated",
+    event,
+    user,
+    title: `Agenda atualizada: ${event.title}`,
+    description: `${event.title} mudou para ${event.status}. Data: ${event.startAt}.`,
+  });
 
   return NextResponse.json({ event, notification }, { status: 200, headers: NO_STORE_HEADERS });
 }

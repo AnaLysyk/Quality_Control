@@ -1,0 +1,133 @@
+.agendaTheme {
+  --agenda-page-bg: linear-gradient(135deg, #f8fbff 0%, #ffffff 48%, #fff7f7 100%);
+  --agenda-card-bg: rgb(255 255 255 / 96%);
+  --agenda-card-border: rgb(15 23 42 / 10%);
+  --agenda-header-bg: rgb(255 255 255 / 92%);
+  --agenda-muted-bg: rgb(248 250 252 / 92%);
+  --agenda-day-bg: rgb(255 255 255 / 96%);
+  --agenda-day-muted-bg: rgb(241 245 249 / 88%);
+  --agenda-day-border: rgb(15 23 42 / 9%);
+  --agenda-text: #011848;
+  --agenda-muted-text: rgb(71 85 105 / 86%);
+  --agenda-soft-text: rgb(100 116 139 / 88%);
+  --agenda-control-bg: rgb(255 255 255 / 94%);
+  --agenda-control-text: #011848;
+  --agenda-control-border: rgb(15 23 42 / 12%);
+  --agenda-shadow: 0 18px 48px rgb(15 23 42 / 8%);
+  --agenda-dark-button-bg: #011848;
+  --agenda-dark-button-text: #ffffff;
+  background: var(--agenda-page-bg) !important;
+  color: var(--agenda-text) !important;
+}
+
+:global(html.dark) .agendaTheme {
+  --agenda-page-bg: linear-gradient(135deg, #030712 0%, #061326 52%, #120718 100%);
+  --agenda-card-bg: rgb(11 18 32 / 94%);
+  --agenda-card-border: rgb(226 232 240 / 12%);
+  --agenda-header-bg: rgb(15 23 42 / 78%);
+  --agenda-muted-bg: rgb(2 6 23 / 72%);
+  --agenda-day-bg: rgb(17 24 39 / 92%);
+  --agenda-day-muted-bg: rgb(15 23 42 / 76%);
+  --agenda-day-border: rgb(226 232 240 / 10%);
+  --agenda-text: #f8fafc;
+  --agenda-muted-text: rgb(203 213 225 / 82%);
+  --agenda-soft-text: rgb(148 163 184 / 88%);
+  --agenda-control-bg: rgb(2 6 23 / 82%);
+  --agenda-control-text: #f8fafc;
+  --agenda-control-border: rgb(226 232 240 / 14%);
+  --agenda-shadow: 0 24px 70px rgb(0 0 0 / 30%);
+  --agenda-dark-button-bg: #020617;
+  --agenda-dark-button-text: #f8fafc;
+}
+
+.agendaTheme :global(section),
+.agendaTheme :global(aside),
+.agendaTheme :global(article) {
+  border-color: var(--agenda-card-border) !important;
+}
+
+.agendaTheme > :global(section) > :global(section),
+.agendaTheme :global(aside),
+.agendaTheme :global(article) {
+  background: var(--agenda-card-bg) !important;
+  color: var(--agenda-text) !important;
+  box-shadow: var(--agenda-shadow);
+}
+
+.agendaTheme :global(input),
+.agendaTheme :global(select),
+.agendaTheme :global(button) {
+  color: inherit;
+}
+
+.agendaTheme :global(label),
+.agendaTheme :global(.rounded-xl.bg-slate-50),
+.agendaTheme :global(.rounded-xl.bg-white) {
+  background: var(--agenda-control-bg) !important;
+  border-color: var(--agenda-control-border) !important;
+  color: var(--agenda-control-text) !important;
+}
+
+.agendaTheme :global(.bg-slate-50),
+.agendaTheme :global(.bg-slate-100) {
+  background: var(--agenda-muted-bg) !important;
+}
+
+.agendaTheme :global(.text-slate-500),
+.agendaTheme :global(.text-slate-600),
+.agendaTheme :global(.text-slate-700),
+.agendaTheme :global(.text-slate-400) {
+  color: var(--agenda-muted-text) !important;
+}
+
+.agendaTheme :global(.text-\[\#011848\]) {
+  color: var(--agenda-text) !important;
+}
+
+.agendaTheme :global(.bg-\[\#011848\]) {
+  background: var(--agenda-dark-button-bg) !important;
+  color: var(--agenda-dark-button-text) !important;
+}
+
+.agendaTheme :global(.grid.grid-cols-7.border-b) {
+  background: var(--agenda-dark-button-bg) !important;
+  border-color: var(--agenda-card-border) !important;
+  color: var(--agenda-dark-button-text) !important;
+}
+
+.agendaTheme :global(.grid.flex-1.grid-cols-7) {
+  background: var(--agenda-muted-bg) !important;
+}
+
+.agendaTheme :global(.grid.flex-1.grid-cols-7 button) {
+  background: var(--agenda-day-bg) !important;
+  border-color: var(--agenda-day-border) !important;
+  color: var(--agenda-text) !important;
+}
+
+.agendaTheme :global(.grid.flex-1.grid-cols-7 button[class*="text-slate-400"]) {
+  background: var(--agenda-day-muted-bg) !important;
+  color: var(--agenda-soft-text) !important;
+}
+
+.agendaTheme :global(.grid.flex-1.grid-cols-7 button:hover) {
+  background: rgb(254 242 242 / 90%) !important;
+}
+
+:global(html.dark) .agendaTheme :global(.grid.flex-1.grid-cols-7 button:hover) {
+  background: rgb(127 29 29 / 22%) !important;
+}
+
+.agendaTheme :global(.ring-\[\#ef0001\]) {
+  --tw-ring-color: #ef0001 !important;
+}
+
+.agendaTheme :global(option) {
+  color: #011848;
+  background: #ffffff;
+}
+
+:global(html.dark) .agendaTheme :global(option) {
+  color: #f8fafc;
+  background: #020617;
+}

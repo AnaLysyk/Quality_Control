@@ -17,6 +17,7 @@ import {
 import "./globals.css";
 import "./operational-theme.css";
 import "./admin-permissions-theme.css";
+import "./agenda-global-theme.css";
 import { ClientBootScripts } from "./_components/ClientBootScripts";
 
 export const metadata: Metadata = {
@@ -88,7 +89,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const migrateStorageScript = `
     (() => {
       try {
-        // Migrate legacy keys from localStorage to sessionStorage for session-scoped data
         if (!window.sessionStorage || !window.localStorage) return;
         const prefixes = ["tc-settings:", "activeClient:", "assistant_history", "qcnotes", "tcnotes", "qcnotes_widget", "qcnotes_widget_state"];
         for (let i = 0; i < localStorage.length; i++) {
@@ -96,16 +96,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           if (!key) continue;
           const shouldMigrate = prefixes.some(p => key.indexOf(p) === 0);
           if (!shouldMigrate) continue;
-          // If sessionStorage already has a value, prefer it; otherwise copy from localStorage
           if (!sessionStorage.getItem(key)) {
             const v = localStorage.getItem(key);
             if (v !== null) sessionStorage.setItem(key, v);
           }
-          // remove legacy localStorage entry
           localStorage.removeItem(key);
         }
       } catch (e) {
-        // best-effort migration; ignore errors
+        /* ignore */
       }
     })();
   `;
@@ -119,25 +117,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme-preference={initialThemePreference}
       data-theme-resolved={initialResolvedTheme}
     >
-      <body
-        suppressHydrationWarning
-        className="min-h-screen w-full overflow-y-auto antialiased"
-      >
-        <ClientBootScripts migrateStorageScript={migrateStorageScript} themeInitScript={themeInitScript} />
-        <AuthProvider>
-          <LanguageProvider>
-            <AppSettingsProvider>
+      <body className="min-h-screen bg-white text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-50">
+        <AppSettingsProvider initialTheme={initialThemePreference} initialLanguage="pt-BR">
+          <AuthProvider>
+            <LanguageProvider>
               <ClientProvider>
                 <ProjectProvider>
-                  <AppShell>
-                    {children}
-                    <ToasterProvider />
-                  </AppShell>
+                  <ClientBootScripts migrateStorageScript={migrateStorageScript} themeInitScript={themeInitScript} />
+                  <AppShell>{children}</AppShell>
+                  <ToasterProvider />
                 </ProjectProvider>
               </ClientProvider>
-            </AppSettingsProvider>
-          </LanguageProvider>
-        </AuthProvider>
+            </LanguageProvider>
+          </AuthProvider>
+        </AppSettingsProvider>
       </body>
     </html>
   );

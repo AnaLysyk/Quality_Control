@@ -1,4 +1,4 @@
-import type { SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 import { canAccess } from "@/lib/permissions/can-access";
 import {
@@ -9,27 +9,41 @@ import { getVisibleRouteIds } from "./get-visible-routes";
 import { SYSTEM_ROUTE_BY_ID } from "./route-map";
 import type { NavItemDef, NavModuleDef } from "./navigationCatalog";
 
-const OPERATIONS_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
-  "operacao.inicio": { moduleId: "operations", action: "view" },
-  "operacao.dashboard": { moduleId: "operations", action: "dashboard" },
-  "operacao.metricas": { moduleId: "operations", action: "metrics" },
-  "operacao.busca": { moduleId: "operations", action: "search" },
-};
+const INTERNAL_ADMIN_ROLES = new Set<SystemRole>([
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+]);
+
+const HIDDEN_MENU_ROUTE_IDS = new Set([
+  "operacao.inicio",
+  "operacao.dashboard",
+  "operacao.metricas",
+  "operacao.busca",
+]);
+
+const ALWAYS_VISIBLE_BRAIN_ROUTES = new Set([
+  "brain.grafo",
+  "brain.admin",
+  "brain.mapa-sistema",
+  "brain.empresa",
+  "assistente.perguntar",
+]);
 
 const MANAGEMENT_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
   "gestao.perfil": { moduleId: "permissions", action: "view" },
   "gestao.usuarios": { moduleId: "users", action: "view" },
+  "usuarios.listagem": { moduleId: "users", action: "view" },
+  "usuarios.criar-lider": { moduleId: "users", action: "create" },
+  "usuarios.criar-suporte": { moduleId: "users", action: "create" },
+  "usuarios.criar-usuário-tc": { moduleId: "users", action: "create" },
+  "usuarios.criar-usuário-empresa": { moduleId: "users", action: "create" },
+  "usuarios.criar-usuário": { moduleId: "users", action: "create" },
   "permissoes.perfil": { moduleId: "permissions", action: "view" },
   "permissoes.matriz": { moduleId: "permissions", action: "view" },
 };
 
 const MENU_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
-  ...OPERATIONS_ROUTE_PERMISSIONS,
   ...MANAGEMENT_ROUTE_PERMISSIONS,
-  "brain.grafo": { moduleId: "brain", action: "graph" },
-  "brain.admin": { moduleId: "brain", action: "admin" },
-  "brain.mapa-sistema": { moduleId: "brain", action: "admin" },
-  "assistente.perguntar": { moduleId: "brain", action: "ask" },
   "chat.principal": { moduleId: "chat", action: "view" },
   "chat.buscar": { moduleId: "chat", action: "view" },
   "chat.conversas": { moduleId: "chat", action: "view" },
@@ -57,8 +71,18 @@ function canSeeNavigationDefinition(
 ) {
   if (!userRole || !context) return false;
 
+  if (item.routeId && HIDDEN_MENU_ROUTE_IDS.has(item.routeId)) return false;
+
   const allowedRoles = item.allowedRoles;
   if (allowedRoles && !allowedRoles.includes(userRole)) return false;
+
+  if (item.routeId === "logs.sistema") {
+    return INTERNAL_ADMIN_ROLES.has(userRole);
+  }
+
+  if (item.routeId && ALWAYS_VISIBLE_BRAIN_ROUTES.has(item.routeId)) {
+    return true;
+  }
 
   if (item.routeId) {
     const menuPermission = MENU_ROUTE_PERMISSIONS[item.routeId];

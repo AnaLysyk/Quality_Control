@@ -1,0 +1,159 @@
+.chatSidebarFixes {
+  --chat-sidebar-fix-bg: linear-gradient(180deg, rgb(255 255 255 / 98%), rgb(243 248 255 / 98%));
+  --chat-sidebar-fix-header: linear-gradient(180deg, rgb(255 255 255 / 94%), rgb(248 251 255 / 90%));
+  --chat-sidebar-fix-card: rgb(255 255 255 / 82%);
+  --chat-sidebar-fix-card-hover: rgb(239 246 255 / 94%);
+  --chat-sidebar-fix-card-active: linear-gradient(135deg, rgb(239 246 255 / 98%), rgb(255 255 255 / 94%));
+  --chat-sidebar-fix-text: #061225;
+  --chat-sidebar-fix-muted: rgb(71 85 105 / 88%);
+  --chat-sidebar-fix-soft: rgb(100 116 139 / 86%);
+  --chat-sidebar-fix-border: rgb(15 23 42 / 12%);
+  --chat-sidebar-fix-border-strong: rgb(1 24 72 / 18%);
+  --chat-sidebar-fix-shadow: 0 16px 38px rgb(15 23 42 / 8%);
+
+  --chat-body-bg: radial-gradient(circle at 34% 12%, rgb(59 130 246 / 9%), transparent 32%), radial-gradient(circle at 92% 86%, rgb(239 0 1 / 4%), transparent 30%), linear-gradient(135deg, #ffffff 0%, #f7faff 52%, #edf4ff 100%);
+  --chat-body-panel: rgb(255 255 255 / 92%);
+  --chat-body-composer: rgb(255 255 255 / 96%);
+  --chat-body-text: #061225;
+  --chat-body-muted: #50627d;
+  --chat-body-border: rgb(15 23 42 / 12%);
+}
+
+:global(html.dark) .chatSidebarFixes,
+:global(.dark) .chatSidebarFixes,
+:global([data-theme="dark"]) .chatSidebarFixes {
+  --chat-sidebar-fix-bg: linear-gradient(180deg, rgb(5 13 29 / 98%), rgb(2 6 23 / 98%));
+  --chat-sidebar-fix-header: linear-gradient(180deg, rgb(10 20 42 / 92%), rgb(5 13 29 / 86%));
+  --chat-sidebar-fix-card: rgb(15 23 42 / 72%);
+  --chat-sidebar-fix-card-hover: rgb(30 41 59 / 88%);
+  --chat-sidebar-fix-card-active: linear-gradient(135deg, rgb(1 24 72 / 90%), rgb(15 23 42 / 92%));
+  --chat-sidebar-fix-text: #f8fafc;
+  --chat-sidebar-fix-muted: rgb(203 213 225 / 82%);
+  --chat-sidebar-fix-soft: rgb(148 163 184 / 88%);
+  --chat-sidebar-fix-border: rgb(226 232 240 / 12%);
+  --chat-sidebar-fix-border-strong: rgb(125 167 255 / 26%);
+  --chat-sidebar-fix-shadow: 0 18px 48px rgb(0 0 0 / 28%);
+
+  --chat-body-bg: radial-gradient(circle at 78% 18%, rgb(59 130 246 / 12%), transparent 34%), radial-gradient(circle at 94% 88%, rgb(239 0 1 / 10%), transparent 26%), linear-gradient(180deg, rgb(2 7 19 / 78%), rgb(5 11 22 / 98%));
+  --chat-body-panel: rgb(9 17 32 / 84%);
+  --chat-body-composer: rgb(7 15 31 / 94%);
+  --chat-body-text: #f8fafc;
+  --chat-body-muted: #b9c7db;
+  --chat-body-border: rgb(148 163 184 / 22%);
+}
+
+.chatSidebarFixes :global(.qc-chat-shell),
+.chatSidebarFixes :global(.qc-chat-shell main) {
+  background: var(--chat-body-bg) !important;
+  color: var(--chat-body-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell header),
+.chatSidebarFixes :global(.qc-chat-shell form) {
+  background: var(--chat-body-panel) !important;
+  border-color: var(--chat-body-border) !important;
+  color: var(--chat-body-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell form [class*="rounded-[28px]"]),
+.chatSidebarFixes :global(.qc-chat-shell form [class*="items-end"]) {
+  background: var(--chat-body-composer) !important;
+  border-color: var(--chat-sidebar-fix-border-strong) !important;
+  color: var(--chat-body-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell textarea),
+.chatSidebarFixes :global(.qc-chat-shell input) {
+  background: transparent !important;
+  color: var(--chat-body-text) !important;
+  -webkit-text-fill-color: var(--chat-body-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell textarea::placeholder),
+.chatSidebarFixes :global(.qc-chat-shell input::placeholder) {
+  color: var(--chat-body-muted) !important;
+  opacity: 1 !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell [class*="text-white"]),
+.chatSidebarFixes :global(.qc-chat-shell h1),
+.chatSidebarFixes :global(.qc-chat-shell h2),
+.chatSidebarFixes :global(.qc-chat-shell h3) {
+  color: var(--chat-body-text) !important;
+  text-shadow: none !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell p),
+.chatSidebarFixes :global(.qc-chat-shell span) {
+  color: inherit;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside) {
+  background: var(--chat-sidebar-fix-bg) !important;
+  border-color: var(--chat-sidebar-fix-border) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside > div:first-child) {
+  background: var(--chat-sidebar-fix-header) !important;
+  border-color: var(--chat-sidebar-fix-border) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside input) {
+  background: var(--chat-sidebar-fix-card) !important;
+  border-color: var(--chat-sidebar-fix-border-strong) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+  box-shadow: var(--chat-sidebar-fix-shadow) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside input::placeholder) {
+  color: var(--chat-sidebar-fix-soft) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside button) {
+  color: var(--chat-sidebar-fix-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside button:not(:disabled):hover) {
+  background: var(--chat-sidebar-fix-card-hover) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside button[class*="bg-white/12"]),
+.chatSidebarFixes :global(.qc-chat-shell aside button[aria-current="true"]),
+.chatSidebarFixes :global(.qc-chat-shell aside button[data-active="true"]) {
+  background: var(--chat-sidebar-fix-card-active) !important;
+  border: 1px solid var(--chat-sidebar-fix-border-strong) !important;
+  color: var(--chat-sidebar-fix-text) !important;
+  box-shadow: var(--chat-sidebar-fix-shadow) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside [class*="text-white/"]),
+.chatSidebarFixes :global(.qc-chat-shell aside .qc-chat-sidebar-presence-label) {
+  color: var(--chat-sidebar-fix-muted) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside button[class*="bg-white/12"] [class*="text-white/"]) {
+  color: var(--chat-sidebar-fix-muted) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside [class*="border-white/"]),
+.chatSidebarFixes :global(.qc-chat-shell aside [class*="border-dashed"]) {
+  border-color: var(--chat-sidebar-fix-border) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside [class*="border-dashed"]) {
+  background: var(--chat-sidebar-fix-card) !important;
+  color: var(--chat-sidebar-fix-muted) !important;
+}
+
+.chatSidebarFixes :global(.qc-chat-shell aside h1),
+.chatSidebarFixes :global(.qc-chat-shell aside h2),
+.chatSidebarFixes :global(.qc-chat-shell aside h3),
+.chatSidebarFixes :global(.qc-chat-shell aside strong),
+.chatSidebarFixes :global(.qc-chat-shell aside b),
+.chatSidebarFixes :global(.qc-chat-shell aside .font-bold),
+.chatSidebarFixes :global(.qc-chat-shell aside .font-black) {
+  color: var(--chat-sidebar-fix-text) !important;
+}

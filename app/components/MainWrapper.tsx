@@ -56,7 +56,7 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
     <main
       className={`flex-1 w-full min-w-0 ${topPt} ${rightPr} ${leftPx} ${bottomPb} ${heightMode}`}
     >
-      {beforeContent ? <div className={`shrink-0 ${beforeTopGap} ${beforeBottomGap} ${beforeHorizontalPad}`}>{beforeContent}</div> : null}
+      {beforeContent && !isBrainRoute ? <div className={`shrink-0 ${beforeTopGap} ${beforeBottomGap} ${beforeHorizontalPad}`}>{beforeContent}</div> : null}
       {children}
     </main>
   );

@@ -9,10 +9,15 @@ import layoutFix from "./chat-layout-fix.module.css";
 import sidebarFixes from "./chat-sidebar-fixes.module.css";
 import modalFixes from "./chat-modal-fixes.module.css";
 import emojiFixes from "./chat-emoji-fixes.module.css";
+import "./chat-runtime-fixes.css";
 
 const Chat = loadDynamic(() => import("../components/TeamChat"), {
   ssr: false,
   loading: () => <div className="qc-chat-page-loading">Carregando chat...</div>,
+});
+
+const ChatRuntimeFixes = loadDynamic(() => import("./ChatRuntimeFixes"), {
+  ssr: false,
 });
 
 export default function ChatPage() {
@@ -29,6 +34,7 @@ export default function ChatPage() {
   return (
     <div className={className}>
       <Chat />
+      <ChatRuntimeFixes />
     </div>
   );
 }

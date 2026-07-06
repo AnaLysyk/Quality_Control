@@ -1,242 +1,137 @@
 .overviewTheme {
-  --overview-bg-light: linear-gradient(135deg, #ffffff 0%, #f7f9fd 54%, #eef4ff 100%);
-  --overview-bg-dark: linear-gradient(135deg, #050713 0%, #07111f 54%, #0a1020 100%);
-  --overview-panel-light: rgba(255, 255, 255, 0.94);
-  --overview-panel-dark: rgba(15, 23, 42, 0.9);
-  --overview-card-light: rgba(255, 255, 255, 0.88);
-  --overview-card-dark: rgba(15, 23, 42, 0.82);
-  --overview-soft-light: rgba(248, 250, 252, 0.94);
-  --overview-soft-dark: rgba(17, 30, 50, 0.78);
-  --overview-border-light: rgba(15, 23, 42, 0.12);
-  --overview-border-dark: rgba(148, 163, 184, 0.24);
-  --overview-text-light: #0f172a;
-  --overview-muted-light: #52627a;
-  --overview-text-dark: #f8fafc;
-  --overview-muted-dark: #b9c6d8;
-
+  --overview-page-bg: linear-gradient(135deg, #f8fbff 0%, #ffffff 54%, #fff7f7 100%);
+  --overview-card-bg: rgb(255 255 255 / 94%);
+  --overview-card-border: rgb(15 23 42 / 12%);
+  --overview-card-text: #011848;
+  --overview-muted: rgb(71 85 105 / 86%);
+  --overview-hero-bg: radial-gradient(circle at 10% 8%, rgb(239 0 1 / 18%), transparent 26%), radial-gradient(circle at 82% 18%, rgb(59 130 246 / 18%), transparent 32%), linear-gradient(135deg, #f8fbff 0%, #eef5ff 52%, #fff4f4 100%);
+  --overview-hero-text: #011848;
+  --overview-hero-muted: rgb(51 65 85 / 86%);
+  --overview-hero-card: rgb(255 255 255 / 72%);
+  --overview-hero-border: rgb(1 24 72 / 16%);
+  --overview-shadow: 0 18px 46px rgb(1 24 72 / 10%);
   min-height: 100%;
-  background: var(--overview-bg-light) !important;
-  color: var(--overview-text-light) !important;
+  background: var(--overview-page-bg) !important;
+  color: var(--overview-card-text) !important;
 }
 
-.overviewTheme :global(.app-stage::before) {
-  opacity: 0.08 !important;
+:global(.dark) .overviewTheme,
+:global([data-theme="dark"]) .overviewTheme {
+  --overview-page-bg: linear-gradient(135deg, #030712 0%, #07111f 54%, #120718 100%);
+  --overview-card-bg: rgb(11 18 32 / 92%);
+  --overview-card-border: rgb(226 232 240 / 12%);
+  --overview-card-text: #f8fafc;
+  --overview-muted: rgb(203 213 225 / 78%);
+  --overview-hero-bg: radial-gradient(circle at 10% 8%, rgb(239 0 1 / 30%), transparent 26%), radial-gradient(circle at 82% 18%, rgb(59 130 246 / 28%), transparent 32%), linear-gradient(135deg, #040814 0%, #07111f 52%, #0b1932 100%);
+  --overview-hero-text: #ffffff;
+  --overview-hero-muted: rgb(255 255 255 / 70%);
+  --overview-hero-card: rgb(255 255 255 / 10%);
+  --overview-hero-border: rgb(255 255 255 / 15%);
+  --overview-shadow: 0 28px 90px rgb(1 24 72 / 30%);
 }
 
+.overviewTheme > :global(div),
 .overviewTheme :global(main),
-.overviewTheme :global(main > div),
-.overviewTheme :global(.admin-dashboard-print-shell),
-.overviewTheme :global(.admin-dashboard-print-shell > div) {
+.overviewTheme :global(main > div) {
   background: transparent !important;
-  color: var(--overview-text-light) !important;
+  color: var(--overview-card-text) !important;
 }
 
-.overviewTheme :global(.tc-hero-panel) {
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  background:
-    linear-gradient(135deg, #011848 0%, #061b4d 48%, #ef0001 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 22px 55px rgba(1, 24, 72, 0.18) !important;
+.overviewTheme > :global(div) > :global(section:first-child) {
+  background: var(--overview-hero-bg) !important;
+  color: var(--overview-hero-text) !important;
+  border-color: var(--overview-hero-border) !important;
+  box-shadow: var(--overview-shadow) !important;
 }
 
-.overviewTheme :global(.tc-hero-panel *),
-.overviewTheme :global(.tc-hero-title) {
-  color: #ffffff !important;
+.overviewTheme > :global(div) > :global(section:first-child) :global(h1),
+.overviewTheme > :global(div) > :global(section:first-child) :global(h2),
+.overviewTheme > :global(div) > :global(section:first-child) :global(b),
+.overviewTheme > :global(div) > :global(section:first-child) :global(strong) {
+  color: var(--overview-hero-text) !important;
 }
 
-.overviewTheme :global(.tc-hero-panel button[class*="bg-white"]),
-.overviewTheme :global(.tc-hero-panel .bg-white) {
-  color: #011848 !important;
+.overviewTheme > :global(div) > :global(section:first-child) :global(p),
+.overviewTheme > :global(div) > :global(section:first-child) :global(small),
+.overviewTheme > :global(div) > :global(section:first-child) :global(span) {
+  color: var(--overview-hero-muted) !important;
 }
 
-.overviewTheme :global(.tc-hero-panel button:not([class*="bg-white"])) {
-  color: rgba(255, 255, 255, 0.78) !important;
+.overviewTheme > :global(div) > :global(section:first-child) :global([class*="bg-white/"]),
+.overviewTheme > :global(div) > :global(section:first-child) :global([class*="bg-black/"]) {
+  background: var(--overview-hero-card) !important;
+  border-color: var(--overview-hero-border) !important;
 }
 
-.overviewTheme :global(.tc-hero-panel [class*="border-white"]) {
-  border-color: rgba(255, 255, 255, 0.18) !important;
-}
-
-.overviewTheme :global(.tc-hero-panel [class*="bg-white/10"]),
-.overviewTheme :global(.tc-hero-panel [class*="bg-white/"]) {
-  background-color: rgba(255, 255, 255, 0.12) !important;
-}
-
-.overviewTheme :global(.tc-hero-panel [class*="bg-white px"]),
-.overviewTheme :global(.tc-hero-panel button.rounded-xl.bg-white) {
+.overviewTheme > :global(div) > :global(section:first-child) :global(button[class*="bg-white"]),
+.overviewTheme > :global(div) > :global(section:first-child) :global(.bg-white) {
   background: #ffffff !important;
   color: #011848 !important;
 }
 
-.overviewTheme :global(.tc-button-primary) {
-  border-color: #011848 !important;
-  background: #011848 !important;
-  color: #ffffff !important;
+.overviewTheme > :global(div) > :global(section:not(:first-child)),
+.overviewTheme :global(article),
+.overviewTheme :global(aside),
+.overviewTheme :global(label > div) {
+  background: var(--overview-card-bg) !important;
+  color: var(--overview-card-text) !important;
+  border-color: var(--overview-card-border) !important;
+  box-shadow: var(--overview-shadow) !important;
 }
 
-.overviewTheme :global(.tc-button-secondary) {
-  border-color: var(--overview-border-light) !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  color: #011848 !important;
-}
-
-.overviewTheme :global(label > div),
-.overviewTheme :global(section:not(.tc-hero-panel)),
-.overviewTheme :global([class*="rounded-[28px]"]),
-.overviewTheme :global([class*="rounded-3xl"]),
-.overviewTheme :global([class*="rounded-[20px]"]) {
-  border-color: var(--overview-border-light) !important;
-  color: var(--overview-text-light) !important;
-}
-
-.overviewTheme :global(label > div),
-.overviewTheme :global([class*="bg-white/45"]),
-.overviewTheme :global([class*="bg-white/60"]),
-.overviewTheme :global([class*="bg-white/75"]),
-.overviewTheme :global([class*="bg-white/90"]),
-.overviewTheme :global([class*="bg-transparent"]) {
-  background: var(--overview-card-light) !important;
-  color: var(--overview-text-light) !important;
-}
-
-.overviewTheme :global(input),
-.overviewTheme :global(select),
-.overviewTheme :global(textarea) {
-  color: var(--overview-text-light) !important;
-}
-
-.overviewTheme :global(input::placeholder) {
-  color: var(--overview-muted-light) !important;
+.overviewTheme :global(.bg-white),
+.overviewTheme :global(.bg-white\/65),
+.overviewTheme :global(.bg-white\/78),
+.overviewTheme :global(.bg-slate-50),
+.overviewTheme :global(.bg-transparent) {
+  background: var(--overview-card-bg) !important;
 }
 
 .overviewTheme :global(h1),
 .overviewTheme :global(h2),
 .overviewTheme :global(h3),
+.overviewTheme :global(h4),
 .overviewTheme :global(b),
+.overviewTheme :global(strong),
+.overviewTheme :global(.text-\[\#011848\]) {
+  color: var(--overview-card-text) !important;
+}
+
 .overviewTheme :global(p),
-.overviewTheme :global(span),
 .overviewTheme :global(small),
-.overviewTheme :global(a),
-.overviewTheme :global(button) {
-  color: inherit;
+.overviewTheme :global(.text-\[\#64748b\]),
+.overviewTheme :global(.text-slate-400),
+.overviewTheme :global(.text-slate-500),
+.overviewTheme :global(.text-slate-600),
+.overviewTheme :global(.text-white\/60),
+.overviewTheme :global(.text-white\/70),
+.overviewTheme :global(.text-white\/72) {
+  color: var(--overview-muted) !important;
 }
 
-.overviewTheme :global([class*="text-[#64748b]"]),
-.overviewTheme :global([class*="text-white/60"]),
-.overviewTheme :global([class*="text-white/70"]),
-.overviewTheme :global([class*="text-white/72"]) {
-  color: var(--overview-muted-light) !important;
+.overviewTheme :global(input),
+.overviewTheme :global(select),
+.overviewTheme :global(textarea) {
+  color: var(--overview-card-text) !important;
 }
 
-.overviewTheme :global(.tc-hero-panel [class*="text-white/60"]),
-.overviewTheme :global(.tc-hero-panel [class*="text-white/70"]),
-.overviewTheme :global(.tc-hero-panel [class*="text-white/72"]) {
-  color: rgba(255, 255, 255, 0.72) !important;
+.overviewTheme :global(input::placeholder) {
+  color: var(--overview-muted) !important;
 }
 
-.overviewTheme :global(.tc-hero-panel [class*="bg-white/10"] svg),
-.overviewTheme :global(.tc-hero-panel svg) {
-  color: rgba(255, 255, 255, 0.78) !important;
+.overviewTheme :global(.tc-button-secondary) {
+  background: var(--overview-card-bg) !important;
+  color: var(--overview-card-text) !important;
+  border-color: var(--overview-card-border) !important;
 }
 
-.overviewTheme :global([class*="dark:bg"]),
-.overviewTheme :global([class*="dark:text"]) {
-  forced-color-adjust: none;
+.overviewTheme :global(.tc-button-primary) {
+  background: #011848 !important;
+  color: #ffffff !important;
+  border-color: rgb(239 0 1 / 44%) !important;
 }
 
-:global(.dark) .overviewTheme,
-:global([data-theme="dark"]) .overviewTheme {
-  background: var(--overview-bg-dark) !important;
-  color: var(--overview-text-dark) !important;
-}
-
-:global(.dark) .overviewTheme :global(main),
-:global(.dark) .overviewTheme :global(main > div),
-:global(.dark) .overviewTheme :global(.admin-dashboard-print-shell),
-:global(.dark) .overviewTheme :global(.admin-dashboard-print-shell > div),
-:global([data-theme="dark"]) .overviewTheme :global(main),
-:global([data-theme="dark"]) .overviewTheme :global(main > div),
-:global([data-theme="dark"]) .overviewTheme :global(.admin-dashboard-print-shell),
-:global([data-theme="dark"]) .overviewTheme :global(.admin-dashboard-print-shell > div) {
-  background: transparent !important;
-  color: var(--overview-text-dark) !important;
-}
-
-:global(.dark) .overviewTheme :global(.tc-hero-panel),
-:global([data-theme="dark"]) .overviewTheme :global(.tc-hero-panel) {
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  background:
-    linear-gradient(135deg, #011848 0%, #050b16 48%, #990001 100%) !important;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34) !important;
-}
-
-:global(.dark) .overviewTheme :global(.tc-button-secondary),
-:global([data-theme="dark"]) .overviewTheme :global(.tc-button-secondary) {
-  border-color: var(--overview-border-dark) !important;
-  background: rgba(15, 23, 42, 0.86) !important;
-  color: var(--overview-text-dark) !important;
-}
-
-:global(.dark) .overviewTheme :global(label > div),
-:global(.dark) .overviewTheme :global(section:not(.tc-hero-panel)),
-:global(.dark) .overviewTheme :global([class*="rounded-[28px]"]),
-:global(.dark) .overviewTheme :global([class*="rounded-3xl"]),
-:global(.dark) .overviewTheme :global([class*="rounded-[20px]"]),
-:global([data-theme="dark"]) .overviewTheme :global(label > div),
-:global([data-theme="dark"]) .overviewTheme :global(section:not(.tc-hero-panel)),
-:global([data-theme="dark"]) .overviewTheme :global([class*="rounded-[28px]"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="rounded-3xl"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="rounded-[20px]"]) {
-  border-color: var(--overview-border-dark) !important;
-  color: var(--overview-text-dark) !important;
-}
-
-:global(.dark) .overviewTheme :global(label > div),
-:global(.dark) .overviewTheme :global([class*="bg-white/45"]),
-:global(.dark) .overviewTheme :global([class*="bg-white/60"]),
-:global(.dark) .overviewTheme :global([class*="bg-white/75"]),
-:global(.dark) .overviewTheme :global([class*="bg-white/90"]),
-:global(.dark) .overviewTheme :global([class*="bg-transparent"]),
-:global([data-theme="dark"]) .overviewTheme :global(label > div),
-:global([data-theme="dark"]) .overviewTheme :global([class*="bg-white/45"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="bg-white/60"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="bg-white/75"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="bg-white/90"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="bg-transparent"]) {
-  background: var(--overview-card-dark) !important;
-  color: var(--overview-text-dark) !important;
-}
-
-:global(.dark) .overviewTheme :global(input),
-:global(.dark) .overviewTheme :global(select),
-:global(.dark) .overviewTheme :global(textarea),
-:global([data-theme="dark"]) .overviewTheme :global(input),
-:global([data-theme="dark"]) .overviewTheme :global(select),
-:global([data-theme="dark"]) .overviewTheme :global(textarea) {
-  color: var(--overview-text-dark) !important;
-}
-
-:global(.dark) .overviewTheme :global(input::placeholder),
-:global([data-theme="dark"]) .overviewTheme :global(input::placeholder) {
-  color: var(--overview-muted-dark) !important;
-}
-
-:global(.dark) .overviewTheme :global([class*="text-[#64748b]"]),
-:global(.dark) .overviewTheme :global([class*="text-white/60"]),
-:global(.dark) .overviewTheme :global([class*="text-white/70"]),
-:global(.dark) .overviewTheme :global([class*="text-white/72"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="text-[#64748b]"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="text-white/60"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="text-white/70"]),
-:global([data-theme="dark"]) .overviewTheme :global([class*="text-white/72"]) {
-  color: var(--overview-muted-dark) !important;
-}
-
-:global(.dark) .overviewTheme :global(.tc-hero-panel [class*="text-white/60"]),
-:global(.dark) .overviewTheme :global(.tc-hero-panel [class*="text-white/70"]),
-:global(.dark) .overviewTheme :global(.tc-hero-panel [class*="text-white/72"]),
-:global([data-theme="dark"]) .overviewTheme :global(.tc-hero-panel [class*="text-white/60"]),
-:global([data-theme="dark"]) .overviewTheme :global(.tc-hero-panel [class*="text-white/70"]),
-:global([data-theme="dark"]) .overviewTheme :global(.tc-hero-panel [class*="text-white/72"]) {
-  color: rgba(255, 255, 255, 0.74) !important;
+:global(.dark) .overviewTheme :global(.tc-button-primary),
+:global([data-theme="dark"]) .overviewTheme :global(.tc-button-primary) {
+  background: rgb(239 0 1 / 90%) !important;
 }

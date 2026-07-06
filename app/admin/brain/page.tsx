@@ -1,7 +1,10 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { registerScreen } from "@/lib/brain/registry";
 import { BrainDashboard } from "../../brain/_components/BrainDashboard";
+import styles from "../../brain/brain-theme.module.css";
+import nodeThemeStyles from "../../brain/brain-node-theme-fixes.module.css";
+import pageStyles from "../../brain/brain-page-theme.module.css";
 
 registerScreen({
   id: "admin-brain",
@@ -34,6 +37,9 @@ export const metadata = {
 };
 
 export default function BrainPage() {
-  return <BrainDashboard />;
+  return (
+    <div className={`${styles.brainTheme} ${nodeThemeStyles.brainNodeThemeFixes} ${pageStyles.brainPageFullscreen}`}>
+      <BrainDashboard />
+    </div>
+  );
 }
-

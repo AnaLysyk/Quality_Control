@@ -132,7 +132,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // OPERAÃ‡Ã•ES — All users (context varies)
+  // OPERAÇÕES — All users (context varies)
   // ============================================
   {
     id: "operations",
@@ -177,7 +177,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // REPOSITÃ“RIO DE TESTES — All users
+  // REPOSITÓRIO DE TESTES — All users
   // Removed: Releases, Cobertura, Evidências
   // ============================================
   {
@@ -232,7 +232,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // AUTOMAÃ‡ÃƒO — All internal users
+  // AUTOMAÇÃO — All internal users
   // Grouped: Workspace | Execuções | Ativos
   // ============================================
   {
@@ -367,7 +367,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // SOLICITAÃ‡Ã•ES — Leader + Technical support only
+  // SOLICITAÇÕES — Leader + Technical support only
   // ============================================
   {
     id: "requests",
@@ -403,18 +403,43 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // AGENDA — Leader + Technical support only
+  // AGENDA — All users with agenda permission
   // ============================================
   {
     id: "agenda",
-    routeId: "agenda.release",
+    routeId: "agenda.meus-agendamentos",
     requiredPermission: { moduleId: "release_calendar", action: "view" },
     label: "Agenda",
     iconKey: "clock",
-    href: "/agenda",
-    allowedRoles: LEADER_AND_SUPPORT,
+    href: "/agenda?view=mine",
+    allowedRoles: ALL_USERS,
     testId: "nav-agenda",
-    items: [],
+    items: [
+      {
+        id: "agenda-mine",
+        routeId: "agenda.meus-agendamentos",
+        label: "Meus agendamentos",
+        iconKey: "user",
+        module: "agenda",
+        href: "/agenda?view=mine",
+        allowedRoles: ALL_USERS,
+        requiredPermission: { moduleId: "release_calendar", action: "view" },
+        favoriteEnabled: true,
+        testId: "nav-agenda-mine",
+      },
+      {
+        id: "agenda-general",
+        routeId: "agenda.agendamentos-gerais",
+        label: "Agendamentos gerais",
+        iconKey: "users",
+        module: "agenda",
+        href: "/agenda?view=management",
+        allowedRoles: SYSTEM_USERS,
+        requiredPermission: { moduleId: "release_calendar", action: "view" },
+        favoriteEnabled: true,
+        testId: "nav-agenda-general",
+      },
+    ],
   },
 
   // ============================================
@@ -523,68 +548,32 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // DOCUMENTOS — All users
-  // Removed: Documentos da empresa, Documentação técnica, Evidências, Exportações
-  // ============================================
-  {
-    id: "documents",
-    label: "Documentos",
-    iconKey: "file-text",
-    allowedRoles: ALL_USERS,
-    testId: "nav-documents",
-    items: [
-      {
-        id: "docs-central",
-        routeId: "documentos.central",
-        label: "Central de documentos",
-        iconKey: "folder",
-        module: "documents",
-        href: "/documentos",
-        favoriteEnabled: true,
-        testId: "nav-documents-central",
-      },
-      {
-        id: "docs-repository",
-        routeId: "documentos.repositorio",
-        label: "Repositório de documentos",
-        iconKey: "book",
-        module: "documents",
-        href: "/documentos/repositorio",
-        favoriteEnabled: true,
-        testId: "nav-documents-repository",
-      },
-    ],
-  },
-
-  // ============================================
-  // GESTAO — perfil e usuarios
+  // GESTÃO — Leader + Technical support only
   // ============================================
   {
     id: "management",
     label: "Gestão",
-    iconKey: "sliders",
-    allowedRoles: PRIVILEGED,
+    iconKey: "settings",
+    allowedRoles: USER_MANAGERS,
     testId: "nav-management",
     items: [
       {
         id: "management-profile",
-        routeId: "permissoes.perfil",
+        routeId: "gestao.perfil",
         label: "Perfil",
-        iconKey: "shield",
+        iconKey: "user-check",
         module: "management",
-        href: "/admin/permissions",
-        allowedRoles: USER_MANAGERS,
+        href: "/admin/profile",
         favoriteEnabled: true,
         testId: "nav-management-profile",
       },
       {
         id: "management-users",
-        routeId: "permissoes.matriz",
+        routeId: "gestao.usuarios",
         label: "Usuário",
         iconKey: "users",
         module: "management",
-        href: "/admin/users/permissions",
-        allowedRoles: USER_MANAGERS,
+        href: "/admin/users",
         favoriteEnabled: true,
         testId: "nav-management-users",
       },
@@ -593,11 +582,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
 
   {
     id: "logs",
-    routeId: "configuracoes.auditoria",
+    routeId: "logs.sistema",
     label: "Logs",
-    iconKey: "eye",
-    href: "/admin/audit-logs",
-    allowedRoles: PRIVILEGED,
+    iconKey: "file-text",
+    href: "/admin/logs",
+    allowedRoles: LEADER_AND_SUPPORT,
     testId: "nav-logs",
     items: [],
   },

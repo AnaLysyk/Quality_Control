@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
+import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
@@ -89,7 +90,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const migrateStorageScript = `
     (() => {
       try {
-        // Migrate legacy keys from localStorage to sessionStorage for session-scoped data
         if (!window.sessionStorage || !window.localStorage) return;
         const prefixes = ["tc-settings:", "activeClient:", "assistant_history", "qcnotes", "tcnotes", "qcnotes_widget", "qcnotes_widget_state"];
         for (let i = 0; i < localStorage.length; i++) {
@@ -97,16 +97,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           if (!key) continue;
           const shouldMigrate = prefixes.some(p => key.indexOf(p) === 0);
           if (!shouldMigrate) continue;
-          // If sessionStorage already has a value, prefer it; otherwise copy from localStorage
           if (!sessionStorage.getItem(key)) {
             const v = localStorage.getItem(key);
             if (v !== null) sessionStorage.setItem(key, v);
           }
-          // remove legacy localStorage entry
           localStorage.removeItem(key);
         }
       } catch (e) {
-        // best-effort migration; ignore errors
+        /* ignore */
       }
     })();
   `;
@@ -120,11 +118,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme-preference={initialThemePreference}
       data-theme-resolved={initialResolvedTheme}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <script dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
-      </head>
       <body className="min-h-screen bg-white text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-50">
+        <Script id="qc-theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <Script id="qc-storage-migration" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
         <AppSettingsProvider initialTheme={initialThemePreference} initialLanguage="pt-BR">
           <AuthProvider>
             <LanguageProvider>

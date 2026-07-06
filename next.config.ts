@@ -60,6 +60,22 @@ const nextConfig = {
       },
     ];
   },
+  async headers() {
+    return [
+      {
+        source: "/chat/:path*",
+        headers: [
+          { key: "Permissions-Policy", value: "microphone=(self), camera=(self), autoplay=(self), fullscreen=(self)" },
+        ],
+      },
+      {
+        source: "/api/chat/:path*",
+        headers: [
+          { key: "Permissions-Policy", value: "microphone=(self), camera=(self)" },
+        ],
+      },
+    ];
+  },
   devIndicators: {
     buildActivity: false, // esconde o indicador/loader do Next no canto
   },

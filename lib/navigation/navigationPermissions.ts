@@ -18,9 +18,22 @@ const OPERATIONS_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: s
 
 const MANAGEMENT_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
   "gestao.perfil": { moduleId: "permissions", action: "view" },
-  "gestao.usuarios": { moduleId: "users", action: "view" },
+  "gestao.usuarios": { moduleId: "permissions", action: "view" },
   "permissoes.perfil": { moduleId: "permissions", action: "view" },
   "permissoes.matriz": { moduleId: "permissions", action: "view" },
+};
+
+const MENU_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
+  ...OPERATIONS_ROUTE_PERMISSIONS,
+  ...MANAGEMENT_ROUTE_PERMISSIONS,
+  "logs.sistema": { moduleId: "audit", action: "view" },
+  "brain.grafo": { moduleId: "brain", action: "graph" },
+  "brain.admin": { moduleId: "brain", action: "admin" },
+  "brain.mapa-sistema": { moduleId: "brain", action: "admin" },
+  "assistente.perguntar": { moduleId: "brain", action: "ask" },
+  "chat.principal": { moduleId: "chat", action: "view" },
+  "chat.buscar": { moduleId: "chat", action: "view" },
+  "chat.conversas": { moduleId: "chat", action: "view" },
 };
 
 function buildNavigationAccessContext(
@@ -49,11 +62,8 @@ function canSeeNavigationDefinition(
   if (allowedRoles && !allowedRoles.includes(userRole)) return false;
 
   if (item.routeId) {
-    const operationPermission = OPERATIONS_ROUTE_PERMISSIONS[item.routeId];
-    if (operationPermission) return canAccess(context, operationPermission);
-
-    const managementPermission = MANAGEMENT_ROUTE_PERMISSIONS[item.routeId];
-    if (managementPermission) return canAccess(context, managementPermission);
+    const menuPermission = MENU_ROUTE_PERMISSIONS[item.routeId];
+    if (menuPermission) return canAccess(context, menuPermission);
 
     if (visibleRouteIds.has(item.routeId)) return true;
     if (item.routeId === "visao-geral.admin") {

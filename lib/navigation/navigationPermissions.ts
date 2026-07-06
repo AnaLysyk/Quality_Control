@@ -16,6 +16,13 @@ const OPERATIONS_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: s
   "operacao.busca": { moduleId: "operations", action: "search" },
 };
 
+const MANAGEMENT_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
+  "gestao.perfil": { moduleId: "permissions", action: "view" },
+  "gestao.usuarios": { moduleId: "users", action: "view" },
+  "permissoes.perfil": { moduleId: "permissions", action: "view" },
+  "permissoes.matriz": { moduleId: "permissions", action: "view" },
+};
+
 function buildNavigationAccessContext(
   userRole: SystemRole | null,
   permissions?: PermissionMatrix | null,
@@ -44,6 +51,9 @@ function canSeeNavigationDefinition(
   if (item.routeId) {
     const operationPermission = OPERATIONS_ROUTE_PERMISSIONS[item.routeId];
     if (operationPermission) return canAccess(context, operationPermission);
+
+    const managementPermission = MANAGEMENT_ROUTE_PERMISSIONS[item.routeId];
+    if (managementPermission) return canAccess(context, managementPermission);
 
     if (visibleRouteIds.has(item.routeId)) return true;
     if (item.routeId === "visao-geral.admin") {

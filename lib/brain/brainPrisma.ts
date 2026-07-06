@@ -25,13 +25,11 @@ function getPrimaryDatabaseUrl() {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL ?? null;
 }
 
-function getBrainDatabaseUrl() {
+export function resolveBrainDatabaseUrl() {
   const brainDatabaseUrl = process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL;
 
   if (!brainDatabaseUrl) {
-    throw new Error(
-      "BRAIN_DATABASE_URL or BRAIN_RAG_DATABASE_URL is required for the Brain RAG database.",
-    );
+    return null;
   }
 
   const primaryDatabaseUrl = getPrimaryDatabaseUrl();
@@ -51,15 +49,24 @@ function getBrainDatabaseUrl() {
 }
 
 function createBrainPrismaClient() {
-  const adapter = globalForBrainPrisma.brainPrismaAdapter ?? new PrismaPg(getBrainDatabaseUrl());
+  const databaseUrl = resolveBrainDatabaseUrl();
+  if (!databaseUrl) return null;
+
+  const adapter = globalForBrainPrisma.brainPrismaAdapter ?? new PrismaPg(databaseUrl);
   globalForBrainPrisma.brainPrismaAdapter = adapter;
 
   return new PrismaClient({ adapter });
 }
 
-export const brainPrisma: PrismaClient =
-  globalForBrainPrisma.brainPrisma ?? createBrainPrismaClient();
+export function getBrainPrisma() {
+  if (globalForBrainPrisma.brainPrisma) return globalForBrainPrisma.brainPrisma;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForBrainPrisma.brainPrisma = brainPrisma;
+  const client = createBrainPrismaClient();
+  if (!client) return null;
+
+  if (process.env.NODE_ENV !== "production") {
+    globalForBrainPrisma.brainPrisma = client;
+  }
+
+  return client;
 }

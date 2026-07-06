@@ -6,6 +6,7 @@ export default function AdminHomePage() {
     <>
       <link rel="stylesheet" href="/brain-home-orb-reference.css" />
       <link rel="stylesheet" href="/admin-home-brain-reference.css" />
+      <link rel="stylesheet" href="/admin-home-brain-footer-position.css" />
       <HomeRouteWarmup />
       <NewHomeContent />
     </>

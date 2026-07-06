@@ -90,7 +90,7 @@ export default function SidebarSection({
   }
 
   return (
-    <div>
+    <div className="relative min-w-0 overflow-hidden">
       <button
         onClick={onToggle}
         data-testid={mod.testId}
@@ -108,7 +108,7 @@ export default function SidebarSection({
       </button>
 
       {open && visibleItems.length > 0 && (
-        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-(--shell-menu-border) pl-3">
+        <div className="ml-4 mt-0.5 min-w-0 space-y-0.5 overflow-hidden border-l border-(--shell-menu-border) pl-3">
           {visibleItems.map((item, index) => {
             const active = isItemActive(item);
             const showGroupLabel = item.group && (index === 0 || visibleItems[index - 1].group !== item.group);
@@ -117,11 +117,11 @@ export default function SidebarSection({
             const Icon = getIcon(item.iconKey);
             return (
               <Fragment key={item.id}>
-                {showGroupLabel && (
-                  <span className="block px-2 pb-0.5 pt-2.5 text-[10px] font-semibold uppercase tracking-widest text-(--shell-sidebar-text-muted) opacity-70">
-                    {item.group}
-                  </span>
-                )}
+                {showGroupLabel ? (
+                  <div className="qc-sidebar-group-label max-w-full overflow-hidden px-2 pb-0.5 pt-2.5 text-[10px] font-semibold uppercase tracking-widest text-(--shell-sidebar-text-muted) opacity-70">
+                    <span className="block max-w-full truncate">{item.group}</span>
+                  </div>
+                ) : null}
                 {openModal ? (
                   <button
                     type="button"

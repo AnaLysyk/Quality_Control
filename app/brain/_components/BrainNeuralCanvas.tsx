@@ -80,21 +80,17 @@ function getFocusGraph(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: s
   };
 }
 
-function layoutNodes(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: string | null, saved: Record<string, { x: number; y: number }>, canvasSize: { width: number; height: number }) {
+function layoutNodes(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: string | null, saved: Record<string, { x: number; y: number }>, canvasSize: { width: number; height: number }, themeMode: "light" | "dark") {
   const center = { x: Math.max(420, canvasSize.width / 2 - 60), y: Math.max(300, canvasSize.height / 2 - 20) };
   const selected = selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) : nodes.find((node) => node.metadata?.isBrainCore || node.metadata?.isContextCore) ?? nodes[0];
   const selectedIndex = selected ? nodes.findIndex((node) => node.id === selected.id) : -1;
   const connected = getConnectedNodeIds(edges);
 
   return nodes.map<Node>((node, index) => {
+    const nodeData = { brainNode: node, selectedNodeId, related: !selectedNodeId || node.id === selectedNodeId || connected.has(node.id), orphan: !connected.has(node.id), connectedCount: edges.filter((edge) => edge.source === node.id || edge.target === node.id).length, themeMode };
+
     if (saved[node.id]) {
-      return {
-        id: node.id,
-        type: "brainNeuron",
-        position: saved[node.id],
-        data: { brainNode: node, selectedNodeId, related: !selectedNodeId || node.id === selectedNodeId || connected.has(node.id), orphan: !connected.has(node.id), connectedCount: edges.filter((edge) => edge.source === node.id || edge.target === node.id).length },
-        draggable: true,
-      };
+      return { id: node.id, type: "brainNeuron", position: saved[node.id], data: nodeData, draggable: true };
     }
 
     let x = center.x;
@@ -130,13 +126,7 @@ function layoutNodes(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: str
       y = center.y;
     }
 
-    return {
-      id: node.id,
-      type: "brainNeuron",
-      position: { x, y },
-      data: { brainNode: node, selectedNodeId, related: !selectedNodeId || node.id === selectedNodeId || connected.has(node.id), orphan: !connected.has(node.id), connectedCount: edges.filter((edge) => edge.source === node.id || edge.target === node.id).length },
-      draggable: true,
-    };
+    return { id: node.id, type: "brainNeuron", position: { x, y }, data: nodeData, draggable: true };
   });
 }
 
@@ -145,6 +135,17 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 720 });
   const [manualPositions, setManualPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [overlayNode, setOverlayNode] = useState<BrainNode | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    const syncTheme = () => setIsDarkMode(root.classList.contains("dark"));
+    syncTheme();
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   useLayoutEffect(() => {
     let frame = 0;
@@ -183,10 +184,11 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
     };
   }, []);
 
+  const themeMode = isDarkMode ? "dark" : "light";
   const focusedGraph = useMemo(() => getFocusGraph(nodes, edges, selectedNodeId), [nodes, edges, selectedNodeId]);
-  const flowNodes = useMemo<Node[]>(() => layoutNodes(focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize), [focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize]);
-  const flowEdges = useMemo<Edge[]>(() => focusedGraph.edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target, type: "brainNeural", animated: edge.status === "pending" || edge.status === "warning", data: { brainEdge: edge, highlighted: Boolean(selectedNodeId && (edge.source === selectedNodeId || edge.target === selectedNodeId)) } })), [focusedGraph.edges, selectedNodeId]);
-  const flowSignature = useMemo(() => [selectedNodeId ?? "root", focusedGraph.nodes.map((node) => node.id).join("|"), focusedGraph.edges.map((edge) => edge.id).join("|")].join("::"), [focusedGraph.edges, focusedGraph.nodes, selectedNodeId]);
+  const flowNodes = useMemo<Node[]>(() => layoutNodes(focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize, themeMode), [focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize, themeMode]);
+  const flowEdges = useMemo<Edge[]>(() => focusedGraph.edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target, type: "brainNeural", animated: edge.status === "pending" || edge.status === "warning", data: { brainEdge: edge, highlighted: Boolean(selectedNodeId && (edge.source === selectedNodeId || edge.target === selectedNodeId)), themeMode } })), [focusedGraph.edges, selectedNodeId, themeMode]);
+  const flowSignature = useMemo(() => [selectedNodeId ?? "root", themeMode, focusedGraph.nodes.map((node) => node.id).join("|"), focusedGraph.edges.map((edge) => edge.id).join("|")].join("::"), [focusedGraph.edges, focusedGraph.nodes, selectedNodeId, themeMode]);
   const [reactFlowNodes, setNodes, onNodesChange] = useNodesState(flowNodes);
   const [reactFlowEdges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
@@ -204,18 +206,16 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
     setManualPositions((current) => ({ ...current, [node.id]: node.position }));
   };
 
+  const canvasStyle = isDarkMode
+    ? { width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" as const, color: "#f8fafc", background: "radial-gradient(circle at 18% 28%, rgba(34,211,238,0.18), transparent 28%), radial-gradient(circle at 82% 24%, rgba(239,0,1,0.18), transparent 30%), linear-gradient(135deg, #020817 0%, #061326 44%, #120718 72%, #220006 100%)" }
+    : { width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" as const, color: "#0b1a3c", background: "radial-gradient(circle at 18% 28%, rgba(34,211,238,0.2), transparent 28%), radial-gradient(circle at 82% 32%, rgba(239,0,1,0.08), transparent 30%), linear-gradient(135deg, #f8fbff 0%, #eef7ff 42%, #fff4f7 100%)" };
+
   return (
-    <section ref={containerRef} data-brain-universe className="brain-universe-canvas brain-universe-canvas-strong brain-cortex-canvas relative w-full overflow-hidden text-white" style={{ width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" }}>
-      <div className="brain-cortex-layer" aria-hidden="true">
-        <span className="brain-cortex-lobe brain-cortex-lobe-left" />
-        <span className="brain-cortex-lobe brain-cortex-lobe-right" />
-        <span className="brain-cortex-bridge" />
-        <span className="brain-cortex-pulse brain-cortex-pulse-a" />
-        <span className="brain-cortex-pulse brain-cortex-pulse-b" />
-        <span className="brain-cortex-pulse brain-cortex-pulse-c" />
-        <span className="brain-cortex-thread brain-cortex-thread-a" />
-        <span className="brain-cortex-thread brain-cortex-thread-b" />
-        <span className="brain-cortex-thread brain-cortex-thread-c" />
+    <section ref={containerRef} data-brain-universe className="brain-universe-canvas brain-universe-canvas-strong relative w-full overflow-hidden" style={canvasStyle}>
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute left-[-14%] top-[8%] h-[44vw] min-h-[380px] w-[44vw] min-w-[380px] rounded-full blur-3xl" style={{ background: isDarkMode ? "radial-gradient(circle, rgba(34,211,238,0.18), transparent 68%)" : "radial-gradient(circle, rgba(34,211,238,0.18), transparent 68%)" }} />
+        <div className="absolute right-[-14%] top-[14%] h-[44vw] min-h-[380px] w-[44vw] min-w-[380px] rounded-full blur-3xl" style={{ background: isDarkMode ? "radial-gradient(circle, rgba(239,0,1,0.18), transparent 68%)" : "radial-gradient(circle, rgba(239,0,1,0.12), transparent 68%)" }} />
+        <div className="absolute left-[16%] right-[16%] top-1/2 h-px" style={{ background: isDarkMode ? "linear-gradient(90deg, transparent, rgba(34,211,238,0.36), rgba(239,0,1,0.3), transparent)" : "linear-gradient(90deg, transparent, rgba(34,211,238,0.32), rgba(239,0,1,0.18), transparent)", boxShadow: isDarkMode ? "0 0 32px rgba(34,211,238,0.16)" : "0 0 24px rgba(34,211,238,0.18)" }} />
       </div>
 
       <ReactFlow
@@ -251,19 +251,19 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
         className="h-full w-full"
         style={{ width: "100%", height: "100%" }}
       >
-        <Background color="rgba(1,24,72,0.18)" gap={34} />
-        <Controls className="!bottom-5 !left-5 !rounded-2xl backdrop-blur-xl" />
+        <Background color={isDarkMode ? "rgba(125,211,252,0.12)" : "rgba(1,24,72,0.12)"} gap={34} />
+        <Controls className={isDarkMode ? "!bottom-5 !left-5 !rounded-2xl !border !border-white/10 !bg-slate-950/70 !text-slate-50 backdrop-blur-xl" : "!bottom-5 !left-5 !rounded-2xl !border !border-slate-200/70 !bg-white/80 !text-slate-700 backdrop-blur-xl"} />
       </ReactFlow>
 
       {!overlayNode ? (
-        <div className="pointer-events-none absolute bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-cyan-100/10 bg-black/24 px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-50/72 backdrop-blur-xl">
+        <div className={`pointer-events-none absolute bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] backdrop-blur-xl ${isDarkMode ? "border-cyan-100/10 bg-slate-950/70 text-cyan-50/80" : "border-slate-200/80 bg-white/80 text-slate-700"}`}>
           Nó = conhecimento · Conexão = relação · Informação = conhecimento conectado
         </div>
       ) : null}
 
       {loading ? (
-        <div className="brain-synapse-loading pointer-events-none absolute left-1/2 top-[74px] z-30 -translate-x-1/2">
-          <span className="brain-synapse-loading-dot" />
+        <div className={`pointer-events-none absolute left-1/2 top-[74px] z-30 -translate-x-1/2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] backdrop-blur-xl ${isDarkMode ? "border-cyan-100/10 bg-slate-950/70 text-cyan-50/85" : "border-slate-200/80 bg-white/86 text-slate-700"}`}>
+          <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ background: "#22d3ee", boxShadow: "0 0 18px rgba(34,211,238,0.82)" }} />
           <span>Sinapses atualizando</span>
         </div>
       ) : null}
@@ -272,7 +272,7 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
         <BrainNodeOverlay node={overlayNode} nodes={focusedGraph.nodes} edges={focusedGraph.edges} debugMode={debugMode} onClose={() => setOverlayNode(null)} onResetFocus={() => { setOverlayNode(null); const core = nodes.find((node) => node.metadata?.isBrainCore || node.metadata?.isContextCore) ?? nodes[0]; if (core) onSelectNode(core); }} onOpenRelatedModule={onOpenRelatedModule} />
       ) : null}
 
-      <button type="button" onClick={onToggleLocalGraph} className={`absolute right-[132px] top-[92px] z-30 rounded-full border px-3 py-2 text-xs font-black backdrop-blur-xl transition ${localGraphOnly ? "border-cyan-200/70 bg-cyan-200/18 text-cyan-50" : "border-white/10 bg-black/24 text-white/76 hover:border-cyan-200/60 hover:text-cyan-100"}`}>
+      <button type="button" onClick={onToggleLocalGraph} className={`absolute right-[132px] top-[92px] z-30 rounded-full border px-3 py-2 text-xs font-black backdrop-blur-xl transition ${localGraphOnly ? (isDarkMode ? "border-cyan-200/60 bg-cyan-300/20 text-cyan-50" : "border-cyan-300 bg-cyan-100/90 text-cyan-900") : (isDarkMode ? "border-white/10 bg-slate-950/70 text-white/76 hover:border-cyan-200/40 hover:text-cyan-100" : "border-slate-200/80 bg-white/86 text-slate-700 hover:border-cyan-200 hover:text-cyan-700")}`}>
         Grafo local
       </button>
     </section>

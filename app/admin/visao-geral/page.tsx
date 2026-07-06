@@ -1,5 +1,5 @@
-import VisaoGeralPageClient from "./VisaoGeralCompacta";
+import VisaoGeralComUsuarios from './VisaoGeralComUsuarios';
 
 export default function VisaoGeralPage() {
-  return <VisaoGeralPageClient />;
+  return <VisaoGeralComUsuarios />;
 }

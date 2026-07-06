@@ -79,16 +79,12 @@
 .queueShell :global(table),
 .queueShell :global(thead),
 .queueShell :global([data-access-requests-dialog]),
-.queueShell :global([class*="bg-(--tc-surface)"]),
-.queueShell :global([class*="bg-\(--tc-surface\)"]),
-.queueShell :global([class*="bg-\[var\(--tc-surface"]),
+.queueShell :global([class*="tc-surface"]),
 .queueShell :global([class*="bg-white"]) {
   background: var(--tc-surface) !important;
 }
 
-.queueShell :global([class*="bg-(--tc-surface-2)"]),
-.queueShell :global([class*="bg-\(--tc-surface-2\)"]),
-.queueShell :global([class*="bg-\[var\(--tc-surface-2"]),
+.queueShell :global([class*="tc-surface-2"]),
 .queueShell :global([class*="bg-slate-50"]),
 .queueShell :global([class*="bg-slate-100"]) {
   background: var(--tc-surface-2) !important;
@@ -123,8 +119,7 @@
 .queueShell :global(.text-slate-950),
 .queueShell :global(.text-slate-900),
 .queueShell :global(.text-slate-800),
-.queueShell :global([class*="text-\(--tc-text-primary\)" ]),
-.queueShell :global([class*="text-\[var\(--tc-text-primary"] ) {
+.queueShell :global([class*="tc-text-primary"]) {
   color: var(--tc-text-primary) !important;
 }
 
@@ -133,10 +128,8 @@
 .queueShell :global(.text-slate-700),
 .queueShell :global(.text-slate-600),
 .queueShell :global(.text-slate-500),
-.queueShell :global([class*="text-\(--tc-text-secondary\)" ]),
-.queueShell :global([class*="text-\(--tc-text-muted\)" ]),
-.queueShell :global([class*="text-\[var\(--tc-text-secondary"] ),
-.queueShell :global([class*="text-\[var\(--tc-text-muted"] ) {
+.queueShell :global([class*="tc-text-secondary"]),
+.queueShell :global([class*="tc-text-muted"]) {
   color: var(--tc-text-secondary) !important;
 }
 
@@ -164,6 +157,36 @@
 :global([data-mode="dark"]) .queueShell :global(option) {
   background: #071426 !important;
   color: #f8fafc !important;
+}
+
+.queueShell[data-access-requests-dialog="profile"] > div:first-child {
+  background: linear-gradient(135deg, #ffffff 0%, #eef4ff 58%, rgb(239 0 1 / 8%) 150%) !important;
+  border-color: var(--tc-border) !important;
+  color: var(--tc-text-primary) !important;
+}
+
+.queueShell[data-access-requests-dialog="profile"] > div:first-child :global(*) {
+  color: var(--tc-text-primary) !important;
+}
+
+.queueShell[data-access-requests-dialog="profile"] > div:first-child :global(p),
+.queueShell[data-access-requests-dialog="profile"] > div:first-child :global(small) {
+  color: var(--tc-text-secondary) !important;
+}
+
+:global(html.dark) .queueShell[data-access-requests-dialog="profile"] > div:first-child,
+:global(.dark) .queueShell[data-access-requests-dialog="profile"] > div:first-child,
+:global([data-theme="dark"]) .queueShell[data-access-requests-dialog="profile"] > div:first-child,
+:global([data-mode="dark"]) .queueShell[data-access-requests-dialog="profile"] > div:first-child {
+  background: linear-gradient(135deg, #07132a 0%, #101a34 54%, rgb(239 0 1 / 20%) 140%) !important;
+  color: #ffffff !important;
+}
+
+:global(html.dark) .queueShell[data-access-requests-dialog="profile"] > div:first-child :global(*),
+:global(.dark) .queueShell[data-access-requests-dialog="profile"] > div:first-child :global(*),
+:global([data-theme="dark"]) .queueShell[data-access-requests-dialog="profile"] > div:first-child :global(*),
+:global([data-mode="dark"]) .queueShell[data-access-requests-dialog="profile"] > div:first-child :global(*) {
+  color: #ffffff !important;
 }
 
 .queueShell :global([class*="bg-sky-50"]) {

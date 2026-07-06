@@ -1,4 +1,4 @@
-﻿const distDir = process.env.NEXT_DIST_DIR?.trim() || ".next";
+const distDir = process.env.NEXT_DIST_DIR?.trim() || ".next";
 
 // Resolve build version: prefer CI env, fallback to git short hash, then package version
 function resolveAppVersion(): string {
@@ -73,6 +73,16 @@ const nextConfig = {
         pathname: "/api/s3/object",
       },
     ],
+    remotePatterns: [
+      { protocol: "https", hostname: "media.giphy.com" },
+      { protocol: "https", hostname: "media.tenor.com" },
+      { protocol: "https", hostname: "media0.giphy.com" },
+      { protocol: "https", hostname: "media1.giphy.com" },
+      { protocol: "https", hostname: "media2.giphy.com" },
+      { protocol: "https", hostname: "media3.giphy.com" },
+      { protocol: "https", hostname: "media4.giphy.com" },
+      { protocol: "https", hostname: "media5.giphy.com" },
+    ],
   },
   experimental: {
     optimizePackageImports: ["react-icons", "recharts", "framer-motion"],
@@ -94,4 +104,3 @@ const nextConfig = {
   },
 };
 module.exports = nextConfig;
-

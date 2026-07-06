@@ -174,17 +174,7 @@ function resolveModuleHref(
   effectiveRole: SystemRole | null,
 ): string | undefined {
   if (mod.id === "home") {
-    if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
-      return "/admin/home";
-    }
-
-    if (companySlug) {
-      return withScopeQuery(buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput), companySlug, projectSlug, true);
-    }
-
-    if (companySlug && effectiveRole && COMPANY_DASHBOARD_ROLES.has(effectiveRole)) {
-      return withScopeQuery(buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput), companySlug, projectSlug, true);
-    }
+    return withScopeQuery("/home", companySlug, projectSlug, true);
   }
 
   if (mod.id === "brain") {
@@ -399,8 +389,6 @@ function resolveModuleItems(
   effectiveRole: SystemRole | null,
   permissions?: PermissionMatrix | null,
 ): NavModuleDef {
-  const usesCompanyCentral =
-    mod.id === "home" && effectiveRole != null && COMPANY_DASHBOARD_ROLES.has(effectiveRole);
   const dynamicItems =
     mod.id === "agenda"
       ? []
@@ -412,7 +400,7 @@ function resolveModuleItems(
 
   return {
     ...mod,
-    label: usesCompanyCentral ? "Central da Empresa" : mod.label,
+    label: mod.id === "home" ? "Home" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {

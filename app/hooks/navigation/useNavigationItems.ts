@@ -46,6 +46,7 @@ const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "support",
   "brain",
   "documents",
+  "management",
 ]);
 const PROJECT_SCOPED_ITEM_IDS = new Set([
   "quality-plans",
@@ -56,6 +57,20 @@ const PROJECT_SCOPED_ITEM_IDS = new Set([
 ]);
 const PROJECT_OPTIONAL_SCOPED_ITEM_IDS = new Set(["quality-cases"]);
 const ENABLED_NAV_CATALOG = NAV_CATALOG;
+const MANAGEMENT_ROLES: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+  SYSTEM_ROLES.TESTING_COMPANY_USER,
+  SYSTEM_ROLES.EMPRESA,
+  SYSTEM_ROLES.COMPANY_USER,
+];
+const PRIVILEGED_MANAGEMENT_ROLES: SystemRole[] = [SYSTEM_ROLES.LEADER_TC, SYSTEM_ROLES.TECHNICAL_SUPPORT];
+const COMPANY_USER_CREATOR_ROLES: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TESTING_COMPANY_USER,
+  SYSTEM_ROLES.EMPRESA,
+  SYSTEM_ROLES.COMPANY_USER,
+];
 
 function withScopeQuery(
   href: string | undefined,
@@ -221,6 +236,133 @@ function buildQualityItems(items: NavItemDef[], companySlug: string | null): Nav
   return [projectItem, ...items.filter((item) => item.id !== projectItem.id)];
 }
 
+function buildManagementModule(effectiveRole: SystemRole | null): NavModuleDef | null {
+  if (!effectiveRole || !MANAGEMENT_ROLES.includes(effectiveRole)) return null;
+
+  const canSeePermissionManagement = PRIVILEGED_MANAGEMENT_ROLES.includes(effectiveRole);
+  const items: NavItemDef[] = [];
+
+  if (canSeePermissionManagement) {
+    items.push(
+      {
+        id: "management-permissions-profile",
+        routeId: "permissoes.perfil",
+        label: "Permissões por perfil",
+        iconKey: "shield",
+        module: "management",
+        href: "/admin/permissions",
+        allowedRoles: PRIVILEGED_MANAGEMENT_ROLES,
+        group: "Gestão de permissões",
+        favoriteEnabled: true,
+        testId: "nav-management-permissions-profile",
+      },
+      {
+        id: "management-permissions-users",
+        routeId: "permissoes.matriz",
+        label: "Permissões por usuário",
+        iconKey: "users",
+        module: "management",
+        href: "/admin/users/permissions",
+        allowedRoles: PRIVILEGED_MANAGEMENT_ROLES,
+        group: "Gestão de permissões",
+        favoriteEnabled: true,
+        testId: "nav-management-permissions-users",
+      },
+    );
+  }
+
+  items.push({
+    id: "management-users-list",
+    routeId: "gestao.usuarios",
+    label: "Listagem de usuários",
+    iconKey: "users",
+    module: "management",
+    href: "/admin/users",
+    allowedRoles: MANAGEMENT_ROLES,
+    group: "Gestão de usuários",
+    favoriteEnabled: true,
+    testId: "nav-management-users-list",
+  });
+
+  if (effectiveRole === SYSTEM_ROLES.TESTING_COMPANY_USER || effectiveRole === SYSTEM_ROLES.LEADER_TC) {
+    items.push({
+      id: "management-users-tc",
+      routeId: "gestao.usuarios",
+      label: "Usuários TC",
+      iconKey: "user-check",
+      module: "management",
+      href: "/admin/users?tab=testing",
+      allowedRoles: [SYSTEM_ROLES.LEADER_TC, SYSTEM_ROLES.TESTING_COMPANY_USER],
+      group: "Gestão de usuários",
+      favoriteEnabled: true,
+      testId: "nav-management-users-tc",
+    });
+  }
+
+  items.push({
+    id: "management-create-company-user",
+    routeId: "gestao.usuarios",
+    label: "Criar usuário empresarial",
+    iconKey: "plus-circle",
+    module: "management",
+    href: "/admin/users?tab=company&modal=create&role=company_user",
+    allowedRoles: COMPANY_USER_CREATOR_ROLES,
+    requiredPermission: { moduleId: "users", action: "create" },
+    group: "Gestão de usuários",
+    action: "openCreateModal",
+    favoriteEnabled: true,
+    testId: "nav-management-create-company-user",
+  });
+
+  if (effectiveRole === SYSTEM_ROLES.LEADER_TC) {
+    items.push(
+      {
+        id: "management-create-leader-tc",
+        routeId: "gestao.usuarios",
+        label: "Criar Líder TC",
+        iconKey: "user-check",
+        module: "management",
+        href: "/admin/users?tab=admin&modal=create&role=leader_tc",
+        allowedRoles: [SYSTEM_ROLES.LEADER_TC],
+        requiredPermission: { moduleId: "users", action: "create" },
+        group: "Gestão de usuários",
+        action: "openCreateModal",
+        favoriteEnabled: true,
+        testId: "nav-management-create-leader-tc",
+      },
+      {
+        id: "management-create-support",
+        routeId: "gestao.usuarios",
+        label: "Criar suporte técnico",
+        iconKey: "tool",
+        module: "management",
+        href: "/admin/users?tab=support&modal=create&role=technical_support",
+        allowedRoles: [SYSTEM_ROLES.LEADER_TC],
+        requiredPermission: { moduleId: "users", action: "create" },
+        group: "Gestão de usuários",
+        action: "openCreateModal",
+        favoriteEnabled: true,
+        testId: "nav-management-create-support",
+      },
+    );
+  }
+
+  return {
+    id: "management",
+    label: "Gestão",
+    iconKey: "settings",
+    allowedRoles: MANAGEMENT_ROLES,
+    testId: "nav-management",
+    items,
+  };
+}
+
+function withScopedManagementModule(catalog: NavModuleDef[], effectiveRole: SystemRole | null) {
+  const managementModule = buildManagementModule(effectiveRole);
+  if (!managementModule) return catalog;
+  return [...catalog.filter((module) => module.id !== "management"), managementModule];
+}
+
 function resolveModuleItems(
   mod: NavModuleDef,
   companySlug: string | null,
@@ -354,7 +496,8 @@ export function useNavigationItems() {
   const modules = useMemo<NavModuleDef[]>(() => {
     if (!user) return [];
 
-    const catalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
+    const baseCatalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
+    const catalog = withScopedManagementModule(baseCatalog, effectiveRole);
     const contextCatalog = filterByActiveContext(catalog, companySlug);
     const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
     const resolvedModules = filtered

@@ -107,33 +107,34 @@ function layoutNodes(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: str
   });
 }
 
-function readDocumentTheme(): "light" | "dark" {
-  if (typeof document === "undefined") return "light";
-
+function readDocumentTheme(): "light" | "dark" | null {
+  if (typeof document === "undefined") return null;
   const root = document.documentElement;
   const body = document.body;
-  const themeValues = [
+  const tokens = [
     root.dataset.theme,
     root.dataset.mode,
     root.dataset.appearance,
     body.dataset.theme,
     body.dataset.mode,
     body.dataset.appearance,
+    root.className,
+    body.className,
   ]
     .filter(Boolean)
-    .map((value) => String(value).toLowerCase());
+    .join(" ")
+    .toLowerCase();
 
-  if (themeValues.some((value) => value.includes("dark") || value.includes("escuro"))) return "dark";
-  if (themeValues.some((value) => value.includes("light") || value.includes("claro"))) return "light";
-  if (root.classList.contains("dark") || body.classList.contains("dark")) return "dark";
-
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  if (tokens.includes("dark") || tokens.includes("theme-dark") || tokens.includes("modo-escuro")) return "dark";
+  if (tokens.includes("light") || tokens.includes("theme-light") || tokens.includes("modo-claro")) return "light";
+  return null;
 }
 
 export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, onOpenRelatedModule, localGraphOnly, onToggleLocalGraph, loading = false, debugMode = false }: BrainNeuralCanvasProps) {
   const { resolvedTheme } = useAppSettings();
-  const [documentTheme, setDocumentTheme] = useState<"light" | "dark">("light");
-  const isDarkMode = resolvedTheme === "dark" || documentTheme === "dark";
+  const [documentTheme, setDocumentTheme] = useState<"light" | "dark" | null>(null);
+  const effectiveTheme = documentTheme ?? (resolvedTheme === "dark" ? "dark" : "light");
+  const isDarkMode = effectiveTheme === "dark";
   const themeMode = isDarkMode ? "dark" : "light";
   const containerRef = useRef<HTMLElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 720 });
@@ -141,22 +142,13 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
   const [overlayNode, setOverlayNode] = useState<BrainNode | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
+    if (typeof document === "undefined") return;
     const syncTheme = () => setDocumentTheme(readDocumentTheme());
     syncTheme();
-
     const observer = new MutationObserver(syncTheme);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme", "data-mode", "data-appearance"] });
     observer.observe(document.body, { attributes: true, attributeFilter: ["class", "data-theme", "data-mode", "data-appearance"] });
-
-    const media = window.matchMedia?.("(prefers-color-scheme: dark)");
-    media?.addEventListener?.("change", syncTheme);
-
-    return () => {
-      observer.disconnect();
-      media?.removeEventListener?.("change", syncTheme);
-    };
+    return () => observer.disconnect();
   }, []);
 
   useLayoutEffect(() => {
@@ -209,12 +201,12 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
 
   const handleNodeDragStop = (_: MouseEvent, node: Node) => setManualPositions((current) => ({ ...current, [node.id]: node.position }));
   const canvasStyle = isDarkMode
-    ? { width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" as const, color: "#f8fafc", backgroundColor: "#020713", background: "radial-gradient(circle at 18% 28%, rgba(34,211,238,0.18), transparent 28%), radial-gradient(circle at 82% 24%, rgba(239,0,1,0.18), transparent 30%), linear-gradient(135deg, #020713 0%, #061326 44%, #120718 72%, #220006 100%)" }
+    ? { width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" as const, color: "#f8fafc", backgroundColor: "#020713", background: "radial-gradient(circle at 18% 28%, rgba(34,211,238,0.22), transparent 30%), radial-gradient(circle at 82% 24%, rgba(239,0,1,0.20), transparent 32%), radial-gradient(circle at 50% 45%, rgba(15,23,42,0.88), transparent 48%), linear-gradient(135deg, #020713 0%, #061326 44%, #120718 72%, #220006 100%)" }
     : { width: "100%", height: "100%", minHeight: "100%", display: "block", position: "relative" as const, color: "#0b1a3c", backgroundColor: "#ffffff", background: "radial-gradient(circle at 18% 28%, rgba(34,211,238,0.14), transparent 28%), radial-gradient(circle at 82% 32%, rgba(239,0,1,0.06), transparent 30%), linear-gradient(135deg, #ffffff 0%, #f6fbff 46%, #fff8f9 100%)" };
 
   return (
     <section ref={containerRef} data-brain-universe data-theme-mode={themeMode} className="brain-universe-canvas brain-universe-canvas-strong relative w-full overflow-hidden" style={canvasStyle}>
-      <style>{`.brain-universe-canvas .react-flow,.brain-universe-canvas .react-flow__renderer,.brain-universe-canvas .react-flow__pane,.brain-universe-canvas .react-flow__viewport{background:transparent!important}.brain-universe-canvas[data-theme-mode="light"] .react-flow__pane{background:transparent!important}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__pane{background:#020713!important}.brain-universe-canvas[data-theme-mode="light"] .react-flow__background{opacity:.28}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__background{opacity:.18}`}</style>
+      <style>{`.brain-universe-canvas .react-flow,.brain-universe-canvas .react-flow__renderer,.brain-universe-canvas .react-flow__pane,.brain-universe-canvas .react-flow__viewport{background:transparent!important}.brain-universe-canvas[data-theme-mode="light"] .react-flow__pane{background:transparent!important}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__pane{background:#020713!important}.brain-universe-canvas[data-theme-mode="light"] .react-flow__background{opacity:.28}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__background{opacity:.18}.brain-universe-canvas[data-theme-mode="dark"] .react-flow__controls button{background:rgba(2,7,19,.82)!important;color:#e0f2fe!important;border-color:rgba(255,255,255,.08)!important}`}</style>
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute left-[-14%] top-[8%] h-[44vw] min-h-[380px] w-[44vw] min-w-[380px] rounded-full blur-3xl" style={{ background: isDarkMode ? "radial-gradient(circle, rgba(34,211,238,0.18), transparent 68%)" : "radial-gradient(circle, rgba(34,211,238,0.10), transparent 68%)" }} />
         <div className="absolute right-[-14%] top-[14%] h-[44vw] min-h-[380px] w-[44vw] min-w-[380px] rounded-full blur-3xl" style={{ background: isDarkMode ? "radial-gradient(circle, rgba(239,0,1,0.18), transparent 68%)" : "radial-gradient(circle, rgba(239,0,1,0.07), transparent 68%)" }} />

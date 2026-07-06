@@ -7,7 +7,6 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { buildCompanyPathForAccess, shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
 
 type AuthUserShape = {
   role?: string | null;
@@ -52,16 +51,7 @@ export default function LoginClient() {
 
     if (!hadSensitiveQuery) return;
 
-    const next = url.searchParams.get("next");
-    const cleanParams = new URLSearchParams();
-
-    if (next && next.startsWith("/")) {
-      cleanParams.set("next", next);
-    }
-
-    const cleanQuery = cleanParams.toString();
-    const cleanUrl = `${url.pathname}${cleanQuery ? `?${cleanQuery}` : ""}${url.hash}`;
-
+    const cleanUrl = `${url.pathname}${url.hash}`;
     window.history.replaceState(null, "", cleanUrl);
   }, []);
 
@@ -90,8 +80,6 @@ export default function LoginClient() {
       target.style.setProperty("pointer-events", "auto", "important");
     }
 
-    // Defensive cleanup: if a fullscreen overlay leaks from another route/component,
-    // keep login interactive by disabling that overlay while this page is mounted.
     const root = rootRef.current;
     if (!root) return;
 
@@ -156,55 +144,15 @@ export default function LoginClient() {
     };
   }, []);
 
-  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
-    const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
-    const companyRouteInput = {
-      isGlobalAdmin: authUser?.isGlobalAdmin === true,
-      permissionRole: authUser?.permissionRole ?? null,
-      role: authUser?.role ?? null,
-      companyRole: authUser?.companyRole ?? null,
-      userOrigin: authUser?.userOrigin ?? authUser?.user_origin ?? null,
-      clientSlug:
-        typeof authUser?.clientSlug === "string"
-          ? authUser.clientSlug
-          : typeof authUser?.companySlug === "string"
-            ? authUser.companySlug
-            : null,
-    };
-    if (safeNext) {
-      const shortenedNext = shortenCompanyPathname(safeNext);
-      if (shortenedNext && shouldUseShortCompanyRoutes(companyRouteInput)) {
-        return shortenedNext;
-      }
-      return safeNext;
-    }
-    const normalizedRole = typeof authUser?.role === "string" ? authUser.role.toLowerCase() : "";
-    const isAdmin =
-      authUser?.isGlobalAdmin === true ||
-      authUser?.globalRole === "global_admin" ||
-      normalizedRole === "leader_tc" ||
-      normalizedRole === "technical_support";
-    const clientSlug =
-      typeof authUser?.clientSlug === "string"
-        ? authUser.clientSlug
-        : typeof authUser?.companySlug === "string"
-          ? authUser.companySlug
-          : null;
-    if (isAdmin) return "/admin/home";
-    if (clientSlug) {
-      return buildCompanyPathForAccess(clientSlug, "home", companyRouteInput);
-    }
-    return "/empresas";
+  function resolvePostLoginRedirect(_nextParam: string | null, _authUser: AuthUserShape | null) {
+    return "/admin/home";
   }
 
   useEffect(() => {
     if (authUserLoading || !authenticatedUser) return;
     if (typeof window === "undefined") return;
 
-    const params = new URLSearchParams(window.location.search);
-    const nextParam = params.get("next");
-
-    router.replace(resolvePostLoginRedirect(nextParam, authenticatedUser as AuthUserShape));
+    router.replace(resolvePostLoginRedirect(null, authenticatedUser as AuthUserShape));
   }, [authUserLoading, authenticatedUser, router]);
 
   async function handleSubmit(e: FormEvent) {
@@ -224,8 +172,7 @@ export default function LoginClient() {
 
       if (res.ok) {
         const authUser = (data?.user ?? null) as AuthUserShape | null;
-        const nextParam = searchParams?.get("next") ?? null;
-        const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
+        const redirectTo = resolvePostLoginRedirect(searchParams?.get("next") ?? null, authUser);
 
         void refreshUser(false);
 

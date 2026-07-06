@@ -1,0 +1,58 @@
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__emoji),
+.chatEmojiFixes :global(.qc-chat-modal-emoji),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__emoji) {
+  font-size: 0 !important;
+}
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__emoji::before) {
+  display: block !important;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(1) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(1) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(1) .qc-chat-reaction-modal__emoji::before) { content: "👍"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(2) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(2) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(2) .qc-chat-reaction-modal__emoji::before) { content: "❤️"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(3) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(3) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(3) .qc-chat-reaction-modal__emoji::before) { content: "✅"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(4) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(4) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(4) .qc-chat-reaction-modal__emoji::before) { content: "👀"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(5) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(5) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(5) .qc-chat-reaction-modal__emoji::before) { content: "🔥"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(6) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(6) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(6) .qc-chat-reaction-modal__emoji::before) { content: "🎉"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(7) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(7) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(7) .qc-chat-reaction-modal__emoji::before) { content: "🐞"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(8) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(8) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(8) .qc-chat-reaction-modal__emoji::before) { content: "⚠️"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(9) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(9) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(9) .qc-chat-reaction-modal__emoji::before) { content: "🤔"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid button:nth-child(10) .qc-chat-unified-action-modal__emoji::before),
+.chatEmojiFixes :global(.qc-chat-modal-grid button:nth-child(10) .qc-chat-modal-emoji::before),
+.chatEmojiFixes :global(.qc-chat-reaction-modal__grid button:nth-child(10) .qc-chat-reaction-modal__emoji::before) { content: "🙌"; }
+
+.chatEmojiFixes :global(.qc-chat-unified-action-modal__grid--compact button .qc-chat-unified-action-modal__emoji::before) {
+  content: "🎞️" !important;
+}

@@ -1,4 +1,4 @@
-﻿import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
@@ -13,6 +13,54 @@ import { formatWebSearchForBrain, searchBrainWeb, shouldUseWebSearch } from "@/l
 
 function isE2eJsonMode() {
   return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true";
+}
+
+function normalizeForBrain(value: string) {
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function isSmallTalk(message: string) {
+  return /^(oi|ola|bom dia|boa tarde|boa noite|tudo bem|valeu|obrigada|obrigado)[!.?\s]*$/.test(normalizeForBrain(message));
+}
+
+function shouldTryWebFallback(message: string, foundNodes: number) {
+  if (shouldUseWebSearch(message)) return true;
+  if (foundNodes > 0 || isSmallTalk(message)) return false;
+  const text = normalizeForBrain(message);
+  if (text.split(/\s+/).filter(Boolean).length < 3) return false;
+  return /\b(quem|qual|quando|onde|como|porque|por que|o que|me explica|sabe|conhece)\b/.test(text);
+}
+
+function humanizeBrainReply(input: {
+  message: string;
+  baseReply: string;
+  foundNodes: number;
+  pendingCount: number;
+  webContext: string | null;
+  webEnabled: boolean;
+}) {
+  if (input.webContext) {
+    const intro = input.webEnabled
+      ? "Procurei primeiro no Brain. Como a pergunta dependia de informação externa ou atual, também consultei a internet."
+      : "Procurei primeiro no Brain. Para completar com internet, ainda falta configurar a chave de busca do ambiente.";
+    return `${intro}\n\n${input.webContext}`;
+  }
+
+  if (input.foundNodes > 0) {
+    return input.baseReply
+      .replace(/^Encontrei no Brain:/, "Encontrei isso no Brain para você:")
+      .replace(/Modo QA ativado:/g, "Vou te apoiar em modo QA:");
+  }
+
+  if (isSmallTalk(input.message)) {
+    return "Oi, Ana. Estou aqui. Me diga o que você quer fazer agora: investigar um erro, criar bug, montar caso de teste, revisar permissão ou consultar algo fora do Brain.";
+  }
+
+  return [
+    "Ana, eu procurei no Brain, RAG e contexto permitido para o seu perfil, mas não achei uma base forte para responder com segurança.",
+    input.pendingCount ? `Também vi ${input.pendingCount} pendência(s) de contexto interno que podem deixar a resposta incompleta.` : null,
+    "Posso seguir por dois caminhos: você me dá mais contexto do sistema/projeto, ou eu uso busca na internet quando a pergunta for externa/atual e a chave de busca estiver configurada.",
+  ].filter(Boolean).join("\n\n");
 }
 
 export async function POST(req: NextRequest) {
@@ -44,17 +92,17 @@ export async function POST(req: NextRequest) {
 
     if (/\borfaos?\b/.test(text)) {
       return NextResponse.json({
-        reply: `Filtrei os nos orfaos do contexto. Encontrei ${visibleOrphanCount} no(s) sem conexao suficiente.`,
+        reply: `Filtrei os nós órfãos do contexto. Encontrei ${visibleOrphanCount} nó(s) sem conexão suficiente.`,
         action: "show_orphans",
         filters: { onlyOrphans: true },
-        suggestedActions: ["Mostrar pendencias", "Ver tudo que tenho acesso"],
+        suggestedActions: ["Mostrar pendências", "Ver tudo que tenho acesso"],
         requiresConfirmation: false,
       });
     }
 
     if (/\bpendencias?\b|\bfalta mapear\b/.test(text)) {
       return NextResponse.json({
-        reply: `No contexto ${moduleName ?? "geral"}, encontrei ${pending.length} pendencia(s). Principais pontos: ${pendingMappings.slice(0, 4).join("; ") || "sem pendencias criticas no fallback"}.`,
+        reply: `No contexto ${moduleName ?? "geral"}, encontrei ${pending.length} pendência(s). Principais pontos: ${pendingMappings.slice(0, 4).join("; ") || "sem pendências críticas no fallback"}.`,
         action: "show_pending",
         filters: { onlyPending: true },
         suggestedActions: ["Explicar no selecionado", "Atualizar grafo"],
@@ -64,20 +112,20 @@ export async function POST(req: NextRequest) {
 
     if (/\bexplica\b|\binformacao\b/.test(text) && selectedNode) {
       return NextResponse.json({
-        reply: selectedNode.information ?? `${selectedNode.label} ainda precisa de mais conexoes para formar uma informacao completa.`,
+        reply: selectedNode.information ?? `${selectedNode.label} ainda precisa de mais conexões para formar uma informação completa.`,
         action: "explain_node",
         selectedNodeId: selectedNode.id,
-        suggestedActions: ["Mostrar grafo local", "Expandir conexoes"],
+        suggestedActions: ["Mostrar grafo local", "Expandir conexões"],
         requiresConfirmation: false,
       });
     }
 
     if (/\bsolicitacoes?\b|\bacesso\b/.test(text)) {
       return NextResponse.json({
-        reply: "Apliquei o recorte de Solicitacoes. Esse modulo mostra pedidos, solicitantes, perfis, status, logs, e-mails e decisoes quando permitidos pelo seu perfil.",
+        reply: "Apliquei o recorte de Solicitações. Esse módulo mostra pedidos, solicitantes, perfis, status, logs, e-mails e decisões quando permitidos pelo seu perfil.",
         action: "filter_context",
         filters: { module: "Solicitacoes" },
-        suggestedActions: ["Mostrar pendencias desse projeto", "Abrir solicitacoes de acesso"],
+        suggestedActions: ["Mostrar pendências desse projeto", "Abrir solicitações de acesso"],
         requiresConfirmation: false,
       });
     }
@@ -97,21 +145,25 @@ export async function POST(req: NextRequest) {
         : null,
     });
 
-    const needsWebSearch = shouldUseWebSearch(lightweightBody.message);
+    const needsWebSearch = shouldTryWebFallback(lightweightBody.message, brainAnswer.foundNodes.length);
     const webSearch = needsWebSearch ? await searchBrainWeb(lightweightBody.message).catch((error) => ({
       enabled: false,
       provider: "none" as const,
       query: lightweightBody.message ?? "",
       results: [],
-      warning: `Busca web indisponivel agora: ${String(error)}`,
+      warning: `Busca web indisponível agora: ${String(error)}`,
     })) : null;
     const webContext = webSearch ? formatWebSearchForBrain(webSearch) : null;
-    const baseReply = brainAnswer.foundNodes.length
-      ? brainAnswer.answer
-      : `Oi. No Brain encontrei ${visibleNodes.length} nos e ${visibleGraph.edges.length} conexoes neste recorte. Existem ${pending.length} pendencia(s). Posso mostrar modulos, empresas, projetos, nos orfaos, pendencias, criado hoje ou explicar o no selecionado.`;
-    const reply = webContext
-      ? `${baseReply}\n\nBusca na internet:\n${webContext}`
-      : baseReply;
+    const fallbackReply = `Procurei no Brain e encontrei ${visibleNodes.length} nó(s), ${visibleGraph.edges.length} conexão(ões) e ${pending.length} pendência(s) neste recorte.`;
+    const baseReply = brainAnswer.foundNodes.length ? brainAnswer.answer : fallbackReply;
+    const reply = humanizeBrainReply({
+      message: lightweightBody.message,
+      baseReply,
+      foundNodes: brainAnswer.foundNodes.length,
+      pendingCount: pending.length,
+      webContext,
+      webEnabled: Boolean(webSearch?.enabled),
+    });
 
     return NextResponse.json({
       reply,

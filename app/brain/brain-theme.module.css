@@ -116,7 +116,14 @@
 }
 
 .brainTheme :global(.brain-filter-hud) {
-  z-index: 60 !important;
+  position: absolute !important;
+  left: 1rem !important;
+  top: 1rem !important;
+  right: auto !important;
+  width: min(430px, calc(100% - 2rem)) !important;
+  margin: 0 !important;
+  transform: none !important;
+  z-index: 2147483000 !important;
   pointer-events: auto !important;
 }
 
@@ -131,10 +138,27 @@
 .brainTheme :global(.qc-brain-filter-summary-chips > span),
 .brainTheme :global(.qc-brain-filter-chip) {
   border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  border-radius: 999px;
   background: rgba(15, 23, 42, 0.82) !important;
   color: #f8fbff !important;
   box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
   backdrop-filter: blur(14px);
+}
+
+.brainTheme :global(.qc-brain-filter-summary-chips > span) {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.brainTheme :global(.qc-brain-filter-chip) {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .brainTheme :global(.qc-brain-filter-chip[data-active="true"]),
@@ -147,11 +171,12 @@
 
 .brainTheme :global(.qc-brain-filter-panel) {
   display: block !important;
-  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.26) !important;
   border-radius: 1.4rem;
-  background: rgba(2, 6, 23, 0.72) !important;
+  background: rgba(2, 6, 23, 0.86) !important;
   color: #f8fbff !important;
-  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(18px);
 }
 
@@ -164,13 +189,56 @@
 }
 
 .brainTheme :global(.qc-brain-filter-compact-bar) {
+  display: grid !important;
+  grid-template-columns: 1fr auto auto;
   padding: 0.75rem;
+}
+
+.brainTheme :global(.qc-brain-filter-brand) {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-brand-logo) {
+  display: inline-flex;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: #67e8f9;
+  box-shadow: 0 0 18px rgba(103, 232, 249, 0.72);
+}
+
+.brainTheme :global(.qc-brain-filter-main-button) {
+  justify-content: center;
+  min-height: 2.35rem;
+  padding: 0 0.85rem;
+  border-radius: 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 950;
 }
 
 .brainTheme :global(.qc-brain-filter-brand),
 .brainTheme :global(.qc-brain-filter-compact-stats),
 .brainTheme :global(.qc-brain-filter-context) {
   color: rgba(226, 232, 240, 0.78) !important;
+}
+
+.brainTheme :global(.qc-brain-filter-compact-stats) {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.brainTheme :global(.qc-brain-filter-compact-stats span) {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.35rem 0.55rem;
 }
 
 .brainTheme :global(.qc-brain-filter-compact-search),
@@ -181,24 +249,38 @@
   color: #f8fbff !important;
 }
 
+.brainTheme :global(.qc-brain-filter-compact-search) {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+}
+
 .brainTheme :global(.qc-brain-filter-compact-search input),
 .brainTheme :global(.qc-brain-filter-field select) {
+  width: 100%;
+  border: 0 !important;
+  outline: 0 !important;
   background: transparent !important;
   color: #f8fbff !important;
 }
 
 .brainTheme :global(.qc-brain-filter-popover) {
+  display: block !important;
+  max-height: min(58vh, 520px);
+  overflow: auto;
   margin: 0.75rem;
   padding: 1rem;
   border-radius: 1.25rem;
   border: 1px solid rgba(148, 163, 184, 0.22) !important;
-  background: rgba(2, 6, 23, 0.92) !important;
+  background: rgba(2, 6, 23, 0.94) !important;
   color: #f8fbff !important;
 }
 
 .brainTheme :global(.qc-brain-filter-grid) {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.75rem;
 }
 
@@ -220,6 +302,7 @@
 
 .brainTheme :global(.qc-brain-filter-popover-header) {
   justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 1rem;
 }
 
@@ -228,7 +311,38 @@
   color: #f8fbff !important;
 }
 
+.brainTheme :global(.qc-brain-filter-popover-header h2) {
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.brainTheme :global(.qc-brain-filter-popover-header p) {
+  margin-top: 0.35rem;
+  color: rgba(226, 232, 240, 0.72) !important;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
 .brainTheme :global(.qc-brain-filter-actions) {
   flex-wrap: wrap;
   margin-top: 0.9rem;
+}
+
+.brainTheme :global(.react-flow__edge-textbg) {
+  fill: rgba(2, 6, 23, 0.86) !important;
+}
+
+.brainTheme :global(.react-flow__edge-text) {
+  fill: #f8fafc !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 900px) {
+  .brainTheme :global(.brain-filter-hud) {
+    top: 0.75rem !important;
+    left: 0.75rem !important;
+    width: calc(100% - 1.5rem) !important;
+  }
 }

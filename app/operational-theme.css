@@ -341,3 +341,54 @@ body::after {
 :root[data-theme="dark"] .text-indigo-700,
 :root.dark .text-cyan-700,
 :root[data-theme="dark"] .text-cyan-700 { color: #a5b4fc !important; }
+
+/* Painel administrativo de usuário: deve permanecer claro quando o usuário seleciona modo claro.
+   Este bloco impede que regras genéricas de dark mode contaminem o modal e deixem campos ilegíveis. */
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] {
+  color-scheme: light;
+  background: #fcfdff !important;
+  border-color: #d7e0ef !important;
+  color: #081f4d !important;
+}
+
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] > div:first-child {
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%) !important;
+  border-color: #e3e8f2 !important;
+  color: #081f4d !important;
+}
+
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] section,
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="bg-white"],
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="bg-[#ffffff"] {
+  background-color: #ffffff !important;
+  border-color: #d7e0ef !important;
+}
+
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="bg-[#fcfdff"],
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="bg-[#fbfcff"] {
+  background-color: #fcfdff !important;
+}
+
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="bg-[#f7faff"] {
+  background-color: #f7faff !important;
+}
+
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] input,
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] select,
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] textarea,
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [role="combobox"] {
+  background-color: #ffffff !important;
+  border-color: #d8dfeb !important;
+  color: #081f4d !important;
+}
+
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] input::placeholder,
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] textarea::placeholder {
+  color: #7b8eb5 !important;
+}
+
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="text-[#081f4d"] { color: #081f4d !important; }
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="text-[#27457d"] { color: #27457d !important; }
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="text-[#5f77a2"] { color: #5f77a2 !important; }
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="text-[#4f658d"] { color: #4f658d !important; }
+div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="text-[#ef0001"] { color: #ef0001 !important; }

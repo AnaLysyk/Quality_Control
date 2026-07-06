@@ -10,6 +10,13 @@ interface LanguageContextType {
   toggleLocale: () => void;
 }
 
+const fallbackLanguageContext: LanguageContextType = {
+  locale: "pt",
+  setLocale: () => undefined,
+  t: translations.pt,
+  toggleLocale: () => undefined,
+};
+
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 const STORAGE_KEY = "painel-qa-locale";
@@ -100,11 +107,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
-  }
-  return context;
+  return useContext(LanguageContext) ?? fallbackLanguageContext;
 }
 
 export function useTranslation() {

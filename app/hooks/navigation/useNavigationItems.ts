@@ -13,6 +13,7 @@ import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatr
 import type { SystemRole } from "@/lib/auth/roles";
 
 const DISABLED_ITEM_IDS = new Set(["admin-system-map"]);
+const DISABLED_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
 const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
@@ -38,7 +39,7 @@ const AGENDA_MODULE: NavModuleDef = {
   testId: "nav-release-agenda",
   items: [],
 };
-const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents"]);
+const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "documents"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "home",
   "quality",
@@ -355,7 +356,9 @@ export function useNavigationItems() {
     if (!user) return [];
 
     const catalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
-    const contextCatalog = filterByActiveContext(catalog, companySlug);
+    const contextCatalog = filterByActiveContext(catalog, companySlug).filter(
+      (module) => !DISABLED_MODULE_IDS.has(module.id),
+    );
     const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
     const resolvedModules = filtered
       .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole, permissions))

@@ -20,109 +20,102 @@
   color: #f8fafc;
 }
 
-:global(body.qc-brain-active-route) {
-  overflow: hidden;
+:global(html.theme-light) .brainPageFullscreen,
+:global(html:not(.dark)) .brainPageFullscreen {
+  background: var(--brain-light-bg);
+  color: #0b1a3c;
 }
 
-:global(html.theme-light body.qc-brain-active-route),
-:global(html:not(.dark) body.qc-brain-active-route) {
-  background: #f8fbff;
-}
-
-:global(html.dark body.qc-brain-active-route) {
-  background: #020817;
-}
-
-:global(body.qc-brain-active-route .brain-universe-canvas) {
+.brainPageFullscreen :global(.brain-universe-canvas) {
   height: 100% !important;
   min-height: 100% !important;
   border-radius: 0;
 }
 
-:global(html.theme-light body.qc-brain-active-route .brain-universe-canvas),
-:global(html:not(.dark) body.qc-brain-active-route .brain-universe-canvas) {
+:global(html.theme-light) .brainPageFullscreen :global(.brain-universe-canvas),
+:global(html:not(.dark)) .brainPageFullscreen :global(.brain-universe-canvas) {
   color: #0b1a3c !important;
   background: var(--brain-light-bg) !important;
 }
 
-:global(html.dark body.qc-brain-active-route .brain-universe-canvas) {
+:global(html.dark) .brainPageFullscreen :global(.brain-universe-canvas) {
   color: #f8fafc !important;
   background: var(--brain-dark-bg) !important;
 }
 
-:global(html.theme-light body.qc-brain-active-route .qc-sidebar),
-:global(html:not(.dark) body.qc-brain-active-route .qc-sidebar) {
+:global(html.theme-light) .brainPageFullscreen :global(.qc-sidebar),
+:global(html:not(.dark)) .brainPageFullscreen :global(.qc-sidebar) {
   border-color: rgb(15 23 42 / 10%) !important;
   background: linear-gradient(180deg, rgb(255 255 255 / 96%) 0%, rgb(248 251 255 / 94%) 62%, rgb(255 244 246 / 90%) 100%) !important;
   color: #10203f !important;
   box-shadow: 18px 0 48px rgb(15 23 42 / 8%);
 }
 
-:global(html.dark body.qc-brain-active-route .qc-sidebar) {
+:global(html.dark) .brainPageFullscreen :global(.qc-sidebar) {
   border-color: rgb(148 163 184 / 16%) !important;
   background: linear-gradient(180deg, rgb(3 7 18 / 96%) 0%, rgb(8 18 37 / 94%) 56%, rgb(30 5 13 / 92%) 100%) !important;
   color: #f8fafc !important;
   box-shadow: 18px 0 60px rgb(0 0 0 / 32%);
 }
 
-:global(html.theme-light body.qc-brain-active-route .qc-sidebar input),
-:global(html:not(.dark) body.qc-brain-active-route .qc-sidebar input) {
+:global(html.theme-light) .brainPageFullscreen :global(.qc-sidebar input),
+:global(html:not(.dark)) .brainPageFullscreen :global(.qc-sidebar input) {
   color: #10203f !important;
 }
 
-:global(html.theme-light body.qc-brain-active-route .qc-sidebar input::placeholder),
-:global(html:not(.dark) body.qc-brain-active-route .qc-sidebar input::placeholder) {
+:global(html.theme-light) .brainPageFullscreen :global(.qc-sidebar input::placeholder),
+:global(html:not(.dark)) .brainPageFullscreen :global(.qc-sidebar input::placeholder) {
   color: rgb(15 23 42 / 48%) !important;
 }
 
-:global(html.dark body.qc-brain-active-route .qc-sidebar input) {
+:global(html.dark) .brainPageFullscreen :global(.qc-sidebar input) {
   color: #f8fafc !important;
 }
 
-:global(html.dark body.qc-brain-active-route .qc-sidebar input::placeholder) {
+:global(html.dark) .brainPageFullscreen :global(.qc-sidebar input::placeholder) {
   color: rgb(226 232 240 / 50%) !important;
 }
 
-:global(body.qc-brain-active-route .sidebar-search),
-:global(body.qc-brain-active-route .sidebar-control),
-:global(body.qc-brain-active-route .sidebar-dropdown) {
+.brainPageFullscreen :global(.sidebar-search),
+.brainPageFullscreen :global(.sidebar-control),
+.brainPageFullscreen :global(.sidebar-dropdown) {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
 
-:global(html.theme-light body.qc-brain-active-route .sidebar-search),
-:global(html.theme-light body.qc-brain-active-route .sidebar-control),
-:global(html.theme-light body.qc-brain-active-route .sidebar-dropdown),
-:global(html:not(.dark) body.qc-brain-active-route .sidebar-search),
-:global(html:not(.dark) body.qc-brain-active-route .sidebar-control),
-:global(html:not(.dark) body.qc-brain-active-route .sidebar-dropdown) {
+:global(html.theme-light) .brainPageFullscreen :global(.sidebar-search),
+:global(html.theme-light) .brainPageFullscreen :global(.sidebar-control),
+:global(html.theme-light) .brainPageFullscreen :global(.sidebar-dropdown),
+:global(html:not(.dark)) .brainPageFullscreen :global(.sidebar-search),
+:global(html:not(.dark)) .brainPageFullscreen :global(.sidebar-control),
+:global(html:not(.dark)) .brainPageFullscreen :global(.sidebar-dropdown) {
   border-color: rgb(15 23 42 / 12%) !important;
   background: rgb(255 255 255 / 72%) !important;
   color: #10203f !important;
 }
 
-:global(html.dark body.qc-brain-active-route .sidebar-search),
-:global(html.dark body.qc-brain-active-route .sidebar-control),
-:global(html.dark body.qc-brain-active-route .sidebar-dropdown) {
+:global(html.dark) .brainPageFullscreen :global(.sidebar-search),
+:global(html.dark) .brainPageFullscreen :global(.sidebar-control),
+:global(html.dark) .brainPageFullscreen :global(.sidebar-dropdown) {
   border-color: rgb(226 232 240 / 12%) !important;
   background: rgb(2 6 23 / 62%) !important;
   color: #f8fafc !important;
 }
 
-:global(body.qc-brain-active-route .react-flow__controls-button) {
+.brainPageFullscreen :global(.react-flow__controls-button) {
   background: transparent !important;
   color: inherit !important;
   border-bottom-color: currentcolor !important;
 }
 
-:global(html.theme-light body.qc-brain-active-route .react-flow__controls),
-:global(html:not(.dark) body.qc-brain-active-route .react-flow__controls) {
+:global(html.theme-light) .brainPageFullscreen :global(.react-flow__controls),
+:global(html:not(.dark)) .brainPageFullscreen :global(.react-flow__controls) {
   background: rgb(255 255 255 / 82%) !important;
   color: #10203f !important;
   border-color: rgb(15 23 42 / 12%) !important;
 }
 
-:global(html.dark body.qc-brain-active-route .react-flow__controls) {
+:global(html.dark) .brainPageFullscreen :global(.react-flow__controls) {
   background: rgb(2 6 23 / 72%) !important;
   color: #f8fafc !important;
   border-color: rgb(226 232 240 / 12%) !important;

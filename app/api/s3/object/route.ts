@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -30,6 +30,11 @@ function contentTypeFromFile(key: string) {
   if (ext === ".txt") return "text/plain; charset=utf-8";
   if (ext === ".csv") return "text/csv; charset=utf-8";
   if (ext === ".json") return "application/json; charset=utf-8";
+  if (ext === ".webm") return "audio/webm";
+  if (ext === ".ogg" || ext === ".oga") return "audio/ogg";
+  if (ext === ".mp3") return "audio/mpeg";
+  if (ext === ".mp4" || ext === ".m4a") return "audio/mp4";
+  if (ext === ".wav") return "audio/wav";
   return "application/octet-stream";
 }
 
@@ -103,4 +108,3 @@ export async function DELETE(req: Request) {
   }
   return NextResponse.json({ ok: true });
 }
-

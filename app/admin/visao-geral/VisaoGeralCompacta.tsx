@@ -5,11 +5,9 @@ import type { IconType } from "react-icons";
 import {
   FiActivity,
   FiAlertTriangle,
-  FiBarChart2,
   FiBriefcase,
   FiCalendar,
   FiCheckCircle,
-  FiClipboard,
   FiClock,
   FiSearch,
   FiShield,
@@ -24,6 +22,7 @@ import { fetchApi } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import type { CompanyRow, Stats } from "@/lib/quality";
 import { buildPieGradient } from "./pieChartUtils";
+import QualityControlOverviewBoard from "./QualityControlOverviewBoard";
 
 type Overview = {
   companies: CompanyRow[];
@@ -58,11 +57,26 @@ type AdminUser = {
   avatar_url?: string | null;
   avatarUrl?: string | null;
   image?: string | null;
+  role?: string | null;
+  permissionRole?: string | null;
+  companyRole?: string | null;
+  profileLabel?: string | null;
 };
 
 type ActorProfile = { name: string; avatar: string | null };
 type Mode = "company" | "user";
 type Slice = { label: string; value: number; color: string };
+type RunRow = {
+  id: string;
+  title: string;
+  companyName: string;
+  project: string;
+  total: number;
+  pass: number;
+  fail: number;
+  blocked: number;
+  notRun: number;
+};
 
 const FIRST_ITEMS = 6;
 const FIRST_EVENTS = 6;
@@ -80,18 +94,30 @@ function normalize(value?: string | null) {
     .toLowerCase();
 }
 
-function shortDate(value?: string | null) {
-  if (!value) return "--";
-  const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? date.toLocaleDateString("pt-BR") : "--";
-}
-
 function total(stats?: Stats | null) {
   return stats ? stats.pass + stats.fail + stats.blocked + stats.notRun : 0;
 }
 
 function keyOf(company: CompanyRow) {
   return company.slug ?? company.id;
+}
+
+function shortDate(value?: string | null) {
+  if (!value) return "--";
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toLocaleDateString("pt-BR") : "--";
+}
+
+function shortDateTime(value?: string | null) {
+  if (!value) return "Sem horário";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "Sem horário";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function nameFromEmail(email?: string | null) {
@@ -104,6 +130,15 @@ function nameFromEmail(email?: string | null) {
 
 function avatarFromUser(user?: AdminUser | null) {
   return user?.avatar_url ?? user?.avatarUrl ?? user?.image ?? null;
+}
+
+function profileTag(user: AdminUser) {
+  const raw = normalize(user.profileLabel ?? user.permissionRole ?? user.role ?? user.companyRole ?? "Usuário");
+  if (raw.includes("leader") || raw.includes("lider")) return "Líder TC";
+  if (raw.includes("support") || raw.includes("suporte")) return "Suporte";
+  if (raw.includes("testing") || raw.includes("tc")) return "Usuário TC";
+  if (raw.includes("empresa") || raw.includes("company")) return "Empresa";
+  return "Usuário";
 }
 
 function daysBetween(start: string, end: string) {
@@ -167,35 +202,35 @@ function resolveHealth(passRate: number | null, defectsInPeriod: number) {
   return { label: "Saudável", detail: "Operação dentro do esperado", tone: "border-emerald-300/45 bg-emerald-500/16 text-emerald-50" };
 }
 
-function Pie({ title, slices, note }: { title: string; note: string; slices: Slice[] }) {
-  const sum = slices.reduce((acc, slice) => acc + slice.value, 0);
-  if (!sum) return null;
+function runTitle(release: CompanyRow["releases"][number], index: number) {
+  const record = release as unknown as Record<string, unknown>;
+  const title = record.title ?? record.name ?? record.runName ?? record.code ?? record.id;
+  return typeof title === "string" && title.trim() ? title.trim() : `Run ${index + 1}`;
+}
 
-  return (
-    <section className="rounded-[28px] border border-[var(--tc-border)] bg-white/80 p-4 shadow-[0_18px_36px_rgba(1,24,72,.08)] dark:bg-white/[0.04]">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-black tracking-[-.03em]">{title}</h2>
-          <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{note}</p>
-        </div>
-        <div className="relative h-32 w-32 rounded-full" style={{ background: buildPieGradient(slices) }}>
-          <div className="absolute inset-8 flex items-center justify-center rounded-full bg-white text-sm font-black dark:bg-[#07111f]">
-            {sum}
-          </div>
-        </div>
-      </div>
-      <div className="mt-4 grid gap-2">
-        {slices.filter((slice) => slice.value > 0).map((slice) => (
-          <div key={slice.label} className="flex justify-between rounded-2xl border border-[var(--tc-border)] bg-transparent px-3 py-2 text-sm">
-            <span className="flex items-center gap-2 text-[#64748b] dark:text-white/60">
-              <i className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slice.color }} />
-              {slice.label}
-            </span>
-            <b>{slice.value}</b>
-          </div>
-        ))}
-      </div>
-    </section>
+function runProject(release: CompanyRow["releases"][number]) {
+  const record = release as unknown as Record<string, unknown>;
+  const value = record.project ?? record.app ?? record.qaseProject ?? record.application;
+  return typeof value === "string" && value.trim() ? value.trim() : "Projeto não informado";
+}
+
+function buildRunRows(companies: CompanyRow[], selectedCompany: CompanyRow | null): RunRow[] {
+  const source = selectedCompany ? [selectedCompany] : companies;
+  return source.flatMap((entry) =>
+    entry.releases.map((release, index) => {
+      const stats = release.stats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 };
+      return {
+        id: `${keyOf(entry)}-${runTitle(release, index)}-${index}`,
+        title: runTitle(release, index),
+        companyName: entry.name,
+        project: runProject(release),
+        total: total(stats),
+        pass: stats.pass,
+        fail: stats.fail,
+        blocked: stats.blocked,
+        notRun: stats.notRun,
+      };
+    }),
   );
 }
 
@@ -203,6 +238,8 @@ function eventKind(item: Audit) {
   const text = normalize(`${item.action} ${item.entity_type ?? ""} ${item.entity_label ?? ""}`);
   const action = humanizeAction(item.action);
 
+  if (/perfil|profile|role/.test(text) && /permission|permissao|access|acesso|update|alter|reset/.test(text)) return { title: "Permissão de perfil alterada", detail: "Perfil teve matriz de acesso atualizada.", color: "bg-cyan-500" };
+  if (/usuario|user/.test(text) && /permission|permissao|access|acesso|role|perfil|update|alter/.test(text)) return { title: "Permissão de usuário alterada", detail: "Usuário teve acesso, vínculo ou perfil atualizado.", color: "bg-cyan-500" };
   if (/defeito|defect|bug|falha/.test(text) && /create|created|criou|novo|open|opened|abert/.test(text)) return { title: "Defeito aberto", detail: "Registro de defeito criado no período filtrado.", color: "bg-rose-500" };
   if (/defeito|defect|bug|falha/.test(text) && /status|update|alter|resolved|closed|fech|conclu/.test(text)) return { title: "Status de defeito alterado", detail: "Defeito teve mudança de status ou atualização.", color: "bg-rose-500" };
   if (/run|execu/.test(text) && /finish|finished|closed|completed|finaliz|conclu/.test(text)) return { title: "Run finalizada", detail: "Execução encerrada dentro do período filtrado.", color: "bg-emerald-500" };
@@ -212,29 +249,36 @@ function eventKind(item: Audit) {
   if (/plano|plan/.test(text)) return { title: "Plano de teste atualizado", detail: "Plano de teste teve alteração ou movimentação.", color: "bg-emerald-500" };
   if (/caso|case|teste|test/.test(text) && /finish|finished|finaliz|conclu|passed|failed|blocked|execut/.test(text)) return { title: "Teste finalizado", detail: "Caso de teste recebeu resultado de execução.", color: "bg-sky-500" };
   if (/caso|case|teste|test|repositorio/.test(text) && /create|created|criou|novo/.test(text)) return { title: "Caso de teste criado", detail: "Novo caso de teste registrado no repositório.", color: "bg-sky-500" };
-  if (/status|update|alter|mudou|troca/.test(text)) return { title: "Status atualizado", detail: "Item do sistema teve status ou dados alterados.", color: "bg-sky-500" };
   if (/ticket|chamado|suporte|support/.test(text)) return { title: "Chamado de suporte movimentado", detail: "Chamado ou solicitação recebeu ação no período.", color: "bg-amber-500" };
   if (/empresa|company|projeto|project/.test(text) && /create|created|criou|novo/.test(text)) return { title: "Empresa ou projeto criado", detail: "Cadastro institucional criado no período.", color: "bg-indigo-500" };
   if (/empresa|company|projeto|project/.test(text)) return { title: "Empresa ou projeto atualizado", detail: "Cadastro institucional recebeu alteração.", color: "bg-indigo-500" };
-  if (/usuario|user|vincul|invite|convite|permission|permissao|perfil|role/.test(text)) return { title: "Usuário ou permissão alterada", detail: "Usuário, vínculo ou permissão teve atualização.", color: "bg-cyan-500" };
   if (/delete|deleted|remove|removed|exclu|apag/.test(text)) return { title: "Exclusão realizada", detail: "Item foi removido ou desvinculado no período.", color: "bg-red-500" };
+  if (/status|update|alter|mudou|troca/.test(text)) return { title: "Status atualizado", detail: "Item do sistema teve status ou dados alterados.", color: "bg-sky-500" };
   if (/create|created|criou|novo|nova/.test(text)) return { title: "Criação registrada", detail: "Novo item criado no sistema.", color: "bg-emerald-500" };
 
   return { title: `Ação registrada: ${action || "sistema"}`, detail: "Ação do sistema sem categoria específica mapeada ainda.", color: "bg-slate-500" };
 }
 
+function eventDetail(item: Audit, actorName: string) {
+  const target = item.entity_label?.trim() || humanizeAction(item.action) || "item do sistema";
+  const type = item.entity_type?.trim() ? ` em ${humanizeAction(item.entity_type)}` : "";
+  return `${actorName} movimentou ${target}${type} às ${shortDateTime(item.created_at)}.`;
+}
+
 function StatCard({ icon: Icon, value, label, note }: { icon: IconType; value: string | number; label: string; note?: string }) {
   return (
-    <div className="group rounded-[26px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5 transition hover:-translate-y-0.5 hover:bg-white/15">
+    <div className="group flex h-full min-h-[152px] flex-col justify-between rounded-[26px] border border-white/15 bg-white/10 p-4 text-white shadow-[0_18px_38px_rgba(1,24,72,.12)] backdrop-blur-sm ring-1 ring-white/5 transition hover:-translate-y-0.5 hover:bg-white/15">
       <div className="flex items-start justify-between gap-3">
         <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 text-white/80">
           <Icon />
         </div>
         <FiTrendingUp className="mt-1 text-white/30 transition group-hover:text-white/70" />
       </div>
-      <b className="mt-4 block text-3xl leading-none tracking-[-.05em]">{value}</b>
-      <small className="mt-2 block text-xs font-black uppercase tracking-[.16em] text-white/62">{label}</small>
-      {note ? <p className="mt-2 text-xs font-semibold text-white/52">{note}</p> : null}
+      <div>
+        <b className="mt-4 block text-3xl leading-none tracking-[-.05em]">{value}</b>
+        <small className="mt-2 block text-xs font-black uppercase tracking-[.16em] text-white/62">{label}</small>
+        {note ? <p className="mt-2 text-xs font-semibold text-white/52">{note}</p> : null}
+      </div>
     </div>
   );
 }
@@ -278,6 +322,67 @@ function EventAvatar({ email, profile }: { email: string | null; profile?: Actor
 
 function CommandPill({ children }: { children: React.ReactNode }) {
   return <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-black uppercase tracking-[.16em] text-white/62">{children}</span>;
+}
+
+function Pie({ title, slices, note, contextLabel }: { title: string; note: string; contextLabel: string; slices: Slice[] }) {
+  const [activeLabel, setActiveLabel] = useState<string | null>(null);
+  const visibleSlices = slices.filter((slice) => slice.value > 0);
+  const sum = visibleSlices.reduce((acc, slice) => acc + slice.value, 0);
+  if (!sum) return null;
+
+  const activeSlice = visibleSlices.find((slice) => slice.label === activeLabel) ?? visibleSlices[0];
+  const activePercent = Math.round((activeSlice.value / sum) * 100);
+
+  return (
+    <section className="overflow-hidden rounded-[30px] border border-[var(--tc-border)] bg-white/85 p-4 shadow-[0_18px_36px_rgba(1,24,72,.08)] dark:bg-white/[0.045]">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#64748b] dark:text-white/45">{contextLabel}</p>
+          <h2 className="mt-1 text-lg font-black tracking-[-.03em]">{title}</h2>
+          <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{note}</p>
+        </div>
+        <div className="group relative grid place-items-center">
+          <div
+            className="relative h-36 w-36 rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,.18),0_18px_45px_rgba(15,23,42,.14)] transition duration-300 group-hover:scale-[1.03]"
+            style={{ background: buildPieGradient(visibleSlices) }}
+            tabIndex={0}
+            aria-label={`${title}: ${activeSlice.label}, ${activePercent}%`}
+          >
+            <div className="absolute inset-9 flex flex-col items-center justify-center rounded-full bg-white text-center text-[#011848] shadow-inner dark:bg-[#07111f] dark:text-white">
+              <b className="text-2xl leading-none">{activePercent}%</b>
+              <small className="mt-1 max-w-[74px] truncate text-[10px] font-black uppercase tracking-[.12em] text-[#64748b] dark:text-white/45">{activeSlice.label}</small>
+            </div>
+          </div>
+          <div className="pointer-events-none absolute -top-2 left-1/2 hidden -translate-x-1/2 -translate-y-full rounded-2xl border border-[var(--tc-border)] bg-white px-3 py-2 text-xs font-black text-[#011848] shadow-2xl group-hover:block group-focus-within:block dark:bg-[#07111f] dark:text-white">
+            {activeSlice.label}: {activeSlice.value} · {activePercent}%
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-2">
+        {visibleSlices.map((slice) => {
+          const percent = Math.round((slice.value / sum) * 100);
+          const active = activeSlice.label === slice.label;
+          return (
+            <button
+              key={slice.label}
+              type="button"
+              onMouseEnter={() => setActiveLabel(slice.label)}
+              onFocus={() => setActiveLabel(slice.label)}
+              onClick={() => setActiveLabel(slice.label)}
+              className={`flex items-center justify-between rounded-2xl border px-3 py-2 text-sm transition ${active ? "border-[rgba(239,0,1,.34)] bg-[rgba(239,0,1,.06)]" : "border-[var(--tc-border)] bg-transparent hover:bg-black/[0.025] dark:hover:bg-white/[0.04]"}`}
+              title={`${slice.label}: ${slice.value} (${percent}%)`}
+            >
+              <span className="flex min-w-0 items-center gap-2 text-[#64748b] dark:text-white/60">
+                <i className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: slice.color }} />
+                <span className="truncate">{slice.label}</span>
+              </span>
+              <b className="shrink-0">{slice.value} · {percent}%</b>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 export default function VisaoGeralCompacta() {
@@ -358,8 +463,6 @@ export default function VisaoGeralCompacta() {
   }, [effectivePeriod, from, hasRange, selectedCompany, to, visibleEvents]);
 
   useEffect(() => {
-    if (mode !== "user") return;
-
     let ok = true;
     const id = window.setTimeout(() => {
       fetchApi("/api/admin/users", { cache: "no-store" })
@@ -379,13 +482,13 @@ export default function VisaoGeralCompacta() {
           setActorProfiles((current) => ({ ...current, ...next }));
         })
         .catch(() => undefined);
-    }, 250);
+    }, 650);
 
     return () => {
       ok = false;
       window.clearTimeout(id);
     };
-  }, [mode]);
+  }, []);
 
   useEffect(() => {
     setVisibleCards(FIRST_ITEMS);
@@ -398,92 +501,90 @@ export default function VisaoGeralCompacta() {
   const stats = company ? mergeStats(company.releases) : overview?.globalStats ?? null;
   const filteredCompanies = useMemo(() => companies.filter((entry) => normalize(`${entry.name} ${entry.slug ?? ""}`).includes(normalize(query))), [companies, query]);
   const shownCompanies = filteredCompanies.slice(0, visibleCards);
-  const filteredUsers = useMemo(() => adminUsers.filter((user) => normalize(`${user.name ?? ""} ${user.email ?? ""}`).includes(normalize(query))), [adminUsers, query]);
+  const filteredUsers = useMemo(() => adminUsers.filter((user) => normalize(`${user.name ?? ""} ${user.email ?? ""} ${profileTag(user)}`).includes(normalize(query))), [adminUsers, query]);
   const shownUsers = filteredUsers.slice(0, visibleCards);
   const filteredEvents = audit
     .filter((event) => isInsidePeriod(event.created_at, effectivePeriod, from, to))
     .filter((event) => eventMatchesCompany(event, company))
     .filter((event) => !selectedUser || event.actor_email === selectedUser);
   const shownEvents = filteredEvents.slice(0, visibleEvents);
-  const linkedDefects = defects
-    .filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to))
-    .filter((defect) => defect.run_id !== null && defect.run_id !== undefined && String(defect.run_id).trim()).length;
   const defectsInPeriod = defects.filter((defect) => isInsidePeriod(defect.created_at ?? defect.updated_at, effectivePeriod, from, to));
+  const linkedDefects = defectsInPeriod.filter((defect) => defect.run_id !== null && defect.run_id !== undefined && String(defect.run_id).trim()).length;
   const testCaseCount = total(stats);
-  const planCount = company ? Math.max(0, new Set(company.releases.map((release) => release.project || release.app || release.qaseProject || release.title).filter(Boolean)).size) : overview?.projectRows?.length ?? 0;
+  const planCount = company ? Math.max(0, new Set(company.releases.map((release) => {
+    const row = release as unknown as Record<string, unknown>;
+    return row.project ?? row.app ?? row.qaseProject ?? row.title ?? row.name;
+  }).filter(Boolean)).size) : overview?.projectRows?.length ?? 0;
   const statsTotal = total(stats);
   const passRate = stats && statsTotal > 0 ? Math.round((stats.pass / statsTotal) * 100) : null;
   const health = resolveHealth(passRate, defectsInPeriod.length);
-  const hasInsightCards = statsTotal > 0 || defectsInPeriod.length > 0;
-  const selectedContextLabel = company?.name ?? (selectedUser ? nameFromEmail(selectedUser) : "Operação geral");
+  const hasInsightCards = statsTotal > 0 || defectsInPeriod.length > 0 || releases.length > 0;
+  const selectedContextLabel = company?.name ?? (mode === "user" ? (selectedUser ? nameFromEmail(selectedUser) : "Todos os usuários") : "Todas as empresas");
   const periodLabel = hasRange ? `${shortDate(from)} até ${shortDate(to)}` : `últimos ${period} dias`;
+  const runRows = buildRunRows(companies, company);
+  const contextExplanation = mode === "company"
+    ? company
+      ? `Mostrando apenas a empresa ${company.name} em ${periodLabel}.`
+      : `Mostrando a saúde consolidada de todas as empresas em ${periodLabel}.`
+    : selectedUser
+      ? `Mostrando movimentações do usuário ${nameFromEmail(selectedUser)} em ${periodLabel}.`
+      : `Mostrando movimentações de todos os usuários em ${periodLabel}.`;
 
   return (
     <div className="text-[#011848] dark:text-white">
       <div className="flex flex-col gap-6 px-3 py-4 sm:px-4 lg:px-8">
-        <section className="relative overflow-hidden rounded-[34px] border border-white/14 bg-[radial-gradient(circle_at_10%_8%,rgba(239,0,1,.30),transparent_26%),radial-gradient(circle_at_82%_18%,rgba(59,130,246,.26),transparent_32%),linear-gradient(135deg,#040814_0%,#07111f_52%,#0b1932_100%)] p-5 text-white shadow-[0_28px_90px_rgba(1,24,72,.28)] sm:p-6 lg:p-7">
+        <section className="relative overflow-visible rounded-[34px] border border-white/14 bg-[radial-gradient(circle_at_10%_8%,rgba(239,0,1,.30),transparent_26%),radial-gradient(circle_at_82%_18%,rgba(59,130,246,.26),transparent_32%),linear-gradient(135deg,#040814_0%,#07111f_52%,#0b1932_100%)] p-5 text-white shadow-[0_28px_90px_rgba(1,24,72,.28)] sm:p-6 lg:p-7">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent" />
           <div className="relative z-10 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_380px]">
             <div className="min-w-0">
               <div className="mb-4 flex flex-wrap items-center gap-2">
-                <CommandPill>Central Executiva</CommandPill>
+                <CommandPill>Central de Qualidade</CommandPill>
+                <CommandPill>{selectedContextLabel}</CommandPill>
                 <CommandPill>{periodLabel}</CommandPill>
                 {loading || loadingActivity ? <CommandPill>Atualizando dados</CommandPill> : <CommandPill>Dados prontos</CommandPill>}
               </div>
               <h1 className="max-w-5xl text-4xl font-black leading-[.95] tracking-[-.06em] sm:text-5xl xl:text-6xl">
-                Visão Geral da operação
+                Controle real da qualidade
               </h1>
               <p className="mt-4 max-w-3xl text-base font-semibold leading-relaxed text-white/68 sm:text-lg">
-                Uma leitura forte do contexto: qualidade, runs, defeitos, eventos recentes, empresas e usuários em um único painel.
+                {contextExplanation} A leitura agora junta runs, defeitos, planos, casos, solicitações, agenda, gestão e usuários no mesmo contexto.
               </p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <StatCard icon={FiActivity} value={releases.length} label="Runs" note="no contexto filtrado" />
-                <StatCard icon={FiShield} value={passRate === null ? "--" : `${passRate}%`} label="Aprovação" note="taxa geral de qualidade" />
+              <div className="mt-6 grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard icon={FiActivity} value={releases.length} label="Runs" note={`${selectedContextLabel} · ${periodLabel}`} />
+                <StatCard icon={FiShield} value={passRate === null ? "--" : `${passRate}%`} label="Aprovação" note="taxa do contexto filtrado" />
                 <StatCard icon={FiAlertTriangle} value={defectsInPeriod.length} label="Defeitos" note={`${linkedDefects} vinculados a runs`} />
-                <StatCard icon={FiUsers} value={filteredEvents.length} label="Eventos" note="ações rastreadas" />
+                <StatCard icon={FiUsers} value={filteredEvents.length} label="Movimentações" note="ações rastreadas" />
               </div>
             </div>
 
             <aside className={`flex min-h-[280px] flex-col justify-between rounded-[30px] border p-5 backdrop-blur ${health.tone}`}>
               <div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="rounded-full border border-white/15 bg-black/12 px-3 py-1 text-[11px] font-black uppercase tracking-[.18em] text-white/72">Saúde</span>
+                  <span className="rounded-full border border-white/15 bg-black/12 px-3 py-1 text-[11px] font-black uppercase tracking-[.18em] text-white/72">Saúde do filtro</span>
                   <FiZap className="text-white/72" />
                 </div>
                 <h2 className="mt-5 text-4xl font-black tracking-[-.06em]">{health.label}</h2>
                 <p className="mt-2 text-sm font-semibold text-white/70">{health.detail}</p>
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Contexto</p>
-                  <p className="mt-1 truncate text-sm font-black">{selectedContextLabel}</p>
-                </div>
-                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Planos</p>
-                  <p className="mt-1 text-sm font-black">{planCount}</p>
-                </div>
-                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Casos</p>
-                  <p className="mt-1 text-sm font-black">{testCaseCount}</p>
-                </div>
-                <div className="rounded-2xl border border-white/12 bg-black/12 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Empresas</p>
-                  <p className="mt-1 text-sm font-black">{companies.length}</p>
-                </div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3"><p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Filtro</p><p className="mt-1 truncate text-sm font-black">{selectedContextLabel}</p></div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3"><p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Planos</p><p className="mt-1 text-sm font-black">{planCount}</p></div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3"><p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Casos</p><p className="mt-1 text-sm font-black">{testCaseCount}</p></div>
+                <div className="rounded-2xl border border-white/12 bg-black/12 p-3"><p className="text-[10px] font-black uppercase tracking-[.16em] text-white/48">Empresas</p><p className="mt-1 text-sm font-black">{company ? 1 : companies.length}</p></div>
               </div>
             </aside>
           </div>
 
-          <div className="relative z-10 mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/12 pt-4">
+          <div className="relative z-[70] mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/12 pt-4">
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => { setMode("company"); setSelectedUser(null); }} className={mode === "company" ? "tc-button-primary" : "tc-button-secondary"}><FiBriefcase /> Empresa</button>
               <button type="button" onClick={() => { setMode("user"); setSelectedCompany(null); }} className={mode === "user" ? "tc-button-primary" : "tc-button-secondary"}><FiUsers /> Usuário</button>
             </div>
-            <div className="relative flex flex-wrap gap-2">
+            <div className="relative z-[80] flex flex-wrap gap-2">
               <div className="flex gap-1 rounded-2xl border border-white/16 bg-white/10 p-1">
                 {periods.map((item) => (
-                  <button key={item} type="button" onClick={() => { setPeriod(item); setFrom(""); setTo(""); }} className={!hasRange && period === item ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}>
+                  <button key={item} type="button" onClick={() => { setPeriod(item); setFrom(""); setTo(""); setShowCalendar(false); }} className={!hasRange && period === item ? "rounded-xl bg-white px-3 py-2 text-xs font-black text-[#011848]" : "rounded-xl px-3 py-2 text-xs font-black text-white/75"}>
                     {item === 7 ? "Semana" : `${item} dias`}
                   </button>
                 ))}
@@ -492,7 +593,7 @@ export default function VisaoGeralCompacta() {
                 </button>
               </div>
               {showCalendar ? (
-                <div className="absolute right-0 top-[calc(100%+.5rem)] z-30 w-80 rounded-3xl border border-white/16 bg-white p-4 text-[#011848] shadow-2xl dark:bg-[#07111f] dark:text-white">
+                <div className="absolute right-0 top-[calc(100%+.5rem)] z-[999] w-80 rounded-3xl border border-slate-200 bg-white p-4 text-[#011848] shadow-[0_32px_80px_rgba(15,23,42,.28)] ring-1 ring-black/5 dark:border-white/12 dark:bg-[#07111f] dark:text-white">
                   <p className="text-xs font-black uppercase tracking-[.22em] text-[var(--tc-text-muted)]">Filtrar por período</p>
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     <label className="text-xs font-bold">De<input type="date" value={draftFrom} onChange={(event) => setDraftFrom(event.target.value)} className="mt-1 w-full rounded-xl border border-[var(--tc-border)] bg-white px-3 py-2 dark:bg-[#0b1628]" /></label>
@@ -500,7 +601,7 @@ export default function VisaoGeralCompacta() {
                   </div>
                   <div className="mt-3 flex gap-2">
                     <button type="button" onClick={() => { if (draftFrom && draftTo) { setFrom(draftFrom); setTo(draftTo); setShowCalendar(false); } }} className="rounded-xl bg-[var(--tc-primary)] px-3 py-2 text-xs font-black text-white">Aplicar</button>
-                    <button type="button" onClick={() => { setFrom(""); setTo(""); setDraftFrom(""); setDraftTo(""); }} className="rounded-xl border border-[var(--tc-border)] px-3 py-2 text-xs font-black">Limpar</button>
+                    <button type="button" onClick={() => { setFrom(""); setTo(""); setDraftFrom(""); setDraftTo(""); setShowCalendar(false); }} className="rounded-xl border border-[var(--tc-border)] px-3 py-2 text-xs font-black">Limpar</button>
                   </div>
                 </div>
               ) : null}
@@ -512,12 +613,12 @@ export default function VisaoGeralCompacta() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-black tracking-[-.04em]">Mapa de contexto</h2>
-              <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">Escolha empresa ou usuário para a visão geral responder ao contexto certo.</p>
+              <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">A mesma estrutura aparece de forma geral em todas as empresas ou individualmente ao selecionar uma empresa.</p>
             </div>
             <label className="w-full lg:max-w-md">
               <div className="flex w-full items-center gap-3 rounded-[20px] border border-[var(--tc-border)] bg-white/65 px-4 py-3 dark:bg-white/[0.04]">
                 <FiSearch />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mode === "company" ? "Buscar empresa" : "Buscar usuário"} className="w-full bg-transparent text-sm outline-none" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={mode === "company" ? "Buscar empresa" : "Buscar usuário, e-mail ou perfil"} className="w-full bg-transparent text-sm outline-none" />
               </div>
             </label>
           </div>
@@ -550,7 +651,7 @@ export default function VisaoGeralCompacta() {
                     return (
                       <button key={email} type="button" onClick={() => setSelectedUser(email)} className={selected ? contextCardSelected : contextCard}>
                         <RoundUserAvatar src={avatarFromUser(user)} name={name} />
-                        <span className="min-w-0"><b className="line-clamp-1">{name}</b><p className="truncate text-xs text-[#64748b] dark:text-white/60">{email}</p></span>
+                        <span className="min-w-0"><b className="line-clamp-1">{name}</b><p className="truncate text-xs text-[#64748b] dark:text-white/60">{email}</p><small className="mt-1 inline-flex rounded-full bg-[rgba(1,24,72,.08)] px-2 py-0.5 text-[10px] font-black uppercase tracking-[.12em] text-[#011848] dark:bg-white/10 dark:text-white/70">{profileTag(user)}</small></span>
                       </button>
                     );
                   })}
@@ -561,12 +662,30 @@ export default function VisaoGeralCompacta() {
           </div>
         </section>
 
-        <div className={hasInsightCards ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]" : "grid gap-6"}>
+        <QualityControlOverviewBoard
+          companies={companies}
+          selectedCompany={company}
+          audit={filteredEvents}
+          defectsInPeriod={defectsInPeriod}
+          adminUsers={adminUsers}
+          runRows={runRows}
+          stats={stats}
+          planCount={planCount}
+          testCaseCount={testCaseCount}
+          passRate={passRate}
+          selectedContextLabel={selectedContextLabel}
+          periodLabel={periodLabel}
+          mode={mode}
+          selectedUser={selectedUser}
+        />
+
+        <div className={hasInsightCards ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]" : "grid gap-6"}>
           <section className="min-w-0 rounded-[30px] border border-[var(--tc-border)] bg-white/78 p-5 shadow-[0_18px_46px_rgba(1,24,72,.08)] dark:bg-white/[0.035]">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-black tracking-[-.05em]">Linha do tempo operacional</h2>
-                <p className="mt-1 max-w-3xl text-sm text-[#64748b] dark:text-white/60">Ações do período filtrado com leitura de criação, status, runs, planos, testes, defeitos, suporte, usuários e permissões.</p>
+                <p className="text-xs font-black uppercase tracking-[.18em] text-[#64748b] dark:text-white/45">{selectedContextLabel} · {periodLabel}</p>
+                <h2 className="mt-1 text-2xl font-black tracking-[-.05em]">Movimentações do período</h2>
+                <p className="mt-1 max-w-3xl text-sm text-[#64748b] dark:text-white/60">Criação, mudança de status, runs, planos, testes, defeitos, suporte, perfis e usuários com ator e horário.</p>
               </div>
               <span className="rounded-full border border-[var(--tc-border)] px-3 py-2 text-xs font-black uppercase tracking-[.14em] text-[#64748b] dark:text-white/55">
                 {loadingActivity ? "Carregando" : `${filteredEvents.length} eventos`}
@@ -577,6 +696,7 @@ export default function VisaoGeralCompacta() {
                 shownEvents.map((event, index) => {
                   const meta = eventKind(event);
                   const profile = event.actor_email ? actorProfiles[event.actor_email] : undefined;
+                  const actorName = profile?.name ?? nameFromEmail(event.actor_email);
                   return (
                     <div key={event.id} className="relative flex gap-4 pb-6">
                       <div className="flex flex-col items-center">
@@ -587,11 +707,11 @@ export default function VisaoGeralCompacta() {
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`h-2.5 w-2.5 rounded-full ${meta.color}`} aria-hidden />
                           <b>{meta.title}</b>
-                          <small className="ml-auto text-[#64748b] dark:text-white/50">{shortDate(event.created_at)}</small>
+                          <small className="ml-auto text-[#64748b] dark:text-white/50">{shortDateTime(event.created_at)}</small>
                         </div>
-                        <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{meta.detail}</p>
+                        <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{eventDetail(event, actorName)}</p>
                         <p className="mt-2 text-sm font-black text-[#011848] dark:text-white">{event.entity_label ?? humanizeAction(event.action)}</p>
-                        <small className="mt-2 block text-[#64748b] dark:text-white/50">{profile?.name ?? event.actor_email ?? "Sistema"}</small>
+                        <small className="mt-2 block text-[#64748b] dark:text-white/50">Ação original: {humanizeAction(event.action)}</small>
                       </div>
                     </div>
                   );
@@ -604,24 +724,17 @@ export default function VisaoGeralCompacta() {
           {hasInsightCards ? (
             <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
               <section className="rounded-[28px] border border-[var(--tc-border)] bg-white/82 p-4 shadow-[0_18px_36px_rgba(1,24,72,.08)] dark:bg-white/[0.04]">
-                <h2 className="text-lg font-black tracking-[-.03em]">Sinais rápidos</h2>
+                <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#64748b] dark:text-white/45">{selectedContextLabel}</p>
+                <h2 className="mt-1 text-lg font-black tracking-[-.03em]">Resumo do filtro</h2>
+                <p className="mt-1 text-sm text-[#64748b] dark:text-white/60">{contextExplanation}</p>
                 <div className="mt-4 grid gap-3">
-                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiCheckCircle /> Aprovação</span>
-                    <b className={passRate === null ? "text-[#64748b]" : statusTone(passRate)}>{passRate === null ? "--" : `${passRate}%`}</b>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiTarget /> Casos avaliados</span>
-                    <b>{testCaseCount}</b>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3">
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiClock /> Período</span>
-                    <b>{periodLabel}</b>
-                  </div>
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3"><span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiCheckCircle /> Aprovação</span><b className={passRate === null ? "text-[#64748b]" : statusTone(passRate)}>{passRate === null ? "--" : `${passRate}%`}</b></div>
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3"><span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiTarget /> Casos avaliados</span><b>{testCaseCount}</b></div>
+                  <div className="flex items-center justify-between rounded-2xl border border-[var(--tc-border)] px-3 py-3"><span className="flex items-center gap-2 text-sm font-semibold text-[#64748b] dark:text-white/60"><FiClock /> Período</span><b>{periodLabel}</b></div>
                 </div>
               </section>
-              <Pie title="Runs por status" note="Distribuição do contexto filtrado" slices={[{ label: "Aprovados", value: stats?.pass ?? 0, color: "#22c55e" }, { label: "Reprovados", value: stats?.fail ?? 0, color: "#ef4444" }, { label: "Bloqueados", value: stats?.blocked ?? 0, color: "#f59e0b" }, { label: "Em andamento", value: stats?.notRun ?? 0, color: "#60a5fa" }]} />
-              <Pie title="Defeitos" note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`} slices={[{ label: "Com run", value: linkedDefects, color: "#8b5cf6" }, { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" }]} />
+              <Pie title="Runs por status" contextLabel={selectedContextLabel} note={`Todas as runs encontradas em ${periodLabel}`} slices={[{ label: "Aprovados", value: stats?.pass ?? 0, color: "#22c55e" }, { label: "Reprovados", value: stats?.fail ?? 0, color: "#ef4444" }, { label: "Bloqueados", value: stats?.blocked ?? 0, color: "#f59e0b" }, { label: "Em andamento", value: stats?.notRun ?? 0, color: "#60a5fa" }]} />
+              <Pie title="Defeitos" contextLabel={selectedContextLabel} note={`${linkedDefects} vinculados a runs · ${defectsInPeriod.length - linkedDefects} soltos`} slices={[{ label: "Com run", value: linkedDefects, color: "#8b5cf6" }, { label: "Soltos", value: defectsInPeriod.length - linkedDefects, color: "#ef4444" }]} />
             </aside>
           ) : null}
         </div>

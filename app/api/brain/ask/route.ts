@@ -20,12 +20,30 @@ function normalizeForBrain(value: string) {
 }
 
 function isSmallTalk(message: string) {
-  return /^(oi|ola|bom dia|boa tarde|boa noite|tudo bem|valeu|obrigada|obrigado)[!.?\s]*$/.test(normalizeForBrain(message));
+  const text = normalizeForBrain(message).replace(/[!.?,;:]+/g, " ").replace(/\s+/g, " ").trim();
+  return /^(oi|ola|olá|e ai|e aí|bom dia|boa tarde|boa noite|tudo bem|como vai|como voce esta|como você está|valeu|obrigada|obrigado)( brian| brain)?$/.test(text);
+}
+
+function wantsTechJoke(message: string) {
+  const text = normalizeForBrain(message);
+  return /\b(piada|brincadeira|engracado|engraçado)\b/.test(text) && /\b(tecnologia|dev|programacao|programação|qa|teste|bug|sistema)\b/.test(text);
+}
+
+function buildTechJokeReply() {
+  return "Claro 😄 Por que o QA atravessou a rua? Para testar se o fluxo de pedestre também quebrava em produção. Quer que eu te conte outra ou seguimos para o trabalho?";
+}
+
+function buildSmallTalkReply() {
+  return [
+    "Oi, Ana! Tudo bem? Eu estou por aqui e pronto para te ajudar.",
+    "Como está o clima por aí hoje? Se você quiser, eu também posso consultar a previsão quando a busca web estiver ativa.",
+    "Antes da gente começar: quer ouvir uma piada rápida da área de tecnologia?",
+  ].join("\n\n");
 }
 
 function shouldTryWebFallback(message: string, foundNodes: number) {
   if (shouldUseWebSearch(message)) return true;
-  if (foundNodes > 0 || isSmallTalk(message)) return false;
+  if (foundNodes > 0 || isSmallTalk(message) || wantsTechJoke(message)) return false;
   const text = normalizeForBrain(message);
   if (text.split(/\s+/).filter(Boolean).length < 3) return false;
   return /\b(quem|qual|quando|onde|como|porque|por que|o que|me explica|sabe|conhece)\b/.test(text);
@@ -39,6 +57,10 @@ function humanizeBrainReply(input: {
   webContext: string | null;
   webEnabled: boolean;
 }) {
+  if (wantsTechJoke(input.message)) {
+    return buildTechJokeReply();
+  }
+
   if (input.webContext) {
     const intro = input.webEnabled
       ? "Procurei primeiro no Brain. Como a pergunta dependia de informação externa ou atual, também consultei a internet."
@@ -53,7 +75,7 @@ function humanizeBrainReply(input: {
   }
 
   if (isSmallTalk(input.message)) {
-    return "Oi, Ana. Estou aqui. Me diga o que você quer fazer agora: investigar um erro, criar bug, montar caso de teste, revisar permissão ou consultar algo fora do Brain.";
+    return buildSmallTalkReply();
   }
 
   return [

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { FiBriefcase, FiChevronDown, FiFolder, FiPlus } from "react-icons/fi";
@@ -34,6 +34,7 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
   const hasMultipleCompanies = clients.length > 1;
   const hasActiveCompany = Boolean(activeClientSlug);
   const hasProjects = projects.length > 0;
+  const newProjectHref = activeClientSlug ? `/empresas/${activeClientSlug}/projetos` : "/admin/clients";
 
   if (collapsed) {
     const label = activeClient?.name
@@ -200,7 +201,10 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
 
             <button
               type="button"
-              onClick={() => setProjectOpen(false)}
+              onClick={() => {
+                setProjectOpen(false);
+                window.location.href = newProjectHref;
+              }}
               className="flex w-full items-center gap-2 px-3 py-2 text-[11px] text-white/45 transition hover:bg-white/10 hover:text-white/75"
               data-testid="sidebar-project-create"
             >
@@ -213,4 +217,3 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
     </div>
   );
 }
-

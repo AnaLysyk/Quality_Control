@@ -25,12 +25,10 @@ function getPrimaryDatabaseUrl() {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL ?? null;
 }
 
-export function resolveBrainDatabaseUrl() {
+function resolveBrainDatabaseUrl() {
   const brainDatabaseUrl = process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL;
 
-  if (!brainDatabaseUrl) {
-    return null;
-  }
+  if (!brainDatabaseUrl) return null;
 
   const primaryDatabaseUrl = getPrimaryDatabaseUrl();
   const allowSameDatabase = process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
@@ -48,9 +46,23 @@ export function resolveBrainDatabaseUrl() {
   return brainDatabaseUrl;
 }
 
+function createDisabledBrainPrisma() {
+  const listModel = { findMany: async () => [] };
+  const auditModel = { create: async () => null };
+
+  return {
+    brainNode: listModel,
+    brainEdge: listModel,
+    brainAuditLog: auditModel,
+  } as unknown as PrismaClient;
+}
+
 function createBrainPrismaClient() {
   const databaseUrl = resolveBrainDatabaseUrl();
-  if (!databaseUrl) return null;
+  if (!databaseUrl) {
+    console.warn("[brainPrisma] Brain RAG disabled: configure BRAIN_DATABASE_URL or BRAIN_RAG_DATABASE_URL to enable it.");
+    return createDisabledBrainPrisma();
+  }
 
   const adapter = globalForBrainPrisma.brainPrismaAdapter ?? new PrismaPg(databaseUrl);
   globalForBrainPrisma.brainPrismaAdapter = adapter;
@@ -58,15 +70,13 @@ function createBrainPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
+export const brainPrisma: PrismaClient =
+  globalForBrainPrisma.brainPrisma ?? createBrainPrismaClient();
+
 export function getBrainPrisma() {
-  if (globalForBrainPrisma.brainPrisma) return globalForBrainPrisma.brainPrisma;
+  return brainPrisma;
+}
 
-  const client = createBrainPrismaClient();
-  if (!client) return null;
-
-  if (process.env.NODE_ENV !== "production") {
-    globalForBrainPrisma.brainPrisma = client;
-  }
-
-  return client;
+if (process.env.NODE_ENV !== "production") {
+  globalForBrainPrisma.brainPrisma = brainPrisma;
 }

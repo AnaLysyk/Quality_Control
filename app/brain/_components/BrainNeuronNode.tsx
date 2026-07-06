@@ -19,7 +19,12 @@ function labelize(value: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function statusLabel(value: string) {
+function statusLabel(node: BrainNode, connectedCount: number) {
+  const count = typeof node.metadata?.count === "number" ? node.metadata.count : connectedCount;
+  if (node.metadata?.isBrainCore || node.metadata?.isContextCore) return "núcleo";
+  if (node.metadata?.isProfileRoot) return count > 0 ? `${count} item(ns)` : "camada";
+  if (node.metadata?.isCompanyHub || node.metadata?.isProjectHub || node.metadata?.isModuleHub || node.metadata?.isUserHub) return count > 0 ? `${count} item(ns)` : "sem dados";
+
   const map: Record<string, string> = {
     ok: "ok",
     warning: "atenção",
@@ -28,11 +33,11 @@ function statusLabel(value: string) {
     error: "erro",
     orphan: "órfão",
   };
-  return map[value] ?? value;
+  return map[node.status] ?? node.status;
 }
 
 function IconForNode({ node }: { node: BrainNode }) {
-  if (node.type === "company" || node.type === "project" || node.type === "module") return <FiGitBranch className="h-4 w-4" />;
+  if (node.type === "company" || node.type === "project" || node.type === "module" || node.metadata?.isProfileRoot) return <FiGitBranch className="h-4 w-4" />;
   if (node.type === "screen") return <FiMonitor className="h-4 w-4" />;
   if (node.type === "integration") return <FiLink2 className="h-4 w-4" />;
   if (node.type === "person" || node.type === "requester" || node.metadata?.isUserHub) return <FiUser className="h-4 w-4" />;
@@ -46,6 +51,8 @@ function IconForNode({ node }: { node: BrainNode }) {
 
 function theme(node: BrainNode, selected: boolean, orphan: boolean) {
   if (selected) return "border-cyan-100 bg-cyan-200 text-[#03111f] shadow-[0_0_90px_rgba(103,232,249,.92),0_0_180px_rgba(103,232,249,.22),inset_0_0_28px_rgba(255,255,255,.45)]";
+  if (node.metadata?.isBrainCore || node.metadata?.isContextCore) return "border-yellow-300/80 bg-yellow-950/82 text-yellow-50 shadow-[0_0_58px_rgba(250,204,21,.46),inset_0_0_34px_rgba(250,204,21,.24)]";
+  if (node.metadata?.isProfileRoot) return "border-sky-300/80 bg-sky-950/78 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
   if (node.type === "integration") return "border-violet-300/80 bg-violet-950/78 text-violet-50 shadow-[0_0_48px_rgba(167,139,250,.42),inset_0_0_34px_rgba(167,139,250,.22)]";
   if (node.type === "screen") return "border-sky-300/80 bg-sky-950/78 text-sky-50 shadow-[0_0_48px_rgba(56,189,248,.38),inset_0_0_34px_rgba(56,189,248,.22)]";
   if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300/80 bg-rose-950/82 text-rose-50 shadow-[0_0_48px_rgba(251,113,133,.46),inset_0_0_34px_rgba(251,113,133,.24)]";
@@ -54,12 +61,14 @@ function theme(node: BrainNode, selected: boolean, orphan: boolean) {
 }
 
 function nodeKicker(node: BrainNode) {
+  const layerLabel = typeof node.metadata?.layerLabel === "string" ? node.metadata.layerLabel : "";
   const route = typeof node.metadata?.route === "string" ? node.metadata.route : "";
   const stage = typeof node.metadata?.stage === "string" ? node.metadata.stage : "";
   const provider = typeof node.metadata?.provider === "string" ? node.metadata.provider : "";
   const accessType = typeof node.metadata?.accessType === "string" ? node.metadata.accessType : "";
   const profileType = typeof node.metadata?.profileType === "string" ? node.metadata.profileType : "";
 
+  if (layerLabel) return layerLabel;
   if (profileType) return profileType;
   if (provider) return provider;
   if (stage) return stage;
@@ -94,7 +103,7 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
       data-brain-node-id={node.id}
       data-brain-node-status={node.status}
       data-brain-node-type={node.type}
-      title={`${node.label} · ${labelize(node.type)} · ${statusLabel(node.status)}`}
+      title={`${node.label} · ${nodeKicker(node)} · ${statusLabel(node, nodeData.connectedCount)}`}
       style={color && !isSelected ? {
         borderColor: color,
         boxShadow: `0 0 52px ${color}66, inset 0 0 34px ${color}2e`,
@@ -121,11 +130,11 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
       </span>
 
       <span className="relative z-10 mt-1 max-w-[78%] truncate text-[8px] font-black uppercase tracking-[0.15em] opacity-60">
-        {isCore ? labelize(node.type) : nodeKicker(node)}
+        {isCore ? nodeKicker(node) : nodeKicker(node)}
       </span>
 
       <span className="relative z-10 mt-1 rounded-full bg-black/42 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] opacity-80">
-        {statusLabel(node.status)}
+        {statusLabel(node, nodeData.connectedCount)}
       </span>
 
       {isBig ? (

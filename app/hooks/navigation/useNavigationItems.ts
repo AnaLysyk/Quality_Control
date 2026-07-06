@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -89,8 +89,8 @@ function buildAgendaItems(effectiveRole: SystemRole | null, companySlug: string 
 
   const geralLabel =
     effectiveRole === SYSTEM_ROLES.EMPRESA || effectiveRole === SYSTEM_ROLES.COMPANY_USER
-      ? "Calendário da empresa"
-      : "Calendário geral";
+      ? "CalendÃ¡rio da empresa"
+      : "CalendÃ¡rio geral";
 
   const geralHref = withScopeQuery(`/agenda/calendario-geral?scope=${geralScope}`, companySlug, projectSlug);
 
@@ -273,7 +273,9 @@ function resolveModuleItems(
       ? buildBrainItems(effectiveRole, companySlug, projectSlug)
       : mod.id === "quality"
         ? buildQualityItems(mod.items, companySlug)
-        : mod.items;
+        : mod.id === "agenda"
+          ? buildAgendaItems(effectiveRole, companySlug, projectSlug)
+          : mod.items;
 
   return {
     ...mod,
@@ -311,12 +313,27 @@ function filterByActiveContext(modules: NavModuleDef[], companySlug: string | nu
   return modules.filter((module) => !OPERATIONAL_MODULE_IDS.has(module.id));
 }
 
-function withReleaseAgendaModule(modules: NavModuleDef[], effectiveRole: SystemRole | null, permissions?: PermissionMatrix | null) {
+function withReleaseAgendaModule(
+  modules: NavModuleDef[],
+  effectiveRole: SystemRole | null,
+  permissions: PermissionMatrix | null | undefined,
+  companySlug: string | null,
+  projectSlug: string | null,
+  companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
+) {
   if (!effectiveRole || !AGENDA_ROLES.includes(effectiveRole)) return modules;
   if (!hasPermissionAccess(permissions, "release_calendar", "view")) return modules;
   if (modules.some((module) => (module.id as string) === "agenda")) return modules;
 
-  const agendaModule: NavModuleDef = { ...AGENDA_MODULE };
+  const agendaModule = resolveModuleItems(
+    { ...AGENDA_MODULE, items: buildAgendaItems(effectiveRole, companySlug, projectSlug) },
+    companySlug,
+    projectSlug,
+    companyRouteInput,
+    effectiveRole,
+    permissions,
+  );
+
   const homeIndex = modules.findIndex((module) => module.id === "home");
   if (homeIndex < 0) return [agendaModule, ...modules];
 
@@ -396,7 +413,14 @@ export function useNavigationItems() {
       .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole, permissions))
       .filter((mod) => mod.href || mod.items.length > 0);
 
-    return withReleaseAgendaModule(resolvedModules, effectiveRole, permissions);
+    return withReleaseAgendaModule(
+      resolvedModules,
+      effectiveRole,
+      permissions,
+      companySlug,
+      activeProjectSlug,
+      companyRouteInput,
+    );
   }, [
     user,
     isClientProfile,
@@ -411,3 +435,4 @@ export function useNavigationItems() {
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }
+

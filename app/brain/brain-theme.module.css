@@ -1,0 +1,234 @@
+.brainTheme {
+  --brain-bg: #020713;
+  --brain-panel: rgba(3, 10, 24, 0.86);
+  --brain-node-bg: rgba(3, 13, 29, 0.92);
+  --brain-node-border: rgba(125, 211, 252, 0.58);
+  --brain-node-text: #f8fbff;
+  --brain-node-muted: rgba(219, 234, 254, 0.76);
+}
+
+.brainTheme :global(.brain-page-fullscreen),
+.brainTheme :global(.brain-universe-canvas),
+.brainTheme :global(.brain-cortex-canvas) {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(59, 130, 246, 0.16), transparent 34%),
+    radial-gradient(circle at 84% 24%, rgba(239, 0, 1, 0.12), transparent 32%),
+    linear-gradient(135deg, #01040d 0%, var(--brain-bg) 46%, #06152c 100%) !important;
+  color: var(--brain-node-text) !important;
+}
+
+.brainTheme :global(.react-flow),
+.brainTheme :global(.react-flow__renderer),
+.brainTheme :global(.react-flow__viewport),
+.brainTheme :global(.react-flow__pane) {
+  background: transparent !important;
+}
+
+.brainTheme :global(.react-flow__controls) {
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  background: rgba(2, 6, 23, 0.58) !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28) !important;
+}
+
+.brainTheme :global(.react-flow__controls button) {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  background: rgba(15, 23, 42, 0.78) !important;
+  color: #e0f2fe !important;
+}
+
+.brainTheme :global(.brain-orb-node) {
+  border-color: var(--brain-node-border) !important;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.22), transparent 26%),
+    radial-gradient(circle at 70% 80%, rgba(14, 165, 233, 0.24), transparent 34%),
+    linear-gradient(145deg, rgba(3, 13, 29, 0.96), rgba(1, 24, 72, 0.88)) !important;
+  color: var(--brain-node-text) !important;
+  box-shadow:
+    0 0 44px rgba(56, 189, 248, 0.28),
+    0 0 96px rgba(1, 24, 72, 0.24),
+    inset 0 0 32px rgba(125, 211, 252, 0.12) !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.brainTheme :global(.brain-orb-node[data-brain-node-type="integration"]) {
+  border-color: rgba(196, 181, 253, 0.78) !important;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.2), transparent 26%),
+    linear-gradient(145deg, rgba(35, 18, 74, 0.96), rgba(88, 28, 135, 0.78)) !important;
+  box-shadow: 0 0 52px rgba(167, 139, 250, 0.36), inset 0 0 34px rgba(167, 139, 250, 0.18) !important;
+}
+
+.brainTheme :global(.brain-orb-node[data-brain-node-type="screen"]) {
+  border-color: rgba(125, 211, 252, 0.8) !important;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.2), transparent 26%),
+    linear-gradient(145deg, rgba(8, 47, 73, 0.96), rgba(12, 74, 110, 0.78)) !important;
+  box-shadow: 0 0 52px rgba(56, 189, 248, 0.34), inset 0 0 34px rgba(56, 189, 248, 0.18) !important;
+}
+
+.brainTheme :global(.brain-orb-node[data-brain-node-status="missing"]),
+.brainTheme :global(.brain-orb-node[data-brain-node-status="error"]),
+.brainTheme :global(.brain-orb-node[data-brain-node-status="orphan"]) {
+  border-color: rgba(253, 164, 175, 0.82) !important;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.18), transparent 26%),
+    linear-gradient(145deg, rgba(76, 5, 25, 0.98), rgba(127, 29, 29, 0.8)) !important;
+  box-shadow: 0 0 54px rgba(251, 113, 133, 0.4), inset 0 0 34px rgba(251, 113, 133, 0.18) !important;
+}
+
+.brainTheme :global(.brain-orb-node[data-brain-node-status="pending"]),
+.brainTheme :global(.brain-orb-node[data-brain-node-status="warning"]) {
+  border-color: rgba(253, 224, 71, 0.82) !important;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.18), transparent 26%),
+    linear-gradient(145deg, rgba(66, 32, 6, 0.98), rgba(113, 63, 18, 0.82)) !important;
+  box-shadow: 0 0 54px rgba(250, 204, 21, 0.34), inset 0 0 34px rgba(250, 204, 21, 0.18) !important;
+}
+
+.brainTheme :global(.react-flow__node.selected .brain-orb-node),
+.brainTheme :global(.brain-orb-node:hover) {
+  border-color: rgba(207, 250, 254, 0.95) !important;
+  background:
+    radial-gradient(circle at 26% 18%, rgba(255, 255, 255, 0.42), transparent 28%),
+    linear-gradient(145deg, rgba(8, 145, 178, 0.94), rgba(1, 24, 72, 0.9)) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 0 72px rgba(103, 232, 249, 0.78),
+    0 0 150px rgba(103, 232, 249, 0.22),
+    inset 0 0 32px rgba(255, 255, 255, 0.2) !important;
+}
+
+.brainTheme :global(.brain-orb-node span) {
+  color: inherit !important;
+}
+
+.brainTheme :global(.brain-orb-node span[class*="opacity-60"]),
+.brainTheme :global(.brain-orb-node span[class*="opacity-75"]),
+.brainTheme :global(.brain-orb-node span[class*="opacity-80"]) {
+  color: var(--brain-node-muted) !important;
+  opacity: 1 !important;
+}
+
+.brainTheme :global(.brain-orb-node span[class*="bg-black"]),
+.brainTheme :global(.brain-orb-node span[class*="bg-white"]) {
+  background: rgba(2, 6, 23, 0.42) !important;
+  color: #e0f2fe !important;
+}
+
+.brainTheme :global(.brain-filter-hud) {
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+.brainTheme :global(.qc-brain-filter-summary-chips) {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-summary-chips > span),
+.brainTheme :global(.qc-brain-filter-chip) {
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  background: rgba(15, 23, 42, 0.82) !important;
+  color: #f8fbff !important;
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
+  backdrop-filter: blur(14px);
+}
+
+.brainTheme :global(.qc-brain-filter-chip[data-active="true"]),
+.brainTheme :global(.qc-brain-filter-main-button),
+.brainTheme :global(.qc-brain-filter-icon-button) {
+  border-color: rgba(103, 232, 249, 0.45) !important;
+  background: rgba(1, 24, 72, 0.86) !important;
+  color: #ffffff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-panel) {
+  display: block !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 1.4rem;
+  background: rgba(2, 6, 23, 0.72) !important;
+  color: #f8fbff !important;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.brainTheme :global(.qc-brain-filter-compact-bar),
+.brainTheme :global(.qc-brain-filter-popover-header),
+.brainTheme :global(.qc-brain-filter-actions) {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brainTheme :global(.qc-brain-filter-compact-bar) {
+  padding: 0.75rem;
+}
+
+.brainTheme :global(.qc-brain-filter-brand),
+.brainTheme :global(.qc-brain-filter-compact-stats),
+.brainTheme :global(.qc-brain-filter-context) {
+  color: rgba(226, 232, 240, 0.78) !important;
+}
+
+.brainTheme :global(.qc-brain-filter-compact-search),
+.brainTheme :global(.qc-brain-filter-field) {
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.78) !important;
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-compact-search input),
+.brainTheme :global(.qc-brain-filter-field select) {
+  background: transparent !important;
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-popover) {
+  margin: 0.75rem;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  background: rgba(2, 6, 23, 0.92) !important;
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-grid) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.brainTheme :global(.qc-brain-filter-field) {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.brainTheme :global(.qc-brain-filter-field span),
+.brainTheme :global(.qc-brain-filter-eyebrow) {
+  color: rgba(226, 232, 240, 0.7) !important;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.brainTheme :global(.qc-brain-filter-popover-header) {
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.brainTheme :global(.qc-brain-filter-popover-header h2),
+.brainTheme :global(.qc-brain-filter-popover-header p) {
+  color: #f8fbff !important;
+}
+
+.brainTheme :global(.qc-brain-filter-actions) {
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}

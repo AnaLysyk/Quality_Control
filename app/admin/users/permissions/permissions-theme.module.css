@@ -1,0 +1,192 @@
+.permissionsTheme {
+  --permissions-bg-light: #f8fafc;
+  --permissions-panel-light: rgba(255, 255, 255, 0.96);
+  --permissions-panel-soft-light: rgba(248, 250, 252, 0.95);
+  --permissions-border-light: #dbe4f0;
+  --permissions-text-light: #0f172a;
+  --permissions-muted-light: #52627a;
+
+  --permissions-bg-dark: #07111f;
+  --permissions-panel-dark: rgba(15, 23, 42, 0.94);
+  --permissions-panel-soft-dark: rgba(17, 30, 50, 0.92);
+  --permissions-border-dark: rgba(148, 163, 184, 0.22);
+  --permissions-text-dark: #f8fafc;
+  --permissions-muted-dark: #b9c6d8;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page) {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(1, 24, 72, 0.08), transparent 34%),
+    radial-gradient(circle at 85% 10%, rgba(239, 0, 1, 0.06), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, var(--permissions-bg-light) 48%, #eef4ff 100%) !important;
+  color: var(--permissions-text-light) !important;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page > div > section),
+.permissionsTheme :global(.qc-users-permissions-page table),
+.permissionsTheme :global(.qc-users-permissions-page tr),
+.permissionsTheme :global(.qc-users-permissions-page aside),
+.permissionsTheme :global(.qc-users-permissions-page td[colspan] > div),
+.permissionsTheme :global(.qc-users-permissions-page td[colspan] section) {
+  border-color: var(--permissions-border-light) !important;
+  background: var(--permissions-panel-light) !important;
+  color: var(--permissions-text-light) !important;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page > div > section:first-child) {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 246, 255, 0.96)),
+    radial-gradient(circle at 85% 0%, rgba(1, 24, 72, 0.11), transparent 28%) !important;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.09) !important;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page > div > section:first-child > div:last-child > div),
+.permissionsTheme :global(.qc-users-permissions-page label),
+.permissionsTheme :global(.qc-users-permissions-page input),
+.permissionsTheme :global(.qc-users-permissions-page select),
+.permissionsTheme :global(.qc-users-permissions-page tbody tr),
+.permissionsTheme :global(.qc-users-permissions-page td[colspan] tr),
+.permissionsTheme :global(.qc-users-permissions-page td[colspan] aside > div),
+.permissionsTheme :global(.qc-users-permissions-page td[colspan] section > div) {
+  border-color: var(--permissions-border-light) !important;
+  background-color: var(--permissions-panel-soft-light) !important;
+  color: var(--permissions-text-light) !important;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page thead),
+.permissionsTheme :global(.qc-users-permissions-page thead tr) {
+  border-color: var(--permissions-border-light) !important;
+  background: #edf3fb !important;
+  color: #102447 !important;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page h1),
+.permissionsTheme :global(.qc-users-permissions-page h2),
+.permissionsTheme :global(.qc-users-permissions-page h3),
+.permissionsTheme :global(.qc-users-permissions-page p),
+.permissionsTheme :global(.qc-users-permissions-page th button),
+.permissionsTheme :global(.qc-users-permissions-page td) {
+  color: var(--permissions-text-light) !important;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page p.text-slate-500),
+.permissionsTheme :global(.qc-users-permissions-page .text-slate-400),
+.permissionsTheme :global(.qc-users-permissions-page .text-slate-500),
+.permissionsTheme :global(.qc-users-permissions-page .text-slate-600) {
+  color: var(--permissions-muted-light) !important;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page input::placeholder) {
+  color: #7b8aa0 !important;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page select option) {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.permissionsTheme :global(.qc-users-permissions-page button:not(:disabled):hover) {
+  filter: brightness(0.98);
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page) {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(59, 130, 246, 0.18), transparent 32%),
+    radial-gradient(circle at 90% 6%, rgba(239, 0, 1, 0.16), transparent 30%),
+    linear-gradient(135deg, #050b16 0%, var(--permissions-bg-dark) 52%, #0b1628 100%) !important;
+  color: var(--permissions-text-dark) !important;
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page > div > section),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page table),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page tr),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page aside),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page td[colspan] > div),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page td[colspan] section),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page > div > section),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page table),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page tr),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page aside),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page td[colspan] > div),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page td[colspan] section) {
+  border-color: var(--permissions-border-dark) !important;
+  background: var(--permissions-panel-dark) !important;
+  color: var(--permissions-text-dark) !important;
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page > div > section:first-child),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page > div > section:first-child) {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(1, 24, 72, 0.92)),
+    radial-gradient(circle at 100% 0%, rgba(239, 0, 1, 0.2), transparent 34%) !important;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.3) !important;
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page > div > section:first-child > div:last-child > div),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page label),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page input),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page select),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page tbody tr),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page td[colspan] tr),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page td[colspan] aside > div),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page td[colspan] section > div),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page > div > section:first-child > div:last-child > div),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page label),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page input),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page select),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page tbody tr),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page td[colspan] tr),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page td[colspan] aside > div),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page td[colspan] section > div) {
+  border-color: var(--permissions-border-dark) !important;
+  background-color: var(--permissions-panel-soft-dark) !important;
+  color: var(--permissions-text-dark) !important;
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page thead),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page thead tr),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page thead),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page thead tr) {
+  border-color: var(--permissions-border-dark) !important;
+  background: rgba(5, 14, 28, 0.98) !important;
+  color: var(--permissions-text-dark) !important;
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page h1),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page h2),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page h3),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page p),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page th button),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page td),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page h1),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page h2),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page h3),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page p),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page th button),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page td) {
+  color: var(--permissions-text-dark) !important;
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page p.text-slate-500),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page .text-slate-400),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page .text-slate-500),
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page .text-slate-600),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page p.text-slate-500),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page .text-slate-400),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page .text-slate-500),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page .text-slate-600) {
+  color: var(--permissions-muted-dark) !important;
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page input::placeholder),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page input::placeholder) {
+  color: #8fa0b6 !important;
+}
+
+:global(.dark) .permissionsTheme :global(.qc-users-permissions-page select option),
+:global([data-theme="dark"]) .permissionsTheme :global(.qc-users-permissions-page select option) {
+  background: #111e32;
+  color: #f8fafc;
+}

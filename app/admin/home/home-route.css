@@ -1,0 +1,7 @@
+.app-shell .app-stage:has(.home-route-theme)::before {
+  display: none !important;
+}
+
+.app-shell .app-stage:has(.home-route-theme) {
+  background: transparent !important;
+}

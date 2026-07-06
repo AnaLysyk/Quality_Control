@@ -353,6 +353,18 @@ export function BrainNeuralDashboard() {
   function handleSelectNode(node: BrainNode) {
     setSelectedNode(node);
 
+    if (node.metadata?.isScopeHub) {
+      if (node.metadata.scopeType === "requests") setNodeType("access_request");
+      if (node.metadata.scopeType === "users") setNodeType("all");
+      setActiveModule(null);
+      return;
+    }
+
+    if (node.metadata?.isUserHub) {
+      setActiveModule(null);
+      return;
+    }
+
     if (node.metadata?.isProfileRoot) {
       setSelectedProfileType(String(node.metadata.profileType ?? node.label));
       setActiveModule(null);
@@ -365,8 +377,13 @@ export function BrainNeuralDashboard() {
       return;
     }
 
-    if (node.metadata?.isModuleHub || node.type === "module") {
-      setActiveModule(String(node.metadata?.module ?? node.module));
+    if (node.metadata?.isModuleHub) {
+      setActiveModule(String(node.metadata?.module ?? node.label));
+      return;
+    }
+
+    if (node.type === "module") {
+      setActiveModule(node.module);
     }
   }
 
@@ -464,7 +481,7 @@ export function BrainNeuralDashboard() {
       onPointerCancel={handleFilterPointerUp}
     >
       <div className="qc-brain-filter-summary-chips mb-2">
-        <span>Perfil primeiro</span>
+        <span>1. Escolha o perfil</span>
         <button type="button" onClick={() => handleSelectProfile(null)} data-active={!selectedProfileType ? "true" : "false"} className="qc-brain-filter-chip">
           Todos os perfis
         </button>

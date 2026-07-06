@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BrainAccessRequestFlowPanel } from "./_components/BrainAccessRequestFlowPanel";
+import "./brain-universe-dark.css";
 import styles from "./brain-theme.module.css";
 
 export default function BrainLayout({ children }: { children: ReactNode }) {

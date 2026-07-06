@@ -71,7 +71,7 @@ function displayModule(value: string) {
 }
 
 function contextLabel(company: string, project: string, area: string | null) {
-  return `${company} / ${project} / ${area ? displayModule(area) : "Todas as áreas"}`;
+  return `${company} / ${project} / ${area ? displayModule(area) : "Todos os módulos"}`;
 }
 
 function belongsToSelectedCompany(node: BrainNode, selectedCompanyId: string | null) {
@@ -126,7 +126,7 @@ export function BrainContextSelector({
   onRefresh,
   source = "fallback",
 }: BrainContextSelectorProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [apiBrainOptions, setApiBrainOptions] = useState<{
     companies: Array<{ id: string; label: string }>;
     projects: Array<{ id: string; label: string }>;
@@ -242,7 +242,7 @@ export function BrainContextSelector({
       <div className="qc-brain-filter-compact-bar">
         <div className="qc-brain-filter-brand" aria-label="Brain">
           <span className="qc-brain-filter-brand-logo" />
-          <strong>Brain</strong>
+          <strong>Brain de gestão</strong>
         </div>
         <button
           type="button"
@@ -251,7 +251,7 @@ export function BrainContextSelector({
           aria-expanded={open}
         >
           <FiSliders aria-hidden />
-          <span>Filtros</span>
+          <span>{open ? "Ocultar filtros" : "Abrir filtros"}</span>
           {activeFilterCount ? <strong>{activeFilterCount}</strong> : null}
         </button>
 
@@ -260,7 +260,7 @@ export function BrainContextSelector({
           <input
             value={searchText}
             onChange={(event) => onSearchTextChange(event.target.value)}
-            placeholder="Buscar nó, usuário, empresa, defeito, suporte, caso, plano..."
+            placeholder="Buscar usuário, empresa, módulo, item, solicitação ou agenda..."
           />
         </label>
 
@@ -289,10 +289,10 @@ export function BrainContextSelector({
         <div className="qc-brain-filter-popover">
           <div className="qc-brain-filter-popover-header">
             <div>
-              <span className="qc-brain-filter-eyebrow">Recorte do Brain</span>
-              <h2>Filtrar sem quebrar o fluxo dos nós</h2>
+              <span className="qc-brain-filter-eyebrow">Fluxo de leitura</span>
+              <h2>Perfil → empresa → usuário → módulo → item</h2>
               <p>
-                As opções abaixo são montadas a partir do que a API trouxe para o grafo. Se preferir, peça ao chat do Brain para ajustar o recorte por você.
+                Para líder TC e suporte técnico, a visão mostra empresas gerenciadas, usuários vinculados, solicitações da Quality Control e agenda. Para empresa, mostra usuários empresariais e usuários TC vinculados à empresa.
               </p>
             </div>
 
@@ -303,7 +303,7 @@ export function BrainContextSelector({
 
           <div className="qc-brain-filter-grid">
             <label className="qc-brain-filter-field">
-              <span>Empresa</span>
+              <span>2. Empresa gerenciada</span>
               <select
                 aria-label="Empresa"
                 value={selectedCompanyId ?? "all"}
@@ -320,7 +320,7 @@ export function BrainContextSelector({
             </label>
 
             <label className="qc-brain-filter-field">
-              <span>Projeto</span>
+              <span>3. Projeto/contexto</span>
               <select
                 aria-label="Projeto"
                 value={selectedProjectId ?? "all"}
@@ -337,13 +337,13 @@ export function BrainContextSelector({
             </label>
 
             <label className="qc-brain-filter-field">
-              <span>Área</span>
+              <span>4. Módulo/área</span>
               <select
                 aria-label="Área"
                 value={activeModule ?? "all"}
                 onChange={(event) => onModuleChange(event.target.value === "all" ? null : event.target.value)}
               >
-                <option value="all">Todas as áreas</option>
+                <option value="all">Todos os módulos</option>
                 {modules.map((moduleName) => (
                   <option key={moduleName} value={moduleName}>
                     {displayModule(moduleName)}
@@ -354,13 +354,16 @@ export function BrainContextSelector({
             </label>
 
             <label className="qc-brain-filter-field">
-              <span>Tipo de nó</span>
+              <span>5. Tipo de item</span>
               <select
                 aria-label="Tipo de nó"
                 value={nodeType}
                 onChange={(event) => resetDependentFilters(() => onNodeTypeChange(event.target.value as BrainNodeType | "all"))}
               >
                 <option value="all">Todos os tipos</option>
+                <option value="person">Usuários</option>
+                <option value="access_request">Solicitações</option>
+                <option value="event">Agenda/eventos</option>
                 {types.map((type) => (
                   <option key={type} value={type}>
                     {nodeTypeLabel(type)}
@@ -371,7 +374,7 @@ export function BrainContextSelector({
             </label>
 
             <label className="qc-brain-filter-field">
-              <span>Status do nó</span>
+              <span>Status do item</span>
               <select
                 aria-label="Status do nó"
                 value={nodeStatus}

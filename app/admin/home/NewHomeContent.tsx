@@ -34,6 +34,7 @@ function formatHomeReply(prompt: string, fallbackRole: string, payload: BrainAsk
 export default function NewHomeContent() {
   const { user } = useAuthUser();
   const { modules, effectiveRole } = useNavigationItems();
+  const [isHydrated, setIsHydrated] = useState(false);
   const [command, setCommand] = useState("");
   const [listening, setListening] = useState(false);
   const [directVoiceMode, setDirectVoiceMode] = useState(false);
@@ -47,11 +48,11 @@ export default function NewHomeContent() {
   const [sessions, setSessions] = useState<BrainSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const firstName = resolveFirstName(user);
-  const roleLabel = effectiveRole ? resolveRoleLabel({ role: effectiveRole }) : resolveRoleLabel(user);
-  const greeting = useMemo(() => resolveGreeting(), []);
-  const navActions = useMemo(() => buildBrainHomeActions(modules).slice(0, 8), [modules]);
-  const suggestions = useMemo<(BrainSuggestion | BrainHomeAction)[]>(() => navActions.length ? navActions : buildSuggestions(roleLabel), [navActions, roleLabel]);
+  const firstName = isHydrated ? resolveFirstName(user) : "Ana";
+  const roleLabel = isHydrated ? (effectiveRole ? resolveRoleLabel({ role: effectiveRole }) : resolveRoleLabel(user)) : "Usuário";
+  const greeting = useMemo(() => (isHydrated ? resolveGreeting() : "Boa tarde"), [isHydrated]);
+  const navActions = useMemo(() => (isHydrated ? buildBrainHomeActions(modules).slice(0, 8) : []), [isHydrated, modules]);
+  const suggestions = useMemo<(BrainSuggestion | BrainHomeAction)[]>(() => { if (!isHydrated) return []; return navActions.length ? navActions : buildSuggestions(roleLabel); }, [isHydrated, navActions, roleLabel]);
   const initialAssistantText = useMemo(() => buildInitialMessage(greeting, firstName, roleLabel), [firstName, greeting, roleLabel]);
   const currentSession = sessions.find((session) => session.id === currentSessionId);
   const messages = currentSession?.messages ?? [];
@@ -60,7 +61,8 @@ export default function NewHomeContent() {
   const typedAssistantText = useTypewriter(latestAssistantMessage, 46);
   const isTyping = typedAssistantText.length < latestAssistantMessage.length;
 
-  useEffect(() => { const today = todayBR(); const storedDay = window.localStorage.getItem(DAILY_KEY); const stored = window.localStorage.getItem(STORAGE_KEY); const parsed = stored ? (JSON.parse(stored) as BrainSession[]) : []; const shouldStartFresh = storedDay !== today || parsed.length === 0; const nextSessions = shouldStartFresh ? [createSession(initialAssistantText), ...parsed] : parsed; window.localStorage.setItem(DAILY_KEY, today); setSessions(nextSessions); setCurrentSessionId(nextSessions[0]?.id ?? ""); }, [initialAssistantText]);
+  useEffect(() => { setIsHydrated(true); }, []);
+  useEffect(() => { if (!isHydrated) return; const today = todayBR(); const storedDay = window.localStorage.getItem(DAILY_KEY); const stored = window.localStorage.getItem(STORAGE_KEY); const parsed = stored ? (JSON.parse(stored) as BrainSession[]) : []; const shouldStartFresh = storedDay !== today || parsed.length === 0; const nextSessions = shouldStartFresh ? [createSession(initialAssistantText), ...parsed] : parsed; window.localStorage.setItem(DAILY_KEY, today); setSessions(nextSessions); setCurrentSessionId(nextSessions[0]?.id ?? ""); }, [initialAssistantText, isHydrated]);
   useEffect(() => { if (sessions.length) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions.slice(0, 30))); }, [sessions]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages, typedAssistantText]);
   useEffect(() => { if (typeof window === "undefined" || !window.speechSynthesis) return; const loadVoices = () => setAvailableVoices(window.speechSynthesis.getVoices().filter((voice) => voice.lang.startsWith("pt"))); loadVoices(); window.speechSynthesis.onvoiceschanged = loadVoices; return () => { window.speechSynthesis.onvoiceschanged = null; window.speechSynthesis.cancel(); }; }, []);

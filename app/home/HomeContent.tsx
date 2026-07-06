@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { FiCommand, FiMessageCircle, FiMic } from "react-icons/fi";
+import { FiClock, FiCommand, FiMessageCircle, FiMic, FiZap } from "react-icons/fi";
 
 import { useAuthUser } from "@/hooks/useAuthUser";
 
@@ -11,11 +11,29 @@ type ProfileExperience = {
   prompts: string[];
 };
 
-type HomeCaptionTurn = {
+type BrainUpdateWindow = {
   id: string;
-  from: "user" | "assistant";
+  title: string;
   text: string;
+  scope: string;
   ts: number;
+};
+
+type HomeContextPayload = {
+  periodLabel?: string;
+  typedMessages?: string[];
+  summary?: {
+    actions?: number;
+    companiesUpdated?: number;
+    usersInvolved?: number;
+    pendingItems?: number;
+    flowsWithRisk?: number;
+  };
+  highlights?: Array<{
+    title?: string;
+    description?: string;
+    type?: string;
+  }>;
 };
 
 type BrowserSpeechRecognitionEvent = {
@@ -44,7 +62,7 @@ type BrowserSpeechRecognition = {
   onend: (() => void) | null;
 };
 
-const HOME_HISTORY_KEY_PREFIX = "brain_home_caption_history_v2";
+const HOME_UPDATES_KEY_PREFIX = "brain_home_update_windows_v1";
 
 function normalizeText(value: string) {
   return value
@@ -83,8 +101,8 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
   if (role.includes("leader") || role.includes("lider")) {
     return {
       label: "Líder TC",
-      summary: "Eu cruzo empresas, usuários, solicitações, fluxos e pendências recentes para orientar a próxima ação.",
-      prompts: ["Analisar por empresa", "Analisar por usuário", "Ver pendências do dia"],
+      summary: "Eu cruzo empresas, usuários, solicitações, fluxos e pendências recentes para explicar a próxima ação.",
+      prompts: ["Analisar por empresa", "Analisar por usuário", "Ver pendências das últimas horas"],
     };
   }
 
@@ -92,7 +110,7 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
     return {
       label: "Suporte Técnico",
       summary: "Eu organizo chamados, integrações, usuários bloqueados e alertas técnicos para acelerar o atendimento.",
-      prompts: ["Ver incidentes", "Analisar integrações", "Checar usuários"],
+      prompts: ["Ver incidentes", "Analisar integrações", "Checar usuários nas últimas horas"],
     };
   }
 
@@ -100,14 +118,14 @@ function resolveProfileExperience(roleValue: string): ProfileExperience {
     return {
       label: "Empresa",
       summary: "Eu organizo projeto, pendências, próximas entregas e movimentações recentes da empresa.",
-      prompts: ["Ver saúde do projeto", "Listar pendências", "Abrir visão geral"],
+      prompts: ["Ver saúde do projeto", "Listar pendências", "Atualizações das últimas 24 horas"],
     };
   }
 
   return {
     label: "QA",
     summary: "Eu conecto runs, evidências, bugs e plano atual para você continuar sem procurar no menu.",
-    prompts: ["Continuar meu trabalho", "Ver meus runs", "Revisar bugs"],
+    prompts: ["Continuar meu trabalho", "Ver meus runs", "Revisar bugs das últimas horas"],
   };
 }
 
@@ -141,6 +159,65 @@ function resolveAssistantActor(user: unknown) {
   };
 }
 
+function extractHourWindow(command: string) {
+  const normalized = normalizeText(command);
+  const match = normalized.match(/(?:ultimas?|u00faltimas?|em|por)\s*(\d{1,2})\s*h(?:oras?)?/i) ?? normalized.match(/(\d{1,2})\s*h(?:oras?)?/i);
+  const hours = match?.[1] ? Math.max(1, Math.min(72, Number(match[1]))) : 24;
+  return {
+    hours,
+    label: hours === 1 ? "última 1 hora" : `últimas ${hours} horas`,
+    apiRange: hours <= 24 ? "24h" : hours <= 168 ? "7d" : "30d",
+  };
+}
+
+function buildInitialUpdates(input: {
+  greeting: string;
+  userName: string;
+  profile: ProfileExperience;
+  payload?: HomeContextPayload | null;
+}): BrainUpdateWindow[] {
+  const periodLabel = input.payload?.periodLabel ?? "últimas 24 horas";
+  const summary = input.payload?.summary;
+  const highlights = Array.isArray(input.payload?.highlights) ? input.payload?.highlights ?? [] : [];
+  const typedMessages = Array.isArray(input.payload?.typedMessages) ? input.payload?.typedMessages ?? [] : [];
+  const baseText = typedMessages.join(" ").trim();
+  const now = Date.now();
+
+  const updates: BrainUpdateWindow[] = [
+    {
+      id: makeHomeId("update"),
+      title: "Atualizações recentes",
+      scope: periodLabel,
+      text:
+        baseText ||
+        `${input.greeting}, ${input.userName}. Estou lendo as movimentações das últimas 24 horas e organizando o que importa para ${input.profile.label}.`,
+      ts: now,
+    },
+  ];
+
+  if (summary) {
+    updates.push({
+      id: makeHomeId("update"),
+      title: "Resumo tratado pelo Brain",
+      scope: periodLabel,
+      text: `${summary.actions ?? 0} ações registradas, ${summary.companiesUpdated ?? 0} empresas com atualização, ${summary.usersInvolved ?? 0} usuários envolvidos, ${summary.pendingItems ?? 0} pendências abertas e ${summary.flowsWithRisk ?? 0} fluxos com risco.`,
+      ts: now + 1,
+    });
+  }
+
+  for (const item of highlights.slice(0, 3)) {
+    updates.push({
+      id: makeHomeId("update"),
+      title: item.title || "Destaque do contexto",
+      scope: periodLabel,
+      text: item.description || "Movimento encontrado no contexto recente.",
+      ts: now + updates.length,
+    });
+  }
+
+  return updates.slice(-5);
+}
+
 function BrainOrb({ active }: { active: boolean }) {
   return (
     <div className={`brain-orb-wrap ${active ? "is-active" : ""}`} aria-hidden="true">
@@ -170,19 +247,18 @@ function BrainOrb({ active }: { active: boolean }) {
 function openAssistantChat(input: {
   command: string;
   profile: ProfileExperience;
-  homeConversation: HomeCaptionTurn[];
+  updates: BrainUpdateWindow[];
+  hoursLabel: string;
 }) {
   if (typeof window === "undefined") return;
 
-  const historySnippet = input.homeConversation
-    .slice(-12)
-    .map((turn) => `${turn.from === "user" ? "Usuária" : "Brain"}: ${turn.text}`)
+  const updatesSnippet = input.updates
+    .slice(-8)
+    .map((turn) => `Brain/${turn.scope}: ${turn.title} — ${turn.text}`)
     .join("\n");
   const prompt =
     input.command.trim() ||
-    (historySnippet
-      ? `Continue a conversa da Home.\n\n${historySnippet}`
-      : "Continue a conversa da Home como Brain, respondendo em balões e usando o contexto da pessoa.");
+    `Continue a análise da Home. Janela: ${input.hoursLabel}.\n\n${updatesSnippet}`;
 
   window.dispatchEvent(
     new CustomEvent("assistant:open", {
@@ -199,7 +275,8 @@ function openAssistantChat(input: {
           screenSummary: input.profile.summary,
           suggestedPrompts: input.profile.prompts,
           metadata: {
-            homeConversation: input.homeConversation.slice(-12),
+            hoursLabel: input.hoursLabel,
+            updates: input.updates.slice(-8),
           },
         },
       },
@@ -219,67 +296,102 @@ function BrainConsole({
   authUser: unknown;
 }) {
   const [command, setCommand] = useState("");
-  const [homeConversation, setHomeConversation] = useState<HomeCaptionTurn[]>([]);
+  const [updates, setUpdates] = useState<BrainUpdateWindow[]>([]);
   const [sendingHome, setSendingHome] = useState(false);
   const [dictating, setDictating] = useState(false);
+  const [hoursLabel, setHoursLabel] = useState("últimas 24 horas");
 
   const homeStorageKey = useMemo(() => {
     const record = (authUser ?? {}) as Record<string, unknown>;
     const id = typeof record.id === "string" ? record.id : userName;
-    return `${HOME_HISTORY_KEY_PREFIX}:${id}`;
+    return `${HOME_UPDATES_KEY_PREFIX}:${id}`;
   }, [authUser, userName]);
 
-  const initialMessage = `${greeting}, ${userName}. Eu sou o Brain. Me diga o que você quer ver agora e eu respondo aqui por balões.`;
-
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(homeStorageKey);
-      if (!raw) {
-        setHomeConversation([{ id: makeHomeId("assistant"), from: "assistant", text: initialMessage, ts: Date.now() }]);
-        return;
+    let active = true;
+
+    async function loadInitialUpdates() {
+      try {
+        const raw = window.localStorage.getItem(homeStorageKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setUpdates(parsed.slice(-5));
+            return;
+          }
+        }
+      } catch {
+        // continua com atualização nova
       }
-      const parsed = JSON.parse(raw);
-      const history = Array.isArray(parsed) ? parsed.slice(-16) : [];
-      setHomeConversation(history.length ? history : [{ id: makeHomeId("assistant"), from: "assistant", text: initialMessage, ts: Date.now() }]);
-    } catch {
-      setHomeConversation([{ id: makeHomeId("assistant"), from: "assistant", text: initialMessage, ts: Date.now() }]);
+
+      try {
+        const response = await fetch("/api/brain/home-context?range=24h", { cache: "no-store" });
+        const payload = response.ok ? ((await response.json().catch(() => null)) as HomeContextPayload | null) : null;
+        if (active) {
+          setUpdates(buildInitialUpdates({ greeting, userName, profile, payload }));
+        }
+      } catch {
+        if (active) {
+          setUpdates(buildInitialUpdates({ greeting, userName, profile }));
+        }
+      }
     }
-  }, [homeStorageKey, initialMessage]);
+
+    void loadInitialUpdates();
+    return () => {
+      active = false;
+    };
+  }, [greeting, homeStorageKey, profile, userName]);
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(homeStorageKey, JSON.stringify(homeConversation.slice(-16)));
+      window.localStorage.setItem(homeStorageKey, JSON.stringify(updates.slice(-8)));
     } catch {
       // ignora falha de histórico local
     }
-  }, [homeConversation, homeStorageKey]);
+  }, [updates, homeStorageKey]);
 
-  function replaceThinkingWithAssistant(text: string) {
-    setHomeConversation((current) => {
+  function replaceThinkingWithUpdate(text: string, scope: string, title = "Resposta organizada") {
+    setUpdates((current) => {
       const withoutThinking = current.filter((turn) => turn.id !== "brain-thinking-home");
-      return [...withoutThinking, { id: makeHomeId("assistant"), from: "assistant", text, ts: Date.now() }].slice(-16);
+      return [
+        ...withoutThinking,
+        {
+          id: makeHomeId("update"),
+          title,
+          text,
+          scope,
+          ts: Date.now(),
+        },
+      ].slice(-8);
     });
   }
 
   async function askHomeBrain(text: string) {
-    const userTurn: HomeCaptionTurn = { id: makeHomeId("user"), from: "user", text, ts: Date.now() };
-    const thinkingTurn: HomeCaptionTurn = {
-      id: "brain-thinking-home",
-      from: "assistant",
-      text: "Estou conectando isso com o seu contexto...",
-      ts: Date.now() + 1,
-    };
-
+    const windowInfo = extractHourWindow(text);
+    const scope = windowInfo.label;
+    setHoursLabel(scope);
     setCommand("");
     setSendingHome(true);
-    setHomeConversation((current) => [...current, userTurn, thinkingTurn].slice(-16));
+    setUpdates((current) => [
+      ...current.filter((turn) => turn.id !== "brain-thinking-home"),
+      {
+        id: "brain-thinking-home",
+        title: "Analisando pedido",
+        text: `Estou buscando, tratando e organizando as informações da ${scope}.`,
+        scope,
+        ts: Date.now(),
+      },
+    ].slice(-8));
+
+    openAssistantChat({ command: text, profile, updates, hoursLabel: scope });
 
     try {
       const response = await fetch("/api/assistente/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: text,
+          message: `Responda para a Home do Brain sem repetir a pergunta da usuária. Traga dados, informações organizadas e uma explicação clara. Janela solicitada: ${scope}. Pedido: ${text}`,
           context: {
             route: "/home",
             module: "home",
@@ -288,18 +400,25 @@ function BrainConsole({
             suggestedPrompts: profile.prompts,
             actor: resolveAssistantActor(authUser),
             metadata: {
-              homeConversation: [...homeConversation.slice(-8), userTurn],
+              requestedWindow: scope,
+              apiRange: windowInfo.apiRange,
+              previousUpdates: updates.slice(-6),
             },
           },
         }),
       });
 
       const payload = (await response.json().catch(() => ({}))) as { answer?: string; message?: string; error?: string };
-      replaceThinkingWithAssistant(
-        payload.answer || payload.message || payload.error || "Não consegui buscar detalhes agora, mas posso continuar pelo chat lateral.",
+      replaceThinkingWithUpdate(
+        payload.answer || payload.message || payload.error || "Não encontrei detalhes suficientes agora. Tente pedir por uma empresa, usuário, tela, fluxo ou período em horas.",
+        scope,
       );
     } catch {
-      replaceThinkingWithAssistant("Não consegui consultar o Brain agora. Abre a conversa no chat que eu continuo por lá com este mesmo contexto.");
+      replaceThinkingWithUpdate(
+        "Não consegui consultar o Brain agora. Mantive o pedido no chat flutuante para continuar a análise por lá.",
+        scope,
+        "Consulta indisponível",
+      );
     } finally {
       setSendingHome(false);
     }
@@ -315,7 +434,7 @@ function BrainConsole({
   function startHomeDictation() {
     const SpeechRecognitionConstructor = resolveSpeechRecognitionConstructor();
     if (!SpeechRecognitionConstructor) {
-      replaceThinkingWithAssistant("Este navegador não liberou ditado por voz aqui. Você pode continuar digitando ou abrir o chat lateral.");
+      replaceThinkingWithUpdate("Este navegador não liberou ditado por voz aqui. Você pode continuar digitando.", hoursLabel, "Áudio indisponível");
       return;
     }
 
@@ -390,26 +509,32 @@ function BrainConsole({
         </div>
 
         <div className="min-w-0">
-          <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-white/55">
-            Brain
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-white/55">
+              Brain
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/58">
+              <FiClock /> {hoursLabel}
+            </span>
           </div>
           <h1 className="text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl xl:text-5xl">
             {greeting}, <span className="text-[var(--tc-accent,#ef0001)]">{userName}.</span>
           </h1>
 
-          <div className="mt-5 max-h-[360px] space-y-3 overflow-auto pr-1">
-            {homeConversation.map((turn) => (
-              <div key={turn.id} className={`flex ${turn.from === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[88%] rounded-[1.35rem] px-4 py-3 text-sm font-semibold leading-6 shadow-[0_18px_44px_rgba(0,0,0,0.16)] sm:text-base ${
-                    turn.from === "user"
-                      ? "rounded-br-md bg-white text-slate-950"
-                      : "rounded-bl-md border border-white/10 bg-white/[0.07] text-white/86 backdrop-blur"
-                  }`}
-                >
-                  {turn.text}
+          <div className="mt-5 max-h-[390px] space-y-3 overflow-auto pr-1">
+            {updates.map((item) => (
+              <article
+                key={item.id}
+                className="rounded-[1.35rem] rounded-bl-md border border-white/10 bg-white/[0.07] px-4 py-3 text-white/86 shadow-[0_18px_44px_rgba(0,0,0,0.16)] backdrop-blur"
+              >
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--tc-accent,#ef0001)]/16 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tc-accent,#ef0001)]">
+                    <FiZap /> {item.scope}
+                  </span>
+                  <h2 className="text-sm font-black text-white">{item.title}</h2>
                 </div>
-              </div>
+                <p className="whitespace-pre-line text-sm font-semibold leading-6 sm:text-base">{item.text}</p>
+              </article>
             ))}
           </div>
 
@@ -418,7 +543,7 @@ function BrainConsole({
             <input
               value={command}
               onChange={(event) => setCommand(event.target.value)}
-              placeholder="Fale ou escreva para o Brain..."
+              placeholder="Peça dados, atualizações ou informe horas. Ex: últimas 6h por empresa..."
               className="min-w-0 flex-1 bg-transparent text-base font-semibold text-white outline-none placeholder:text-white/36"
             />
             <button
@@ -439,7 +564,7 @@ function BrainConsole({
           <div className="mt-4 flex justify-end">
             <button
               type="button"
-              onClick={() => openAssistantChat({ command, profile, homeConversation })}
+              onClick={() => openAssistantChat({ command, profile, updates, hoursLabel })}
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:border-[var(--tc-accent,#ef0001)]/55"
             >
               Abrir conversa no chat

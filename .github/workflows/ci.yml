@@ -19,6 +19,20 @@ jobs:
       E2E_USE_JSON: "1"
       AUTH_STORE: "json"
       USE_JSON_STORE: "true"
+      TICKETS_STORE: "json"
+      EMAIL_CAPTURE_MODE: "file"
+      EMAIL_CAPTURE_FILE: "test-results/emails/outbox.jsonl"
+      ACCESS_REQUEST_EMAIL_BYPASS: "true"
+      ACCESS_REQUEST_BLOCK_DUPLICATES: "true"
+      EMAIL_CAPTURE_MODE_REASON: "CI must never send real SMTP messages"
+      FORCE_EMAIL_SEND: "false"
+      E2E_SEND_REAL_EMAIL: "false"
+      PLAYWRIGHT_REAL_EMAIL: "false"
+      JWT_SECRET: "quality-control-ci-secret"
+      NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3100"
+      NEXT_PUBLIC_BASE_URL: "http://127.0.0.1:3100"
+      APP_URL: "http://127.0.0.1:3100"
+      PUBLIC_BASE_URL: "http://127.0.0.1:3100"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +45,12 @@ jobs:
 
       - name: Install Node deps
         run: npm ci
+
+      - name: Prepare isolated test directories
+        shell: bash
+        run: |
+          mkdir -p test-results/emails .tmp/e2e-auth
+          : > "$EMAIL_CAPTURE_FILE"
 
       - name: Block obvious committed database secrets
         shell: bash
@@ -72,8 +92,18 @@ jobs:
           export DATABASE_URL="$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql ci ci 127.0.0.1 5432 ci)"
           npm run build
 
-      - name: Run Node tests
+      - name: Run Node tests with captured email
         shell: bash
+        env:
+          NODE_ENV: test
         run: |
           export DATABASE_URL="$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql ci ci 127.0.0.1 5432 ci)"
           npm run test
+
+      - name: Upload captured test emails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captured-test-emails
+          path: test-results/emails/outbox.jsonl
+          if-no-files-found: ignore

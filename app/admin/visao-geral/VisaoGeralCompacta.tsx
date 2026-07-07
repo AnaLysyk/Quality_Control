@@ -469,8 +469,9 @@ export default function VisaoGeralCompacta() {
         .then((response) => response.json().then((json) => ({ response, json })).catch(() => ({ response, json: null })))
         .then(({ response, json }) => {
           if (!ok || !response.ok) return;
-          const data = unwrapEnvelopeData<{ items?: AdminUser[] }>(json) ?? json;
-          const items = Array.isArray(data?.items) ? data.items : [];
+          const envelopedData = unwrapEnvelopeData<{ items?: AdminUser[] }>(json);
+          const rawData = (envelopedData ?? json) as { items?: unknown } | null;
+          const items: AdminUser[] = Array.isArray(rawData?.items) ? (rawData.items as AdminUser[]) : [];
           setAdminUsers(items);
 
           const next: Record<string, ActorProfile> = {};

@@ -1,6 +1,8 @@
 ﻿import "server-only";
 
 import { randomUUID } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { listSeedTestCaseRecords } from "./testCaseMappers";
 import { createTestCaseVersion } from "./testCaseSnapshots";
 import {
@@ -10,6 +12,7 @@ import {
   TEST_CASE_STATUSES,
   TEST_CASE_TYPES,
 } from "./types";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 import type {
   CreateTestAutomationLinkInput,
   CreateTestCaseInput,
@@ -29,7 +32,23 @@ async function getPrisma() {
   return prisma;
 }
 
+const USE_JSON_STORE = shouldUseJsonStore();
+const TEST_CASE_STORE_PATH = path.join(
+  process.env.LOCAL_AUTH_DATA_DIR || path.join(process.cwd(), "data"),
+  "manual-test-cases.json",
+);
+
 async function readManualRecords(): Promise<TestCaseRecord[]> {
+  if (USE_JSON_STORE) {
+    try {
+      const raw = await readFile(TEST_CASE_STORE_PATH, "utf8");
+      const parsed = JSON.parse(raw) as unknown;
+      return Array.isArray(parsed) ? (parsed as TestCaseRecord[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
   try {
     const prisma = await getPrisma();
     const rows = await prisma.storedTestCase.findMany({ orderBy: { createdAt: "desc" } });
@@ -40,6 +59,12 @@ async function readManualRecords(): Promise<TestCaseRecord[]> {
 }
 
 async function writeManualRecords(records: TestCaseRecord[]) {
+  if (USE_JSON_STORE) {
+    await mkdir(path.dirname(TEST_CASE_STORE_PATH), { recursive: true });
+    await writeFile(TEST_CASE_STORE_PATH, JSON.stringify(records, null, 2), "utf8");
+    return;
+  }
+
   const prisma = await getPrisma();
   await prisma.$transaction(async (tx) => {
     for (const record of records) {
@@ -562,4 +587,3 @@ export function buildTestCaseMetrics(records: TestCaseRecord[]) {
     automationCoverage: total > 0 ? Math.round(((automated + hybrid) / total) * 100) : 0,
   };
 }
-

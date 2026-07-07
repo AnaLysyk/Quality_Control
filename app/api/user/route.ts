@@ -3,9 +3,13 @@ import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
 import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import { readSyncedUserProfileFields } from "@/lib/userProfileData";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 // POST: Cria um novo usuário e vincula a uma empresa
 export async function POST(req: NextRequest) {
+  const guard = await requirePermission(req, "users", "create");
+  if (!guard.ok) return guard.response;
+
   const data = await req.json().catch(() => null);
   const profileFields = readSyncedUserProfileFields(data);
   const email = profileFields.email;
@@ -62,4 +66,3 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json(user, { status: 201 });
 }
-

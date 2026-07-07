@@ -154,6 +154,7 @@ export async function POST(req: Request) {
 
     res.cookies.set(COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode({
       isGlobalAdmin: built.session.isGlobalAdmin,
+      permissionRole: built.session.permissionRole,
       role: built.session.role,
       companyRole: built.session.companyRole,
       userOrigin: user.user_origin ?? null,

@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
-const INTERNAL_HOME_ROLES = new Set([
+const INTERNAL_HOME_ROLES: ReadonlySet<SystemRole> = new Set([
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
 ]);

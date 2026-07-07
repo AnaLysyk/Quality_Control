@@ -1,15 +1,17 @@
 ﻿import { NextResponse } from "next/server";
-// Autenticação removida para endpoint público
 import { getTicketById } from "@/lib/ticketsStore";
 import { listTicketEvents } from "@/lib/ticketEventsStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
-// RBAC removido para endpoint público
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
 }
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
+  const guard = await requirePermission(req, "tickets", "view");
+  if (!guard.ok) return guard.response;
+
   const { id } = await context.params;
   const ticket = await getTicketById(id);
   if (!ticket) {
@@ -43,4 +45,3 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 
   return NextResponse.json({ items: enriched }, { status: 200 });
 }
-

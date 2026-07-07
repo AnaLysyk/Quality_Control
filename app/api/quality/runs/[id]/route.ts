@@ -1,5 +1,6 @@
 ﻿import { apiFail, apiOk } from "@/lib/apiResponse";
 import { getQualityRun, updateQualityRunStatus } from "@/lib/runOperationStore";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 import type { TestRunStatus } from "@/data/runOperationModel";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,9 @@ function isRunStatus(value: unknown): value is TestRunStatus {
 
 export async function GET(request: Request, { params }: Params) {
   try {
+    const guard = await requirePermission(request, "runs", "view");
+    if (!guard.ok) return guard.response;
+
     const run = await getQualityRun((await params).id);
     if (!run) {
       return apiFail(request, "Run não encontrada", { status: 404, code: "RUN_NOT_FOUND" });
@@ -36,6 +40,9 @@ export async function GET(request: Request, { params }: Params) {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
+  const guard = await requirePermission(request, "runs", "edit");
+  if (!guard.ok) return guard.response;
+
   const body = asRecord(await request.json().catch(() => null));
   try {
     if (!isRunStatus(body.status)) {
@@ -51,7 +58,6 @@ export async function PATCH(request: Request, { params }: Params) {
     return apiFail(request, "Erro ao atualizar run", { status: 500, code: "RUN_STATUS_UPDATE_ERROR", details: error });
   }
 }
-
 
 
 

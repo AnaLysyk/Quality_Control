@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 const BASE_DIR = path.join(process.cwd(), "data", "s3");
 
@@ -19,10 +20,12 @@ async function listFiles(dir: string, prefix: string, out: string[] = []) {
 }
 
 export async function GET(req: Request) {
+  const guard = await requirePermission(req, "documents", "view");
+  if (!guard.ok) return guard.response;
+
   const url = new URL(req.url);
   const prefix = url.searchParams.get("prefix")?.trim() ?? "";
   await fs.mkdir(BASE_DIR, { recursive: true });
   const objects = await listFiles(BASE_DIR, prefix);
   return NextResponse.json({ ok: true, objects });
 }
-

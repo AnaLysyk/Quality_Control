@@ -7,6 +7,7 @@ import {
   normalizeLocalRole,
 } from "@/lib/auth/localStore";
 import { resolveCapabilities } from "@/lib/permissions";
+import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 
 export type BuiltSessionPayload = {
   userId: string;
@@ -17,6 +18,7 @@ export type BuiltSessionPayload = {
   defaultCompanySlug: string | null;
   userOrigin: string | null;
   role: string;
+  permissionRole: string;
   globalRole: "global_admin" | null;
   companyRole: string;
   capabilities: string[];
@@ -27,6 +29,7 @@ export type BuiltJwtPayload = {
   sub: string;
   email: string;
   role: string;
+  permissionRole: string;
   globalRole: "global_admin" | null;
   companyRole: string;
   capabilities: string[];
@@ -161,7 +164,9 @@ export async function buildLocalSessionForUser(
     membershipCapabilities: activeLink?.capabilities ?? null,
   });
 
-  const effectiveRole = isGlobalAdmin ? "leader_tc" : companyRole;
+  const permissionAccess = await resolvePermissionAccessForUser(user.id);
+  const permissionRole = permissionAccess.roleKey;
+  const effectiveRole = isGlobalAdmin ? "leader_tc" : permissionRole;
 
   const session: BuiltSessionPayload = {
     userId: user.id,
@@ -172,6 +177,7 @@ export async function buildLocalSessionForUser(
     defaultCompanySlug: user.default_company_slug ?? null,
     userOrigin: user.user_origin ?? null,
     role: effectiveRole,
+    permissionRole,
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     capabilities,
@@ -182,6 +188,7 @@ export async function buildLocalSessionForUser(
     sub: user.id,
     email: user.email,
     role: effectiveRole,
+    permissionRole,
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     capabilities,
@@ -198,4 +205,3 @@ export async function buildLocalSessionForUser(
     requestedCompanySlug: requestedCompany?.slug ?? null,
   };
 }
-

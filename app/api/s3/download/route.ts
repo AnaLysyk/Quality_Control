@@ -1,12 +1,16 @@
 ﻿import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 export const runtime = "nodejs";
 
 const BASE_DIR = path.join(process.cwd(), "data", "s3");
 
 export async function GET(req: Request) {
+  const guard = await requirePermission(req, "documents", "view");
+  if (!guard.ok) return guard.response;
+
   const url = new URL(req.url);
   const key = url.searchParams.get("key")?.trim();
   if (!key) {
@@ -27,4 +31,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: "not found" }, { status: 404 });
   }
 }
-

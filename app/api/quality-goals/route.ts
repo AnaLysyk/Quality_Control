@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { readGoalStatusStore } from "@/lib/qualityGoalAlerts";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,9 @@ type QualityGoal = {
 };
 
 export async function GET(req: Request) {
+  const guard = await requirePermission(req, "metrics", "view");
+  if (!guard.ok) return guard.response;
+
   const url = new URL(req.url);
   const companySlug = url.searchParams.get("companySlug") || url.searchParams.get("company") || null;
   const goals = await readGoalStatusStore();
@@ -29,4 +33,3 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ items: filtered }, { status: 200 });
 }
-

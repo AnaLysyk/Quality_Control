@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
 import { createQualityRun, updateQualityRunStatus, updateRunItemResult } from "@/lib/runOperationStore";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,6 +33,9 @@ function stepsFrom(value: unknown): StudioStep[] {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = await requirePermission(request, "playwright", "execute");
+  if (!guard.ok) return guard.response;
+
   const body = asRecord(await request.json().catch(() => null));
   const actorId = actorFrom(request, body);
   const companyId = text(body.companyId, "quality-control");
@@ -109,4 +113,3 @@ export async function POST(request: NextRequest) {
     message: "Run Playwright criada e concluida pelo Automation Studio.",
   }, { status: 201 });
 }
-

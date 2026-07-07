@@ -1,10 +1,14 @@
 ﻿import "server-only";
 
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
 import type { Release } from "@/types/release";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
+const USE_JSON_STORE = shouldUseJsonStore();
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
   return prisma;
@@ -192,6 +196,11 @@ const USE_MEMORY_STORE = process.env.MANUAL_RELEASES_IN_MEMORY === "true";
 const USE_REDIS = isRedisConfigured();
 const REDIS_RELEASES_KEY = "qc:manualReleases";
 const REDIS_CASES_KEY = "qc:manualReleaseCases";
+const STORE_BASE_DIR =
+  process.env.LOCAL_AUTH_DATA_DIR ||
+  (USE_JSON_STORE ? path.join(process.cwd(), ".tmp", "e2e") : path.join(process.cwd(), "data"));
+const JSON_RELEASES_PATH = path.join(STORE_BASE_DIR, "manual-releases.json");
+const JSON_RELEASE_CASES_PATH = path.join(STORE_BASE_DIR, "manual-release-cases.json");
 
 function getGlobalStore<T>(key: string, fallback: T): StoreState<T> {
   const globalStores = (globalThis as GlobalStores).__qcManualStores ?? {};
@@ -227,11 +236,30 @@ async function writeRedisJson<T>(key: string, value: T) {
   await redis.set(key, JSON.stringify(value));
 }
 
+async function readJsonStore<T>(filePath: string, fallback: T): Promise<T> {
+  try {
+    const raw = await readFile(filePath, "utf8");
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+async function writeJsonStore<T>(filePath: string, value: T) {
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, JSON.stringify(value, null, 2), "utf8");
+}
+
 export async function readManualReleases(): Promise<Release[]> {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
     const rows = await prisma.release.findMany({ orderBy: { createdAt: "desc" } });
     return rows.map(pgToRelease);
+  }
+
+  if (USE_JSON_STORE) {
+    const releases = await readJsonStore<Release[]>(JSON_RELEASES_PATH, []);
+    return Array.isArray(releases) ? releases.filter(Boolean) : [];
   }
 
   if (!USE_MEMORY_STORE && USE_REDIS) {
@@ -261,6 +289,11 @@ export async function writeManualReleases(releases: Release[]) {
     for (const r of next) {
       await prisma.release.upsert({ where: { slug: r.slug }, create: { id: r.id, slug: r.slug, title: r.name, summary: encodeReleaseSummary(r), app: r.app ?? null, qaseProject: r.qaseProject ?? null, category: encodeReleaseCategory(r), kind: r.kind ?? "run", runSlug: r.runSlug ?? null, runName: r.runName ?? null, companySlug: r.clientSlug ?? null, environments: r.environments ?? [], source: r.source, status: r.status, runId: r.runId ?? null, statsPass: r.stats?.pass ?? 0, statsFail: r.stats?.fail ?? 0, statsBlocked: r.stats?.blocked ?? 0, statsNotRun: r.stats?.notRun ?? 0, observations: r.observations ?? null, createdByUserId: r.createdByUserId ?? null, createdByName: r.createdByName ?? null, assignedToUserId: r.assignedToUserId ?? null, assignedToName: r.assignedToName ?? null, closedAt: r.closedAt ? new Date(r.closedAt) : null }, update: { title: r.name, summary: encodeReleaseSummary(r), app: r.app ?? null, qaseProject: r.qaseProject ?? null, category: encodeReleaseCategory(r), kind: r.kind ?? "run", runSlug: r.runSlug ?? null, runName: r.runName ?? null, companySlug: r.clientSlug ?? null, environments: r.environments ?? [], source: r.source, status: r.status, runId: r.runId ?? null, statsPass: r.stats?.pass ?? 0, statsFail: r.stats?.fail ?? 0, statsBlocked: r.stats?.blocked ?? 0, statsNotRun: r.stats?.notRun ?? 0, observations: r.observations ?? null, createdByUserId: r.createdByUserId ?? null, createdByName: r.createdByName ?? null, assignedToUserId: r.assignedToUserId ?? null, assignedToName: r.assignedToName ?? null, closedAt: r.closedAt ? new Date(r.closedAt) : null } });
     }
+    return;
+  }
+
+  if (USE_JSON_STORE) {
+    await writeJsonStore(JSON_RELEASES_PATH, next);
     return;
   }
 
@@ -326,6 +359,11 @@ export async function readManualReleaseCases(): Promise<Record<string, ManualCas
     return result;
   }
 
+  if (USE_JSON_STORE) {
+    const storeValue = await readJsonStore<Record<string, ManualCaseItem[]>>(JSON_RELEASE_CASES_PATH, {});
+    return storeValue && typeof storeValue === "object" ? storeValue : {};
+  }
+
   if (!USE_MEMORY_STORE && USE_REDIS) {
     const cached = await readRedisJson<Record<string, ManualCaseItem[]>>(REDIS_CASES_KEY);
     if (cached) return cached && typeof cached === "object" ? cached : {};
@@ -387,6 +425,11 @@ export async function writeManualReleaseCases(storeValue: Record<string, ManualC
     return;
   }
 
+  if (USE_JSON_STORE) {
+    await writeJsonStore(JSON_RELEASE_CASES_PATH, next);
+    return;
+  }
+
   if (!USE_MEMORY_STORE && USE_REDIS) {
     await writeRedisJson(REDIS_CASES_KEY, next);
     return;
@@ -396,4 +439,3 @@ export async function writeManualReleaseCases(storeValue: Record<string, ManualC
   store.data = clone(next);
   store.initialized = true;
 }
-

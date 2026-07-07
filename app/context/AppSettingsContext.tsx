@@ -33,6 +33,12 @@ type AppSettingsContextValue = {
   refreshSettings: () => Promise<void>;
 };
 
+type AppSettingsProviderProps = {
+  children: ReactNode;
+  initialTheme?: Theme;
+  initialLanguage?: Language;
+};
+
 const DEFAULT_SETTINGS: AppSettings = { theme: "system", language: DEFAULT_LOCALE };
 
 const LAST_USER_ID_KEY = "tc-settings:last-user-id";
@@ -134,11 +140,20 @@ function languageToLocale(language: Language): "pt" | "en" {
   return language === "en-US" ? "en" : "pt";
 }
 
-export function AppSettingsProvider({ children }: { children: ReactNode }) {
+function resolveInitialAppSettings(initialTheme?: Theme, initialLanguage?: Language): AppSettings {
+  const stored = readInitialSettings();
+  return normalizeSettings({
+    ...stored,
+    theme: initialTheme ?? stored.theme,
+    language: initialLanguage ?? stored.language,
+  });
+}
+
+export function AppSettingsProvider({ children, initialTheme, initialLanguage }: AppSettingsProviderProps) {
   const { user } = useAuthUser();
   const { locale, setLocale } = useLanguage();
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
+  const [settings, setSettings] = useState<AppSettings>(() => resolveInitialAppSettings(initialTheme, initialLanguage));
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => resolveThemePreference(initialTheme ?? DEFAULT_SETTINGS.theme));
   const [loading, setLoading] = useState(true);
   // Guard to prevent infinite sync loops between LanguageContext and AppSettings
   const syncingRef = useRef(false);
@@ -377,4 +392,3 @@ export function useAppSettings() {
   if (!ctx) throw new Error("useAppSettings deve ser usado dentro de AppSettingsProvider");
   return ctx;
 }
-

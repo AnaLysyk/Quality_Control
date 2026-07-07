@@ -1,5 +1,6 @@
 ﻿import { apiFail, apiOk } from "@/lib/apiResponse";
 import { createQualityRun, listQualityRuns } from "@/lib/runOperationStore";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,9 @@ function actorFrom(request: Request, body?: BodyRecord) {
 
 export async function GET(request: Request) {
   try {
+    const guard = await requirePermission(request, "runs", "view");
+    if (!guard.ok) return guard.response;
+
     const url = new URL(request.url);
     const runs = await listQualityRuns({
       companyId: text(url.searchParams.get("companyId")) || null,
@@ -40,6 +44,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const guard = await requirePermission(request, "runs", "create");
+  if (!guard.ok) return guard.response;
+
   const body = asRecord(await request.json().catch(() => null));
   try {
     const result = await createQualityRun({
@@ -70,4 +77,3 @@ export async function POST(request: Request) {
     return apiFail(request, "Erro ao criar run", { status: 500, code: "RUN_CREATE_ERROR", details: error });
   }
 }
-

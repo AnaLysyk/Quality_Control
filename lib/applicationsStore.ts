@@ -32,6 +32,28 @@ type ApplicationSeed = Partial<AppRecord> & {
   name: string;
 };
 
+function buildE2eDefaultApplications(companySlug?: string | null): AppRecord[] {
+  const normalizedCompany = companySlug?.trim().toLowerCase();
+  if (normalizedCompany !== "testing-company") return [];
+
+  return [
+    {
+      id: "quality-control",
+      companyId: "testing-company",
+      companySlug: "testing-company",
+      name: "Quality Control",
+      slug: "quality-control",
+      description: "Aplicacao padrao do modo E2E JSON para a Testing Company.",
+      imageUrl: null,
+      qaseProjectCode: "QUALITY-CONTROL",
+      source: "e2e-default",
+      active: true,
+      createdAt: new Date(0).toISOString(),
+      updatedAt: new Date(0).toISOString(),
+    },
+  ];
+}
+
 function normalizeSlug(value: string) {
   return value
     .toLowerCase()
@@ -70,7 +92,14 @@ export async function listApplications(filter?: { companySlug?: string }): Promi
     const slug = filter.companySlug.toLowerCase();
     items = items.filter((i) => i.companySlug?.toLowerCase() === slug);
   }
-  return items;
+  const defaults = buildE2eDefaultApplications(filter?.companySlug);
+  const merged = [...items];
+  for (const fallback of defaults) {
+    if (!merged.some((item) => item.id === fallback.id || item.slug === fallback.slug)) {
+      merged.unshift(fallback);
+    }
+  }
+  return merged;
 }
 
 export async function createApplication(input: ApplicationSeed): Promise<AppRecord> {
@@ -229,4 +258,3 @@ export async function syncCompanyApplications(input: {
 
   return synced;
 }
-

@@ -130,6 +130,9 @@ export async function GET(req: Request) {
       permissionRole: permissionAccess.roleKey,
       userOrigin: user.user_origin ?? null,
       user_origin: user.user_origin ?? null,
+      companyId: access.companyId ?? null,
+      companySlug: access.companySlug ?? null,
+      companySlugs: access.companySlugs ?? [],
       clientId: access.companyId ?? null,
       clientSlug: access.companySlug ?? null,
       defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
@@ -428,4 +431,3 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

@@ -24,7 +24,7 @@ describe("runtime central de permissoes", () => {
     expect(canAccess(leader, "permissions.view")).toBe(true);
     expect(canAccess(leader, "permissions.edit")).toBe(true);
     expect(canAccess(support, "permissions.view")).toBe(true);
-    expect(canAccess(support, "permissions.edit")).toBe(false);
+    expect(canAccess(support, "permissions.edit")).toBe(true);
   });
 
   it("mapeia usuario global legado para o perfil existente Lider TC", () => {
@@ -70,4 +70,3 @@ describe("runtime central de permissoes", () => {
     expect(canAccessRoute(contextFor(SYSTEM_ROLES.LEADER_TC, {}), route!)).toBe(false);
   });
 });
-

@@ -1,6 +1,7 @@
 ﻿import "server-only";
 
 import crypto from "node:crypto";
+import { getOfficialCompanyDocsForSlug, mergePlatformDocsStore } from "@/lib/documentation/qualityControlOfficialDocs";
 
 // â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -174,7 +175,9 @@ export async function readCompanyDocs(companySlug: string): Promise<PlatformDocs
     prisma.wikiCategory.findMany({ where: { companySlug }, orderBy: { order: "asc" } }),
     prisma.wikiDoc.findMany({ where: { companySlug }, orderBy: { order: "asc" } }),
   ]);
-  return { categories: categories.map(mapCategory), docs: docs.map(mapDoc) };
+  const stored = { categories: categories.map(mapCategory), docs: docs.map(mapDoc) };
+  const official = getOfficialCompanyDocsForSlug(companySlug);
+  return official ? mergePlatformDocsStore(stored, official) : stored;
 }
 
 export async function writeCompanyDocs(companySlug: string, store: PlatformDocsStore): Promise<void> {
@@ -202,4 +205,3 @@ export function sanitizeSlug(raw: string): string {
     .replace(/^-|-$/g, "")
     .slice(0, 80);
 }
-

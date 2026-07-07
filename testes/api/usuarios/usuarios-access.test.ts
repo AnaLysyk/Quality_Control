@@ -6,6 +6,7 @@ describe("acesso da feature de usuarios", () => {
       canViewUsers: true,
       canCreateUsers: true,
       canEditUsers: true,
+      canDeleteUsers: true,
       canViewPermissions: true,
       canEditPermissions: true,
       canResetPermissions: true,
@@ -14,15 +15,17 @@ describe("acesso da feature de usuarios", () => {
     });
   });
 
-  it("mantem suporte tecnico em modo de consulta", () => {
+  it("permite gestao completa para Suporte Tecnico conforme matriz central", () => {
     expect(resolverAcessoUsuarios({ permissionRole: "technical_support" })).toMatchObject({
       canViewUsers: true,
-      canCreateUsers: false,
-      canEditUsers: false,
+      canCreateUsers: true,
+      canEditUsers: true,
+      canDeleteUsers: true,
       canViewPermissions: true,
-      canEditPermissions: false,
-      canResetPermissions: false,
-      canManagePrivilegedProfiles: false,
+      canEditPermissions: true,
+      canResetPermissions: true,
+      canClonePermissions: true,
+      canManagePrivilegedProfiles: true,
     });
   });
 
@@ -49,4 +52,3 @@ describe("acesso da feature de usuarios", () => {
     expect(resolverAcessoUsuarios(null).canViewPermissions).toBe(false);
   });
 });
-

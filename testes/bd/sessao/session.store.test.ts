@@ -52,12 +52,12 @@ describe('session.store', () => {
 
   test('getSessionPayload decodes JWT when JWT_SECRET present and Authorization header used', async () => {
     process.env.JWT_SECRET = 'sekrit';
-    const tokenPayload = { userId: 'u2', email: 'u2@example.com' };
+    const tokenPayload = { userId: 'u2', email: 'u2@example.com', permissionRole: 'technical_support' };
     (jwt.verify as unknown as jest.Mock).mockReturnValue(tokenPayload);
 
     const req = { headers: { get: (name: string) => (name === 'authorization' ? 'Bearer token-xyz' : null) } } as unknown as Request;
     const result = await sessionStore.getSessionPayload(req);
-    expect(result).toEqual({ userId: 'u2', email: 'u2@example.com', isGlobalAdmin: false });
+    expect(result).toEqual({ userId: 'u2', email: 'u2@example.com', permissionRole: 'technical_support', isGlobalAdmin: false });
     expect(jwt.verify).toHaveBeenCalledWith('token-xyz', 'sekrit');
   });
 
@@ -121,10 +121,10 @@ describe('session.store', () => {
 
     expect(ctx).not.toBeNull();
     expect(ctx?.role).toBe('technical_support');
+    expect(ctx?.permissionRole).toBe('technical_support');
     expect(ctx?.companyRole).toBe('company_user');
     expect(ctx?.companyId).toBeNull();
     expect(ctx?.companySlug).toBeNull();
     expect(ctx?.companySlugs).toEqual(['slug1']);
   });
 });
-

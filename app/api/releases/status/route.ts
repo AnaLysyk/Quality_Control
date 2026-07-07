@@ -4,6 +4,7 @@ import { readManualReleaseStore } from "@/data/manualData";
 import { appendQualityGateHistory } from "@/lib/qualityGateHistory";
 import { sendQualityAlert } from "@/lib/qualityAlert";
 import { calculateQualityScore } from "@/lib/qualityScore";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 import { randomUUID } from "crypto";
 
 // Helper: get all runs for a release (manual + Qase)
@@ -25,7 +26,10 @@ type RunLike = {
   status?: string | null;
 };
 
-export async function GET() {
+export async function GET(req: Request) {
+  const guard = await requirePermission(req, "releases", "view");
+  if (!guard.ok) return guard.response;
+
   const releases = await getAllReleases();
   const result = [];
   for (const rel of releases) {
@@ -122,4 +126,3 @@ export async function GET() {
   }
   return NextResponse.json({ releases: result });
 }
-

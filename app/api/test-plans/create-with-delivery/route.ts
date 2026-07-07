@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -40,6 +41,9 @@ function forwardAuthHeaders(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requirePermission(req, "test_plan", "create");
+  if (!guard.ok) return guard.response;
+
   const body = (await req.json().catch(() => null)) as CreatePlanWithDeliveryBody | null;
   if (!body) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400, headers: NO_STORE_HEADERS });

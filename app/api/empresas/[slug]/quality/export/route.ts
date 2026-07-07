@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/lib/companyQuality";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 function toCsvLine(values: Array<string | number | null | undefined>) {
   return values.map((value) => {
@@ -12,7 +13,10 @@ function toCsvLine(values: Array<string | number | null | undefined>) {
   }).join(",");
 }
 
-export async function GET(_req: Request, context: { params: Promise<{ slug: string }> }) {
+export async function GET(req: Request, context: { params: Promise<{ slug: string }> }) {
+  const guard = await requirePermission(req, "metrics", "export");
+  if (!guard.ok) return guard.response;
+
   const { slug } = await context.params;
   const summary = await getCompanyQualitySummary(slug);
   const defects = await getCompanyDefectsExport(slug);
@@ -36,4 +40,3 @@ export async function GET(_req: Request, context: { params: Promise<{ slug: stri
 
   return new NextResponse(csv, { headers });
 }
-

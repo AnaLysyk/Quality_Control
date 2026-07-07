@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prismaClient'
+import { prisma } from '@/lib/prismaClient'
 import {
   upsertNode,
   connectNodes,
@@ -28,6 +28,7 @@ export async function syncBrain() {
     // ===== STEP 2: Criar nós para cada entidade
     log('Step 1: Creating nodes from entities...')
     let nodeCount = 0
+    let ciTestTrackingNode: Awaited<ReturnType<typeof upsertNode>> | null = null
 
     // Companies
     const companies = await prisma.company.findMany()
@@ -117,6 +118,69 @@ export async function syncBrain() {
     }
     log(`Created ${users.length} User nodes`)
 
+    // CI/test policy node
+    ciTestTrackingNode = await upsertNode({
+      type: 'TestPlan',
+      label: 'Rastreamento dos testes CI com e-mail capturado',
+      refType: 'QualityControlTestPolicy',
+      refId: 'ci-email-captured-tests',
+      description:
+        'No operacional do Brain para rastrear a regra de CI que executa lint/build/testes sem envio real de e-mail. O job deve capturar mensagens em arquivo e usar stores isolados para evitar quebra por SMTP, dados reais ou ambiente local.',
+      metadata: {
+        source: 'manual_link',
+        createdBy: 'system',
+        companySlug: 'testing-company',
+        status: 'active',
+        category: 'ci-test-tracking',
+        purpose: 'Rastrear testes de CI, captura de e-mail e validações obrigatórias antes de subir mudanças.',
+        workflows: [
+          '.github/workflows/ci.yml',
+          '.github/workflows/copilot-setup-steps.yml',
+        ],
+        scripts: [
+          'npm run lint',
+          'npm run build',
+          'npm run test',
+          'npm run test:e2e:smoke',
+          'npm run test:e2e:access',
+        ],
+        emailPolicy: {
+          captureMode: 'file',
+          captureFile: 'test-results/emails/outbox.jsonl',
+          accessRequestEmailBypass: true,
+          forceEmailSend: false,
+          e2eSendRealEmail: false,
+          playwrightRealEmail: false,
+          rule: 'CI nunca deve enviar SMTP real; testes devem validar e-mails pelo arquivo capturado.',
+        },
+        stores: {
+          authStore: 'json',
+          ticketsStore: 'json',
+          e2eUseJson: true,
+          localAuthDataDir: '.tmp/e2e-auth',
+        },
+        validationRules: [
+          'Lint deve continuar com 0 errors.',
+          'Build deve usar ambiente isolado e DATABASE_URL fake de CI.',
+          'Testes de e-mail devem ler test-results/emails/outbox.jsonl.',
+          'Fluxos de solicitar acesso nao podem depender de SMTP real.',
+          'Smoke, regressao e aceitacao devem apontar para documentacao rastreavel quando novos endpoints/telas forem alterados.',
+        ],
+        relatedAreas: [
+          'Solicitar acesso',
+          'Aprovacao de acesso',
+          'Criacao de usuarios',
+          'Documentacao oficial Quality Control',
+          'Swagger/OpenAPI',
+          'Smoke',
+          'Regressao',
+          'Aceitacao',
+        ],
+      },
+    })
+    nodeCount++
+    log('Created CI email/test tracking node')
+
     log(`âœ“ Total nodes created: ${nodeCount}`)
 
     // ===== STEP 3: Criar arestas entre entidades
@@ -205,6 +269,29 @@ export async function syncBrain() {
     }
     log(`Created User-Company edges`)
 
+    // CI/test policy → Testing Company (BELONGS_TO)
+    if (ciTestTrackingNode) {
+      const testingCompany = companies.find((company) => {
+        const slug = company.slug?.trim().toLowerCase()
+        const name = company.name?.trim().toLowerCase()
+        return slug === 'testing-company' || name === 'testing company'
+      })
+      if (testingCompany) {
+        const companyNode = await prisma.brainNode.findFirst({
+          where: { refType: 'Company', refId: testingCompany.id },
+        })
+        if (companyNode) {
+          await connectNodes(ciTestTrackingNode.id, companyNode.id, 'BELONGS_TO', {
+            source: 'manual_link',
+            reason: 'ci_test_policy_belongs_to_testing_company',
+            companySlug: 'testing-company',
+          })
+          edgeCount++
+        }
+      }
+    }
+    log(`Created CI test tracking edges`)
+
     log(`âœ“ Total edges created: ${edgeCount}`)
 
     // ===== STEP 4: Validar integridade
@@ -250,4 +337,3 @@ if (require.main === module) {
       process.exit(1)
     })
 }
-

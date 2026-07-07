@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import { randomUUID } from "crypto";
 
@@ -9,6 +9,13 @@ export type ChatPersonSnapshot = {
   name: string;
   handle?: string | null;
   avatarUrl?: string | null;
+};
+
+export type ChatContextScope = {
+  companyId?: string | null;
+  companySlug?: string | null;
+  projectId?: string | null;
+  projectSlug?: string | null;
 };
 
 export type ChatAttachment = {
@@ -35,9 +42,13 @@ export type ChatMessage = {
   text: string;
   attachments?: ChatAttachment[];
   createdAt: string;
+  companyId?: string | null;
+  companySlug?: string | null;
+  projectId?: string | null;
+  projectSlug?: string | null;
 };
 
-type ChatThread = {
+type ChatThread = ChatContextScope & {
   key: string;
   participantIds: [string, string];
   createdAt: string;
@@ -49,7 +60,7 @@ type ChatStore = {
   threads: Record<string, ChatThread>;
 };
 
-export type ChatThreadSummary = {
+export type ChatThreadSummary = ChatContextScope & {
   key: string;
   peerId: string;
   peerName: string;
@@ -67,6 +78,40 @@ const MAX_MESSAGES_PER_THREAD = 150;
 
 function emptyStore(): ChatStore {
   return { threads: {} };
+}
+
+function normalizeScopeValue(value?: string | null) {
+  return typeof value === "string" && value.trim() ? value.trim().toLowerCase() : null;
+}
+
+function normalizeScope(input?: ChatContextScope | null): Required<ChatContextScope> {
+  return {
+    companyId: normalizeScopeValue(input?.companyId),
+    companySlug: normalizeScopeValue(input?.companySlug),
+    projectId: normalizeScopeValue(input?.projectId),
+    projectSlug: normalizeScopeValue(input?.projectSlug),
+  };
+}
+
+function scopeMatches(candidate: ChatContextScope | null | undefined, filter?: ChatContextScope | null) {
+  const normalizedFilter = normalizeScope(filter);
+  if (!normalizedFilter.companyId && !normalizedFilter.companySlug && !normalizedFilter.projectId && !normalizedFilter.projectSlug) return true;
+
+  const normalizedCandidate = normalizeScope(candidate);
+  if (normalizedFilter.companyId && normalizedCandidate.companyId !== normalizedFilter.companyId) return false;
+  if (normalizedFilter.companySlug && normalizedCandidate.companySlug !== normalizedFilter.companySlug) return false;
+  if (normalizedFilter.projectId && normalizedCandidate.projectId !== normalizedFilter.projectId) return false;
+  if (normalizedFilter.projectSlug && normalizedCandidate.projectSlug !== normalizedFilter.projectSlug) return false;
+  return true;
+}
+
+function scopeKey(scope?: ChatContextScope | null) {
+  const normalized = normalizeScope(scope);
+  const parts = [
+    normalized.companySlug ? `cs:${normalized.companySlug}` : normalized.companyId ? `ci:${normalized.companyId}` : "c:all",
+    normalized.projectSlug ? `ps:${normalized.projectSlug}` : normalized.projectId ? `pi:${normalized.projectId}` : "p:all",
+  ];
+  return parts.join("::");
 }
 
 function sanitizeText(value: unknown, max = 4000) {
@@ -110,8 +155,10 @@ function normalizeSnapshot(input: ChatPersonSnapshot | null | undefined): Requir
   };
 }
 
-function threadKeyFor(a: string, b: string) {
-  return [a.trim(), b.trim()].filter(Boolean).sort((left, right) => left.localeCompare(right)).join("::");
+function threadKeyFor(a: string, b: string, scope?: ChatContextScope | null) {
+  const participants = [a.trim(), b.trim()].filter(Boolean).sort((left, right) => left.localeCompare(right)).join("::");
+  const key = scopeKey(scope);
+  return key === "c:all::p:all" ? participants : `${participants}::${key}`;
 }
 
 function normalizeMessage(input: Partial<ChatMessage> | null | undefined): ChatMessage | null {
@@ -126,7 +173,7 @@ function normalizeMessage(input: Partial<ChatMessage> | null | undefined): ChatM
     threadKey:
       typeof input?.threadKey === "string" && input.threadKey.trim()
         ? input.threadKey.trim()
-        : threadKeyFor(senderId, recipientId),
+        : threadKeyFor(senderId, recipientId, input),
     senderId,
     senderName: typeof input?.senderName === "string" && input.senderName.trim() ? input.senderName.trim() : "Usuario",
     senderHandle: typeof input?.senderHandle === "string" && input.senderHandle.trim() ? input.senderHandle.trim() : null,
@@ -141,6 +188,7 @@ function normalizeMessage(input: Partial<ChatMessage> | null | undefined): ChatM
     text,
     attachments: attachments.length > 0 ? attachments : [],
     createdAt: typeof input?.createdAt === "string" && input.createdAt.trim() ? input.createdAt.trim() : new Date().toISOString(),
+    ...normalizeScope(input),
   };
 }
 
@@ -154,9 +202,10 @@ function normalizeThread(input: Partial<ChatThread> | null | undefined): ChatThr
     : [];
   if (!key || participantIds.length !== 2) return null;
 
+  const scope = normalizeScope(input);
   const messages = Array.isArray(input?.messages)
     ? input.messages
-        .map((message) => normalizeMessage(message))
+        .map((message) => normalizeMessage({ ...message, ...scope }))
         .filter((message): message is ChatMessage => Boolean(message))
         .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
     : [];
@@ -176,6 +225,7 @@ function normalizeThread(input: Partial<ChatThread> | null | undefined): ChatThr
     createdAt,
     updatedAt,
     messages,
+    ...scope,
   };
 }
 
@@ -235,23 +285,29 @@ function buildSummaryForUser(userId: string, thread: ChatThread): ChatThreadSumm
     lastSenderId: lastMessage.senderId,
     lastSenderName: lastMessage.senderName,
     messageCount: thread.messages.length,
+    companyId: thread.companyId,
+    companySlug: thread.companySlug,
+    projectId: thread.projectId,
+    projectSlug: thread.projectSlug,
   };
 }
 
-export function makeChatThreadKey(userAId: string, userBId: string) {
-  return threadKeyFor(userAId, userBId);
+export function makeChatThreadKey(userAId: string, userBId: string, scope?: ChatContextScope | null) {
+  return threadKeyFor(userAId, userBId, scope);
 }
 
-export async function listChatThreadMessages(userId: string, peerId: string) {
+export async function listChatThreadMessages(userId: string, peerId: string, scope?: ChatContextScope | null) {
   const store = await readStore();
-  const thread = store.threads[threadKeyFor(userId, peerId)] ?? null;
+  const thread = store.threads[threadKeyFor(userId, peerId, scope)] ?? null;
   if (!thread) return [];
+  if (!scopeMatches(thread, scope)) return [];
   return [...thread.messages].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
 }
 
-export async function listChatInboxSummaries(userId: string) {
+export async function listChatInboxSummaries(userId: string, scope?: ChatContextScope | null) {
   const store = await readStore();
   return Object.values(store.threads)
+    .filter((thread) => scopeMatches(thread, scope))
     .map((thread) => buildSummaryForUser(userId, thread))
     .filter((thread): thread is ChatThreadSummary => Boolean(thread))
     .sort((left, right) => (left.lastMessageAt < right.lastMessageAt ? 1 : -1));
@@ -262,24 +318,26 @@ export async function appendChatMessage(input: {
   recipient: ChatPersonSnapshot;
   text: string;
   attachments?: ChatAttachment[];
-}) {
+} & ChatContextScope) {
   const sender = normalizeSnapshot(input.sender);
   const recipient = normalizeSnapshot(input.recipient);
   const text = sanitizeText(input.text);
   const attachments = sanitizeAttachments(input.attachments);
+  const scope = normalizeScope(input);
   if (!sender.id || !recipient.id || (!text && attachments.length === 0)) {
     throw new Error("Mensagem invalida");
   }
 
   const now = new Date().toISOString();
   const store = await readStore();
-  const key = threadKeyFor(sender.id, recipient.id);
+  const key = threadKeyFor(sender.id, recipient.id, scope);
   const current = store.threads[key] ?? {
     key,
     participantIds: [sender.id, recipient.id],
     createdAt: now,
     updatedAt: now,
     messages: [],
+    ...scope,
   };
 
   const message: ChatMessage = {
@@ -296,6 +354,7 @@ export async function appendChatMessage(input: {
     text,
     attachments,
     createdAt: now,
+    ...scope,
   };
 
   current.messages.push(message);
@@ -312,4 +371,3 @@ export async function clearChatStore() {
   const redis = getRedis();
   await redis.del(STORE_KEY);
 }
-

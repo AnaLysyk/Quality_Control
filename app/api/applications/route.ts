@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { listApplications, createApplication } from "../../../lib/applicationsStore";
 import { getCompanyIntegratedDefects } from "../../../lib/companyDefects";
 import { syncApplicationToBrain } from "@/lib/brain-sync";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { resolveOperationalContext } from "@/lib/context/operationalContext";
 
 const APPLICATIONS_CACHE_TTL_MS = 30_000;
 
@@ -59,45 +58,21 @@ function isLightRequest(url: URL) {
   return value === "1" || value === "true" || value === "yes";
 }
 
-function resolveRole(user: AuthUser) {
-  return normalizeLegacyRole(user.permissionRole) ?? normalizeLegacyRole(user.role) ?? normalizeLegacyRole(user.companyRole);
-}
-
-function canUseAllCompanies(user: AuthUser) {
-  const role = resolveRole(user);
-  return user.isGlobalAdmin === true || role === SYSTEM_ROLES.LEADER_TC || role === SYSTEM_ROLES.TECHNICAL_SUPPORT;
-}
-
 function normalizeCompanySlug(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
 
-function resolveCompanySlugForRequest(user: AuthUser, requestedCompanySlug?: string | null) {
-  const normalizedRequested = normalizeCompanySlug(requestedCompanySlug);
-  if (normalizedRequested) return normalizedRequested;
-  if (canUseAllCompanies(user)) return undefined;
-  return normalizeCompanySlug(user.companySlug) || normalizeCompanySlug(user.companySlugs?.[0]) || undefined;
-}
-
-function userCanAccessCompanySlug(user: AuthUser, companySlug?: string | null) {
-  const normalized = normalizeCompanySlug(companySlug);
-  if (!normalized) return canUseAllCompanies(user);
-  if (canUseAllCompanies(user)) return true;
-  if (normalizeCompanySlug(user.companySlug) === normalized) return true;
-  return (user.companySlugs ?? []).map(normalizeCompanySlug).includes(normalized);
-}
-
 export async function GET(request: Request) {
-  const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-
   const url = new URL(request.url);
-  const requestedCompanySlug = url.searchParams.get("companySlug") || undefined;
-  const companySlug = resolveCompanySlugForRequest(user, requestedCompanySlug);
-  if (!userCanAccessCompanySlug(user, companySlug)) {
-    return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
-  }
+  const requestedCompanySlug = normalizeCompanySlug(url.searchParams.get("companySlug"));
+  const contextResult = await resolveOperationalContext(request, {
+    moduleId: "applications",
+    action: "view",
+    companySlug: requestedCompanySlug || null,
+  });
+  if (!contextResult.ok) return contextResult.response;
 
+  const companySlug = requestedCompanySlug || (contextResult.context.scope === "global" ? undefined : contextResult.context.companySlug ?? undefined);
   const light = isLightRequest(url);
   const cacheKey = companySlug ? `company:${companySlug}:light:${light ? "1" : "0"}` : `all:light:${light ? "1" : "0"}`;
 
@@ -177,17 +152,19 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await authenticateRequest(request);
-    if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-
     const body = await request.json();
-    const companySlug = resolveCompanySlugForRequest(user, body.companySlug ?? body.companyId ?? null);
+    const companySlug = normalizeCompanySlug(body.companySlug ?? body.companyId ?? null);
     if (!companySlug) {
       return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
     }
-    if (!userCanAccessCompanySlug(user, companySlug)) {
-      return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
-    }
+
+    const contextResult = await resolveOperationalContext(request, {
+      moduleId: "applications",
+      action: "create",
+      companySlug,
+      requireCompany: true,
+    });
+    if (!contextResult.ok) return contextResult.response;
 
     if (!body.name) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });

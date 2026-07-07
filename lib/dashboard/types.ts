@@ -35,12 +35,12 @@ export type DashboardContextValue = {
   canSelectMultipleCompanies: boolean;
   canSelectAllCompanies: boolean;
   companySelectorMode: "hidden" | "locked" | "select";
-  allowedProjects: DashboardProjectOption[];
-  allowedProjectSlugs: string[];
-  selectedProjectSlug: string | null;
-  selectedProjectId: string | null;
-  canSelectProject: boolean;
-  projectSelectorMode: "hidden" | "locked" | "select";
+  allowedProjects?: DashboardProjectOption[];
+  allowedProjectSlugs?: string[];
+  selectedProjectSlug?: string | null;
+  selectedProjectId?: string | null;
+  canSelectProject?: boolean;
+  projectSelectorMode?: "hidden" | "locked" | "select";
   labels: DashboardContextLabels;
   contextLabel: string;
 };

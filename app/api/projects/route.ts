@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { resolveOperationalContext } from "@/lib/context/operationalContext";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -12,23 +12,20 @@ async function getDb() {
   return prisma;
 }
 
-function forbiddenCompanyResponse(error: unknown) {
-  const message = error instanceof Error ? error.message : "FORBIDDEN_COMPANY_ACCESS";
-  if (message === "MISSING_COMPANY_ID") {
-    return NextResponse.json({ error: "Empresa obrigatória" }, { status: 400 });
-  }
-  return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
-}
-
 // GET /api/projects?companySlug=
 
 export async function GET(request: Request) {
-  const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-
   const { searchParams } = new URL(request.url);
   const companySlug = searchParams.get("companySlug")?.trim();
   if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
+
+  const contextResult = await resolveOperationalContext(request, {
+    moduleId: "context",
+    action: "view_linked_projects",
+    companySlug,
+    requireCompany: true,
+  });
+  if (!contextResult.ok) return contextResult.response;
 
   if (process.env.E2E_USE_JSON === "1") {
     return NextResponse.json({
@@ -51,12 +48,6 @@ export async function GET(request: Request) {
   const db = await getDb();
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ projects: [] });
-
-  try {
-    await assertCompanyAccess(user, company.id);
-  } catch (error) {
-    return forbiddenCompanyResponse(error);
-  }
 
   const projects = await db.project.findMany({
     where: { companyId: company.id, status: "active" },
@@ -95,9 +86,6 @@ const CreateSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-
   const body = await request.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -105,21 +93,27 @@ export async function POST(request: Request) {
   }
 
   const { companySlug, slug, name, description, color, iconKey } = parsed.data;
+  const contextResult = await resolveOperationalContext(request, {
+    moduleId: "context",
+    action: "switch_project",
+    companySlug,
+    requireCompany: true,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
+  const role = normalizeLegacyRole(contextResult.context.access.permissionRole) ??
+    normalizeLegacyRole(contextResult.context.access.role) ??
+    normalizeLegacyRole(contextResult.context.access.companyRole);
+  const canCreateProject =
+    contextResult.context.access.isGlobalAdmin === true ||
+    role === SYSTEM_ROLES.LEADER_TC ||
+    role === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    role === SYSTEM_ROLES.EMPRESA;
+  if (!canCreateProject) return NextResponse.json({ error: "Sem permissão para criar projetos" }, { status: 403 });
 
   const db = await getDb();
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
-
-  try {
-    await assertCompanyAccess(user, company.id);
-  } catch (error) {
-    return forbiddenCompanyResponse(error);
-  }
-
-  const canCreateProject =
-    user.isGlobalAdmin === true ||
-    ["leader_tc", "technical_support", "empresa"].includes(String(user.permissionRole ?? user.role ?? user.companyRole ?? "").toLowerCase());
-  if (!canCreateProject) return NextResponse.json({ error: "Sem permissão para criar projetos" }, { status: 403 });
 
   const existing = await db.project.findUnique({
     where: { companyId_slug: { companyId: company.id, slug } },
@@ -135,7 +129,7 @@ export async function POST(request: Request) {
       description,
       color,
       iconKey,
-      createdById: user.id,
+      createdById: contextResult.context.access.userId,
     },
     select: {
       id: true,
@@ -151,8 +145,8 @@ export async function POST(request: Request) {
   });
 
   writeAuditLog({
-    actorUserId: user.id,
-    actorEmail: user.email ?? null,
+    actorUserId: contextResult.context.access.userId,
+    actorEmail: contextResult.context.access.email ?? null,
     action: "create",
     entityType: "Project",
     entityId: project.id,

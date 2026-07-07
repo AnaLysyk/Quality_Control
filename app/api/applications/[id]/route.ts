@@ -1,9 +1,13 @@
 ﻿import { NextResponse } from "next/server";
 import { updateApplication } from "../../../../lib/applicationsStore";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
+  const guard = await requirePermission(request, "applications", "edit");
+  if (!guard.ok) return guard.response;
+
   const { id } = await context.params;
   if (!id) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
@@ -27,4 +31,3 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
 }
-

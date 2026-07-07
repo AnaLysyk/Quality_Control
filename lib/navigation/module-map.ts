@@ -70,7 +70,7 @@ export const SYSTEM_MODULES = [
     name: "Chat",
     description: "Conversas e contatos entre usuários da plataforma.",
     mainRoute: "/chat",
-    basePermission: null,
+    basePermission: { moduleId: "chat", action: "view" },
     status: "parcial",
   },
   {
@@ -79,14 +79,6 @@ export const SYSTEM_MODULES = [
     description: "Abertura, acompanhamento e operação de chamados.",
     mainRoute: "/suporte",
     basePermission: { moduleId: "support", action: "view" },
-    status: "ativo",
-  },
-  {
-    id: "agenda",
-    name: "Agenda",
-    description: "Calendário de releases e compromissos operacionais.",
-    mainRoute: "/agenda",
-    basePermission: { moduleId: "release_calendar", action: "view" },
     status: "ativo",
   },
   {
@@ -134,7 +126,6 @@ export const SYSTEM_MODULES = [
 export const SYSTEM_MODULE_BY_ID = new Map(
   SYSTEM_MODULES.map((moduleDefinition) => [moduleDefinition.id, moduleDefinition]),
 );
-
 
 
 

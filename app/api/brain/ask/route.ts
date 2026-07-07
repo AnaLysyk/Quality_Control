@@ -7,12 +7,21 @@ import type { AgentMode } from "@/lib/brain/agents";
 import { runAllGuardrails } from "@/lib/brain/guardrails";
 import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
-import { filterBrainDomainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
 import { answerBrainChatQuestion } from "@/lib/brain/chat";
 import { formatWebSearchForBrain, searchBrainWeb, shouldUseWebSearch } from "@/lib/brain/webSearch";
 
 type BrainWeatherContext = { place?: string; temperature?: number | null; apparentTemperature?: number | null; humidity?: number | null; precipitation?: number | null; windSpeed?: number | null; label?: string; comment?: string; source?: string };
 type HomeSelectedAction = { id?: string | null; label?: string | null; href?: string | null; moduleLabel?: string | null };
+
+function resolveBrainRoleLabel(context: BrainAccessContext) {
+  const role = normalizeForBrain(String(context.userAccess.permissionRole ?? context.userAccess.role ?? context.user.permissionRole ?? context.user.role ?? context.user.companyRole ?? context.userAccess.profileKind ?? ""));
+  if (role.includes("leader") || role.includes("lider")) return "Lider TC";
+  if (role.includes("support") || role.includes("suporte") || role.includes("technical")) return "Suporte Tecnico";
+  if (role.includes("testing") || role.includes("tc")) return "Usuario Testing Company";
+  if (role.includes("empresa") || role.includes("company")) return "Empresa";
+  return "seu perfil";
+}
 
 function isE2eJsonMode() { return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true"; }
 function normalizeForBrain(value: string) { return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
@@ -58,7 +67,7 @@ export async function POST(req: NextRequest) {
     const homeSummary = isHomeSummaryRequest(lightweightBody);
     const weatherContext = extractWeatherContext(lightweightBody.visibleFilters);
     const selectedAction = extractSelectedAction(lightweightBody.visibleFilters);
-    const roleLabel = accessResult.context.roleLabel ?? "seu perfil";
+    const roleLabel = resolveBrainRoleLabel(accessResult.context);
 
     if (homeSummary && selectedAction) return NextResponse.json({ reply: buildHomeActionReply(selectedAction, roleLabel), action: "home_context", navigation: selectedAction.href ? { label: selectedAction.label ?? selectedAction.moduleLabel ?? "Abrir", route: selectedAction.href } : null, foundNodes: [], webSearch: null, suggestedActions: [], filters: lightweightBody.visibleFilters ?? {}, requiresConfirmation: false });
     if (homeSummary && isSmallTalk(lightweightBody.message)) return NextResponse.json({ reply: buildSmallTalkReply(weatherContext), action: "small_talk", navigation: null, foundNodes: [], webSearch: null, suggestedActions: ["Investigar erro", "Criar bug", "Abrir agenda"], filters: lightweightBody.visibleFilters ?? {}, requiresConfirmation: false });

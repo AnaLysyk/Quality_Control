@@ -121,7 +121,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     globalContextRoles.some((role) => role === "admin" || role === "leader_tc" || role === "technical_support");
   const canUseAllLinkedCompanies =
     !isGlobalAdmin &&
-    normalizedUser?.permissionRole === "testing_company_user" &&
+    normalizedUser?.roles.includes("testing_company_user") === true &&
     companies.length > 1;
 
   const normalizedClients = useMemo(

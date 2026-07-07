@@ -1,13 +1,14 @@
 ﻿import { NextResponse, NextRequest } from 'next/server';
-import { deleteUserOverride, setUserOverride } from '@/lib/store/permissionsStore';
 import { addAuditLogSafe } from '@/data/auditLogRepository';
 import { getAdminUserItem } from '@/lib/adminUsers';
 import { notifyUserAccessUpdated } from '@/lib/notificationService';
-import { requireGlobalAdminWithStatus } from '@/lib/rbac/requireGlobalAdmin';
-import { resolvePermissionAccessForUser } from '@/lib/serverPermissionAccess';
-import { getAccessContext } from '@/lib/auth/session';
-import { validarAcessoUsuariosNoServidor } from '@/lib/permissions/validarAcessoUsuariosNoServidor';
+import { invalidatePermissionAccessCache, resolvePermissionAccessForUser } from '@/lib/serverPermissionAccess';
 import { invalidateBrainCache } from '@/lib/brain/cache';
+import { requirePermission } from '@/lib/rbac/requirePermission';
+import {
+  deleteUserPermissionOverride,
+  setUserPermissionOverride,
+} from '@/lib/store/userPermissionsStore';
 
 export const revalidate = 0;
 
@@ -17,14 +18,8 @@ function countPermissionActions(input: Record<string, string[] | undefined> | nu
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { admin, status } = await requireGlobalAdminWithStatus(req);
-    if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
-    }
-    const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
-    if (!access.canViewPermissions) {
-      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
-    }
+    const guard = await requirePermission(req, "permissions", "view");
+    if (!guard.ok) return guard.response;
     const p = await params;
     const userId = p.id;
     const resolved = await resolvePermissionAccessForUser(userId);
@@ -43,20 +38,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { admin, status } = await requireGlobalAdminWithStatus(req);
-    if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
-    }
-    const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
-    if (!access.canEditPermissions) {
-      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
-    }
+    const guard = await requirePermission(req, "permissions", "edit");
+    if (!guard.ok) return guard.response;
     const p = await params;
     const userId = p.id;
     const body = await req.json();
     const allowed = body.allow ?? undefined;
     const deny = body.deny ?? undefined;
-    const saved = await setUserOverride(userId, { allow: allowed, deny });
+    const saved = await setUserPermissionOverride(userId, {
+      allow: allowed,
+      deny,
+      updatedBy: guard.access.email ?? null,
+    });
+    invalidatePermissionAccessCache(userId);
     const resolved = await resolvePermissionAccessForUser(userId);
     const targetUser = await getAdminUserItem(userId);
     const effectiveCount = countPermissionActions(resolved.permissions);
@@ -64,8 +58,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const denyCount = countPermissionActions(saved.deny);
 
     await addAuditLogSafe({
-      actorUserId: admin.id,
-      actorEmail: admin.email,
+      actorUserId: guard.access.userId,
+      actorEmail: guard.access.email,
       action: "user.permissions.updated",
       entityType: "user",
       entityId: userId,
@@ -82,7 +76,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     await notifyUserAccessUpdated({
       targetUserId: userId,
-      actorEmail: admin.email,
+      actorEmail: guard.access.email,
       nextRole: resolved.roleKey,
       companyLabel: targetUser?.company_name ?? null,
       permissionsCount: effectiveCount,
@@ -98,26 +92,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { admin, status } = await requireGlobalAdminWithStatus(req);
-    if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
-    }
-    const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
-    if (!access.canResetPermissions) {
-      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
-    }
+    const guard = await requirePermission(req, "permissions", "reset");
+    if (!guard.ok) return guard.response;
     const body = await req.json().catch(() => null);
     const restored = body?.reason === "restored";
     const p = await params;
     const userId = p.id;
-    await deleteUserOverride(userId);
+    await deleteUserPermissionOverride(userId);
+    invalidatePermissionAccessCache(userId);
     const resolved = await resolvePermissionAccessForUser(userId);
     const targetUser = await getAdminUserItem(userId);
     const effectiveCount = countPermissionActions(resolved.permissions);
 
     await addAuditLogSafe({
-      actorUserId: admin.id,
-      actorEmail: admin.email,
+      actorUserId: guard.access.userId,
+      actorEmail: guard.access.email,
       action: restored ? "user.permissions.reset" : "user.permissions.updated",
       entityType: "user",
       entityId: userId,
@@ -133,7 +122,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     await notifyUserAccessUpdated({
       targetUserId: userId,
-      actorEmail: admin.email,
+      actorEmail: guard.access.email,
       nextRole: resolved.roleKey,
       companyLabel: targetUser?.company_name ?? null,
       permissionsCount: effectiveCount,
@@ -147,4 +136,3 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Não foi possível restaurar permissões agora." }, { status: 500 });
   }
 }
-

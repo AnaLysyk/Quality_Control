@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 export const runtime = "nodejs";
 
@@ -96,6 +97,9 @@ function jsonToCsv(value: unknown) {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = await requirePermission(request, "brain", "use");
+  if (!guard.ok) return guard.response;
+
   let payload: ConvertPayload;
 
   try {
@@ -169,4 +173,3 @@ export async function POST(request: NextRequest) {
     return jsonError(error instanceof Error ? error.message : "Não foi possível converter o arquivo.");
   }
 }
-

@@ -203,7 +203,7 @@ export function DeferredProfileButton() {
   if (mounted && ProfileButtonComponent) return <ProfileButtonComponent defaultOpen={defaultOpen} />;
   return (
     <button type="button" aria-label="Abrir perfil" title="Perfil" onMouseEnter={prime} onFocus={prime} onTouchStart={prime} onClick={open} className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)]/70 bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text,#0f172a)] shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-[var(--tc-accent,#ef0001)]/60 hover:text-[var(--tc-accent,#ef0001)] overflow-hidden">
-      <UserAvatar src={activeIdentity.avatarUrl} name={activeIdentity.name || user.name || user.email || "Usuário"} size={44} className="h-11 w-11 border-0 shadow-none" />
+      <UserAvatar src={activeIdentity.avatarUrl} name={activeIdentity.displayName || user.name || user.email || "Usuário"} size="sm" className="h-11 w-11 border-0 shadow-none" />
     </button>
   );
 }

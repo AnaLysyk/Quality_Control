@@ -6,13 +6,14 @@ import {
   type ReleaseCalendarContext,
   type ReleaseCalendarCriticality,
   type ReleaseCalendarEvent,
+  type ReleaseCalendarEventType,
 } from "@/data/releaseCalendarModel";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { getAccessContext } from "@/lib/auth/session";
 import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
-import { listReleaseCalendarEvents, updateReleaseCalendarEvent, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
+import { listReleaseCalendarEvents, updateReleaseCalendarEvent, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent, type ReleaseCalendarEventInput } from "@/lib/releaseCalendarStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -20,6 +21,19 @@ export const revalidate = 0;
 const VALID_STATUSES = ["pending", "ready", "planned", "at_risk", "blocked", "done", "delivered", "cancelled"] as const;
 const VALID_CRITICALITIES = ["critical", "high", "normal", "low"] as const;
 const VALID_CONTEXTS = ["company", "project", "user", "tc", "support", "release", "delivery"] as const;
+const VALID_EVENT_TYPES = [
+  "delivery",
+  "meeting",
+  "discovery",
+  "scope_cut",
+  "dev_freeze",
+  "qa_window",
+  "bug_bash",
+  "uat",
+  "release_candidate",
+  "release",
+  "post_release",
+] as const;
 const VALID_AUDIENCE_PROFILES = [
   "all",
   "empresa",
@@ -81,12 +95,37 @@ function normalizeAudienceProfile(value: unknown): ReleaseCalendarAudienceProfil
     : null;
 }
 
+function normalizeEventType(value: unknown): ReleaseCalendarEventType | undefined {
+  return typeof value === "string" && VALID_EVENT_TYPES.includes(value as ReleaseCalendarEventType)
+    ? (value as ReleaseCalendarEventType)
+    : undefined;
+}
+
 function normalizeScope(value: unknown): AgendaScope {
   return typeof value === "string" && VALID_SCOPES.includes(value as AgendaScope) ? (value as AgendaScope) : "all";
 }
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function optionalText(value: unknown, max = 800) {
+  if (typeof value !== "string") return undefined;
+  const text = value.trim().slice(0, max);
+  return text || undefined;
+}
+
+function optionalStringList(value: unknown, maxItems = 16) {
+  const source = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(/\n|,/g)
+      : [];
+  const items = source
+    .map((item) => optionalText(item, 240))
+    .filter((item): item is string => Boolean(item))
+    .slice(0, maxItems);
+  return items.length ? items : undefined;
 }
 
 function actorName(user: { name?: string | null; email?: string | null; id: string }) {
@@ -250,6 +289,71 @@ function getNotificationTitle(event: ReleaseCalendarEvent, body: Record<string, 
   return `Entrega agendada: ${event.title}`;
 }
 
+function buildEventMutationInput(
+  body: Record<string, unknown>,
+  options: {
+    includeDescription?: boolean;
+    defaultNotificationRules?: string[];
+    defaultBrianRules?: string[];
+  } = {},
+): Partial<ReleaseCalendarEventInput> {
+  const input: Partial<ReleaseCalendarEventInput> = {};
+
+  const textFields = [
+    "id",
+    "title",
+    "markerLabel",
+    "companyId",
+    "companySlug",
+    "companyName",
+    "projectId",
+    "projectSlug",
+    "releaseId",
+    "releaseName",
+    "startAt",
+    "endAt",
+    "ownerId",
+    "ownerName",
+  ] as const;
+
+  textFields.forEach((field) => {
+    const value = optionalText(body[field], field === "id" ? 120 : 240);
+    if (value) input[field] = value;
+  });
+
+  const type = normalizeEventType(body.type);
+  if (type) input.type = type;
+
+  const status = normalizeStatus(body.status);
+  if (status) input.status = status;
+
+  const criticality = normalizeCriticality(body.criticality);
+  if (criticality) input.criticality = criticality;
+
+  const context = normalizeContext(body.context);
+  if (context) input.context = context;
+
+  const audienceProfiles = optionalStringList(body.audienceProfiles, 8)
+    ?.map((profile) => normalizeAudienceProfile(profile))
+    .filter((profile): profile is ReleaseCalendarAudienceProfile => Boolean(profile));
+  if (audienceProfiles?.length) input.audienceProfiles = Array.from(new Set(audienceProfiles));
+
+  const participantNames = optionalStringList(body.participantNames, 16);
+  if (participantNames) input.participantNames = participantNames;
+
+  const checklist = optionalStringList(body.checklist, 12);
+  if (checklist) input.checklist = checklist;
+
+  input.notificationRules = optionalStringList(body.notificationRules, 12) ?? options.defaultNotificationRules;
+  input.brianRules = optionalStringList(body.brianRules, 12) ?? options.defaultBrianRules;
+
+  if (options.includeDescription || "description" in body || isMeetSchedule(body)) {
+    input.description = buildMeetDescription(body, body.description);
+  }
+
+  return input;
+}
+
 export async function GET(req: NextRequest) {
   const { access, response } = await requireReleaseCalendarAccess(req, "view");
   if (response || !access) return response;
@@ -295,14 +399,20 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ error: "Informe os dados do agendamento." }, { status: 400, headers: NO_STORE_HEADERS });
 
+  const title = optionalText(body.title, 240);
+  if (!title) return NextResponse.json({ error: "Informe o titulo do agendamento." }, { status: 400, headers: NO_STORE_HEADERS });
+
+  const eventInput = buildEventMutationInput(body, {
+    includeDescription: true,
+    defaultNotificationRules: ["Notificar participantes", "Lembrar 5 minutos antes"],
+    defaultBrianRules: ["Registrar contexto no Brain", "Relacionar participantes e decisao"],
+  });
+
   const event = await upsertReleaseCalendarEvent({
-    ...body,
-    type: body.type === "meeting" ? "meeting" : body.type === "delivery" ? "delivery" : body.type,
-    description: buildMeetDescription(body, body.description),
-    notificationRules: body.notificationRules ?? ["Notificar participantes", "Lembrar 5 minutos antes"],
-    brianRules: body.brianRules ?? ["Registrar contexto no Brain", "Relacionar participantes e decisão"],
-    ownerId: body.ownerId ?? user.id,
-    ownerName: body.ownerName ?? actorName(user),
+    ...eventInput,
+    title,
+    ownerId: eventInput.ownerId ?? user.id,
+    ownerName: eventInput.ownerName ?? actorName(user),
   });
 
   const notification = await recordCalendarNotification({
@@ -333,10 +443,15 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Informe o id do agendamento." }, { status: 400, headers: NO_STORE_HEADERS });
   }
 
-  const event = Object.keys(body ?? {}).some((key) => key !== "id" && key !== "status")
+  const eventPatch = buildEventMutationInput(body ?? {});
+  const hasFieldMutation = Object.keys(eventPatch).some((key) => {
+    const patchKey = key as keyof typeof eventPatch;
+    return key !== "id" && key !== "status" && eventPatch[patchKey] !== undefined;
+  });
+
+  const event = hasFieldMutation
     ? await updateReleaseCalendarEvent(id, {
-        ...body,
-        description: buildMeetDescription(body ?? {}, body?.description),
+        ...eventPatch,
         status: status ?? undefined,
       })
     : status

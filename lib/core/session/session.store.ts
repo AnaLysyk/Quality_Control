@@ -20,6 +20,7 @@ export type SessionPayload = {
   id?: string;
   email?: string;
   role?: string;
+  permissionRole?: string;
   globalRole?: string;
   companyRole?: string;
   capabilities?: string[];
@@ -35,6 +36,7 @@ export type AccessContext = {
   userOrigin?: string | null;
   isGlobalAdmin: boolean;
   role: string | null;
+  permissionRole: string | null;
   globalRole?: string | null;
   companyRole?: string | null;
   capabilities?: string[];
@@ -96,6 +98,7 @@ function parseJwtSession(token: string, secret: string): SessionPayload | null {
       userId?: string;
       email?: string;
       role?: string;
+      permissionRole?: string;
       globalRole?: string;
       companyRole?: string;
       capabilities?: string[];
@@ -109,6 +112,7 @@ function parseJwtSession(token: string, secret: string): SessionPayload | null {
       id: typeof payload.sub === "string" ? payload.sub : undefined,
       email: typeof payload.email === "string" ? payload.email : undefined,
       role: typeof payload.role === "string" ? payload.role : undefined,
+      permissionRole: typeof payload.permissionRole === "string" ? payload.permissionRole : undefined,
       globalRole: typeof payload.globalRole === "string" ? payload.globalRole : undefined,
       companyRole: typeof payload.companyRole === "string" ? payload.companyRole : undefined,
       capabilities: Array.isArray(payload.capabilities) ? payload.capabilities : undefined,
@@ -232,7 +236,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   // 8) Resolve papel de empresa e capacidades efetivas.
   const rawRole = session.companyRole ?? primaryLink?.role ?? user.role ?? null;
   const companyRole = normalizeLocalRole(rawRole);
-  const permissionRole = resolvePermissionRoleForUser(user, links);
+  const permissionRole = hasForcedGlobalAccess ? "leader_tc" : resolvePermissionRoleForUser(user, links);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
@@ -248,6 +252,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     userOrigin: user.user_origin ?? null,
     isGlobalAdmin,
     role: effectiveRole,
+    permissionRole,
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     capabilities,
@@ -256,4 +261,3 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     companySlugs,
   };
 }
-

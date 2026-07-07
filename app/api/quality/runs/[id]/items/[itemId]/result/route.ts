@@ -1,5 +1,6 @@
 ﻿import { apiFail, apiOk } from "@/lib/apiResponse";
 import { updateRunItemResult } from "@/lib/runOperationStore";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 import type { QaseResultSyncStatus, TestRunItemStatus } from "@/data/runOperationModel";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,9 @@ function isQaseSyncStatus(value: unknown): value is QaseResultSyncStatus {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
+  const guard = await requirePermission(request, "runs", "edit");
+  if (!guard.ok) return guard.response;
+
   const body = asRecord(await request.json().catch(() => null));
   try {
     if (!isItemStatus(body.status)) {
@@ -66,7 +70,6 @@ export async function PATCH(request: Request, { params }: Params) {
     return apiFail(request, "Erro ao atualizar resultado do item", { status: 500, code: "RUN_ITEM_RESULT_UPDATE_ERROR", details: error });
   }
 }
-
 
 
 

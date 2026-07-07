@@ -101,7 +101,8 @@ export async function POST(request: Request) {
   });
   if (!contextResult.ok) return contextResult.response;
 
-  const role = normalizeLegacyRole(contextResult.context.access.permissionRole) ??
+  const role =
+    contextResult.context.role ??
     normalizeLegacyRole(contextResult.context.access.role) ??
     normalizeLegacyRole(contextResult.context.access.companyRole);
   const canCreateProject =

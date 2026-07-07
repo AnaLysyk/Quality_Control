@@ -136,7 +136,7 @@ async function includeLoggedUserInList<T extends { id: string }>(
   const currentUserItem = await getAdminUserItem(access.userId);
   if (!currentUserItem) return items;
 
-  return [...items, currentUserItem as T];
+  return [...items, currentUserItem as unknown as T];
 }
 
 export async function GET(req: NextRequest) {

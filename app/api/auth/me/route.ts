@@ -4,6 +4,7 @@ import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById, findLocalCompanyById, findLocalCompanyBySlug } from "@/lib/auth/localStore";
 import { isAvatarKey } from "@/lib/avatarCatalog";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 
 export const revalidate = 0;
 
@@ -42,27 +43,32 @@ export async function GET(req: Request) {
     // non-critical: logo fallback handled by client
   }
 
+  const permissionAccess = await resolvePermissionAccessForUser(access.userId);
+
   return NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
       name: displayName,
+      user: user.user ?? user.email,
+      username: user.user ?? user.email,
       fullName: typeof user.full_name === "string" ? user.full_name : null,
       avatarKey: isAvatarKey(user.avatar_key) ? user.avatar_key : null,
       avatarUrl: user.avatar_url ?? null,
       role: access.role ?? null,
-      permissionRole: (access as { permissionRole?: string | null }).permissionRole ?? access.role ?? null,
+      permissionRole: permissionAccess.roleKey,
       globalRole: access.globalRole ?? null,
       companyRole: access.companyRole ?? null,
       capabilities: access.capabilities ?? [],
-      permissions: (access as { permissions?: unknown }).permissions ?? {},
+      permissions: permissionAccess.permissions,
       companyId: access.companyId ?? null,
       clientId: access.companyId ?? null,
       companySlug: access.companySlug ?? null,
       clientSlug: access.companySlug ?? null,
+      companySlugs: access.companySlugs ?? [],
+      clientSlugs: access.companySlugs ?? [],
       isGlobalAdmin: access.isGlobalAdmin === true,
       companyLogoUrl,
     },
   }, { headers: NO_STORE_HEADERS });
 }
-

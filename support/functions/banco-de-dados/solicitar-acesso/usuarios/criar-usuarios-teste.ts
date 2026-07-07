@@ -77,6 +77,20 @@ const users = [
     user_origin: "testing_company",
   },
   {
+    id: "usr_e2e_qa_quality_user",
+    full_name: "E2E QA Quality Control",
+    name: "E2E QA Quality Control",
+    email: "e2e-qa-quality@testingcompany.local",
+    user: "e2e.qa.quality",
+    password_hash: passwordHash,
+    active: true,
+    status: "active",
+    role: "testing_company_user",
+    default_company_slug: "testing-company",
+    home_company_id: "cmp_e2e_testing_company",
+    user_origin: "testing_company",
+  },
+  {
     id: "usr_e2e_company_user",
     full_name: "E2E Usuario Empresa",
     name: "E2E Usuario Empresa",
@@ -138,6 +152,12 @@ const memberships = [
     role: "company_user",
   },
   {
+    id: "mem_e2e_qa_quality_user",
+    userId: "usr_e2e_qa_quality_user",
+    companyId: "cmp_e2e_testing_company",
+    role: "testing_company_user",
+  },
+  {
     id: "mem_e2e_empresa",
     userId: "usr_e2e_empresa",
     companyId: "cmp_e2e_client",
@@ -159,4 +179,3 @@ writeFileSync(
 );
 
 console.log(`[e2e] Massa de perfis criada em ${dataDir} (${users.length} usuarios).`);
-

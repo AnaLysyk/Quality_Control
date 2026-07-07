@@ -1,0 +1,691 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Quality Control API",
+    "version": "2026-07-07",
+    "description": "Documentacao inicial dos endpoints criticos do Quality Control. Esta especificacao deve ser atualizada no mesmo PR em que um endpoint novo for criado ou uma regra de permissao for alterada."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Mesmo host da aplicacao Next.js"
+    }
+  ],
+  "tags": [
+    { "name": "Users" },
+    { "name": "Access Requests" },
+    { "name": "Permissions" },
+    { "name": "Projects" },
+    { "name": "Applications" },
+    { "name": "Tickets" },
+    { "name": "Chat" },
+    { "name": "Documentation" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session_id",
+        "description": "Sessao web autenticada usada pelas rotas protegidas."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" }
+        },
+        "additionalProperties": true
+      },
+      "AdminUserSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "user": { "type": ["string", "null"] },
+          "role": { "type": ["string", "null"] },
+          "companyId": { "type": ["string", "null"] },
+          "companySlug": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      },
+      "ProjectSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "status": { "type": "string" }
+        },
+        "additionalProperties": true
+      },
+      "ApplicationSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "companySlug": { "type": ["string", "null"] },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "qaseProjectCode": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      },
+      "TicketSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "string" },
+          "companySlug": { "type": ["string", "null"] },
+          "companyId": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      },
+      "WikiStore": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "docs": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "canEdit": { "type": "boolean" }
+        },
+        "required": ["categories", "docs"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "security": [
+    {
+      "sessionAuth": []
+    }
+  ],
+  "paths": {
+    "/api/admin/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Lista usuarios visiveis no escopo atual",
+        "description": "Leader TC e perfis globais veem escopo amplo. Empresa ve apenas usuarios da propria empresa. Sem permissao o endpoint retorna 403.",
+        "x-authorizedRoles": ["leader_tc", "technical_support", "empresa"],
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filtra a listagem pela empresa desejada quando o escopo do usuario permitir."
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["login", "logins", "identity"] },
+            "description": "Retorna apenas resumo de identidade/login."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuarios listados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AdminUserSummary" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Nao autenticado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "403": { "description": "Sem permissao ou fora do escopo de empresa", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Cria usuario no contexto operacional atual",
+        "description": "Empresa pode criar apenas usuario empresarial dentro da propria empresa. Perfis globais podem criar conforme regra de perfil.",
+        "x-authorizedRoles": ["leader_tc", "technical_support", "empresa"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "role": { "type": "string" },
+                  "client_id": { "type": ["string", "null"] },
+                  "clientSlug": { "type": ["string", "null"] },
+                  "companySlug": { "type": ["string", "null"] },
+                  "capabilities": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              },
+              "example": {
+                "name": "Usuaria Empresa QA",
+                "email": "qa.empresa@example.com",
+                "role": "company_user",
+                "clientSlug": "testing-company"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Usuario criado com sucesso" },
+          "400": { "description": "Payload invalido" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao para criar o perfil solicitado" },
+          "409": { "description": "Conflito de empresa ou usuario" }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Atualiza dados do usuario a partir da tela administrativa",
+        "description": "Mantem as mesmas regras de escopo e perfil da listagem/criacao.",
+        "x-authorizedRoles": ["leader_tc", "technical_support", "empresa"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "role": { "type": "string" },
+                  "active": { "type": "boolean" },
+                  "capabilities": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Usuario atualizado" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao" },
+          "404": { "description": "Usuario nao encontrado" }
+        }
+      }
+    },
+    "/api/access-requests": {
+      "get": {
+        "tags": ["Access Requests"],
+        "summary": "Lista solicitacoes de acesso visiveis ao usuario logado",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "requestType",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Solicitacoes listadas" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao para o escopo solicitado" }
+        }
+      },
+      "post": {
+        "tags": ["Access Requests"],
+        "summary": "Cria solicitacao de acesso",
+        "description": "A solicitacao nasce pendente e vinculada ao contexto/empresa escolhida pelo solicitante.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "company": { "type": "string" },
+                  "clientId": { "type": ["string", "null"] },
+                  "accessType": { "type": "string" },
+                  "phone": { "type": ["string", "null"] },
+                  "jobRole": { "type": ["string", "null"] },
+                  "justification": { "type": ["string", "null"] }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Solicitacao criada" },
+          "400": { "description": "Payload invalido" },
+          "401": { "description": "Nao autenticado" }
+        }
+      }
+    },
+    "/api/admin/access-requests/{id}/accept": {
+      "post": {
+        "tags": ["Access Requests"],
+        "summary": "Aprova solicitacao de acesso",
+        "description": "A aprovacao pode criar usuario, vinculo com empresa e permissao inicial. Empresa so aprova pedido proprio para usuario empresarial.",
+        "x-authorizedRoles": ["leader_tc", "technical_support", "empresa"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "comment": { "type": ["string", "null"] },
+                  "admin_notes": { "type": ["string", "null"] },
+                  "client_id": { "type": ["string", "null"] },
+                  "access_type": { "type": ["string", "null"] }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Solicitacao aprovada" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao para aprovar esse perfil/empresa" },
+          "404": { "description": "Solicitacao nao encontrada" },
+          "409": { "description": "Empresa ou usuario alvo indisponivel" }
+        }
+      }
+    },
+    "/api/admin/user-permissions/{userId}": {
+      "get": {
+        "tags": ["Permissions"],
+        "summary": "Consulta overrides de permissao por usuario",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Overrides carregados" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao" },
+          "404": { "description": "Usuario nao encontrado" }
+        }
+      },
+      "patch": {
+        "tags": ["Permissions"],
+        "summary": "Atualiza overrides de permissao do usuario",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "allow": { "type": "object", "additionalProperties": true },
+                  "deny": { "type": "object", "additionalProperties": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Overrides atualizados" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao" }
+        }
+      },
+      "delete": {
+        "tags": ["Permissions"],
+        "summary": "Remove overrides e volta ao perfil padrao",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Overrides removidos" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao" }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": ["Projects"],
+        "summary": "Lista projetos ativos de uma empresa",
+        "parameters": [
+          {
+            "name": "companySlug",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Projetos listados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "projects": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ProjectSummary" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "companySlug obrigatorio" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Empresa fora do escopo" }
+        }
+      },
+      "post": {
+        "tags": ["Projects"],
+        "summary": "Cria projeto na empresa ativa",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["companySlug", "slug", "name"],
+                "properties": {
+                  "companySlug": { "type": "string" },
+                  "slug": { "type": "string" },
+                  "name": { "type": "string" },
+                  "description": { "type": ["string", "null"] },
+                  "color": { "type": ["string", "null"] },
+                  "iconKey": { "type": ["string", "null"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Projeto criado" },
+          "400": { "description": "Payload invalido" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao" },
+          "404": { "description": "Empresa nao encontrada" },
+          "409": { "description": "Projeto duplicado" }
+        }
+      }
+    },
+    "/api/applications": {
+      "get": {
+        "tags": ["Applications"],
+        "summary": "Lista aplicacoes no escopo da empresa ativa",
+        "parameters": [
+          {
+            "name": "companySlug",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "light",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aplicacoes listadas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ApplicationSummary" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao ou fora do escopo" }
+        }
+      },
+      "post": {
+        "tags": ["Applications"],
+        "summary": "Cria aplicacao vinculada a uma empresa",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["companySlug", "name"],
+                "properties": {
+                  "companySlug": { "type": "string" },
+                  "name": { "type": "string" },
+                  "slug": { "type": ["string", "null"] },
+                  "description": { "type": ["string", "null"] },
+                  "qaseProjectCode": { "type": ["string", "null"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Aplicacao criada" },
+          "400": { "description": "Payload invalido" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao" }
+        }
+      }
+    },
+    "/api/tickets": {
+      "get": {
+        "tags": ["Tickets"],
+        "summary": "Lista chamados do contexto atual",
+        "parameters": [
+          { "name": "companyId", "in": "query", "schema": { "type": "string" } },
+          { "name": "companySlug", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chamados listados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TicketSummary" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao ou empresa fora do escopo" }
+        }
+      },
+      "post": {
+        "tags": ["Tickets"],
+        "summary": "Cria chamado para a empresa ativa",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "type": { "type": ["string", "null"] },
+                  "priority": { "type": ["string", "null"] },
+                  "companySlug": { "type": ["string", "null"] },
+                  "companyId": { "type": ["string", "null"] }
+                },
+                "required": ["title", "description"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Chamado criado" },
+          "400": { "description": "Payload invalido" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao" }
+        }
+      }
+    },
+    "/api/chat/contacts": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Lista contatos de chat visiveis no contexto atual",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "companySlug", "in": "query", "schema": { "type": "string" } },
+          { "name": "projectSlug", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Contatos listados" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Modulo de chat indisponivel para o perfil atual" }
+        }
+      }
+    },
+    "/api/chat/messages": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Lista inbox ou thread do chat",
+        "parameters": [
+          { "name": "peerId", "in": "query", "schema": { "type": "string" } },
+          { "name": "companySlug", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Mensagens ou inbox carregadas" },
+          "400": { "description": "peerId invalido" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao para usar chat" },
+          "404": { "description": "Usuario alvo fora do contexto" }
+        }
+      },
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Envia mensagem no chat",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["peerId"],
+                "properties": {
+                  "peerId": { "type": "string" },
+                  "text": { "type": ["string", "null"] },
+                  "attachments": {
+                    "type": "array",
+                    "items": { "type": "object", "additionalProperties": true }
+                  },
+                  "companySlug": { "type": ["string", "null"] },
+                  "projectSlug": { "type": ["string", "null"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Mensagem enviada" },
+          "400": { "description": "Mensagem invalida" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao para usar chat" },
+          "404": { "description": "Usuario alvo fora do contexto" }
+        }
+      }
+    },
+    "/api/platform-docs": {
+      "get": {
+        "tags": ["Documentation"],
+        "summary": "Le a wiki global da plataforma",
+        "responses": {
+          "200": {
+            "description": "Wiki global carregada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WikiStore" }
+              }
+            }
+          },
+          "401": { "description": "Nao autenticado" }
+        }
+      }
+    },
+    "/api/company-docs/{companySlug}": {
+      "get": {
+        "tags": ["Documentation"],
+        "summary": "Le a wiki da empresa no escopo atual",
+        "parameters": [
+          {
+            "name": "companySlug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wiki da empresa carregada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WikiStore" }
+              }
+            }
+          },
+          "403": { "description": "Empresa fora do escopo ou sem permissao de documentacao" }
+        }
+      }
+    }
+  }
+}

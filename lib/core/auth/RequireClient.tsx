@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -76,14 +76,31 @@ function resolveRequireClientAccessState(input: {
     : "denied";
 }
 
+function subscribeMountedState() {
+  return () => {};
+}
+
+function getClientMountedSnapshot() {
+  return true;
+}
+
+function getServerMountedSnapshot() {
+  return false;
+}
+
 export function RequireClient({ slug, children, fallback }: RequireClientProps) {
   const { user, loading, error, refreshUser } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname() || "/";
-  const [mounted, setMounted] = useState(true);
+  const mounted = useSyncExternalStore(
+    subscribeMountedState,
+    getClientMountedSnapshot,
+    getServerMountedSnapshot,
+  );
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
+    if (!mounted) return;
     if (!loading) {
       const timeoutId = window.setTimeout(() => setTimedOut(false), 0);
       return () => window.clearTimeout(timeoutId);
@@ -91,7 +108,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
 
     const handle = window.setTimeout(() => setTimedOut(true), 10_000);
     return () => window.clearTimeout(handle);
-  }, [loading]);
+  }, [loading, mounted]);
 
   const { isAdmin, isLinkedTcUser } = resolveRoleAccess(user, slug);
   const loginHref =
@@ -113,11 +130,16 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   }, [error, isAdmin, isLinkedTcUser, loading, normalizedClientSlug, slug, timedOut, user]);
 
   useEffect(() => {
+    if (!mounted) return;
     if (loading) return;
     if (!user) {
       router.replace(loginHref);
     }
-  }, [loading, loginHref, router, user]);
+  }, [loading, loginHref, mounted, router, user]);
+
+  if (!mounted) {
+    return (fallback as ReactNode) ?? <AuthSkeleton message="Validando acesso da empresa" />;
+  }
 
   if (accessState === "loading") {
     return (fallback as ReactNode) ?? <AuthSkeleton message="Validando acesso da empresa" />;

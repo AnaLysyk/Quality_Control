@@ -1,12 +1,16 @@
 ﻿import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { requirePermission } from "@/lib/rbac/requirePermission";
 
 export const runtime = "nodejs";
 
 const BASE_DIR = path.join(process.cwd(), "data", "s3");
 
 export async function POST(req: Request) {
+  const guard = await requirePermission(req, "documents", "create");
+  if (!guard.ok) return guard.response;
+
   const form = await req.formData().catch(() => null);
   if (!form) {
     return NextResponse.json({ ok: false, error: "invalid form" }, { status: 400 });
@@ -30,4 +34,3 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true, key: safeKey, size: buffer.length }, { status: 200 });
 }
-

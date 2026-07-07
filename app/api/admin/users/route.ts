@@ -86,6 +86,13 @@ function canManageInstitutionalProfiles(
   return access.isGlobalAdmin === true || role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC;
 }
 
+function isCompanyScopedCreator(access: Awaited<ReturnType<typeof getAccessContext>> | null) {
+  if (!access) return false;
+  const role = normalizeLegacyRole(access.role);
+  const companyRole = normalizeLegacyRole(access.companyRole);
+  return role === SYSTEM_ROLES.EMPRESA || companyRole === SYSTEM_ROLES.EMPRESA;
+}
+
 function wantsLoginSummary(searchParams: URLSearchParams) {
   const summary = (searchParams.get("summary") ?? searchParams.get("select") ?? "").trim().toLowerCase();
   return summary === "logins" || summary === "login" || summary === "identity";
@@ -182,16 +189,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
-  }
   const access = await getAccessContext(req);
+  if (!access) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
   const userAccess = await validarAcessoUsuariosNoServidor(access);
   if (!userAccess.canCreateUsers) {
     return NextResponse.json({ error: "Sem permissão para criar usuários" }, { status: 403 });
   }
   const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
+  const companyScopedCreator = isCompanyScopedCreator(access);
 
   const body = await req.json().catch(() => null);
   const profileFields = readSyncedUserProfileFields(body);
@@ -213,12 +221,25 @@ export async function POST(req: NextRequest) {
   const linkedinUrl = profileFields.linkedinUrl;
   const avatarUrl = profileFields.avatarUrl;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const profileRole = resolveEditableProfileRole(rawRole) ?? "testing_company_user";
+  const profileRole = resolveEditableProfileRole(rawRole) ?? (companyScopedCreator ? "company_user" : "testing_company_user");
   const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
   const role = toStoredEditableUserRole(profileRole);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
+
+  if (companyScopedCreator) {
+    if (profileRole !== SYSTEM_ROLES.COMPANY_USER) {
+      return NextResponse.json({ error: "Empresa só pode criar usuário empresarial" }, { status: 403 });
+    }
+    if (!access.companyId) {
+      return NextResponse.json({ error: "Empresa sem contexto ativo" }, { status: 403 });
+    }
+    if (clientId && clientId !== access.companyId) {
+      return NextResponse.json({ error: "Empresa só pode criar usuário na própria empresa" }, { status: 403 });
+    }
+    clientId = access.companyId;
+  }
 
   if (editableProfileUsesAutomaticCompany(profileRole) && !clientId) {
     const testingCompany =
@@ -311,8 +332,8 @@ export async function POST(req: NextRequest) {
   }
 
   await addAuditLogSafe({
-    actorUserId: admin.id,
-    actorEmail: admin.email,
+    actorUserId: access.userId,
+    actorEmail: access.email,
     action: "user.created",
     entityType: "user",
     entityId: user.id,

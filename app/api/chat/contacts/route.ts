@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
 
   const url = new URL(req.url);
   const search = url.searchParams.get("q") ?? "";
-  const items = await listChatContacts(access, search);
+  const companySlug = url.searchParams.get("companySlug") ?? url.searchParams.get("company") ?? null;
+  const items = await listChatContacts(access, search, { companySlug });
 
   return NextResponse.json({ items }, { headers: CHAT_CONTACTS_CACHE_HEADERS });
 }

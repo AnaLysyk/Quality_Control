@@ -12,6 +12,27 @@ on:
 jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      NEXT_DISABLE_FONT_DOWNLOAD: "1"
+      NEXT_DISABLE_TURBOPACK: "1"
+      SKIP_PRISMA_MIGRATE: "true"
+      E2E_USE_JSON: "1"
+      AUTH_STORE: "json"
+      USE_JSON_STORE: "true"
+      TICKETS_STORE: "json"
+      EMAIL_CAPTURE_MODE: "file"
+      EMAIL_CAPTURE_FILE: "test-results/emails/outbox.jsonl"
+      ACCESS_REQUEST_EMAIL_BYPASS: "true"
+      ACCESS_REQUEST_BLOCK_DUPLICATES: "true"
+      FORCE_EMAIL_SEND: "false"
+      E2E_SEND_REAL_EMAIL: "false"
+      PLAYWRIGHT_REAL_EMAIL: "false"
+      JWT_SECRET: "quality-control-ci-secret"
+      NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3100"
+      NEXT_PUBLIC_BASE_URL: "http://127.0.0.1:3100"
+      APP_URL: "http://127.0.0.1:3100"
+      PUBLIC_BASE_URL: "http://127.0.0.1:3100"
 
     permissions:
       contents: read
@@ -27,8 +48,15 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Prepare isolated test directories
+      run: |
+        mkdir -p test-results/emails .tmp/e2e-auth
+        : > "$EMAIL_CAPTURE_FILE"
+
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
 
     - name: Build application
-      run: npm run build
+      run: |
+        export DATABASE_URL="$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql ci ci 127.0.0.1 5432 ci)"
+        npm run build

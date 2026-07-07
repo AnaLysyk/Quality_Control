@@ -13,6 +13,19 @@ export function apiUrl(path: string): string {
   return path.startsWith("/") ? path : `/${path}`;
 }
 
+function withActiveChatCompany(path: string): string {
+  if (typeof window === "undefined") return path;
+  if (!path.startsWith("/api/chat/contacts") && !path.startsWith("/api/chat/messages")) return path;
+
+  const params = new URLSearchParams(window.location.search);
+  const companySlug = params.get("companySlug") || params.get("company");
+  if (!companySlug) return path;
+
+  const separator = path.includes("?") ? "&" : "?";
+  if (path.includes("companySlug=") || path.includes("company=")) return path;
+  return `${path}${separator}companySlug=${encodeURIComponent(companySlug)}`;
+}
+
 export async function getAccessToken() {
   return getClientAuthToken();
 }
@@ -48,7 +61,8 @@ async function getServerAccessToken() {
 
 // fetch helper que adiciona Authorization: Bearer <jwt> quando disponível
 export async function fetchApi(path: string, init: RequestInit = {}) {
-  const url = apiUrl(path);
+  const scopedPath = withActiveChatCompany(path);
+  const url = apiUrl(scopedPath);
   const buildHeaders = async () => {
     const headers = new Headers(init.headers as HeadersInit | undefined);
     const token =
@@ -75,8 +89,8 @@ export async function fetchApi(path: string, init: RequestInit = {}) {
     typeof window !== "undefined" &&
     res.status === 401 &&
     !API_BASE &&
-    path.startsWith("/api/") &&
-    !path.startsWith("/api/auth/")
+    scopedPath.startsWith("/api/") &&
+    !scopedPath.startsWith("/api/auth/")
   ) {
     const refreshed = await refreshClientSession();
     if (refreshed) {
@@ -86,4 +100,3 @@ export async function fetchApi(path: string, init: RequestInit = {}) {
 
   return res;
 }
-

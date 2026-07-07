@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 
 import { getAccessContext, type AccessContext } from "@/lib/auth/session";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
 export type OperationalScope = "global" | "company" | "own";
@@ -68,13 +67,27 @@ function companyAllowed(access: AccessContext, companyId?: string | null, compan
   return Boolean(requestedSlug && slugs.has(requestedSlug));
 }
 
+function actionAliases(action: string) {
+  if (action === "view") return ["view", "read", "view_own", "view_company", "view_all"];
+  if (action === "read") return ["read", "view", "view_own", "view_company", "view_all"];
+  if (action === "use") return ["use", "view", "read"];
+  return [action];
+}
+
 function hasDefaultPermission(role: SystemRole | null, moduleId: string, action: string) {
   if (!role) return false;
   const defaults = resolveRoleDefaults(role);
   const actions = defaults[moduleId] ?? [];
-  if (actions.includes(action)) return true;
-  if ((action === "view" || action === "read") && (actions.includes("view") || actions.includes("read"))) return true;
-  return false;
+  return actionAliases(action).some((candidate) => actions.includes(candidate));
+}
+
+function hasCapability(access: AccessContext, moduleId: string, action: string) {
+  const capabilities = Array.isArray(access.capabilities) ? access.capabilities : [];
+  return actionAliases(action).some(
+    (candidate) =>
+      capabilities.includes(`${moduleId}.${candidate}`) ||
+      capabilities.includes(`${moduleId}:${candidate}`),
+  );
 }
 
 export async function resolveOperationalContext(
@@ -91,7 +104,7 @@ export async function resolveOperationalContext(
   const action = options.action;
 
   if (moduleId && action) {
-    const allowed = hasPermissionAccess(access.permissions, moduleId, action) || hasDefaultPermission(role, moduleId, action);
+    const allowed = hasCapability(access, moduleId, action) || hasDefaultPermission(role, moduleId, action);
     if (!allowed) {
       return { ok: false, response: NextResponse.json({ error: "Sem permissão" }, { status: 403 }) };
     }

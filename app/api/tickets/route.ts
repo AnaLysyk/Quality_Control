@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
-import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { createTicket, listAllTickets, listTicketsForUser, type TicketRecord } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { notifyTicketCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
-import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
-import { canCreateSupportTickets, canViewSupportBoard } from "@/lib/supportAccess";
 import { brainOnTicketCreated } from "@/lib/brain/autoSync";
+import { resolveOperationalContext } from "@/lib/context/operationalContext";
 import {
   buildTicketsListCacheKey,
   clearTicketsListCache,
@@ -26,46 +21,30 @@ function normalizeKey(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
 
-function resolveRole(user: AuthUser) {
-  return normalizeLegacyRole(user.permissionRole) ?? normalizeLegacyRole(user.role) ?? normalizeLegacyRole(user.companyRole);
-}
-
-function isCompanyTicketScope(user: AuthUser) {
-  return resolveRole(user) === SYSTEM_ROLES.EMPRESA;
-}
-
-function isOwnTicketScope(user: AuthUser) {
-  const role = resolveRole(user);
-  return role === SYSTEM_ROLES.TESTING_COMPANY_USER || role === SYSTEM_ROLES.COMPANY_USER;
-}
-
 function ticketMatchesCompany(ticket: TicketRecord, companyKey?: string | null) {
   const key = normalizeKey(companyKey);
   if (!key) return true;
   return normalizeKey(ticket.companyId) === key || normalizeKey(ticket.companySlug) === key;
 }
 
-function userCanFilterCompany(user: AuthUser, companyKey?: string | null) {
-  const key = normalizeKey(companyKey);
-  if (!key) return true;
-  if (canAccessGlobalTicketWorkspace(user)) return true;
-  if (normalizeKey(user.companyId) === key || normalizeKey(user.companySlug) === key) return true;
-  return (user.companySlugs ?? []).map(normalizeKey).includes(key);
-}
-
 export async function GET(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-  if (!canViewSupportBoard(user)) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
-  }
-
   const url = new URL(req.url);
-  const canUseGlobalScope = canAccessGlobalTicketWorkspace(user);
+  const companyIdFilter = url.searchParams.get("companyId");
+  const companySlugFilter = url.searchParams.get("companySlug");
+  const companyFilter = companyIdFilter ?? companySlugFilter;
+
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "tickets",
+    action: "view",
+    companyId: companyIdFilter,
+    companySlug: companySlugFilter,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
+  const { context } = contextResult;
+  const canUseGlobalScope = context.scope === "global";
   const cacheKey = buildTicketsListCacheKey({
-    userId: user.id,
+    userId: context.access.userId,
     url,
     globalScope: canUseGlobalScope,
   });
@@ -76,27 +55,20 @@ export async function GET(req: Request) {
   }
 
   const statusFilter = url.searchParams.get("status");
-  const companyFilter = url.searchParams.get("companyId") ?? url.searchParams.get("companySlug");
   const assignedTo = url.searchParams.get("assignedTo");
   const priority = url.searchParams.get("priority");
   const tags = url.searchParams.get("tags");
   const search = url.searchParams.get("search");
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
 
-  if (companyFilter && !userCanFilterCompany(user, companyFilter)) {
-    return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
-  }
-
   let items: TicketRecord[];
   if (canUseGlobalScope) {
     items = await listAllTickets();
-  } else if (isCompanyTicketScope(user)) {
-    const companyKey = companyFilter || user.companyId || user.companySlug;
+  } else if (context.scope === "company") {
+    const companyKey = companyFilter || context.companyId || context.companySlug;
     items = (await listAllTickets()).filter((ticket) => ticketMatchesCompany(ticket, companyKey));
-  } else if (isOwnTicketScope(user)) {
-    items = await listTicketsForUser(user.id);
   } else {
-    items = await listTicketsForUser(user.id);
+    items = await listTicketsForUser(context.access.userId);
   }
 
   if (statusFilter) {
@@ -108,7 +80,7 @@ export async function GET(req: Request) {
   if (companyFilter) {
     items = items.filter((ticket) => ticketMatchesCompany(ticket, companyFilter));
   }
-  if (assignedTo) {
+  if (assignedTo && canUseGlobalScope) {
     items = items.filter((ticket) => ticket.assignedToUserId === assignedTo);
   }
   if (priority) {
@@ -139,28 +111,24 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const user = await authenticateRequest(req);
-    if (!user) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
-    if (!canCreateSupportTickets(user)) {
-      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
-    }
     const body = await req.json().catch(() => ({}));
     const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
     const requestedCompanySlug = typeof body?.companySlug === "string" ? body.companySlug : null;
-    const targetCompanyId = requestedCompanyId ?? user.companyId ?? null;
-    const targetCompanySlug = requestedCompanySlug ?? user.companySlug ?? resolvePrimaryCompanySlug(user);
-    if (requestedCompanyId) {
-      await assertCompanyAccess(user, requestedCompanyId);
-    }
-    if (requestedCompanySlug && !userCanFilterCompany(user, requestedCompanySlug)) {
-      return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
-    }
 
-    const localUser = await getLocalUserById(user.id);
+    const contextResult = await resolveOperationalContext(req, {
+      moduleId: "tickets",
+      action: "create",
+      companyId: requestedCompanyId,
+      companySlug: requestedCompanySlug,
+    });
+    if (!contextResult.ok) return contextResult.response;
+
+    const { context } = contextResult;
+    const targetCompanyId = requestedCompanyId ?? context.companyId ?? null;
+    const targetCompanySlug = requestedCompanySlug ?? context.companySlug ?? context.access.companySlugs?.[0] ?? null;
+    const localUser = await getLocalUserById(context.access.userId);
     const assignedToUserId =
-      canAccessGlobalTicketWorkspace(user) &&
+      context.scope === "global" &&
       typeof body?.assignedToUserId === "string"
         ? body?.assignedToUserId
         : null;
@@ -174,7 +142,7 @@ export async function POST(req: Request) {
       priority: body?.priority,
       tags,
       assignedToUserId,
-      createdBy: user.id,
+      createdBy: context.access.userId,
       createdByName: resolveDisplayName(localUser),
       createdByEmail: localUser?.email ?? null,
       companySlug: targetCompanySlug,
@@ -190,8 +158,8 @@ export async function POST(req: Request) {
     appendTicketEvent({
       ticketId: ticket.id,
       type: "CREATED",
-      actorUserId: user.id,
-      payload: { title: ticket.title, role: user.role ?? null },
+      actorUserId: context.access.userId,
+      payload: { title: ticket.title, role: context.access.role ?? null },
     }).catch((err) => {
       console.error("Falha ao registrar evento de chamado:", err);
     });

@@ -91,7 +91,7 @@ function buildInternalNote(input: {
 }
 
 function ActionModal({ action, onClose, onSubmit }: { action: ChatActionKind; onClose: () => void; onSubmit: (input: { title: string; dateTime: string; duration: string; details: string }) => void }) {
-  const context = useMemo(readChatContext, []);
+  const context = useMemo(() => readChatContext(), []);
   const [title, setTitle] = useState(action === "meet" ? `Meet com ${context.selectedName}` : action === "task" ? `Tarefa para ${context.selectedName}` : `Compromisso com ${context.selectedName}`);
   const [dateTime, setDateTime] = useState(toLocalInputValue(addMinutes(new Date(), action === "task" ? 60 : 30)));
   const [duration, setDuration] = useState(action === "task" ? "60" : "30");

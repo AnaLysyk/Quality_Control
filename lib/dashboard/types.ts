@@ -1,4 +1,4 @@
-﻿export type DashboardScopeKind = "global" | "internal" | "company";
+export type DashboardScopeKind = "global" | "internal" | "company";
 
 export type DashboardCompanyOption = {
   id?: string;
@@ -7,8 +7,17 @@ export type DashboardCompanyOption = {
   locked?: boolean;
 };
 
+export type DashboardProjectOption = {
+  id?: string;
+  slug: string;
+  name: string;
+  companySlug?: string | null;
+  locked?: boolean;
+};
+
 export type DashboardContextLabels = {
   companyLabel?: string | null;
+  projectLabel?: string | null;
   applicationLabel?: string | null;
   moduleLabel?: string | null;
   periodLabel?: string | null;
@@ -26,6 +35,12 @@ export type DashboardContextValue = {
   canSelectMultipleCompanies: boolean;
   canSelectAllCompanies: boolean;
   companySelectorMode: "hidden" | "locked" | "select";
+  allowedProjects: DashboardProjectOption[];
+  allowedProjectSlugs: string[];
+  selectedProjectSlug: string | null;
+  selectedProjectId: string | null;
+  canSelectProject: boolean;
+  projectSelectorMode: "hidden" | "locked" | "select";
   labels: DashboardContextLabels;
   contextLabel: string;
 };
@@ -37,4 +52,3 @@ export type DashboardMetricCard = {
   note?: string;
   tone?: "default" | "positive" | "warning" | "critical";
 };
-

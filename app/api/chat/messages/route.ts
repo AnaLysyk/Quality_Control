@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { listChatContacts } from "@/lib/chatContacts";
 import {
@@ -10,6 +9,7 @@ import {
   type ChatAttachment,
 } from "@/lib/chatStore";
 import { recordConversationBrainSignal } from "@/lib/conversationBrainFeed";
+import { resolveOperationalContext } from "@/lib/context/operationalContext";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { fixMojibake, fixMojibakeDeep } from "@/lib/text/fixMojibake";
 
@@ -73,14 +73,16 @@ function firstNonEmpty(...values: Array<string | null | undefined>) {
 }
 
 export async function GET(req: NextRequest) {
-  const access = await getAccessContext(req);
-  if (!access) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
   const url = new URL(req.url);
   const peerId = readPeerId(url);
   const companySlug = readCompanySlug(url);
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "chat",
+    action: "view",
+    companySlug,
+  });
+  if (!contextResult.ok) return contextResult.response;
+  const access = contextResult.context.access;
   const cacheKey = `${access.userId}:${companySlug ?? "all"}:${peerId || "threads"}`;
   const cached = readChatMessagesCache<Record<string, unknown>>(cacheKey);
   if (cached) {
@@ -119,11 +121,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const access = await getAccessContext(req);
-  if (!access) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
   const body = await req.json().catch(() => null);
   const payload = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const peerId = readOptionalString(payload, "peerId") ?? "";
@@ -131,11 +128,22 @@ export async function POST(req: NextRequest) {
   const attachments = fixMojibakeDeep(
     Array.isArray(payload.attachments) ? (payload.attachments as ChatAttachment[]) : [],
   );
-  const companySlug = readOptionalString(payload, "companySlug") ?? access.companySlug ?? null;
+  const companySlug = readOptionalString(payload, "companySlug") ?? null;
   const companyId = readOptionalString(payload, "companyId");
   const projectId = readOptionalString(payload, "projectId");
   const projectSlug = readOptionalString(payload, "projectSlug");
   const forceBrainCandidate = payload.remember === true || payload.feedBrain === true;
+
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "chat",
+    action: "use",
+    companyId,
+    companySlug,
+    projectSlug,
+  });
+  if (!contextResult.ok) return contextResult.response;
+  const access = contextResult.context.access;
+  const activeCompanySlug = companySlug ?? contextResult.context.companySlug;
 
   if (!peerId) {
     return NextResponse.json({ error: "peerId obrigatório" }, { status: 400 });
@@ -149,7 +157,7 @@ export async function POST(req: NextRequest) {
 
   const [sender, contacts, peerUser] = await Promise.all([
     getLocalUserById(access.userId),
-    listChatContacts(access, "", { companySlug }),
+    listChatContacts(access, "", { companySlug: activeCompanySlug }),
     getLocalUserById(peerId),
   ]);
 
@@ -196,7 +204,7 @@ export async function POST(req: NextRequest) {
     peerId: peerContact.id,
     peerName: peerContact.name,
     companyId: firstNonEmpty(companyId, readOptionalString(accessRecord, "companyId")),
-    companySlug: firstNonEmpty(companySlug, readOptionalString(accessRecord, "companySlug")),
+    companySlug: firstNonEmpty(activeCompanySlug, readOptionalString(accessRecord, "companySlug")),
     companyName,
     projectId,
     projectSlug,

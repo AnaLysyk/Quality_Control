@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
 import { listChatContacts } from "@/lib/chatContacts";
+import { resolveOperationalContext } from "@/lib/context/operationalContext";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -12,14 +12,17 @@ const CHAT_CONTACTS_CACHE_HEADERS = {
 };
 
 export async function GET(req: NextRequest) {
-  const access = await getAccessContext(req);
-  if (!access) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
   const url = new URL(req.url);
   const search = url.searchParams.get("q") ?? "";
-  const items = await listChatContacts(access, search);
+  const companySlug = url.searchParams.get("companySlug") ?? url.searchParams.get("company") ?? null;
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "chat",
+    action: "view",
+    companySlug,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
+  const items = await listChatContacts(contextResult.context.access, search, { companySlug });
 
   return NextResponse.json({ items }, { headers: CHAT_CONTACTS_CACHE_HEADERS });
 }

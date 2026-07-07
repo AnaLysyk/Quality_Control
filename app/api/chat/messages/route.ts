@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { listChatContacts } from "@/lib/chatContacts";
 import {
@@ -10,6 +9,7 @@ import {
   type ChatAttachment,
 } from "@/lib/chatStore";
 import { recordConversationBrainSignal } from "@/lib/conversationBrainFeed";
+import { resolveOperationalContext } from "@/lib/context/operationalContext";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { fixMojibake, fixMojibakeDeep } from "@/lib/text/fixMojibake";
 
@@ -56,6 +56,10 @@ function readPeerId(url: URL) {
   return (url.searchParams.get("peerId") ?? url.searchParams.get("peer_id") ?? "").trim();
 }
 
+function readCompanySlug(url: URL) {
+  return (url.searchParams.get("companySlug") ?? url.searchParams.get("company") ?? "").trim() || null;
+}
+
 function readOptionalString(input: Record<string, unknown>, key: string) {
   const value = input[key];
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -69,14 +73,17 @@ function firstNonEmpty(...values: Array<string | null | undefined>) {
 }
 
 export async function GET(req: NextRequest) {
-  const access = await getAccessContext(req);
-  if (!access) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
   const url = new URL(req.url);
   const peerId = readPeerId(url);
-  const cacheKey = `${access.userId}:${peerId || "threads"}`;
+  const companySlug = readCompanySlug(url);
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "chat",
+    action: "view",
+    companySlug,
+  });
+  if (!contextResult.ok) return contextResult.response;
+  const access = contextResult.context.access;
+  const cacheKey = `${access.userId}:${companySlug ?? "all"}:${peerId || "threads"}`;
   const cached = readChatMessagesCache<Record<string, unknown>>(cacheKey);
   if (cached) {
     return NextResponse.json(fixMojibakeDeep(cached), {
@@ -96,12 +103,12 @@ export async function GET(req: NextRequest) {
   }
 
   const [contacts, peerUser] = await Promise.all([
-    listChatContacts(access),
+    listChatContacts(access, "", { companySlug }),
     getLocalUserById(peerId),
   ]);
   const peerContact = contacts.find((item) => item.id === peerId) ?? null;
   if (!peerUser || !peerContact) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado neste contexto de empresa" }, { status: 404 });
   }
 
   const messages = await listChatThreadMessages(access.userId, peerId);
@@ -114,11 +121,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const access = await getAccessContext(req);
-  if (!access) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
   const body = await req.json().catch(() => null);
   const payload = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const peerId = readOptionalString(payload, "peerId") ?? "";
@@ -126,9 +128,22 @@ export async function POST(req: NextRequest) {
   const attachments = fixMojibakeDeep(
     Array.isArray(payload.attachments) ? (payload.attachments as ChatAttachment[]) : [],
   );
+  const companySlug = readOptionalString(payload, "companySlug") ?? null;
+  const companyId = readOptionalString(payload, "companyId");
   const projectId = readOptionalString(payload, "projectId");
   const projectSlug = readOptionalString(payload, "projectSlug");
   const forceBrainCandidate = payload.remember === true || payload.feedBrain === true;
+
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "chat",
+    action: "use",
+    companyId,
+    companySlug,
+    projectSlug,
+  });
+  if (!contextResult.ok) return contextResult.response;
+  const access = contextResult.context.access;
+  const activeCompanySlug = companySlug ?? contextResult.context.companySlug;
 
   if (!peerId) {
     return NextResponse.json({ error: "peerId obrigatório" }, { status: 400 });
@@ -142,13 +157,13 @@ export async function POST(req: NextRequest) {
 
   const [sender, contacts, peerUser] = await Promise.all([
     getLocalUserById(access.userId),
-    listChatContacts(access),
+    listChatContacts(access, "", { companySlug: activeCompanySlug }),
     getLocalUserById(peerId),
   ]);
 
   const peerContact = contacts.find((item) => item.id === peerId) ?? null;
   if (!sender || !peerUser || !peerContact) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado neste contexto de empresa" }, { status: 404 });
   }
 
   const message = await appendChatMessage({
@@ -188,8 +203,8 @@ export async function POST(req: NextRequest) {
     actorName: message.senderName,
     peerId: peerContact.id,
     peerName: peerContact.name,
-    companyId: firstNonEmpty(readOptionalString(payload, "companyId"), readOptionalString(accessRecord, "companyId")),
-    companySlug: firstNonEmpty(readOptionalString(payload, "companySlug"), readOptionalString(accessRecord, "companySlug")),
+    companyId: firstNonEmpty(companyId, readOptionalString(accessRecord, "companyId")),
+    companySlug: firstNonEmpty(activeCompanySlug, readOptionalString(accessRecord, "companySlug")),
     companyName,
     projectId,
     projectSlug,

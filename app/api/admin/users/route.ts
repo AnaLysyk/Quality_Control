@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { brainOnUserCreated } from "@/lib/brain/autoSync";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAccessContext } from "@/lib/auth/session";
+import { type AccessContext } from "@/lib/auth/session";
 import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
 import {
   editableProfileNeedsCompany,
@@ -28,6 +27,7 @@ import {
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { resolveOperationalContext } from "@/lib/context/operationalContext";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { readSyncedUserProfileFields, sanitizeUserProfileText } from "@/lib/userProfileData";
 import { emailService } from "@/lib/email";
@@ -75,7 +75,7 @@ function buildUniqueLogin(
 }
 
 function canManageInstitutionalProfiles(
-  access: Awaited<ReturnType<typeof getAccessContext>> | null,
+  access: AccessContext | null,
   userAccess?: { canManagePrivilegedProfiles?: boolean } | null,
 ) {
   if (userAccess?.canManagePrivilegedProfiles) return true;
@@ -84,6 +84,13 @@ function canManageInstitutionalProfiles(
   const companyRole = normalizeLegacyRole(access.companyRole);
   if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT || companyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT) return false;
   return access.isGlobalAdmin === true || role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC;
+}
+
+function isCompanyScopedCreator(access: AccessContext | null) {
+  if (!access) return false;
+  const role = normalizeLegacyRole(access.role);
+  const companyRole = normalizeLegacyRole(access.companyRole);
+  return role === SYSTEM_ROLES.EMPRESA || companyRole === SYSTEM_ROLES.EMPRESA;
 }
 
 function wantsLoginSummary(searchParams: URLSearchParams) {
@@ -121,7 +128,7 @@ async function listUserLoginSummary(options?: { companyId?: string | null }) {
 
 async function includeLoggedUserInList<T extends { id: string }>(
   items: T[],
-  access: Awaited<ReturnType<typeof getAccessContext>>,
+  access: AccessContext,
 ) {
   if (!access?.userId) return items;
   if (items.some((item) => item.id === access.userId)) return items;
@@ -133,36 +140,29 @@ async function includeLoggedUserInList<T extends { id: string }>(
 }
 
 export async function GET(req: NextRequest) {
-  const access = await getAccessContext(req);
-  if (!access) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-  }
-
-  const resolvedRole = normalizeLegacyRole(access.role);
-  const resolvedCompanyRole = normalizeLegacyRole(access.companyRole);
-  const isGlobalAdmin =
-    access.isGlobalAdmin === true ||
-    resolvedRole === SYSTEM_ROLES.LEADER_TC ||
-    resolvedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
-  const canManageOwnCompanyUsers =
-    resolvedRole === SYSTEM_ROLES.EMPRESA ||
-    resolvedCompanyRole === SYSTEM_ROLES.EMPRESA;
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("client_id");
   const loginSummary = wantsLoginSummary(searchParams);
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "users",
+    action: "view",
+    companyId: clientId,
+  });
+  if (!contextResult.ok) return contextResult.response;
 
-  if (!isGlobalAdmin) {
-    if (!access.companyId) {
+  const { context } = contextResult;
+  const access = context.access;
+  const isGlobalScope = context.scope === "global";
+
+  if (!isGlobalScope) {
+    if (!context.companyId) {
       return NextResponse.json({ error: "Sem empresa vinculada" }, { status: 403 });
     }
-    if (!canManageOwnCompanyUsers) {
-      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
-    }
     if (loginSummary) {
-      const items = await listUserLoginSummary({ companyId: access.companyId });
+      const items = await listUserLoginSummary({ companyId: context.companyId });
       return NextResponse.json({ items }, { status: 200, headers: { "x-qc-mode": "logins" } });
     }
-    const items = await includeLoggedUserInList(await listAdminUserItems({ companyId: access.companyId }), access);
+    const items = await includeLoggedUserInList(await listAdminUserItems({ companyId: context.companyId }), access);
     return NextResponse.json({ items }, { status: 200 });
   }
 
@@ -177,28 +177,11 @@ export async function GET(req: NextRequest) {
   }
 
   const items = await includeLoggedUserInList(await listAdminUserItems(), access);
-
   return NextResponse.json({ items }, { status: 200 });
 }
 
 export async function POST(req: NextRequest) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
-  }
-  const access = await getAccessContext(req);
-  const userAccess = await validarAcessoUsuariosNoServidor(access);
-  if (!userAccess.canCreateUsers) {
-    return NextResponse.json({ error: "Sem permissão para criar usuários" }, { status: 403 });
-  }
-  const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
-
   const body = await req.json().catch(() => null);
-  const profileFields = readSyncedUserProfileFields(body);
-  const fullName = profileFields.fullName;
-  const name = profileFields.name;
-  const email = profileFields.email;
-  const rawLogin = profileFields.login ?? "";
   const rawClientId = typeof body?.client_id === "string" ? body.client_id.trim() : "";
   const rawClientSlug =
     (typeof body?.clientSlug === "string" ? body.clientSlug.trim() : "") ||
@@ -208,17 +191,52 @@ export async function POST(req: NextRequest) {
     const companyBySlug = await findLocalCompanyBySlug(rawClientSlug);
     clientId = companyBySlug?.id ?? null;
   }
+
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "users",
+    action: "create",
+    companyId: clientId,
+    companySlug: rawClientSlug || null,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
+  const access = contextResult.context.access;
+  const userAccess = await validarAcessoUsuariosNoServidor(access);
+  if (!userAccess.canCreateUsers) {
+    return NextResponse.json({ error: "Sem permissão para criar usuários" }, { status: 403 });
+  }
+  const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
+  const companyScopedCreator = isCompanyScopedCreator(access);
+
+  const profileFields = readSyncedUserProfileFields(body);
+  const fullName = profileFields.fullName;
+  const name = profileFields.name;
+  const email = profileFields.email;
+  const rawLogin = profileFields.login ?? "";
   const phone = profileFields.phone;
   const jobTitle = profileFields.jobTitle;
   const linkedinUrl = profileFields.linkedinUrl;
   const avatarUrl = profileFields.avatarUrl;
   const rawRole = typeof body?.role === "string" ? body.role : "";
-  const profileRole = resolveEditableProfileRole(rawRole) ?? "testing_company_user";
+  const profileRole = resolveEditableProfileRole(rawRole) ?? (companyScopedCreator ? "company_user" : "testing_company_user");
   const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
   const role = toStoredEditableUserRole(profileRole);
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
+
+  if (companyScopedCreator) {
+    if (profileRole !== SYSTEM_ROLES.COMPANY_USER) {
+      return NextResponse.json({ error: "Empresa só pode criar usuário empresarial" }, { status: 403 });
+    }
+    if (!access.companyId) {
+      return NextResponse.json({ error: "Empresa sem contexto ativo" }, { status: 403 });
+    }
+    if (clientId && clientId !== access.companyId) {
+      return NextResponse.json({ error: "Empresa só pode criar usuário na própria empresa" }, { status: 403 });
+    }
+    clientId = access.companyId;
+  }
 
   if (editableProfileUsesAutomaticCompany(profileRole) && !clientId) {
     const testingCompany =
@@ -266,9 +284,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
   }
 
-  // Generate a readable temporary password for new users
-  const rawTemp = randomUUID().replace(/-/g, '');
-  const plainTempPassword = rawTemp.charAt(0).toUpperCase() + rawTemp.slice(1, 9) + '!';
+  const rawTemp = randomUUID().replace(/-/g, "");
+  const plainTempPassword = rawTemp.charAt(0).toUpperCase() + rawTemp.slice(1, 9) + "!";
   const passwordHash = hashPasswordSha256(plainTempPassword);
   let user = null;
   try {
@@ -311,8 +328,8 @@ export async function POST(req: NextRequest) {
   }
 
   await addAuditLogSafe({
-    actorUserId: admin.id,
-    actorEmail: admin.email,
+    actorUserId: access.userId,
+    actorEmail: access.email,
     action: "user.created",
     entityType: "user",
     entityId: user.id,
@@ -327,11 +344,10 @@ export async function POST(req: NextRequest) {
     role: user.role ?? undefined,
   }).catch(() => {});
 
-  // Send welcome email with credentials
   if (user.email) {
     emailService
       .sendWelcomeEmail(user.email, login, plainTempPassword, fullName ?? name)
-      .catch((err) => console.error('[ADMIN-USERS][POST] welcome-email-error', err));
+      .catch((err) => console.error("[ADMIN-USERS][POST] welcome-email-error", err));
   }
 
   const item = user ? await getAdminUserItem(user.id) : null;
@@ -339,29 +355,31 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+  const body = await req.json().catch(() => null);
+  const userId = typeof body?.id === "string" ? body.id : "";
+  if (!userId) {
+    return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
   }
-  const access = await getAccessContext(req);
+  const clientId = typeof body?.client_id === "string" ? body.client_id : null;
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "users",
+    action: "edit",
+    companyId: clientId,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
+  const access = contextResult.context.access;
   const userAccess = await validarAcessoUsuariosNoServidor(access);
   if (!userAccess.canEditUsers) {
     return NextResponse.json({ error: "Sem permissão para editar usuários" }, { status: 403 });
   }
   const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
 
-  const body = await req.json().catch(() => null);
-  const userId = typeof body?.id === "string" ? body.id : "";
-  if (!userId) {
-    return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
-  }
-
   const name = typeof body?.name === "string" ? body.name.trim() : null;
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : null;
   const hasLogin = typeof body?.user === "string";
   const login = hasLogin ? normalizeLogin(body?.user) : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
-  const clientId = typeof body?.client_id === "string" ? body.client_id : null;
   const hasJobTitle = hasOwn(body as Record<string, unknown> | null, "job_title") || hasOwn(body as Record<string, unknown> | null, "jobTitle");
   const jobTitle = hasJobTitle ? sanitizeUserProfileText(body?.job_title ?? body?.jobTitle, 120) : undefined;
   const hasLinkedinUrl = hasOwn(body as Record<string, unknown> | null, "linkedin_url") || hasOwn(body as Record<string, unknown> | null, "linkedinUrl");
@@ -410,6 +428,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
   }
+
   let updated = null;
   try {
     updated = await updateLocalUser(userId, {
@@ -465,8 +484,8 @@ export async function PATCH(req: NextRequest) {
   }
 
   await addAuditLogSafe({
-    actorUserId: admin.id,
-    actorEmail: admin.email,
+    actorUserId: access.userId,
+    actorEmail: access.email,
     action: "user.updated",
     entityType: "user",
     entityId: updated.id,

@@ -1,6 +1,7 @@
-﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { NextResponse } from "next/server";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { resolveOperationalContext } from "@/lib/context/operationalContext";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -11,15 +12,20 @@ async function getDb() {
   return prisma;
 }
 
-// â”€â”€ GET /api/projects?companySlug= â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// GET /api/projects?companySlug=
 
 export async function GET(request: Request) {
-  const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-
   const { searchParams } = new URL(request.url);
   const companySlug = searchParams.get("companySlug")?.trim();
   if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
+
+  const contextResult = await resolveOperationalContext(request, {
+    moduleId: "context",
+    action: "view_linked_projects",
+    companySlug,
+    requireCompany: true,
+  });
+  if (!contextResult.ok) return contextResult.response;
 
   if (process.env.E2E_USE_JSON === "1") {
     return NextResponse.json({
@@ -38,6 +44,7 @@ export async function GET(request: Request) {
       ],
     });
   }
+
   const db = await getDb();
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ projects: [] });
@@ -63,7 +70,7 @@ export async function GET(request: Request) {
   });
 }
 
-// â”€â”€ POST /api/projects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// POST /api/projects
 
 const CreateSchema = z.object({
   companySlug: z.string().trim().min(1),
@@ -79,20 +86,30 @@ const CreateSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-
-  // Líder TC, suporte técnico e empresa podem cadastrar projetos no contexto permitido.
-  const role = (user.role ?? "").toLowerCase();
-  const canCreate = ["admin", "leader_tc", "technical_support", "support", "company_admin", "empresa", "it_dev"].includes(role);
-  if (!canCreate) return NextResponse.json({ error: "Sem permissão para criar projetos" }, { status: 403 });
-
   const body = await request.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
-  if (!parsed.success)
+  if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
+  }
 
   const { companySlug, slug, name, description, color, iconKey } = parsed.data;
+  const contextResult = await resolveOperationalContext(request, {
+    moduleId: "context",
+    action: "switch_project",
+    companySlug,
+    requireCompany: true,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
+  const role = normalizeLegacyRole(contextResult.context.access.permissionRole) ??
+    normalizeLegacyRole(contextResult.context.access.role) ??
+    normalizeLegacyRole(contextResult.context.access.companyRole);
+  const canCreateProject =
+    contextResult.context.access.isGlobalAdmin === true ||
+    role === SYSTEM_ROLES.LEADER_TC ||
+    role === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    role === SYSTEM_ROLES.EMPRESA;
+  if (!canCreateProject) return NextResponse.json({ error: "Sem permissão para criar projetos" }, { status: 403 });
 
   const db = await getDb();
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
@@ -112,7 +129,7 @@ export async function POST(request: Request) {
       description,
       color,
       iconKey,
-      createdById: user.id,
+      createdById: contextResult.context.access.userId,
     },
     select: {
       id: true,
@@ -128,8 +145,8 @@ export async function POST(request: Request) {
   });
 
   writeAuditLog({
-    actorUserId: user.id,
-    actorEmail: user.email ?? null,
+    actorUserId: contextResult.context.access.userId,
+    actorEmail: contextResult.context.access.email ?? null,
     action: "create",
     entityType: "Project",
     entityId: project.id,
@@ -147,4 +164,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ project: { ...project, createdAt: project.createdAt.toISOString() } }, { status: 201 });
 }
-

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   createContext,
@@ -20,6 +20,7 @@ type ClientTheme = {
 };
 
 const CLIENT_THEME_MAP_RAW = process.env.NEXT_PUBLIC_CLIENT_THEME_MAP || "";
+const ALL_LINKED_COMPANIES_STORAGE_VALUE = "__all_linked_companies__";
 
 function normalizeClientThemeEntry(key: string, value: unknown): [string, ClientTheme] | null {
   if (!key || !value || typeof value !== "object") return null;
@@ -118,6 +119,10 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   const isGlobalAdmin =
     user?.isGlobalAdmin === true ||
     globalContextRoles.some((role) => role === "admin" || role === "leader_tc" || role === "technical_support");
+  const canUseAllLinkedCompanies =
+    !isGlobalAdmin &&
+    normalizedUser?.permissionRole === "testing_company_user" &&
+    companies.length > 1;
 
   const normalizedClients = useMemo(
     () =>
@@ -164,7 +169,8 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
       const storage = getSessionStorage();
       const stored = storage?.getItem(storageKey(user.id)) ?? null;
-      const storedSlug = stored
+      const wantsAllLinkedCompanies = canUseAllLinkedCompanies && stored === ALL_LINKED_COMPANIES_STORAGE_VALUE;
+      const storedSlug = stored && !wantsAllLinkedCompanies
         ? normalizedClients.find((client) => normalizeSlug(client.slug) === normalizeSlug(stored) || normalizeSlug(client.id) === normalizeSlug(stored))?.slug ?? null
         : null;
 
@@ -173,28 +179,34 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
       // Order of preference for resolving active client slug:
       // 1) explicit cookie set by login (represents user choosing a company)
-      // 2) for non-global-admin users: normalized primary/default company plus the stored company choice
+      // 2) explicit "all linked companies" mode for testing company users
+      // 3) for non-global-admin users: normalized primary/default company plus the stored company choice
       // For global admins we intentionally avoid inheriting a company from storage or implicit defaults
       // so the admin sees the global admin nav unless they explicitly requested a company via cookie.
-      const preferredSlugs = [
-        ...(cookieActiveSlug ? [cookieActiveSlug] : []),
-        ...(!isGlobalAdmin
-          ? [
-              ...(primaryCompanySlug ? [primaryCompanySlug] : []),
-              storedSlug,
-              ...(defaultCompanySlug ? [defaultCompanySlug] : []),
-              ...companySlugs,
-            ]
-          : []),
-      ].filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index);
+      const preferredSlugs = wantsAllLinkedCompanies
+        ? []
+        : [
+            ...(cookieActiveSlug ? [cookieActiveSlug] : []),
+            ...(!isGlobalAdmin
+              ? [
+                  ...(primaryCompanySlug ? [primaryCompanySlug] : []),
+                  storedSlug,
+                  ...(defaultCompanySlug ? [defaultCompanySlug] : []),
+                  ...companySlugs,
+                ]
+              : []),
+          ].filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index);
 
-      const resolvedSlug =
-        preferredSlugs.find((candidate) => normalizedClients.some((client) => normalizeSlug(client.slug) === candidate || normalizeSlug(client.id) === candidate)) ??
-        (isGlobalAdmin ? null : normalizedClients[0].slug);
+      const resolvedSlug = wantsAllLinkedCompanies
+        ? null
+        : preferredSlugs.find((candidate) => normalizedClients.some((client) => normalizeSlug(client.slug) === candidate || normalizeSlug(client.id) === candidate)) ??
+          (isGlobalAdmin ? null : normalizedClients[0].slug);
 
       setActiveClientSlugState(resolvedSlug ?? null);
       if (resolvedSlug) {
         storage?.setItem(storageKey(user.id), resolvedSlug);
+      } else if (wantsAllLinkedCompanies) {
+        storage?.setItem(storageKey(user.id), ALL_LINKED_COMPANIES_STORAGE_VALUE);
       } else {
         storage?.removeItem(storageKey(user.id));
       }
@@ -203,7 +215,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       setError(null);
     }, 0);
     return () => window.clearTimeout(timeoutId);
-  }, [authLoading, normalizedClients, user, isGlobalAdmin, primaryCompanySlug, defaultCompanySlug, companySlugs]);
+  }, [authLoading, normalizedClients, user, isGlobalAdmin, primaryCompanySlug, defaultCompanySlug, companySlugs, canUseAllLinkedCompanies]);
 
   const refreshClients = useCallback(async () => {
     setLoading(true);
@@ -229,7 +241,11 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
       if (!slug) {
         setActiveClientSlugState(null);
-        storage?.removeItem(storageKey(user.id));
+        if (canUseAllLinkedCompanies) {
+          storage?.setItem(storageKey(user.id), ALL_LINKED_COMPANIES_STORAGE_VALUE);
+        } else {
+          storage?.removeItem(storageKey(user.id));
+        }
         return;
       }
 
@@ -247,7 +263,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       setActiveClientSlugState(exists.slug);
       storage?.setItem(storageKey(user.id), exists.slug);
     },
-    [clients, user, activeClientSlug]
+    [clients, user, activeClientSlug, canUseAllLinkedCompanies]
   );
 
   const activeClient = useMemo(
@@ -309,4 +325,3 @@ export function useClientContext() {
   if (!ctx) throw new Error("useClientContext deve ser usado dentro de ClientProvider");
   return ctx;
 }
-

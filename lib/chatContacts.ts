@@ -28,6 +28,10 @@ export type ChatContact = {
   origin_label: string | null;
 };
 
+type ChatContactScope = {
+  companySlug?: string | null;
+};
+
 function normalizeSearch(value: string) {
   return value
     .trim()
@@ -89,10 +93,24 @@ function collectContactCompanyIds(item: AdminUserItem) {
   );
 }
 
-async function resolveVisibleCompanyIds(
-  access: Pick<AccessContext, "companyId" | "companySlug" | "companySlugs">,
-) {
+async function resolveCompanyIdsFromSlugs(slugs: string[]) {
+  const normalizedSlugs = new Set(slugs.map(normalizeCompanyKey).filter(Boolean));
+  if (!normalizedSlugs.size) return new Set<string>();
+
   const companies = await listLocalCompanies();
+  return new Set(
+    companies
+      .filter((company) => normalizedSlugs.has(normalizeCompanyKey(company.slug)))
+      .map((company) => company.id)
+      .filter((value): value is string => typeof value === "string" && value.length > 0),
+  );
+}
+
+async function resolveVisibleCompanyIds(
+  access: Pick<AccessContext, "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "globalRole" | "role" | "companyRole">,
+  scope?: ChatContactScope,
+) {
+  const selectedSlug = normalizeCompanyKey(scope?.companySlug);
   const visibleSlugs = new Set(
     [
       access.companySlug,
@@ -102,13 +120,15 @@ async function resolveVisibleCompanyIds(
       .filter((value): value is string => value.length > 0),
   );
 
-  const visibleIds = companies
-    .filter((company) => visibleSlugs.has(normalizeCompanyKey(company.slug)))
-    .map((company) => company.id);
-
-  if (visibleIds.length > 0) {
-    return new Set(visibleIds);
+  if (selectedSlug) {
+    if (!isPrivilegedAccess(access) && !visibleSlugs.has(selectedSlug)) {
+      return new Set<string>();
+    }
+    return resolveCompanyIdsFromSlugs([selectedSlug]);
   }
+
+  const visibleIds = await resolveCompanyIdsFromSlugs([...visibleSlugs]);
+  if (visibleIds.size > 0) return visibleIds;
 
   return new Set(
     typeof access.companyId === "string" && access.companyId.trim().length > 0
@@ -152,11 +172,13 @@ export async function listChatContacts(
     "userId" | "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "globalRole" | "role" | "companyRole"
   >,
   search = "",
+  scope?: ChatContactScope,
 ) {
-  const visibleItems = isPrivilegedAccess(access)
+  const selectedSlug = normalizeCompanyKey(scope?.companySlug);
+  const visibleItems = isPrivilegedAccess(access) && !selectedSlug
     ? await listAdminUserItems()
     : await (async () => {
-        const allowedCompanyIds = await resolveVisibleCompanyIds(access);
+        const allowedCompanyIds = await resolveVisibleCompanyIds(access, scope);
         if (!allowedCompanyIds.size) return [];
 
         const items = await listAdminUserItems();

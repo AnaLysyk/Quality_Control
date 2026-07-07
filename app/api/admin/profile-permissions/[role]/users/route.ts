@@ -1,12 +1,10 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
 import { prisma } from "@/lib/prismaClient";
 import { applyPermissionOverride, normalizePermissionMatrix } from "@/lib/permissionMatrix";
-import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { resolveProfilePermissionDefaults } from "@/lib/store/profilePermissionsStore";
 import { countPermissionActions } from "@/lib/store/userPermissionsStore";
 
@@ -18,38 +16,28 @@ async function resolveRole(params: Promise<{ role: string }>) {
 }
 
 async function requirePermissionManager(req: NextRequest) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
+  const accessContext = await getAccessContext(req);
+  if (!accessContext) {
     return {
       admin: null,
       access: null,
       response: NextResponse.json(
-        { error: status === 401 ? "Você precisa estar autenticado para acessar a Gestão de Perfis." : "Você não tem permissão para acessar a Gestão de Perfis." },
-        { status },
+        { error: "Voce precisa estar autenticado para acessar a Gestao de Perfis." },
+        { status: 401 },
       ),
     };
   }
 
-  const accessContext = await getAccessContext(req);
-  const access = accessContext
-    ? await validarAcessoUsuariosNoServidor(accessContext)
-    : resolverAcessoUsuarios({
-        permissionRole: admin.role,
-        role: admin.role,
-        companyRole: admin.companyRole,
-        globalRole: admin.globalRole,
-        isGlobalAdmin: admin.isGlobalAdmin,
-      });
-
+  const access = await validarAcessoUsuariosNoServidor(accessContext);
   if (!access.canViewPermissions) {
     return {
-      admin,
+      admin: accessContext,
       access,
-      response: NextResponse.json({ error: "Você não tem permissão para visualizar a matriz de perfis." }, { status: 403 }),
+      response: NextResponse.json({ error: "Voce nao tem permissao para visualizar a matriz de perfis." }, { status: 403 }),
     };
   }
 
-  return { admin, access, response: null };
+  return { admin: accessContext, access, response: null };
 }
 
 function resolveUserRole(user: {
@@ -83,7 +71,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
     if (guard.response) return guard.response;
 
     const role = await resolveRole(params);
-    if (!role) return NextResponse.json({ error: "Perfil inválido." }, { status: 400 });
+    if (!role) return NextResponse.json({ error: "Perfil invalido." }, { status: 400 });
 
     const profilePermissions = await resolveProfilePermissionDefaults(role);
     const users = await prisma.user.findMany({
@@ -101,6 +89,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
         default_company_slug: true,
         home_company_id: true,
         created_by_company_id: true,
+        links: {
+          select: {
+            companyId: true,
+            status: true,
+            active: true,
+            company: {
+              select: {
+                id: true,
+                name: true,
+                company_name: true,
+                slug: true,
+                active: true,
+                status: true,
+              },
+            },
+          },
+        },
         permissionOverride: {
           select: {
             allow: true,
@@ -126,6 +131,27 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
             }
           : null;
         const effective = applyPermissionOverride(profilePermissions, override);
+        const activeCompanyLinks = user.links.filter(
+          (link) =>
+            link.active !== false &&
+            link.status !== "inactive" &&
+            link.company?.active !== false &&
+            link.company?.status !== "inactive",
+        );
+        const companies = activeCompanyLinks.map((link) => ({
+          id: link.company?.id ?? link.companyId,
+          slug: link.company?.slug ?? null,
+          name: link.company?.company_name || link.company?.name || null,
+        }));
+        const companySlugs = Array.from(
+          new Set([user.default_company_slug, ...companies.map((company) => company.slug)].filter(Boolean)),
+        ) as string[];
+        const companyIds = Array.from(
+          new Set([user.home_company_id, user.created_by_company_id, ...companies.map((company) => company.id)].filter(Boolean)),
+        ) as string[];
+        const primaryCompanySlug = user.default_company_slug ?? companySlugs[0] ?? null;
+        const primaryCompany = companies.find((company) => company.slug === primaryCompanySlug) ?? companies[0] ?? null;
+
         return {
           id: user.id,
           name: user.name,
@@ -139,6 +165,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
           overrideCount: countPermissionActions(override?.allow) + countPermissionActions(override?.deny),
           effectiveCount: countPermissionActions(effective),
           updatedAt: override?.updatedAt ?? null,
+          companyId: primaryCompany?.id ?? user.home_company_id ?? user.created_by_company_id ?? null,
+          companySlug: primaryCompanySlug,
+          companyName: primaryCompany?.name ?? null,
+          clientId: primaryCompany?.id ?? null,
+          clientSlug: primaryCompanySlug,
+          primaryCompanySlug,
+          companyIds,
+          companySlugs,
+          companies,
+          company: primaryCompany,
         };
       })
       .filter((user) => user.role === role);
@@ -151,7 +187,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
     });
   } catch (error) {
     console.error("[admin.profile-permissions.users.get]", error);
-    return NextResponse.json({ error: "Não foi possível carregar usuários do perfil agora." }, { status: 500 });
+    return NextResponse.json({ error: "Nao foi possivel carregar usuarios do perfil agora." }, { status: 500 });
   }
 }
-

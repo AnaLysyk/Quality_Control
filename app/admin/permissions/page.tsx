@@ -127,6 +127,25 @@ const PROFILE_DETAILS: Partial<
   },
 };
 
+const PROFILE_GUIDE_STEPS = [
+  {
+    title: "1. Escolha o perfil",
+    description: "Selecione o perfil que vira padrão para todos os usuários daquele tipo.",
+  },
+  {
+    title: "2. Localize o módulo",
+    description: "Busque a tela ou módulo que precisa aparecer, sumir ou mudar ações.",
+  },
+  {
+    title: "3. Ative ou desative",
+    description: "Use os botões Ativar/Desativar para controlar o módulo no perfil inteiro.",
+  },
+  {
+    title: "4. Salve o padrão",
+    description: "Salve para aplicar como regra base; exceções ficam na gestão por usuário.",
+  },
+];
+
 function normalizeText(value: string) {
   return value
     .normalize("NFKD")
@@ -837,6 +856,32 @@ export default function AdminPermissionsPage() {
               <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">{item.label}</p>
                 <p className="mt-1 text-2xl font-black text-[#011848]">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#011848]">
+                <FiSliders className="h-4 w-4" />
+                Modo guiado para perfil
+              </div>
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                Este fluxo ativa ou desativa permissões no perfil inteiro. Todos os usuários desse perfil herdam o padrão salvo.
+              </p>
+            </div>
+            <span className="w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black uppercase text-emerald-700">
+              Ativar / Desativar por módulo
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {PROFILE_GUIDE_STEPS.map((step) => (
+              <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-black text-[#011848]">{step.title}</p>
+                <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500">{step.description}</p>
               </div>
             ))}
           </div>

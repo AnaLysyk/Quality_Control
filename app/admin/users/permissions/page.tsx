@@ -143,6 +143,25 @@ const PROFILE_OPTIONS: Array<{ role: SystemRole; label: string }> = [
   { role: SYSTEM_ROLES.COMPANY_USER, label: "Usuário da Empresa" },
 ];
 
+const USER_GUIDE_STEPS = [
+  {
+    title: "1. Encontre o usuário",
+    description: "Busque por nome, e-mail ou filtre por perfil e status.",
+  },
+  {
+    title: "2. Abra o controle",
+    description: "Use Ativar/Desativar no usuário para abrir o guia individual.",
+  },
+  {
+    title: "3. Ajuste o módulo",
+    description: "Ative ou desative módulos apenas para aquele usuário.",
+  },
+  {
+    title: "4. Salve a exceção",
+    description: "Salve para manter o usuário diferente do padrão do perfil.",
+  },
+];
+
 function normalizeText(value: string) {
   return value
     .normalize("NFKD")
@@ -896,6 +915,32 @@ export default function UsersPermissionsPage() {
           </div>
         </section>
 
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#011848]">
+                <FiSliders className="h-4 w-4" />
+                Modo guiado para usuário
+              </div>
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                Este fluxo ativa ou desativa permissões para um usuário específico, sem alterar o padrão do perfil.
+              </p>
+            </div>
+            <span className="w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black uppercase text-emerald-700">
+              Ativar / Desativar individual
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {USER_GUIDE_STEPS.map((step) => (
+              <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-black text-[#011848]">{step.title}</p>
+                <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-[#011848]">
           Empresas visualizam apenas usuários vinculados ao próprio escopo. Liderança e suporte técnico visualizam todos.
         </section>
@@ -1117,7 +1162,7 @@ export default function UsersPermissionsPage() {
                   </th>
 
                   <th className="px-4 py-3 text-right text-xs font-black text-slate-400">
-                    Ajustes
+                    Controle
                   </th>
                 </tr>
               </thead>
@@ -1175,15 +1220,25 @@ export default function UsersPermissionsPage() {
                           </td>
 
                           <td className="px-4 py-3 text-right">
-                            {profileUser.hasOverride ? (
-                              <span className="rounded-full border border-[#ef0001]/20 bg-[#ef0001]/5 px-2.5 py-1 text-xs font-black text-[#ef0001]">
-                                {profileUser.overrideCount}
-                              </span>
-                            ) : (
-                              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700">
-                                Padrão
-                              </span>
-                            )}
+                            <div className="flex flex-wrap justify-end gap-2">
+                              {profileUser.hasOverride ? (
+                                <span className="rounded-full border border-[#ef0001]/20 bg-[#ef0001]/5 px-2.5 py-1 text-xs font-black text-[#ef0001]">
+                                  {profileUser.overrideCount} ajuste{profileUser.overrideCount === 1 ? "" : "s"}
+                                </span>
+                              ) : (
+                                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700">
+                                  Padrão
+                                </span>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => toggleExpandedUser(profileUser)}
+                                className="h-7 rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-wide text-[#011848] transition hover:border-[#011848] hover:bg-slate-50"
+                              >
+                                {expanded ? "Fechar" : "Ativar/Desativar"}
+                              </button>
+                            </div>
                           </td>
                         </tr>
 
@@ -1370,10 +1425,6 @@ export default function UsersPermissionsPage() {
     </main>
   );
 }
-
-
-
-
 
 
 

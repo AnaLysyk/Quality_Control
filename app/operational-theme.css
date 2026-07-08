@@ -392,3 +392,77 @@ div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [cla
 div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="text-[#5f77a2"] { color: #5f77a2 !important; }
 div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="text-[#4f658d"] { color: #4f658d !important; }
 div[role="presentation"] > div[class*="max-w-5xl"][class*="rounded-[28px]"] [class*="text-[#ef0001"] { color: #ef0001 !important; }
+
+/* FIX: dropdown do seletor de empresa no menu lateral */
+.sidebar-operational-shell .sidebar-dropdown {
+  overflow: hidden !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option {
+  color: var(--shell-sidebar-text-muted) !important;
+  background: transparent !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option:hover {
+  color: var(--shell-sidebar-text-strong) !important;
+  background: var(--shell-sidebar-control-hover) !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option[data-active="true"] {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #011848 0%, #10285d 62%, #ef0001 140%) !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option[data-active="true"] .sidebar-company-slug {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option[data-active="true"] svg {
+  color: #ffffff !important;
+}
+
+:root.theme-light .sidebar-operational-shell .sidebar-company-option[data-active="true"],
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-company-option[data-active="true"] {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #011848 0%, #10285d 62%, #ef0001 140%) !important;
+}
+
+/* FIX DEFINITIVO: seletor de empresa no menu lateral */
+.sidebar-operational-shell .sidebar-dropdown {
+  background: rgba(5, 16, 42, 0.98) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+.sidebar-operational-shell .sidebar-dropdown-search-wrap {
+  background: rgba(5, 16, 42, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option,
+.sidebar-operational-shell .sidebar-company-option * {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option {
+  background: transparent !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option[data-active="true"] {
+  background: linear-gradient(135deg, #063f46 0%, #075b59 48%, #073c54 100%) !important;
+  color: #ffffff !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option[data-active="true"] *,
+.sidebar-operational-shell .sidebar-company-option[data-active="true"] .sidebar-company-slug,
+.sidebar-operational-shell .sidebar-company-option[data-active="true"] svg {
+  color: #ffffff !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option[data-active="true"] .sidebar-company-dot {
+  background: #22c55e !important;
+}
+/* FIM FIX DEFINITIVO */

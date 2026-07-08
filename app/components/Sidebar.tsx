@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
@@ -93,7 +93,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
   const canSwitchCompany = can("context", "switch_company");
   const showCompanyContextSelector = clients.length > 0 && !effectiveCollapsed && canSwitchCompany;
-  const showProjectContextSelector = Boolean(activeClientSlug);
+  const showProjectContextSelector = Boolean(activeClientSlug) && !companyOpen;
 
   useEffect(() => {
     if (activeModuleId) openSection(activeModuleId);
@@ -304,7 +304,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         )}
 
         {!effectiveCollapsed && (
-          <nav className="px-3 pb-3 pt-0" aria-label="Navegação principal">
+          <nav className="px-3 pb-3 pt-0" aria-label="NavegaÃ§Ã£o principal">
             <div className="space-y-0.5">
               {!loading &&
                 visibleModules.map((mod) => (
@@ -322,7 +322,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
             {!loading && visibleModules.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/15 bg-white/8 px-3 py-4 text-center text-xs text-white/65">
-                Nenhum módulo encontrado.
+                Nenhum mÃ³dulo encontrado.
               </div>
             ) : null}
           </nav>
@@ -367,7 +367,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             onClick={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"
-            aria-label="Menu de navegação"
+            aria-label="Menu de navegaÃ§Ã£o"
           >
             {sidebarBody}
           </div>
@@ -376,3 +376,4 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     </>
   );
 }
+

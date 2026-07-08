@@ -20,14 +20,56 @@ import {
   updateLocalUser,
   upsertLocalLink,
 } from "@/lib/auth/localStore";
-import { getAccessContext } from "@/lib/auth/session";
+import { getAccessContext, type AccessContext } from "@/lib/auth/session";
+import type { AcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { sanitizeUserProfileText } from "@/lib/userProfileData";
 
 export const revalidate = 0;
 
 type PermissionRole = EditableProfileRole;
+type UserAccessFlag = "canViewUsers" | "canEditUsers" | "canDeleteUsers";
+type RequireUserAccessResult =
+  | {
+      ok: true;
+      access: AccessContext;
+      userAccess: AcessoUsuarios;
+      response: null;
+    }
+  | {
+      ok: false;
+      access: AccessContext | null;
+      userAccess: AcessoUsuarios | null;
+      response: NextResponse;
+    };
+
+async function requireUserAccess(
+  req: NextRequest,
+  flag: UserAccessFlag,
+  forbiddenMessage: string,
+): Promise<RequireUserAccessResult> {
+  const access = await getAccessContext(req);
+  if (!access) {
+    return {
+      ok: false,
+      access: null,
+      userAccess: null,
+      response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }),
+    };
+  }
+
+  const userAccess = await validarAcessoUsuariosNoServidor(access);
+  if (!userAccess[flag]) {
+    return {
+      ok: false,
+      access,
+      userAccess,
+      response: NextResponse.json({ error: forbiddenMessage }, { status: 403 }),
+    };
+  }
+
+  return { ok: true, access, userAccess, response: null };
+}
 
 function hasOwn(obj: Record<string, unknown> | null, key: string) {
   return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
@@ -51,10 +93,8 @@ function membershipRoleFromPermissionRole(role: PermissionRole) {
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(_req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
-  }
+  const guard = await requireUserAccess(_req, "canViewUsers", "Sem permissão para visualizar usuários");
+  if (!guard.ok) return guard.response;
 
   const { id } = await params;
   const item = await getAdminUserItem(id);
@@ -65,16 +105,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
-  }
-  const access = await getAccessContext(req);
-  const userAccess = await validarAcessoUsuariosNoServidor(access);
-  if (!userAccess.canEditUsers) {
-    return NextResponse.json({ error: "Sem permissão para editar usuários" }, { status: 403 });
-  }
-  const canManageProfiles = canManageInstitutionalProfiles(access);
+  const guard = await requireUserAccess(req, "canEditUsers", "Sem permissão para editar usuários");
+  if (!guard.ok) return guard.response;
+  const { access, userAccess } = guard;
+  const canManageProfiles =
+    userAccess.canManagePrivilegedProfiles || canManageInstitutionalProfiles(access);
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
@@ -229,8 +264,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   await addAuditLogSafe({
-    actorUserId: admin.id,
-    actorEmail: admin.email,
+    actorUserId: access.userId,
+    actorEmail: access.email,
     action: "user.updated",
     entityType: "user",
     entityId: updated.id,
@@ -256,12 +291,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
-  }
-
-  const access = await getAccessContext(req);
+  const guard = await requireUserAccess(req, "canDeleteUsers", "Sem permissão para excluir usuários");
+  if (!guard.ok) return guard.response;
+  const { access } = guard;
   const { id } = await params;
   const target = await getAdminUserItem(id);
 
@@ -269,7 +301,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
-  if (!canDeleteUserByProfile(access, target.permission_role)) {
+  const targetProfileRole = resolveEditableProfileRole(target.permission_role);
+  const canDeleteByPermission =
+    targetProfileRole !== null &&
+    (!isGlobalPrivilegeProfileRole(targetProfileRole) ||
+      guard.userAccess.canManagePrivilegedProfiles);
+
+  if (!canDeleteUserByProfile(access, target.permission_role) && !canDeleteByPermission) {
     return NextResponse.json({ error: "Sem permissão para excluir este perfil" }, { status: 403 });
   }
 
@@ -283,8 +321,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   await addAuditLogSafe({
-    actorUserId: admin.id,
-    actorEmail: admin.email,
+    actorUserId: access.userId,
+    actorEmail: access.email,
     action: "user.deleted",
     entityType: "user",
     entityId: updated.id,
@@ -298,4 +336,3 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const item = await getAdminUserItem(id);
   return NextResponse.json({ ok: true, item: item ?? null }, { status: 200 });
 }
-

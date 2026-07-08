@@ -27,7 +27,7 @@ describe("runtime central de permissoes", () => {
     expect(canAccess(support, "permissions.edit")).toBe(true);
   });
 
-  it("mapeia usuario global legado para o perfil existente Lider TC", () => {
+  it("mapeia usuario global legado para Lider TC sem ignorar matriz efetiva", () => {
     const context = getUserAccessContext({
       id: "usr_ana_paula_lysyk",
       role: SYSTEM_ROLES.TECHNICAL_SUPPORT,
@@ -38,9 +38,9 @@ describe("runtime central de permissoes", () => {
     });
 
     expect(context?.permissionRole).toBe(SYSTEM_ROLES.LEADER_TC);
-    expect(canAccess(context, "users.delete")).toBe(true);
-    expect(canAccess(context, "audit.export")).toBe(true);
-    expect(canAccess(context, "tickets.view_all")).toBe(true);
+    expect(canAccess(context, "users.view")).toBe(true);
+    expect(canAccess(context, "users.delete")).toBe(false);
+    expect(canAccess(context, "audit.export")).toBe(false);
   });
 
   it("trata a matriz efetiva vazia como override autoritativo", () => {

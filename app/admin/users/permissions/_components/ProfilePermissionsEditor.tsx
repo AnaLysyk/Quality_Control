@@ -23,7 +23,7 @@ import {
 } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileHint, getFixedProfileLabel, getFixedProfileTone } from "@/lib/fixedProfilePresentation";
 import { ACTION_LABELS, PERMISSION_MODULES, getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
 import {
@@ -226,15 +226,6 @@ function formatDateTime(value?: string | null) {
   }).format(time);
 }
 
-function resolveCurrentRole(user: ReturnType<typeof usePermissionAccess>["user"], accessRole?: string | null) {
-  return (
-    normalizeLegacyRole(typeof user?.permissionRole === "string" ? user.permissionRole : null) ??
-    normalizeLegacyRole(typeof user?.role === "string" ? user.role : null) ??
-    normalizeLegacyRole(typeof user?.companyRole === "string" ? user.companyRole : null) ??
-    normalizeLegacyRole(accessRole ?? null)
-  );
-}
-
 function notifyPermissionRuntimeChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent("qc:permissions-changed"));
@@ -307,7 +298,7 @@ export default function ProfilePermissionsEditor({
   initialUserId?: string | null;
   initialRole?: SystemRole;
 }) {
-  const { user, accessContext, loading, can, refreshUser } = usePermissionAccess();
+  const { loading, can, refreshUser } = usePermissionAccess();
   const [selectedRole, setSelectedRole] = useState<SystemRole>(initialRole);
   const [query, setQuery] = useState("");
   const [userQuery, setUserQuery] = useState("");
@@ -328,12 +319,7 @@ export default function ProfilePermissionsEditor({
     setSelectedUserId(initialUserId);
   }, [initialRole, initialUserId]);
 
-  const currentRole = resolveCurrentRole(user, accessContext?.role ?? null);
-  const canView =
-    user?.isGlobalAdmin === true ||
-    currentRole === SYSTEM_ROLES.LEADER_TC ||
-    currentRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
-    can("permissions", "view");
+  const canView = can("permissions", "view");
   const canEdit = profileState?.canEdit === true && can("permissions", "edit");
 
   useEffect(() => {
@@ -1473,7 +1459,5 @@ export default function ProfilePermissionsEditor({
       </main>
   );
 }
-
-
 
 

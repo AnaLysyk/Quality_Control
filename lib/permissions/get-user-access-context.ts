@@ -93,16 +93,10 @@ export function getUserAccessContext(
     user.permissionOverride && typeof user.permissionOverride === "object"
       ? user.permissionOverride
       : null;
-  const basePermissions = isGlobalAdmin
-    ? resolveEffectivePermissionMatrix({
-        permissionRole,
-        role,
-        companyRole,
-        globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
-        isGlobalAdmin,
-      })
-    : resolvedUserPermissions ??
-        resolveEffectivePermissionMatrix({
+  const basePermissions =
+    user.permissions != null
+      ? (resolvedUserPermissions ?? {})
+      : resolveEffectivePermissionMatrix({
           permissionRole,
           role,
           companyRole,

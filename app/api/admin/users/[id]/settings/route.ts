@@ -1,8 +1,9 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getAccessContext } from "@/lib/auth/session";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
 import { readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 
 export const revalidate = 0;
 
@@ -15,6 +16,7 @@ type StoredSettings = {
   created_at?: string;
   updated_at?: string;
 };
+type UserAccessFlag = "canViewUsers" | "canEditUsers";
 
 const STORE_KEY_PREFIX = "qc:user_settings:v1";
 
@@ -58,11 +60,23 @@ async function saveSettings(userId: string, next: Omit<StoredSettings, "user_id"
   return saved;
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(_req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+async function requireUserAccess(req: NextRequest, flag: UserAccessFlag, forbiddenMessage: string) {
+  const access = await getAccessContext(req);
+  if (!access) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
+
+  const userAccess = await validarAcessoUsuariosNoServidor(access);
+  if (!userAccess[flag]) {
+    return NextResponse.json({ error: forbiddenMessage }, { status: 403 });
+  }
+
+  return null;
+}
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const forbidden = await requireUserAccess(_req, "canViewUsers", "Sem permissão para visualizar usuários");
+  if (forbidden) return forbidden;
 
   const { id } = await params;
   if (!id) {
@@ -74,10 +88,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
-  }
+  const forbidden = await requireUserAccess(req, "canEditUsers", "Sem permissão para editar usuários");
+  if (forbidden) return forbidden;
 
   const { id } = await params;
   if (!id) {
@@ -103,4 +115,3 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const saved = await saveSettings(id, normalized);
   return NextResponse.json({ settings: normalizeSettings(saved) }, { status: 200 });
 }
-

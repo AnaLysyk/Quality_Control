@@ -22,7 +22,7 @@ import {
 
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
 import { PERMISSION_MODULES, getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
@@ -212,15 +212,6 @@ function toggleOverrideAction(
   return { ...override, allow, deny };
 }
 
-function resolveCurrentRole(user: ReturnType<typeof usePermissionAccess>["user"], accessRole?: string | null) {
-  return (
-    normalizeLegacyRole(typeof user?.permissionRole === "string" ? user.permissionRole : null) ??
-    normalizeLegacyRole(typeof user?.role === "string" ? user.role : null) ??
-    normalizeLegacyRole(typeof user?.companyRole === "string" ? user.companyRole : null) ??
-    normalizeLegacyRole(accessRole ?? null)
-  );
-}
-
 function formatDateTime(value?: string | null) {
   if (!value) return "Sem registro";
   const time = Date.parse(value);
@@ -335,7 +326,7 @@ function getModuleState(
 }
 
 export default function AdminPermissionsPage() {
-  const { user, accessContext, loading, can, refreshUser } = usePermissionAccess();
+  const { loading, can, refreshUser } = usePermissionAccess();
 
   const [selectedRole, setSelectedRole] = useState<SystemRole>(SYSTEM_ROLES.LEADER_TC);
   const [profileState, setProfileState] = useState<ProfilePermissionsResponse | null>(null);
@@ -352,13 +343,7 @@ export default function AdminPermissionsPage() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<NoticeState>({ type: "idle" });
 
-  const currentRole = resolveCurrentRole(user, accessContext?.role ?? null);
-
-  const canView =
-    user?.isGlobalAdmin === true ||
-    currentRole === SYSTEM_ROLES.LEADER_TC ||
-    currentRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
-    can("permissions", "view");
+  const canView = can("permissions", "view");
 
   const canEdit = profileState?.canEdit === true && can("permissions", "edit");
   const canReset = profileState?.canEdit === true && can("permissions", "reset");

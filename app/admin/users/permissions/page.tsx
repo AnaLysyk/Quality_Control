@@ -38,7 +38,7 @@ import {
 } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
 import { PERMISSION_MODULES, type PermissionModule } from "@/lib/permissionCatalog";
 import {
@@ -222,15 +222,6 @@ function toggleOverrideAction(
   }
 
   return { ...override, allow, deny };
-}
-
-function resolveCurrentRole(user: ReturnType<typeof usePermissionAccess>["user"], accessRole?: string | null) {
-  return (
-    normalizeLegacyRole(typeof user?.permissionRole === "string" ? user.permissionRole : null) ??
-    normalizeLegacyRole(typeof user?.role === "string" ? user.role : null) ??
-    normalizeLegacyRole(typeof user?.companyRole === "string" ? user.companyRole : null) ??
-    normalizeLegacyRole(accessRole ?? null)
-  );
 }
 
 function formatDateTime(value?: string | null) {
@@ -419,18 +410,9 @@ export default function UsersPermissionsPage() {
   const [detailsByUserId, setDetailsByUserId] = useState<Record<string, UserPermissionsResponse>>({});
   const [draftsByUserId, setDraftsByUserId] = useState<Record<string, PermissionOverride>>({});
 
-  const currentRole = resolveCurrentRole(user, accessContext?.role ?? null);
+  const canView = can("permissions", "view");
 
-  const canView =
-    user?.isGlobalAdmin === true ||
-    currentRole === SYSTEM_ROLES.LEADER_TC ||
-    currentRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
-    can("permissions", "view");
-
-  const canSeeAllUsers =
-    user?.isGlobalAdmin === true ||
-    currentRole === SYSTEM_ROLES.LEADER_TC ||
-    currentRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  const canSeeAllUsers = can("users", "view_all");
 
   const allowedCompanyKeys = useMemo(() => {
     const keys = new Set<string>();
@@ -1425,7 +1407,5 @@ export default function UsersPermissionsPage() {
     </main>
   );
 }
-
-
 
 

@@ -4,7 +4,7 @@ import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
 import { parsePasswordResetAccessRequestMessage } from "@/lib/passwordResetAccessQueue";
 import { normalizeRequestProfileType, toRequestProfileTypeLabel } from "@/lib/requestRouting";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import { statusLabel } from "../_utils/brainGraphFormatters";
+import { normalizeBrainText, statusLabel } from "../_utils/brainGraphFormatters";
 import type {
   BrainAccessRequestRemovalHistoryItem,
   BrainAccessRequestRow,
@@ -12,6 +12,8 @@ import type {
   BrainContextResponse,
   BrainEdge,
   BrainNode,
+  BrainNodeStatus,
+  BrainNodeType,
 } from "../_types/brain.types";
 
 type RawSupportRequest = {
@@ -27,6 +29,28 @@ type BrainGraphApiNode = {
   id: string;
   label: string;
   type: string;
+  module?: string | null;
+  status?: string | null;
+  accessLevel?: "full" | "summary";
+  companyId?: string | null;
+  companySlug?: string | null;
+  companyName?: string | null;
+  projectId?: string | null;
+  projectSlug?: string | null;
+  projectName?: string | null;
+  createdBy?: string | null;
+  createdByName?: string | null;
+  createdAt?: string | null;
+  updatedBy?: string | null;
+  updatedAt?: string | null;
+  source?: string | null;
+  sourceType?: string | null;
+  allowedActions?: string[];
+  relatedMemoryCount?: number;
+  relatedDocumentCount?: number;
+  relatedLogCount?: number;
+  relatedNodeCount?: number;
+  tags?: string[];
   refType?: string | null;
   refId?: string | null;
   description?: string | null;
@@ -44,6 +68,10 @@ type BrainGraphApiResponse = {
   nodes?: BrainGraphApiNode[];
   edges?: BrainGraphApiEdge[];
   root?: BrainGraphApiNode | null;
+  filters?: Record<string, unknown>;
+  access?: Record<string, unknown>;
+  summary?: Record<string, unknown>;
+  availableActions?: string[];
   error?: string;
 };
 
@@ -125,6 +153,132 @@ function mapRawAccessRequest(row: RawSupportRequest): BrainAccessRequestRow {
   };
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function readText(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function readFirst(metadata: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = readText(metadata[key]);
+    if (value) return value;
+  }
+  return null;
+}
+
+function readStringList(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map(readText).filter((item): item is string => Boolean(item));
+}
+
+const NODE_TYPE_MAP: Record<string, BrainNodeType> = {
+  company: "company",
+  empresa: "company",
+  project: "project",
+  projeto: "project",
+  user: "person",
+  usuario: "person",
+  person: "person",
+  module: "module",
+  modulo: "module",
+  screen: "screen",
+  route: "screen",
+  permission: "permission",
+  permissionmodule: "permission",
+  permissionaction: "permission",
+  log: "log",
+  auditevent: "log",
+  event: "event",
+  document: "document",
+  wikidoc: "document",
+  companydocument: "document",
+  defect: "defect",
+  testrun: "execution",
+  runmanagement: "execution",
+  storedtestcase: "test_case",
+  testcase: "test_case",
+  brainmemory: "memory",
+  memory: "memory",
+  brainsource: "source",
+  integration: "integration",
+};
+
+function normalizeNodeType(value: string): BrainNodeType {
+  const normalized = normalizeBrainText(value).replace(/[^a-z0-9]/g, "");
+  return NODE_TYPE_MAP[normalized] ?? "entity";
+}
+
+function normalizeNodeStatus(value: unknown): BrainNodeStatus {
+  const normalized = normalizeBrainText(String(value ?? "ok"));
+  if (["warning", "missing", "pending", "error", "orphan", "ok"].includes(normalized)) return normalized as BrainNodeStatus;
+  if (["inactive", "archived", "blocked", "denied"].includes(normalized)) return "warning";
+  return "ok";
+}
+
+function mapGraphApiNode(node: BrainGraphApiNode): BrainNode {
+  const metadata = asRecord(node.metadata);
+  const moduleName =
+    readText(node.module) ??
+    readFirst(metadata, ["module", "moduleLabel", "moduleKey", "layer"]) ??
+    node.type ??
+    "Brain";
+
+  return {
+    id: node.id,
+    type: normalizeNodeType(node.type),
+    module: moduleName,
+    companyId: readText(node.companyId) ?? readFirst(metadata, ["companyId", "clientId"]) ?? undefined,
+    companySlug: readText(node.companySlug) ?? readFirst(metadata, ["companySlug", "clientSlug"]) ?? undefined,
+    companyName: readText(node.companyName) ?? readFirst(metadata, ["companyName", "clientName"]) ?? undefined,
+    projectId: readText(node.projectId) ?? readFirst(metadata, ["projectId"]) ?? undefined,
+    projectSlug: readText(node.projectSlug) ?? readFirst(metadata, ["projectSlug", "projectCode"]) ?? undefined,
+    projectName: readText(node.projectName) ?? readFirst(metadata, ["projectName"]) ?? undefined,
+    label: node.label,
+    description: node.description ?? undefined,
+    status: normalizeNodeStatus(node.status ?? metadata.status),
+    accessLevel: node.accessLevel,
+    size: node.type === "Company" || node.type === "Project" ? "lg" : "md",
+    information: node.description ?? readFirst(metadata, ["screenSummary", "information", "summary"]) ?? undefined,
+    createdBy: readText(node.createdBy) ?? readFirst(metadata, ["createdBy", "actorUserId", "userId"]) ?? undefined,
+    createdByName: readText(node.createdByName) ?? readFirst(metadata, ["createdByName", "actorName", "email"]) ?? undefined,
+    createdAt: readText(node.createdAt) ?? readFirst(metadata, ["createdAt"]) ?? undefined,
+    updatedBy: readText(node.updatedBy) ?? readFirst(metadata, ["updatedBy"]) ?? undefined,
+    updatedAt: readText(node.updatedAt) ?? readFirst(metadata, ["updatedAt"]) ?? undefined,
+    generatedBy: "system",
+    entityType: node.refType ?? readFirst(metadata, ["entityType"]) ?? undefined,
+    entityId: node.refId ?? readFirst(metadata, ["entityId"]) ?? undefined,
+    actions: node.allowedActions,
+    tags: node.tags?.length ? node.tags : readStringList(metadata.tags),
+    allowedActions: node.allowedActions,
+    relatedMemoryCount: node.relatedMemoryCount ?? 0,
+    relatedDocumentCount: node.relatedDocumentCount ?? 0,
+    relatedLogCount: node.relatedLogCount ?? 0,
+    relatedNodeCount: node.relatedNodeCount ?? 0,
+    sourceType: node.sourceType ?? null,
+    refType: node.refType ?? null,
+    refId: node.refId ?? null,
+    source: {
+      type: node.sourceType ?? node.refType ?? undefined,
+      route: readFirst(metadata, ["route", "path"]) ?? undefined,
+      provider: readFirst(metadata, ["provider"]) ?? undefined,
+    },
+    metadata,
+  };
+}
+
+function mapGraphApiEdge(edge: BrainGraphApiEdge): BrainEdge {
+  return {
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    label: edge.type ?? "relaciona",
+    type: "relation",
+  };
+}
+
 async function fetchJson<T>(url: string, timeoutMs = 8500): Promise<T> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -149,8 +303,11 @@ async function fetchJson<T>(url: string, timeoutMs = 8500): Promise<T> {
 export async function fetchBrainGraphForDashboard() {
   const graph = await fetchJson<BrainGraphApiResponse>("/api/brain/graph?depth=2");
   return {
-    nodes: Array.isArray(graph.nodes) ? graph.nodes : [],
-    edges: Array.isArray(graph.edges) ? graph.edges : [],
+    nodes: Array.isArray(graph.nodes) ? graph.nodes.map(mapGraphApiNode) : [],
+    edges: Array.isArray(graph.edges) ? graph.edges.map(mapGraphApiEdge) : [],
+    filters: graph.filters ?? {},
+    access: graph.access ?? {},
+    summary: graph.summary ?? {},
   };
 }
 
@@ -208,4 +365,3 @@ export async function fetchBrainDashboardData() {
     ].filter(Boolean),
   };
 }
-

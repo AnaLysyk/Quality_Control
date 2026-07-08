@@ -72,10 +72,10 @@ function belongsToSelectedCompany(node: BrainNode, companyId: string | null) {
   if (node.companyId) return node.companyId === companyId;
   if (metadataCompanyId) return metadataCompanyId === companyId;
 
-  return node.type === "Company" ||
-    node.type === "company" ||
-    node.type === "Project" ||
-    node.type === "project" ||
+  const nodeType = String(node.type).toLowerCase();
+
+  return nodeType === "company" ||
+    nodeType === "project" ||
     node.metadata?.isBrainCore === true ||
     node.metadata?.isContextCore === true;
 }
@@ -93,10 +93,10 @@ function belongsToSelectedProject(node: BrainNode, projectId: string | null) {
   if (node.projectId) return node.projectId === projectId;
   if (metadataProjectId) return metadataProjectId === projectId;
 
-  return node.type === "Company" ||
-    node.type === "company" ||
-    node.type === "Project" ||
-    node.type === "project" ||
+  const nodeType = String(node.type).toLowerCase();
+
+  return nodeType === "company" ||
+    nodeType === "project" ||
     node.metadata?.isBrainCore === true ||
     node.metadata?.isContextCore === true;
 }
@@ -271,4 +271,3 @@ export function describeInformation(node: BrainNode | null, nodes: BrainNode[], 
 
   return `${node.label} forma informação ao se conectar com: ${related.slice(0, 5).join("; ")}.`;
 }
-

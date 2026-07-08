@@ -113,6 +113,12 @@ function companyAllowed(access: AccessContext, companyId?: string | null, compan
 function actionAliases(action: string) {
   if (action === "view") return ["view", "read", "view_own", "view_company", "view_all"];
   if (action === "read") return ["read", "view", "view_own", "view_company", "view_all"];
+  if (action === "view_linked_projects") {
+    return ["view_linked_projects", "view_all_projects", "switch_project", "read", "view"];
+  }
+  if (action === "view_linked_companies") {
+    return ["view_linked_companies", "view_all_companies", "switch_company", "read", "view"];
+  }
   if (action === "use") return ["use", "view", "read"];
   if (action === "edit") return ["edit", "update"];
   if (action === "update") return ["update", "edit"];

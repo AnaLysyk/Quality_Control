@@ -20,6 +20,11 @@ const BRAIN_DELEGATE_NAMES = new Set([
   "brainWorkspaceEdge",
   "brainSavedView",
   "brainRetentionPolicy",
+  "brainProviderConfig",
+  "brainSourceConfig",
+  "brainSourceSecret",
+  "brainSourceAuditLog",
+  "brainSourceSyncLog",
 ]);
 
 function hasDatabaseUrl() {

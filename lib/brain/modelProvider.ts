@@ -6,6 +6,11 @@ import {
   recordFreeProviderUsage,
   type FreeProvider,
 } from "@/lib/brain/freeApiGuard";
+import {
+  getBrainProviderRuntimeConfig,
+  type BrainProviderConfigView,
+  type BrainProviderRuntimeConfig,
+} from "@/lib/brain/providerConfig";
 
 export type BrainModelProvider = "groq" | "gemini" | "openrouter" | "mock";
 
@@ -71,12 +76,18 @@ function numberEnv(name: string, fallback: number) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-function timeoutMs() {
-  return numberEnv("BRAIN_ONLINE_PROVIDER_TIMEOUT_MS", 2500);
+function configuredPositiveInt(value: number | null | undefined) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? Math.round(value) : null;
 }
 
-function maxOutputTokens(input?: BrainModelInput) {
-  return Math.min(input?.maxTokens ?? numberEnv("BRAIN_MAX_OUTPUT_TOKENS", 500), 900);
+function timeoutMs(config?: Pick<BrainProviderConfigView, "timeoutMs"> | null) {
+  return configuredPositiveInt(config?.timeoutMs) ?? numberEnv("BRAIN_ONLINE_PROVIDER_TIMEOUT_MS", 2500);
+}
+
+function maxOutputTokens(input?: BrainModelInput, config?: Pick<BrainProviderConfigView, "maxOutputTokens"> | null) {
+  const configured = configuredPositiveInt(config?.maxOutputTokens);
+  const requested = input?.maxTokens ?? configured ?? numberEnv("BRAIN_MAX_OUTPUT_TOKENS", 500);
+  return Math.min(requested, configured ?? 900, 900);
 }
 
 function compactText(value: unknown, max = 9000) {
@@ -84,9 +95,9 @@ function compactText(value: unknown, max = 9000) {
   return text.length > max ? `${text.slice(0, max - 1)}...` : text;
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit) {
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutValue = timeoutMs()) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs());
+  const timeout = setTimeout(() => controller.abort(), timeoutValue);
 
   try {
     return await fetch(url, { ...init, signal: controller.signal });
@@ -156,8 +167,8 @@ function providerModels(provider: FreeProvider) {
   }
 }
 
-function isFreeModelAllowed(provider: FreeProvider, model: string) {
-  if (!boolEnv("BRAIN_STRICT_FREE_MODELS", true)) return true;
+function isFreeModelAllowed(provider: FreeProvider, model: string, strictFreeModels = boolEnv("BRAIN_STRICT_FREE_MODELS", true)) {
+  if (!strictFreeModels) return true;
 
   if (provider === "groq") {
     return GROQ_FREE_MODELS.has(model);
@@ -195,7 +206,7 @@ function fallbackAnswer(messages: BrainModelMessage[]) {
   ].join("\n");
 }
 
-async function callGroq(input: BrainModelInput, model: string): Promise<BrainModelResult> {
+async function callGroq(input: BrainModelInput, model: string, config?: BrainProviderConfigView | null): Promise<BrainModelResult> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error("GROQ_API_KEY ausente.");
 
@@ -209,10 +220,10 @@ async function callGroq(input: BrainModelInput, model: string): Promise<BrainMod
       model,
       messages: toOpenAiMessages(input.messages),
       temperature: input.temperature ?? 0.2,
-      max_completion_tokens: maxOutputTokens(input),
+      max_completion_tokens: maxOutputTokens(input, config),
       stream: false,
     }),
-  });
+  }, timeoutMs(config));
 
   if (!response.ok) {
     throw new ProviderHttpError("Groq", response.status, retryAfter(response));
@@ -228,7 +239,7 @@ async function callGroq(input: BrainModelInput, model: string): Promise<BrainMod
   return { provider: "groq", model, text };
 }
 
-async function callGemini(input: BrainModelInput, model: string): Promise<BrainModelResult> {
+async function callGemini(input: BrainModelInput, model: string, config?: BrainProviderConfigView | null): Promise<BrainModelResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY ausente.");
 
@@ -256,10 +267,11 @@ async function callGemini(input: BrainModelInput, model: string): Promise<BrainM
         contents,
         generationConfig: {
           temperature: input.temperature ?? 0.2,
-          maxOutputTokens: maxOutputTokens(input),
+          maxOutputTokens: maxOutputTokens(input, config),
         },
       }),
     },
+    timeoutMs(config),
   );
 
   if (!response.ok) {
@@ -285,7 +297,7 @@ async function callGemini(input: BrainModelInput, model: string): Promise<BrainM
   return { provider: "gemini", model, text };
 }
 
-async function callOpenRouter(input: BrainModelInput, model: string): Promise<BrainModelResult> {
+async function callOpenRouter(input: BrainModelInput, model: string, config?: BrainProviderConfigView | null): Promise<BrainModelResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY ausente.");
 
@@ -305,10 +317,10 @@ async function callOpenRouter(input: BrainModelInput, model: string): Promise<Br
       model: safeModel,
       messages: toOpenAiMessages(input.messages),
       temperature: input.temperature ?? 0.2,
-      max_tokens: maxOutputTokens(input),
+      max_tokens: maxOutputTokens(input, config),
       stream: false,
     }),
-  });
+  }, timeoutMs(config));
 
   if (!response.ok) {
     throw new ProviderHttpError("OpenRouter", response.status, retryAfter(response));
@@ -325,43 +337,67 @@ async function callOpenRouter(input: BrainModelInput, model: string): Promise<Br
   return { provider: "openrouter", model: payload?.model ?? safeModel, text };
 }
 
-async function callProvider(provider: FreeProvider, input: BrainModelInput, model: string) {
+async function callProvider(provider: FreeProvider, input: BrainModelInput, model: string, config?: BrainProviderConfigView | null) {
   switch (provider) {
     case "groq":
-      return callGroq(input, model);
+      return callGroq(input, model, config);
     case "gemini":
-      return callGemini(input, model);
+      return callGemini(input, model, config);
     case "openrouter":
-      return callOpenRouter(input, model);
+      return callOpenRouter(input, model, config);
   }
+}
+
+async function readRuntimeConfigSafe(): Promise<BrainProviderRuntimeConfig | null> {
+  try {
+    return await getBrainProviderRuntimeConfig();
+  } catch (error) {
+    console.warn("[brain/modelProvider] provider config fallback:", error instanceof Error ? error.message : String(error));
+    return null;
+  }
+}
+
+function configForProvider(runtime: BrainProviderRuntimeConfig | null, provider: FreeProvider) {
+  return runtime?.configs.find((config) => config.provider === provider) ?? null;
+}
+
+function providerOrder(runtime: BrainProviderRuntimeConfig | null) {
+  return runtime?.order.length ? runtime.order : readProviderOrder();
+}
+
+function providerModelsFromConfig(provider: FreeProvider, config?: BrainProviderConfigView | null) {
+  return config?.models?.length ? config.models : providerModels(provider);
 }
 
 export async function runBrainModel(input: BrainModelInput): Promise<BrainModelResult> {
   const onlineEnabled = boolEnv("BRAIN_ONLINE_MODEL_ENABLED", true);
-  const estimatedTokens = estimateBrainTokens(input.messages, maxOutputTokens(input));
+  const runtimeConfig = await readRuntimeConfigSafe();
   const errors: string[] = [];
 
   if (onlineEnabled) {
-    for (const provider of readProviderOrder()) {
+    for (const provider of providerOrder(runtimeConfig)) {
+      const providerConfig = configForProvider(runtimeConfig, provider);
+      const estimatedTokens = estimateBrainTokens(input.messages, maxOutputTokens(input, providerConfig));
+
       if (!providerHasKey(provider)) {
         errors.push(`${provider}: chave ausente`);
         continue;
       }
 
-      const guard = await canUseFreeProvider(provider, estimatedTokens);
+      const guard = await canUseFreeProvider(provider, estimatedTokens, providerConfig ?? undefined);
       if (!guard.allowed) {
         errors.push(`${provider}: ${guard.reason}`);
         continue;
       }
 
-      for (const model of providerModels(provider)) {
-        if (!isFreeModelAllowed(provider, model)) {
+      for (const model of providerModelsFromConfig(provider, providerConfig)) {
+        if (!isFreeModelAllowed(provider, model, providerConfig?.strictFreeModels ?? boolEnv("BRAIN_STRICT_FREE_MODELS", true))) {
           errors.push(`${provider}: modelo bloqueado por modo grátis (${model})`);
           continue;
         }
 
         try {
-          const result = await callProvider(provider, input, model);
+          const result = await callProvider(provider, input, model, providerConfig);
           await recordFreeProviderUsage(provider, estimatedTokens, 200, null);
           return result;
         } catch (error) {

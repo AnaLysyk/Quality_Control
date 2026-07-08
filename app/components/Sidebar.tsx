@@ -92,9 +92,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const handleSidebarToggle = isMobileDrawer ? () => onClose?.() : toggleCollapsed;
 
   const canSwitchCompany = can("context", "switch_company");
-  const canSwitchProject = can("context", "switch_project");
   const showCompanyContextSelector = clients.length > 0 && !effectiveCollapsed && canSwitchCompany;
-  const showProjectContextSelector = Boolean(activeClientSlug) && canSwitchProject;
+  const showProjectContextSelector = Boolean(activeClientSlug);
 
   useEffect(() => {
     if (activeModuleId) openSection(activeModuleId);
@@ -187,8 +186,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       />
 
       {showCompanyContextSelector ? (
-        <div className="relative px-3 pt-3">
-          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-white/55">
+        <div className="sidebar-company-selector relative px-3 pt-3">
+          <label className="sidebar-company-label mb-1 block text-[10px] font-semibold uppercase tracking-widest text-white/55">
             Empresa
           </label>
           <button
@@ -198,7 +197,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
               setCompanyOpen((value) => !value);
               setCompanySearch("");
             }}
-            className="sidebar-control flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-[12px] font-medium outline-none transition"
+            className="sidebar-control sidebar-company-button flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-[12px] font-medium outline-none transition"
             data-testid="sidebar-company-combobox"
           >
             <span className="min-w-0 flex-1 truncate">
@@ -212,7 +211,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
           {companyOpen ? (
             <div className="sidebar-dropdown absolute left-3 right-3 top-full z-50 mt-1 overflow-hidden rounded-xl border shadow-2xl">
-              <div className="border-b border-white/10 p-2">
+              <div className="sidebar-dropdown-search-wrap border-b p-2">
                 <div className="sidebar-search flex items-center gap-2 rounded-lg border px-2 py-1.5">
                   <FiSearch size={12} className="shrink-0 text-white/55" />
                   <input
@@ -239,22 +238,23 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                           setCompanyOpen(false);
                           setCompanySearch("");
                         }}
-                        className={`flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-white/10 ${
+                        className={`sidebar-company-option flex w-full items-center gap-2 px-3 py-2 text-left transition ${
                           active ? "text-white" : "text-white/72"
                         }`}
+                        data-active={active ? "true" : undefined}
                         data-testid={`sidebar-company-option-${client.slug}`}
                       >
-                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-emerald-400" : "bg-white/35"}`} />
+                        <span className={`sidebar-company-dot h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-emerald-400" : "bg-white/35"}`} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[12px] font-semibold">{client.name}</span>
-                          <span className="block truncate text-[10px] text-white/45">/{client.slug}</span>
+                          <span className="sidebar-company-slug block truncate text-[10px] text-white/45">/{client.slug}</span>
                         </span>
                         {active ? <FiCheck size={12} className="shrink-0 text-emerald-300" /> : null}
                       </button>
                     );
                   })
                 ) : (
-                  <div className="px-3 py-4 text-center text-[11px] text-white/50">
+                  <div className="sidebar-company-empty px-3 py-4 text-center text-[11px] text-white/50">
                     Nenhuma empresa encontrada
                   </div>
                 )}

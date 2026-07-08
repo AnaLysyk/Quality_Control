@@ -775,7 +775,7 @@ export function BrainNeuralDashboard() {
               </span>
               <input
                 value={searchText}
-                onChange={(event) => onSearchTextChange(event.target.value)}
+                onChange={(event) => setSearchText(event.target.value)}
                 placeholder="Ex.: acesso, login, permissões, empresa, run, documentação..."
                 className="mt-1 w-full bg-transparent text-sm font-bold text-white outline-none placeholder:text-slate-500"
               />

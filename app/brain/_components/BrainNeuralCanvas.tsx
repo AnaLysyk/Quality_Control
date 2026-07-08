@@ -36,12 +36,13 @@ function getConnectedNodeIds(edges: BrainEdge[]) {
 
 function scoreNodeForOverview(node: BrainNode, edges: BrainEdge[]) {
   const degree = edges.filter((edge) => edge.source === node.id || edge.target === node.id).length;
+  const type = String(node.type).toLowerCase();
   const typeScore =
-    node.type === "Company" || node.type === "company" ? 90 :
-    node.type === "Project" || node.type === "project" ? 80 :
-    node.type === "User" || node.type === "user" ? 70 :
-    node.type === "TestPlan" || node.type === "TestRun" || node.type === "StoredTestCase" ? 60 :
-    node.type === "WikiDoc" || node.type === "CompanyDocument" ? 50 :
+    type === "company" ? 90 :
+    type === "project" ? 80 :
+    type === "user" || type === "person" ? 70 :
+    type === "testplan" || type === "testrun" || type === "storedtestcase" || type === "execution" || type === "test_case" ? 60 :
+    type === "wikidoc" || type === "companydocument" || type === "document" ? 50 :
     20;
 
   return degree * 10 + typeScore;
@@ -99,8 +100,8 @@ function layoutNodes(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: str
 
   const preferredCenter =
     (selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) : null) ??
-    nodes.find((node) => node.type === "Company" || node.type === "company") ??
-    nodes.find((node) => node.type === "Project" || node.type === "project") ??
+    nodes.find((node) => String(node.type).toLowerCase() === "company") ??
+    nodes.find((node) => String(node.type).toLowerCase() === "project") ??
     [...nodes].sort((left, right) => degree(right.id) - degree(left.id))[0];
 
   const bucketFor = (node: BrainNode) => {

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { FiBriefcase, FiChevronDown, FiFolder, FiPlus } from "react-icons/fi";
 import { useClientContext } from "@/context/ClientContext";
 import { useProjectContext } from "@/lib/core/project/ProjectContext";
-import styles from "./ProjectSelector.module.css";
 
 type Props = {
   collapsed?: boolean;
@@ -24,6 +23,7 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
     projects,
     activeProject,
     loading: projectLoading,
+    error: projectError,
     setActiveProject,
   } = useProjectContext();
 
@@ -48,7 +48,7 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
         <button
           type="button"
           title={label}
-          className="flex h-7 w-7 items-center justify-center rounded-md bg-white/10 transition hover:bg-white/20"
+          className="sidebar-project-collapsed-button flex h-7 w-7 items-center justify-center rounded-md bg-white/10 transition hover:bg-white/20"
         >
           <FiFolder size={14} className="text-white/80" />
         </button>
@@ -57,12 +57,12 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
   }
 
   if (clientLoading) {
-    return <div className="mx-3 mb-2 h-16 animate-pulse rounded-xl bg-white/10" />;
+    return <div className="sidebar-project-loading mx-3 mb-2 h-16 animate-pulse rounded-xl bg-white/10" />;
   }
 
   if (!hasCompanies) {
     return (
-      <div className="mx-3 mb-2 rounded-xl border border-dashed border-white/20 px-3 py-2 text-[11px] text-white/45">
+      <div className="sidebar-context-empty mx-3 mb-2 rounded-xl border border-dashed border-white/20 px-3 py-2 text-[11px] text-white/45">
         <div className="flex items-center gap-2">
           <FiBriefcase className="shrink-0" size={13} />
           <span>Nenhuma empresa vinculada</span>
@@ -72,7 +72,7 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
   }
 
   return (
-    <div className="mx-3 mb-2 space-y-2">
+    <div className="sidebar-project-selector mx-3 mb-2 space-y-2">
       {showCompanySelector ? (
         <div className="relative">
           <button
@@ -82,16 +82,16 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
               setCompanyOpen((value) => !value);
               setProjectOpen(false);
             }}
-            className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-2.5 py-2 text-left transition hover:bg-white/15"
+            className="sidebar-control sidebar-company-button flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition"
             data-testid="sidebar-company-selector"
           >
             <FiBriefcase size={13} className="shrink-0 text-white/70" />
 
             <span className="min-w-0 flex-1">
-              <span className="block text-[9px] font-black uppercase tracking-[0.22em] text-white/35">
+              <span className="sidebar-company-label block text-[9px] font-black uppercase tracking-[0.22em] text-white/35">
                 Empresa
               </span>
-              <span className="block truncate text-[11px] font-semibold text-white/90">
+              <span className="sidebar-company-name block truncate text-[11px] font-semibold text-white/90">
                 {activeClient?.name ?? "Selecionar empresa"}
               </span>
             </span>
@@ -105,7 +105,7 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
           </button>
 
           {companyOpen ? (
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-xl border border-white/15 bg-[#0a1e4a] py-1 shadow-xl">
+            <div className="sidebar-dropdown sidebar-company-dropdown absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-xl border py-1 shadow-xl">
               {clients.map((company) => {
                 const active = company.slug === activeClientSlug;
 
@@ -118,17 +118,16 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
                       setCompanyOpen(false);
                       setProjectOpen(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] transition hover:bg-white/10 ${
-                      active ? "text-white" : "text-white/65"
-                    }`}
+                    className="sidebar-company-option flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] transition"
+                    data-active={active ? "true" : undefined}
                     data-testid={`sidebar-company-option-${company.slug}`}
                   >
-                    <span className={active ? styles.dot : styles.dotMuted} />
+                    <span className="sidebar-company-dot h-2 w-2 shrink-0 rounded-full" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-semibold">{company.name}</span>
-                      <span className="block truncate text-[10px] text-white/35">/{company.slug}</span>
+                      <span className="sidebar-company-slug block truncate text-[10px] text-white/35">/{company.slug}</span>
                     </span>
-                    {active ? <span className="text-[10px] text-white/35">ativa</span> : null}
+                    {active ? <span className="sidebar-active-note text-[10px] text-white/35">ativa</span> : null}
                   </button>
                 );
               })}
@@ -146,21 +145,23 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
             setProjectOpen((value) => !value);
             setCompanyOpen(false);
           }}
-          className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-2.5 py-2 text-left transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
+          className="sidebar-control sidebar-project-button flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-70"
           data-testid="sidebar-project-selector"
         >
           <FiFolder size={13} className="shrink-0 text-white/70" />
 
           <span className="min-w-0 flex-1">
-            <span className="block text-[9px] font-black uppercase tracking-[0.22em] text-white/35">
+            <span className="sidebar-project-label block text-[9px] font-black uppercase tracking-[0.22em] text-white/35">
               Projeto
             </span>
-            <span className="block truncate text-[11px] font-semibold text-white/90">
+            <span className="sidebar-project-name block truncate text-[11px] font-semibold text-white/90">
               {!hasActiveCompany
                 ? "Escolha uma empresa"
                 : projectLoading
                   ? "Carregando projetos..."
-                  : activeProject?.name ?? (hasProjects ? "Selecionar projeto" : "Sem projetos")}
+                  : projectError
+                    ? "Sem acesso aos projetos"
+                    : activeProject?.name ?? (hasProjects ? "Selecionar projeto" : "Sem projetos")}
             </span>
           </span>
 
@@ -173,7 +174,7 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
         </button>
 
         {projectOpen ? (
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-xl border border-white/15 bg-[#0a1e4a] py-1 shadow-xl">
+          <div className="sidebar-dropdown sidebar-project-dropdown absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-xl border py-1 shadow-xl">
             {projects.map((project) => {
               const active = activeProject?.id === project.id;
 
@@ -185,14 +186,13 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
                     setActiveProject(project.slug);
                     setProjectOpen(false);
                   }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] transition hover:bg-white/10 ${
-                    active ? "text-white" : "text-white/65"
-                  }`}
+                  className="sidebar-project-option flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] transition"
+                  data-active={active ? "true" : undefined}
                   data-testid={`sidebar-project-option-${project.slug}`}
                 >
-                  <span className={active ? styles.dot : styles.dotMuted} />
+                  <span className="sidebar-project-dot h-2 w-2 shrink-0 rounded-full" />
                   <span className="min-w-0 flex-1 truncate">{project.name}</span>
-                  {active ? <span className="text-[10px] text-white/35">ativo</span> : null}
+                  {active ? <span className="sidebar-active-note text-[10px] text-white/35">ativo</span> : null}
                 </button>
               );
             })}
@@ -205,7 +205,7 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
                 setProjectOpen(false);
                 window.location.href = newProjectHref;
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-[11px] text-white/45 transition hover:bg-white/10 hover:text-white/75"
+              className="sidebar-project-create flex w-full items-center gap-2 px-3 py-2 text-[11px] transition"
               data-testid="sidebar-project-create"
             >
               <FiPlus size={11} />

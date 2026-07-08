@@ -15,6 +15,11 @@ type ProviderUsage = {
 
 type UsageFile = Partial<Record<FreeProvider, ProviderUsage>>;
 
+type ProviderLimitOverrides = {
+  dailyRequestLimit?: number | null;
+  dailyTokenLimit?: number | null;
+};
+
 const USAGE_FILE = path.join(process.cwd(), ".next", "cache", "brain-free-api-usage.json");
 
 function todayKey() {
@@ -30,11 +35,19 @@ function providerPrefix(provider: FreeProvider) {
   return provider.toUpperCase();
 }
 
-function requestLimit(provider: FreeProvider) {
+function configuredLimit(value: number | null | undefined) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
+}
+
+function requestLimit(provider: FreeProvider, limits?: ProviderLimitOverrides) {
+  const configured = configuredLimit(limits?.dailyRequestLimit);
+  if (configured !== null) return configured;
   return numberEnv(`BRAIN_FREE_DAILY_REQUEST_LIMIT_${providerPrefix(provider)}`, provider === "groq" ? 700 : provider === "gemini" ? 80 : 40);
 }
 
-function tokenLimit(provider: FreeProvider) {
+function tokenLimit(provider: FreeProvider, limits?: ProviderLimitOverrides) {
+  const configured = configuredLimit(limits?.dailyTokenLimit);
+  if (configured !== null) return configured;
   return numberEnv(`BRAIN_FREE_DAILY_TOKEN_LIMIT_${providerPrefix(provider)}`, provider === "groq" ? 120000 : provider === "gemini" ? 60000 : 30000);
 }
 
@@ -73,7 +86,7 @@ export function estimateBrainTokens(messages: Array<{ content: string }>, maxOut
   return inputTokens + maxOutputTokens;
 }
 
-export async function canUseFreeProvider(provider: FreeProvider, estimatedTokens: number) {
+export async function canUseFreeProvider(provider: FreeProvider, estimatedTokens: number, limits?: ProviderLimitOverrides) {
   const usage = await readUsage();
   const bucket = normalizeBucket(usage[provider]);
   const now = Date.now();
@@ -85,14 +98,14 @@ export async function canUseFreeProvider(provider: FreeProvider, estimatedTokens
     };
   }
 
-  if (bucket.requests + 1 > requestLimit(provider)) {
+  if (bucket.requests + 1 > requestLimit(provider, limits)) {
     return {
       allowed: false,
       reason: `${provider} atingiu limite diário local de requisições grátis.`,
     };
   }
 
-  if (bucket.estimatedTokens + estimatedTokens > tokenLimit(provider)) {
+  if (bucket.estimatedTokens + estimatedTokens > tokenLimit(provider, limits)) {
     return {
       allowed: false,
       reason: `${provider} atingiu limite diário local de tokens estimados grátis.`,

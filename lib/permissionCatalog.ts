@@ -52,6 +52,8 @@ export const ACTION_LABELS: Record<string, string> = {
   view_all_projects: "Ver todos os projetos",
   view_linked_projects: "Ver projetos vinculados",
   view_external_sources: "Ver fontes externas",
+  configure_sources: "Configurar fontes",
+  manage_memories: "Gerenciar memorias",
   use_qase_data: "Usar dados Qase",
   use_jira_data: "Usar dados Jira",
   graph: "Ver grafo do Brain",
@@ -238,7 +240,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: "Brain",
     description: "Controla o Brain por perfil e por usuário: menu lateral, grafo, perguntas e fontes de contexto.",
     category: "Produtividade",
-    actions: ["view", "graph", "ask", "admin", "read", "use", "view_external_sources", "use_qase_data", "use_jira_data"],
+    actions: ["view", "graph", "ask", "admin", "read", "use", "view_external_sources", "configure_sources", "manage_memories", "use_qase_data", "use_jira_data"],
   },
   {
     id: "chat",

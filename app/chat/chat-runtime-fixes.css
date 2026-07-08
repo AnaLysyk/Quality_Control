@@ -7,27 +7,27 @@
   overflow: hidden;
 }
 
-.qc-chat-page-shell :global(.qc-chat-message-row),
-.qc-chat-page-shell :global(.qc-chat-message-bubble),
-.qc-chat-page-shell :global(.qc-chat-message-bubble p),
-.qc-chat-page-shell :global(.qc-chat-message-bubble span) {
+.qc-chat-page-shell .qc-chat-message-row,
+.qc-chat-page-shell .qc-chat-message-bubble,
+.qc-chat-page-shell .qc-chat-message-bubble p,
+.qc-chat-page-shell .qc-chat-message-bubble span {
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
-.qc-chat-page-shell :global(.qc-chat-message-bubble) {
+.qc-chat-page-shell .qc-chat-message-bubble {
   overflow: hidden;
 }
 
-.qc-chat-page-shell :global(.qc-chat-message-bubble p) {
+.qc-chat-page-shell .qc-chat-message-bubble p {
   white-space: pre-wrap;
 }
 
-.qc-chat-page-shell :global(.qc-chat-message-bubble img),
-.qc-chat-page-shell :global(.qc-chat-message-bubble video),
-.qc-chat-page-shell :global(.qc-chat-message-bubble audio) {
+.qc-chat-page-shell .qc-chat-message-bubble img,
+.qc-chat-page-shell .qc-chat-message-bubble video,
+.qc-chat-page-shell .qc-chat-message-bubble audio {
   display: block;
   max-width: 100%;
 }

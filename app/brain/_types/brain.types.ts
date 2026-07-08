@@ -23,7 +23,9 @@
   | "execution"
   | "pdf"
   | "adjustment"
-  | "decision";
+  | "decision"
+  | "memory"
+  | "source";
 
 export type BrainNodeStatus = "ok" | "warning" | "missing" | "pending" | "error" | "orphan";
 export type BrainNodeLifecycleStatus =
@@ -70,17 +72,24 @@ export type BrainNode = {
   module: string;
   companyId?: string;
   companyName?: string;
+  companySlug?: string;
   projectId?: string;
   projectName?: string;
+  projectSlug?: string;
   label: string;
   description?: string;
   status: BrainNodeStatus;
+  accessLevel?: "full" | "summary";
   size?: "sm" | "md" | "lg";
   information?: string;
   createdBy?: string;
+  createdByName?: string;
   createdByEmail?: string;
   createdAt?: string;
   updatedAt?: string;
+  updatedBy?: string;
+  refType?: string | null;
+  refId?: string | null;
   generatedBy?: "user" | "system" | "brain" | "automation";
   entityType?: string;
   entityId?: string;
@@ -93,6 +102,12 @@ export type BrainNode = {
   aliases?: string[];
   requiredPermissions?: string[];
   visibleByPermission?: boolean;
+  allowedActions?: string[];
+  relatedMemoryCount?: number;
+  relatedDocumentCount?: number;
+  relatedLogCount?: number;
+  relatedNodeCount?: number;
+  sourceType?: string | null;
   lifecycleStatus?: BrainNodeLifecycleStatus;
   source?: {
     type?: string;
@@ -316,4 +331,3 @@ export type BuiltBrainGraph = {
   removalHistory: BrainAccessRequestRemovalHistoryItem[];
   auditLogs: BrainAuditLogItem[];
 };
-

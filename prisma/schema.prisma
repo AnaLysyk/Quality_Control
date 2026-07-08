@@ -238,6 +238,134 @@ model BrainRetentionPolicy {
 
   @@index([scope])
 }
+
+model BrainProviderConfig {
+  id               String   @id @default(cuid())
+  provider         String
+  enabled          Boolean  @default(true)
+  model            String?
+  models           Json?
+  priority         Int      @default(100)
+  dailyRequestLimit Int?
+  dailyTokenLimit  Int?
+  strictFreeModels Boolean  @default(true)
+  timeoutMs        Int?
+  maxOutputTokens  Int?
+  metadata         Json?
+  updatedBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([provider])
+  @@index([enabled])
+  @@index([priority])
+  @@map("brain_provider_configs")
+}
+
+model BrainSourceConfig {
+  id                     String   @id @default(cuid())
+  name                   String
+  description            String?
+  sourceType             String
+  provider               String?
+  status                 String   @default("draft")
+  scopeType              String   @default("global")
+  companyId              String?
+  companySlug            String?
+  projectId              String?
+  projectSlug            String?
+  ownerUserId            String?
+  allowedRoles           Json?
+  allowedUsers           Json?
+  requiredPermission     String?
+  environment            String   @default("dev")
+  priority               Int      @default(50)
+  useForCompanyContext   Boolean  @default(false)
+  useForGeneralQuestions Boolean  @default(true)
+  useForRagIngestion     Boolean  @default(false)
+  useForLiveQuery        Boolean  @default(false)
+  config                 Json     @default("{}")
+  lastSyncAt             DateTime?
+  lastSuccessAt          DateTime?
+  lastErrorAt            DateTime?
+  lastErrorMessage       String?
+  createdBy              String?
+  updatedBy              String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  secrets                BrainSourceSecret[]
+  auditLogs              BrainSourceAuditLog[]
+  syncLogs               BrainSourceSyncLog[]
+
+  @@index([sourceType])
+  @@index([status])
+  @@index([scopeType])
+  @@index([companyId])
+  @@index([companySlug])
+  @@index([projectId])
+  @@index([ownerUserId])
+  @@map("brain_source_configs")
+}
+
+model BrainSourceSecret {
+  id             String   @id @default(cuid())
+  sourceId       String
+  key            String
+  label          String?
+  maskedValue    String?
+  encryptedValue String
+  encryptionHint String?
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  source         BrainSourceConfig @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, key])
+  @@index([sourceId])
+  @@map("brain_source_secrets")
+}
+
+model BrainSourceAuditLog {
+  id        String   @id @default(cuid())
+  sourceId  String?
+  action    String
+  before    Json?
+  after     Json?
+  userId    String?
+  reason    String?
+  createdAt DateTime @default(now())
+
+  source    BrainSourceConfig? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([sourceId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("brain_source_audit_logs")
+}
+
+model BrainSourceSyncLog {
+  id         String   @id @default(cuid())
+  sourceId   String
+  kind       String   @default("test")
+  status     String
+  message    String?
+  metadata   Json?
+  startedAt  DateTime @default(now())
+  finishedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  source     BrainSourceConfig @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([sourceId])
+  @@index([status])
+  @@index([kind])
+  @@index([createdAt])
+  @@map("brain_source_sync_logs")
+}
+
 // Prisma Schema — Quality Control
 // Provider: PostgreSQL (Render)
 // Gerado automaticamente com base nos tipos do projeto

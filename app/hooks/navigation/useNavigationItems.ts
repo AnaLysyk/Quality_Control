@@ -213,34 +213,78 @@ function resolveModuleHref(
   return resolveCompanyRouteHref(getNavigationRoute(mod)?.path, mod.href, companySlug, companyRouteInput);
 }
 
-function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string | null, projectSlug: string | null): NavItemDef[] {
+function buildBrainItems(
+  effectiveRole: SystemRole | null,
+  companySlug: string | null,
+  projectSlug: string | null,
+  permissions?: PermissionMatrix | null,
+): NavItemDef[] {
   if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
     return [
       {
-        id: "brain-system-map",
-        routeId: "brain.mapa-sistema",
-        label: "Brain visual",
+        id: "brain-map-admin",
+        routeId: "brain.admin",
+        label: "Mapa Neural",
         iconKey: "cpu",
         module: "brain",
         href: "/admin/brain",
         favoriteEnabled: true,
-        testId: "nav-brain-system-map",
+        testId: "nav-brain-map",
+      },
+      {
+        id: "brain-memories-admin",
+        routeId: "brain.memories",
+        label: "Memórias do Brain",
+        iconKey: "file-text",
+        module: "brain",
+        href: "/admin/brain/memories",
+        allowedRoles: TC_USER_CREATOR_ROLES,
+        requiredPermission: { moduleId: "brain", action: "manage_memories" },
+        favoriteEnabled: true,
+        testId: "nav-brain-memories",
+      },
+      {
+        id: "brain-settings-admin",
+        routeId: "brain.settings.admin",
+        label: "Configurações do Brain",
+        iconKey: "settings",
+        module: "brain",
+        href: "/admin/brain/settings",
+        allowedRoles: TC_USER_CREATOR_ROLES,
+        requiredPermission: { moduleId: "brain", action: "configure_sources" },
+        favoriteEnabled: true,
+        testId: "nav-brain-settings",
       },
     ];
   }
+
+  const canConfigureCompanySources = hasPermissionAccess(permissions, "brain", "configure_sources");
 
   if (companySlug) {
     return [
       {
         id: "brain-company",
         routeId: "brain.empresa",
-        label: projectSlug ? "Brain do projeto" : "Brain da empresa",
+        label: projectSlug ? "Mapa Neural do projeto" : "Mapa Neural",
         iconKey: "cpu",
         module: "brain",
         href: withScopeQuery("/brain", companySlug, projectSlug, true),
         favoriteEnabled: true,
         testId: "nav-brain-company",
       },
+      ...(canConfigureCompanySources
+        ? [{
+            id: "brain-settings-company",
+            routeId: "brain.settings.company",
+            label: "Configurações do Brain",
+            iconKey: "settings",
+            module: "brain" as const,
+            href: withScopeQuery("/brain/settings", companySlug, projectSlug, true),
+            requiredPermission: { moduleId: "brain", action: "configure_sources" },
+            favoriteEnabled: true,
+            testId: "nav-brain-settings-company",
+          }]
+        : []),
     ];
   }
 
@@ -248,7 +292,7 @@ function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string |
     {
       id: "brain-graph",
       routeId: "brain.grafo",
-      label: "Brain visual",
+      label: "Mapa Neural",
       iconKey: "cpu",
       module: "brain",
       href: "/brain",
@@ -436,7 +480,7 @@ function resolveModuleItems(
     mod.id === "agenda"
       ? []
       : mod.id === "brain"
-        ? buildBrainItems(effectiveRole, companySlug, projectSlug)
+        ? buildBrainItems(effectiveRole, companySlug, projectSlug, permissions)
         : mod.id === "quality"
           ? buildQualityItems(mod.items, companySlug)
           : mod.items;

@@ -45,6 +45,8 @@ export function nodeTypeLabel(type: BrainNodeType) {
     pdf: "PDF",
     adjustment: "Ajuste",
     decision: "Decisão",
+    memory: "Memória",
+    source: "Fonte",
   };
   return labels[type] ?? type;
 }
@@ -75,4 +77,3 @@ export function makeStableId(prefix: string, value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "nao-informado"}`;
 }
-

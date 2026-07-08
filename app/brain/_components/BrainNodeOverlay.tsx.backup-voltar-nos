@@ -29,8 +29,6 @@ type BrainNodeOverlayProps = {
   onResetFocus: () => void;
   onOpenRelatedModule: (module: string) => void;
   debugMode?: boolean;
-  onBackNode?: () => void;
-  canBackNode?: boolean;
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -123,7 +121,7 @@ function formatKey(key: string) {
   return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, onOpenRelatedModule, debugMode = false, onBackNode, canBackNode = false }: BrainNodeOverlayProps) {
+export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, onOpenRelatedModule, debugMode = false }: BrainNodeOverlayProps) {
   const relations = relationRows(node, nodes, edges);
   const relatedNodes = relations.map((item) => item.related);
   const metadata = compactMetadata(node);
@@ -349,8 +347,7 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
         </div>
 
         <footer className="flex items-center justify-between gap-2 border-t border-white/10 bg-slate-950/72 p-3">
-          <button type="button" onClick={onBackNode ?? onResetFocus} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-white/70 hover:border-cyan-100/35 hover:text-white"><FiRefreshCw className="h-3.5 w-3.5" />{canBackNode ? "Voltar nó" : "Voltar ao núcleo"}</button>
-          <button type="button" onClick={onResetFocus} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-white/70 hover:border-cyan-100/35 hover:text-white">Núcleo Brain</button>
+          <button type="button" onClick={onResetFocus} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-white/70 hover:border-cyan-100/35 hover:text-white"><FiRefreshCw className="h-3.5 w-3.5" />Limpar foco</button>
           <button type="button" onClick={askBrainChatAboutNode} className="qc-brain-ask-chat-button inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60"><FiZap className="h-3.5 w-3.5" />Perguntar ao Brain Chat</button>
           <button type="button" onClick={() => onOpenRelatedModule(node.module)} className="inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60"><FiActivity className="h-3.5 w-3.5" />Ver área<FiExternalLink className="h-3.5 w-3.5" /></button>
         </footer>

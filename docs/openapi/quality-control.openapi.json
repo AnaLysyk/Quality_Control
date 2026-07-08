@@ -19,7 +19,8 @@
     { "name": "Applications" },
     { "name": "Tickets" },
     { "name": "Chat" },
-    { "name": "Documentation" }
+    { "name": "Documentation" },
+    { "name": "Brain" }
   ],
   "components": {
     "securitySchemes": {
@@ -684,6 +685,148 @@
             }
           },
           "403": { "description": "Empresa fora do escopo ou sem permissao de documentacao" }
+        }
+      }
+    },
+    "/api/company-docs/{companySlug}/docs": {
+      "post": {
+        "tags": ["Documentation"],
+        "summary": "Cria documento na wiki da empresa",
+        "description": "Usado por editores autorizados e agentes aprovados para criar rascunhos ou documentos publicados no contexto da empresa.",
+        "x-authorizedRoles": ["leader_tc", "technical_support", "empresa autorizada"],
+        "parameters": [
+          {
+            "name": "companySlug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "categoryId"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "categoryId": { "type": "string" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string", "enum": ["draft", "published", "outdated"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Documento criado" },
+          "400": { "description": "Titulo ou categoria ausente" },
+          "403": { "description": "Sem permissao para editar a wiki da empresa" },
+          "404": { "description": "Categoria nao encontrada" }
+        }
+      }
+    },
+    "/api/company-docs/{companySlug}/docs/{id}": {
+      "patch": {
+        "tags": ["Documentation"],
+        "summary": "Atualiza metadados ou blocos de um documento da wiki da empresa",
+        "description": "Permite atualizar titulo, descricao, status, categoria e blocos estruturados como paragrafo, tabela, codigo, card e imagem.",
+        "x-authorizedRoles": ["leader_tc", "technical_support", "empresa autorizada"],
+        "parameters": [
+          { "name": "companySlug", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string", "enum": ["draft", "published", "outdated"] },
+                  "categoryId": { "type": "string" },
+                  "blocks": {
+                    "type": "array",
+                    "items": { "type": "object", "additionalProperties": true }
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Documento atualizado" },
+          "403": { "description": "Sem permissao para editar a wiki da empresa" },
+          "404": { "description": "Documento nao encontrado" }
+        }
+      },
+      "delete": {
+        "tags": ["Documentation"],
+        "summary": "Remove documento da wiki da empresa",
+        "parameters": [
+          { "name": "companySlug", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Documento removido" },
+          "403": { "description": "Sem permissao para editar a wiki da empresa" },
+          "404": { "description": "Documento nao encontrado" }
+        }
+      }
+    },
+    "/api/brain/search": {
+      "get": {
+        "tags": ["Brain"],
+        "summary": "Pesquisa o indice contextual do Brain",
+        "description": "Retorna nos, filtros e eventos visiveis ao usuario logado, respeitando empresa, projeto, modulo e privacyLevel.",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "type", "in": "query", "schema": { "type": "string" } },
+          { "name": "module", "in": "query", "schema": { "type": "string" } },
+          { "name": "companySlug", "in": "query", "schema": { "type": "string" } },
+          { "name": "projectId", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "tag", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200 } }
+        ],
+        "responses": {
+          "200": { "description": "Resultados do Brain filtrados por acesso" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao para acessar Brain" }
+        }
+      }
+    },
+    "/api/brain/query/hybrid": {
+      "post": {
+        "tags": ["Brain"],
+        "summary": "Monta contexto hibrido do Brain para agentes",
+        "description": "Usado por agentes para consultar documentos, nos e relacoes com controle de acesso antes de responder ou sugerir alteracoes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["query"],
+                "properties": {
+                  "query": { "type": "string" },
+                  "nodeId": { "type": "string" },
+                  "depth": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Contexto hibrido montado" },
+          "400": { "description": "query obrigatoria" },
+          "401": { "description": "Nao autenticado" },
+          "403": { "description": "Sem permissao para acessar Brain" },
+          "500": { "description": "Erro ao montar contexto" }
         }
       }
     }

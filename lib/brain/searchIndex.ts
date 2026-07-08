@@ -35,6 +35,11 @@ export type BrainSearchResult = BrainSearchIndexEntry & {
   matchedBy: string[];
 };
 
+type BrainSearchNodeLike = Pick<BrainNode, "id" | "type" | "label" | "description" | "refType" | "refId"> & {
+  metadata?: unknown;
+  updatedAt?: Date | string | null;
+};
+
 function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
@@ -76,7 +81,7 @@ export function expandBrainSearchTerms(query: string) {
   return Array.from(expanded).filter(Boolean);
 }
 
-function inferTags(node: Pick<BrainNode, "id" | "type" | "label" | "description" | "refType" | "refId" | "metadata">) {
+function inferTags(node: Omit<BrainSearchNodeLike, "updatedAt">) {
   const metadata = toRecord(node.metadata);
   const tags = new Set<string>([
     node.type,
@@ -104,7 +109,7 @@ function inferTags(node: Pick<BrainNode, "id" | "type" | "label" | "description"
 }
 
 export function buildBrainSearchEntry(
-  node: Pick<BrainNode, "id" | "type" | "label" | "description" | "refType" | "refId" | "metadata" | "updatedAt">,
+  node: BrainSearchNodeLike,
   relatedLabels: string[] = [],
 ): BrainSearchIndexEntry {
   const metadata = toRecord(node.metadata);
@@ -123,13 +128,13 @@ export function buildBrainSearchEntry(
     tags: inferTags(node),
     aliases: readStringArray(metadata.aliases).map(normalizeBrainSearchText),
     relatedLabels: relatedLabels.map(normalizeBrainSearchText).filter(Boolean),
-    updatedAt: node.updatedAt instanceof Date ? node.updatedAt.toISOString() : null,
+    updatedAt: node.updatedAt instanceof Date ? node.updatedAt.toISOString() : readString(node.updatedAt),
     accessCount: typeof metadata.accessCount === "number" ? metadata.accessCount : 0,
   };
 }
 
 export function buildBrainSearchIndex(
-  nodes: Array<Pick<BrainNode, "id" | "type" | "label" | "description" | "refType" | "refId" | "metadata" | "updatedAt">>,
+  nodes: BrainSearchNodeLike[],
   edges: Array<Pick<BrainEdge, "fromId" | "toId">> = [],
 ) {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
@@ -230,4 +235,3 @@ export function searchBrainIndex(
     .sort((left, right) => right.score - left.score || left.label.localeCompare(right.label, "pt-BR"))
     .slice(0, limit);
 }
-

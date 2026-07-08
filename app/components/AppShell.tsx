@@ -448,6 +448,8 @@ function isCompanyDashboardRoute(pathname: string) {
 function shouldHideShellCover(pathname: string) {
   const hasAdminHeroCover = /^\/admin\/(?:home|visao-geral|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
   return (
+    /^\/automacoes\/playwright(?:\/|$)/.test(pathname) ||
+    /\/automacao\/playwright(?:\/|$)/.test(pathname) ||
     pathname.startsWith("/agenda") ||
     pathname.startsWith("/operacao") ||
     pathname.startsWith("/operacoes") ||
@@ -672,7 +674,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
-      <NewVersionBanner />
+      {!isPlaywrightWorkspaceRoute ? <NewVersionBanner /> : null}
       {!isBrainCanvasRoute && !hideGlobalSidebar ? (
         <div
           className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area lg:hidden${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
@@ -704,7 +706,7 @@ export default function AppShell({ children }: AppShellProps) {
         </button>
       ) : null}
 
-      {hydrated ? (
+      {hydrated && !isPlaywrightWorkspaceRoute ? (
         <div className="fixed top-3 right-3 z-40 inline-flex w-fit items-center gap-1.5 sm:top-4 sm:right-4 sm:gap-2">
           <DeferredNotificationsButton />
           <DeferredTicketsButton />
@@ -714,7 +716,7 @@ export default function AppShell({ children }: AppShellProps) {
         </div>
       ) : null}
 
-      {hydrated ? <DeferredChatButton /> : null}
+      {hydrated && !isPlaywrightWorkspaceRoute ? <DeferredChatButton /> : null}
 
       <div className="flex h-screen overflow-hidden">
         {hydrated && !hideGlobalSidebar ? (

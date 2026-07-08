@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { FiArrowRight, FiBookOpen, FiLayers, FiLock, FiShield } from "react-icons/fi";
 
 import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
@@ -61,9 +62,13 @@ function AccessDenied() {
 }
 
 export default function AutomationModuleLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname() ?? "";
   const { user } = useAuthUser();
   const { clients, activeClient } = useClientContext();
   const access = useMemo(() => resolveAutomationAccess(user, clients.length), [user, clients.length]);
+  const isPlaywrightWorkspace =
+    /^\/automacoes\/playwright(?:\/|$)/.test(pathname) ||
+    /\/automacao\/playwright(?:\/|$)/.test(pathname);
 
   const coverContent = useMemo(
     () => (
@@ -95,9 +100,17 @@ export default function AutomationModuleLayout({ children }: { children: React.R
   return (
     <RequireAuth fallback={<Skeleton />}>
       <AutomationModuleProvider value={{ access, activeClient, clients }}>
-        <div className="w-full bg-(--page-bg,#f3f6fb) px-4 pt-4 pb-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-10 xl:px-12 2xl:px-14">
+        <div
+          className={
+            isPlaywrightWorkspace
+              ? "flex h-full min-h-0 w-full bg-[#f3f6fb] text-(--page-text,#0b1a3c) dark:bg-zinc-900"
+              : "w-full bg-(--page-bg,#f3f6fb) px-4 pt-4 pb-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-10 xl:px-12 2xl:px-14"
+          }
+        >
           {!access.canOpen ? (
             <AccessDenied />
+          ) : isPlaywrightWorkspace ? (
+            <main className="min-h-0 w-full flex-1 overflow-hidden">{children}</main>
           ) : (
             <div className="space-y-4 2xl:grid 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:items-start 2xl:gap-4 2xl:space-y-0">
               <AutomationModuleSidebar />
@@ -109,4 +122,3 @@ export default function AutomationModuleLayout({ children }: { children: React.R
     </RequireAuth>
   );
 }
-

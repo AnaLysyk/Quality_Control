@@ -61,44 +61,14 @@ function normalize(value: string) {
 
 function belongsToSelectedCompany(node: BrainNode, companyId: string | null) {
   if (!companyId) return true;
-
-  const metadataCompanyId =
-    typeof node.metadata?.companyId === "string"
-      ? node.metadata.companyId
-      : typeof node.metadata?.company_id === "string"
-        ? node.metadata.company_id
-        : null;
-
   if (node.companyId) return node.companyId === companyId;
-  if (metadataCompanyId) return metadataCompanyId === companyId;
-
-  return node.type === "Company" ||
-    node.type === "company" ||
-    node.type === "Project" ||
-    node.type === "project" ||
-    node.metadata?.isBrainCore === true ||
-    node.metadata?.isContextCore === true;
+  return node.type === "company" || node.metadata?.isBrainCore === true || node.metadata?.isContextCore === true;
 }
 
 function belongsToSelectedProject(node: BrainNode, projectId: string | null) {
   if (!projectId) return true;
-
-  const metadataProjectId =
-    typeof node.metadata?.projectId === "string"
-      ? node.metadata.projectId
-      : typeof node.metadata?.project_id === "string"
-        ? node.metadata.project_id
-        : null;
-
   if (node.projectId) return node.projectId === projectId;
-  if (metadataProjectId) return metadataProjectId === projectId;
-
-  return node.type === "Company" ||
-    node.type === "company" ||
-    node.type === "Project" ||
-    node.type === "project" ||
-    node.metadata?.isBrainCore === true ||
-    node.metadata?.isContextCore === true;
+  return node.type === "company" || node.type === "project" || node.metadata?.isBrainCore === true || node.metadata?.isContextCore === true;
 }
 
 export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options: VisibleGraphOptions) {

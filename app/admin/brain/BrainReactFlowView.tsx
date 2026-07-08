@@ -27,8 +27,12 @@ type BrainNodeApi = {
   id: string;
   label: string;
   type: string;
+  refType?: string | null;
+  refId?: string | null;
   description?: string | null;
   metadata?: Record<string, unknown> | null;
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
 };
 
 type BrainEdgeApi = {
@@ -48,6 +52,14 @@ type BrainNodeDetails = {
 type BrainNeighborhood = {
   nodes: BrainNodeApi[];
   edges: BrainEdgeApi[];
+};
+
+type BrainSearchData = {
+  companies?: Array<{ id: string; label: string }>;
+  projects?: Array<{ id: string; label: string }>;
+  types?: string[];
+  statuses?: string[];
+  nodes?: BrainNodeApi[];
 };
 
 type CommunityItem = {
@@ -97,6 +109,81 @@ function toRecord(value: unknown): Record<string, unknown> {
     return value as Record<string, unknown>;
   }
   return {};
+}
+
+function readText(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function readFirstText(metadata: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = readText(metadata[key]);
+    if (value) return value;
+  }
+  return null;
+}
+
+function formatDetailDate(value: unknown) {
+  const raw = value instanceof Date ? value.toISOString() : readText(value);
+  if (!raw) return null;
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+function readTags(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => readText(item)).filter((item): item is string => Boolean(item)).slice(0, 8);
+}
+
+const SENSITIVE_METADATA_KEYS = [
+  "password",
+  "senha",
+  "token",
+  "secret",
+  "apiKey",
+  "api_key",
+  "credential",
+  "credentials",
+  "authorization",
+  "cookie",
+  "session",
+  "hash",
+  "privateKey",
+  "private_key",
+  "database_url",
+  "connectionString",
+  "smtp",
+];
+
+function isSensitiveMetadataKey(key: string) {
+  const normalized = key.trim().toLowerCase();
+  return SENSITIVE_METADATA_KEYS.some((pattern) => normalized.includes(pattern.toLowerCase()));
+}
+
+function sanitizeMetadataValue(key: string, value: unknown): unknown {
+  if (value == null) return value;
+  if (isSensitiveMetadataKey(key)) return "[REDACTED]";
+  if (typeof value === "string") return value.length > 240 ? `${value.slice(0, 240)}...` : value;
+  if (Array.isArray(value)) return value.slice(0, 20).map((item) => sanitizeMetadataValue(key, item));
+  if (value && typeof value === "object") return sanitizeClientMetadata(value);
+  return value;
+}
+
+function sanitizeClientMetadata(value: unknown): Record<string, unknown> {
+  const record = toRecord(value);
+  return Object.fromEntries(
+    Object.entries(record).map(([key, item]) => [key, sanitizeMetadataValue(key, item)]),
+  );
+}
+
+function countByType(items: Array<{ type: string }>) {
+  const counts = new Map<string, number>();
+  for (const item of items) counts.set(item.type, (counts.get(item.type) ?? 0) + 1);
+  return Array.from(counts.entries())
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "pt-BR"))
+    .slice(0, 5)
+    .map(([type, count]) => `${type} (${count})`);
 }
 
 function resolveNodePosition(node: BrainNodeApi, index: number, total: number) {
@@ -168,24 +255,49 @@ export default function BrainReactFlowView() {
   const [depth, setDepth] = useState(2);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("graph");
   const [commandInput, setCommandInput] = useState("");
   const [commandLog, setCommandLog] = useState<Array<{ id: string; role: "user" | "system"; text: string }>>([]);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState<{ command: string } | null>(null);
+  const [askAiLoading, setAskAiLoading] = useState(false);
+  const [askAiError, setAskAiError] = useState<string | null>(null);
 
   const { data: graphData, isLoading } = useBrainGraph(rootNodeId, depth);
 
   const nodesApi: BrainNodeApi[] = useMemo(() => graphData?.nodes ?? [], [graphData?.nodes]);
   const edgesApi: BrainEdgeApi[] = useMemo(() => graphData?.edges ?? [], [graphData?.edges]);
 
-  const filteredNodes = useMemo(() => {
-    const searchLower = search.trim().toLowerCase();
-    return nodesApi.filter((node) => {
-      if (typeFilter !== "all" && node.type !== typeFilter) return false;
-      if (searchLower && !node.label.toLowerCase().includes(searchLower)) return false;
-      return true;
-    });
-  }, [nodesApi, search, typeFilter]);
+  const hasBackendFilters = Boolean(
+    search.trim() ||
+    typeFilter !== "all" ||
+    companyFilter !== "all" ||
+    projectFilter !== "all" ||
+    statusFilter !== "all",
+  );
+
+  const brainSearchKey = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("limit", "250");
+    if (search.trim()) params.set("q", search.trim());
+    if (typeFilter !== "all") params.set("type", typeFilter);
+    if (companyFilter !== "all") params.set("companySlug", companyFilter);
+    if (projectFilter !== "all") params.set("projectId", projectFilter);
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    return `/api/brain/search?${params.toString()}`;
+  }, [companyFilter, projectFilter, search, statusFilter, typeFilter]);
+
+  const { data: searchData } = useSWR<BrainSearchData>(brainSearchKey, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 6000,
+  });
+
+  const filteredNodes = useMemo(
+    () => (hasBackendFilters ? searchData?.nodes ?? [] : nodesApi),
+    [hasBackendFilters, nodesApi, searchData?.nodes],
+  );
 
   const filteredNodeIds = useMemo(() => new Set(filteredNodes.map((node) => node.id)), [filteredNodes]);
   const filteredEdges = useMemo(
@@ -194,11 +306,16 @@ export default function BrainReactFlowView() {
   );
 
   const typeOptions = useMemo(() => {
-    const types = Array.from(new Set(nodesApi.map((node) => node.type))).sort((left, right) =>
-      left.localeCompare(right),
+    const sourceTypes = searchData?.types?.length ? searchData.types : nodesApi.map((node) => node.type);
+    const types = Array.from(new Set(sourceTypes)).sort((left, right) =>
+      left.localeCompare(right, "pt-BR"),
     );
     return ["all", ...types];
-  }, [nodesApi]);
+  }, [nodesApi, searchData?.types]);
+
+  const companyOptions = useMemo(() => searchData?.companies ?? [], [searchData?.companies]);
+  const projectOptions = useMemo(() => searchData?.projects ?? [], [searchData?.projects]);
+  const statusOptions = useMemo(() => searchData?.statuses ?? [], [searchData?.statuses]);
 
   const mapped = useMemo(() => mapGraphToFlow(filteredNodes, filteredEdges), [filteredNodes, filteredEdges]);
   const [nodes, setNodes, onNodesChangeBase] = useNodesState(mapped.flowNodes);
@@ -353,6 +470,87 @@ export default function BrainReactFlowView() {
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [visibleNodesSorted]);
 
+  useEffect(() => {
+    setAskAiError(null);
+  }, [selectedNodeId]);
+
+  const selectedMetadata = useMemo(() => toRecord(nodeDetails?.node?.metadata), [nodeDetails?.node?.metadata]);
+  const selectedTags = useMemo(() => readTags(selectedMetadata.tags), [selectedMetadata]);
+  const selectedRelations = useMemo(
+    () => countByType([...(nodeDetails?.outgoing ?? []), ...(nodeDetails?.incoming ?? [])]),
+    [nodeDetails?.incoming, nodeDetails?.outgoing],
+  );
+  const selectedDetailRows = useMemo(() => {
+    const node = nodeDetails?.node;
+    if (!node) return [];
+    return [
+      ["Empresa", readFirstText(selectedMetadata, ["companyName", "companySlug", "companyId", "slug"])],
+      ["Projeto", readFirstText(selectedMetadata, ["projectName", "projectId", "projectSlug", "projectCode"])],
+      ["Status", readFirstText(selectedMetadata, ["status", "lifecycle", "lifecycleStatus"])],
+      ["Criado em", formatDetailDate(selectedMetadata.createdAt ?? node.createdAt)],
+      ["Atualizado em", formatDetailDate(selectedMetadata.updatedAt ?? node.updatedAt)],
+      ["Criado por", readFirstText(selectedMetadata, ["createdByName", "createdBy", "ownerId"])],
+      ["Origem", readFirstText(selectedMetadata, ["sourceType", "source"])],
+      ["Ref", [node.refType, node.refId].filter(Boolean).join(" / ") || null],
+      ["Conexões", String((nodeDetails?.outgoing?.length ?? 0) + (nodeDetails?.incoming?.length ?? 0))],
+    ].filter((row): row is [string, string] => Boolean(row[1]));
+  }, [nodeDetails?.incoming?.length, nodeDetails?.node, nodeDetails?.outgoing?.length, selectedMetadata]);
+
+  const askAiAboutSelectedNode = useCallback(async () => {
+    if (!selectedNodeId || askAiLoading) return;
+    setAskAiLoading(true);
+    setAskAiError(null);
+
+    try {
+      const response = await fetch("/api/brain/query/local", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nodeId: selectedNodeId,
+          depth: 2,
+          maxNodes: 60,
+          maxMemories: 12,
+          maxDocs: 8,
+          maxEvents: 16,
+        }),
+      });
+      const localContext = await response.json().catch(() => null) as Record<string, unknown> | null;
+      if (!response.ok) {
+        throw new Error(readText(localContext?.error) ?? `HTTP ${response.status}`);
+      }
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("assistant:open", {
+            detail: {
+              source: "brain",
+              route: "/admin/brain",
+              nodeId: selectedNodeId,
+              nodeLabel: nodeDetails?.node?.label ?? selectedNodeId,
+              nodeType: nodeDetails?.node?.type ?? undefined,
+              entityType: nodeDetails?.node?.refType ?? nodeDetails?.node?.type ?? "BrainNode",
+              entityId: nodeDetails?.node?.refId ?? selectedNodeId,
+              agentMode: "qa",
+              panelMode: "side",
+              focusInput: true,
+              initialMessage: `Analise o nó "${nodeDetails?.node?.label ?? selectedNodeId}" com o contexto local autorizado: resumo, conexões, impacto, riscos e próximos passos.`,
+              metadata: {
+                localContext,
+                nodeMetadata: sanitizeClientMetadata(selectedMetadata),
+              },
+            },
+          }),
+        );
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao montar contexto local.";
+      setAskAiError(message);
+    } finally {
+      setAskAiLoading(false);
+    }
+  }, [askAiLoading, nodeDetails?.node, selectedMetadata, selectedNodeId]);
+
   return (
     <div className={styles.reactFlowShell}>
       <div className={styles.reactFlowTopBar}>
@@ -368,7 +566,7 @@ export default function BrainReactFlowView() {
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar no por nome"
+            placeholder="Buscar texto"
             className={styles.searchInput}
           />
 
@@ -383,6 +581,51 @@ export default function BrainReactFlowView() {
               <option key={type} value={type}>
                 {type === "all" ? "Todos os tipos" : type}
                 {type !== "all" && getBrainGraphNodeDefinition(type)?.label ? ` (${getBrainGraphNodeDefinition(type)?.label})` : ""}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={companyFilter}
+            onChange={(event) => setCompanyFilter(event.target.value)}
+            aria-label="Filtrar por empresa"
+            title="Filtrar por empresa"
+            className={styles.compactSelect}
+          >
+            <option value="all">Todas as empresas</option>
+            {companyOptions.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={projectFilter}
+            onChange={(event) => setProjectFilter(event.target.value)}
+            aria-label="Filtrar por projeto"
+            title="Filtrar por projeto"
+            className={styles.compactSelect}
+          >
+            <option value="all">Todos os projetos</option>
+            {projectOptions.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            aria-label="Filtrar por status"
+            title="Filtrar por status"
+            className={styles.compactSelect}
+          >
+            <option value="all">Todos os status</option>
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status}
               </option>
             ))}
           </select>
@@ -742,6 +985,27 @@ export default function BrainReactFlowView() {
               <p className="mb-3 text-xs text-slate-700">{nodeDetails.node.description}</p>
             ) : null}
 
+            {selectedDetailRows.length ? (
+              <div className="mb-3 grid gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 p-2 dark:border-white/10 dark:bg-white/5">
+                {selectedDetailRows.map(([label, value]) => (
+                  <div key={label} className="grid grid-cols-[86px_minmax(0,1fr)] gap-2 text-[11px] leading-5">
+                    <span className="font-semibold uppercase text-slate-500 dark:text-white/52">{label}</span>
+                    <span className="min-w-0 break-words text-slate-700 dark:text-white/78">{value}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {selectedTags.length ? (
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {selectedTags.map((tag) => (
+                  <span key={tag} className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/70">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
             <div className="mb-3 grid grid-cols-3 gap-2 text-center">
               <button
                 type="button"
@@ -760,27 +1024,24 @@ export default function BrainReactFlowView() {
 
             <button
               type="button"
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(
-                    new CustomEvent("assistant:open", {
-                      detail: {
-                        source: "brain",
-                        nodeId: selectedNodeId,
-                        nodeLabel: nodeDetails?.node?.label ?? selectedNodeId,
-                        nodeType: nodeDetails?.node?.type ?? undefined,
-                        agentMode: "qa",
-                        panelMode: "side",
-                        initialMessage: `Analise o nó "${nodeDetails?.node?.label ?? selectedNodeId}" (${nodeDetails?.node?.type ?? "Brain"}): resumo, conexões, impacto e próximos passos.`,
-                      },
-                    }),
-                  );
-                }
-              }}
+              onClick={() => void askAiAboutSelectedNode()}
+              disabled={askAiLoading}
               className="mb-3 w-full rounded-lg border border-[rgba(1,24,72,0.14)] bg-[linear-gradient(135deg,#011848_0%,#1f4aa3_100%)] px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 active:scale-[0.98]"
             >
-              ðŸ§  Perguntar IA sobre este nó
+              {askAiLoading ? "Montando contexto..." : "Perguntar IA sobre este nó"}
             </button>
+            {askAiError ? (
+              <p className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-xs font-semibold text-rose-700">
+                {askAiError}
+              </p>
+            ) : null}
+
+            {selectedRelations.length ? (
+              <div className="mb-3 rounded-xl border border-slate-200 p-2 dark:border-white/10">
+                <p className="mb-1 text-xs font-semibold uppercase text-slate-500 dark:text-white/52">Principais relações</p>
+                <p className="text-xs text-slate-700 dark:text-white/72">{selectedRelations.join(" • ")}</p>
+              </div>
+            ) : null}
 
             <div>
               <p className="mb-1 text-xs font-semibold uppercase text-slate-500">Vizinhanca</p>
@@ -822,4 +1083,3 @@ function StatPill({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
-

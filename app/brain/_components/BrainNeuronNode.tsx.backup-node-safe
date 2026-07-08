@@ -14,9 +14,8 @@ type BrainNeuronNodeData = {
   themeMode?: "light" | "dark";
 };
 
-function labelize(value: unknown) {
-  const safeValue = typeof value === "string" && value.trim() ? value : "contexto";
-  return safeValue.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+function labelize(value: string) {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function statusLabel(node: BrainNode, connectedCount: number) {
@@ -33,8 +32,7 @@ function statusLabel(node: BrainNode, connectedCount: number) {
     error: "erro",
     orphan: "órfão",
   };
-  const status = typeof node.status === "string" && node.status ? node.status : "ok";
-  return map[status] ?? status;
+  return map[node.status] ?? node.status;
 }
 
 function IconForNode({ node }: { node: BrainNode }) {
@@ -46,7 +44,7 @@ function IconForNode({ node }: { node: BrainNode }) {
   if (node.type === "automation" || node.type === "execution") return <FiCpu className="h-4 w-4" />;
   if (node.generatedBy === "brain") return <FiZap className="h-4 w-4" />;
   if (node.status === "ok") return <FiCheckCircle className="h-4 w-4" />;
-  if (["missing", "error", "orphan", "warning"].includes(String(node.status ?? ""))) return <FiAlertTriangle className="h-4 w-4" />;
+  if (["missing", "error", "orphan", "warning"].includes(node.status)) return <FiAlertTriangle className="h-4 w-4" />;
   return <FiBox className="h-4 w-4" />;
 }
 
@@ -58,7 +56,7 @@ function theme(node: BrainNode, selected: boolean, orphan: boolean, darkMode: bo
     if (node.type === "integration") return "border-violet-300/80 bg-violet-950/94 text-violet-50 shadow-[0_0_36px_rgba(167,139,250,.28),inset_0_0_18px_rgba(167,139,250,.12)]";
     if (node.type === "screen") return "border-sky-300/80 bg-sky-950/94 text-sky-50 shadow-[0_0_36px_rgba(56,189,248,.26),inset_0_0_18px_rgba(56,189,248,.12)]";
     if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300/80 bg-rose-950/94 text-rose-50 shadow-[0_0_36px_rgba(251,113,133,.30),inset_0_0_18px_rgba(251,113,133,.12)]";
-    if (["pending", "warning"].includes(String(node.status ?? ""))) return "border-yellow-300/80 bg-yellow-950/94 text-yellow-50 shadow-[0_0_36px_rgba(250,204,21,.28),inset_0_0_18px_rgba(250,204,21,.12)]";
+    if (["pending", "warning"].includes(node.status)) return "border-yellow-300/80 bg-yellow-950/94 text-yellow-50 shadow-[0_0_36px_rgba(250,204,21,.28),inset_0_0_18px_rgba(250,204,21,.12)]";
     return "border-emerald-300/75 bg-emerald-950/94 text-emerald-50 shadow-[0_0_34px_rgba(52,211,153,.24),inset_0_0_18px_rgba(52,211,153,.10)]";
   }
 
@@ -68,7 +66,7 @@ function theme(node: BrainNode, selected: boolean, orphan: boolean, darkMode: bo
   if (node.type === "integration") return "border-violet-300 bg-white text-violet-950 shadow-[0_0_24px_rgba(167,139,250,.18),inset_0_0_16px_rgba(167,139,250,.08)]";
   if (node.type === "screen") return "border-sky-300 bg-white text-sky-950 shadow-[0_0_24px_rgba(56,189,248,.18),inset_0_0_16px_rgba(56,189,248,.08)]";
   if (orphan || ["missing", "error", "orphan"].includes(node.status)) return "border-rose-300 bg-white text-rose-950 shadow-[0_0_24px_rgba(251,113,133,.18),inset_0_0_16px_rgba(251,113,133,.08)]";
-  if (["pending", "warning"].includes(String(node.status ?? ""))) return "border-yellow-300 bg-white text-yellow-950 shadow-[0_0_24px_rgba(250,204,21,.18),inset_0_0_16px_rgba(250,204,21,.08)]";
+  if (["pending", "warning"].includes(node.status)) return "border-yellow-300 bg-white text-yellow-950 shadow-[0_0_24px_rgba(250,204,21,.18),inset_0_0_16px_rgba(250,204,21,.08)]";
   return "border-emerald-300 bg-white text-emerald-950 shadow-[0_0_22px_rgba(52,211,153,.16),inset_0_0_16px_rgba(52,211,153,.08)]";
 }
 
@@ -86,7 +84,7 @@ function nodeKicker(node: BrainNode) {
   if (stage) return stage;
   if (route) return route.replace(/^\/admin\//, "").replace(/^\/login\//, "");
   if (accessType) return accessType;
-  return node.module || node.type || "Contexto";
+  return node.module;
 }
 
 function nodeInstruction(node: BrainNode) {
@@ -105,7 +103,7 @@ function nodeInstruction(node: BrainNode) {
   if (node.metadata?.isProjectHub) return "projeto";
   if (node.metadata?.isModuleHub) return "módulo permitido";
   if (node.metadata?.isDetailNode) return "item criado";
-  return labelize(node.type || node.module || "contexto");
+  return labelize(node.type || node.module);
 }
 
 function companyColor(node: BrainNode) {
@@ -125,7 +123,7 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
   const isCore = Boolean(node.metadata?.isBrainCore || node.metadata?.isContextCore || node.metadata?.isProfileRoot || node.metadata?.isCompanyHub || node.metadata?.isModuleHub || node.metadata?.isUserTypeHub);
   const hasOperationalFlow = Boolean(node.metadata?.isOperationalFlow || node.type === "integration" || node.metadata?.isUserHub || node.metadata?.isDetailNode);
   const isBig = isCore || node.type === "company" || node.type === "project" || node.type === "module" || node.size === "lg";
-  const isSmall = ["status", "log", "event", "email", "pdf", "comment"].includes(String(node.type ?? ""));
+  const isSmall = ["status", "log", "event", "email", "pdf", "comment"].includes(node.type);
   const color = companyColor(node);
 
   const size = isCore ? "h-[136px] w-[190px]" : isBig ? "h-[124px] w-[176px]" : isSmall ? "h-[96px] w-[150px]" : "h-[110px] w-[164px]";

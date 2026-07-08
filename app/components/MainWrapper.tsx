@@ -19,10 +19,15 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
   const isDocsRoute = pathname.startsWith("/docs") || companySection === "docs";
   const isBrainRoute = pathname.startsWith("/brain") || pathname.startsWith("/admin/brain");
   const isChatRoute = pathname.startsWith("/chat");
+  const isPlaywrightWorkspaceRoute =
+    /^\/automacoes\/playwright(?:\/|$)/.test(pathname) ||
+    /\/automacao\/playwright(?:\/|$)/.test(pathname);
 
   // Left padding grows with viewport; right padding uses --content-pr to always
   // clear the fixed floating action strip regardless of breakpoint.
-  const leftPx = isBrainRoute || isChatRoute || isDocumentosRoute || isDocsRoute
+  const leftPx = isPlaywrightWorkspaceRoute
+    ? "px-0"
+    : isBrainRoute || isChatRoute || isDocumentosRoute || isDocsRoute
     ? "px-0"
     : isUsersPermissionsRoute
     ? "px-2 sm:px-2.5 lg:px-3 xl:px-4 2xl:px-5"
@@ -32,10 +37,10 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
     ? "px-2 sm:px-3 lg:px-4 xl:px-5 2xl:px-6"
     : "px-2.5 sm:px-4 lg:px-5 xl:px-6 2xl:px-8";
 
-  const topPt = isBrainRoute || isChatRoute ? "pt-0" : "pt-3 sm:pt-4";
-  const rightPr = isBrainRoute || isChatRoute ? "pr-0" : "pr-(--content-pr)";
+  const topPt = isPlaywrightWorkspaceRoute || isBrainRoute || isChatRoute ? "pt-0" : "pt-3 sm:pt-4";
+  const rightPr = isPlaywrightWorkspaceRoute || isBrainRoute || isChatRoute ? "pr-0" : "pr-(--content-pr)";
 
-  const bottomPb = isBrainRoute || isChatRoute || isDocumentosRoute || isDocsRoute
+  const bottomPb = isPlaywrightWorkspaceRoute || isBrainRoute || isChatRoute || isDocumentosRoute || isDocsRoute
     ? "pb-0"
     : isUsersPermissionsRoute
     ? "pb-4 sm:pb-5"
@@ -44,9 +49,9 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
     : "pb-8";
 
   const beforeTopGap = isBrainRoute ? "" : isDocumentosRoute ? "mt-3 sm:mt-4 lg:mt-5" : isDocsRoute ? "mt-2 sm:mt-3" : "";
-  const beforeBottomGap = isBrainRoute || isChatRoute || isDocumentosRoute || isDocsRoute ? "mb-0" : "mb-6 sm:mb-7 lg:mb-8";
-  const beforeHorizontalPad = isBrainRoute || isDocsRoute ? "px-0" : "";
-  const heightMode = isBrainRoute || isChatRoute
+  const beforeBottomGap = isPlaywrightWorkspaceRoute || isBrainRoute || isChatRoute || isDocumentosRoute || isDocsRoute ? "mb-0" : "mb-6 sm:mb-7 lg:mb-8";
+  const beforeHorizontalPad = isPlaywrightWorkspaceRoute || isBrainRoute || isDocsRoute ? "px-0" : "";
+  const heightMode = isPlaywrightWorkspaceRoute || isBrainRoute || isChatRoute
     ? "h-full overflow-hidden flex flex-col"
     : isDocsRoute
     ? "h-full overflow-hidden flex flex-col"

@@ -25,6 +25,7 @@ export type BrainRagContext = {
   permissions: {
     hasGlobalVisibility: boolean;
     allowedCompanySlugs: string[];
+    allowedProjectIds: string[];
   };
   insufficientEvidence: boolean;
 };
@@ -47,6 +48,20 @@ function normalizeText(value: unknown) {
 }
 
 export class BrainGraphRagService {
+  private wikiCompanyWhere(access: BrainAccessContext, requestedCompanySlug?: string | null) {
+    const requested = requestedCompanySlug?.trim().toLowerCase() ?? null;
+    if (access.hasGlobalVisibility) {
+      return requested ? { companySlug: requested } : undefined;
+    }
+
+    const allowedCompanySlugs = Array.from(access.allowedCompanySlugs);
+    if (requested && !access.allowedCompanySlugs.has(requested)) {
+      return { companySlug: "__no_access__" };
+    }
+
+    return { companySlug: { in: requested ? [requested] : allowedCompanySlugs } };
+  }
+
   async buildLocalContext(input: {
     nodeId: string;
     access: BrainAccessContext;
@@ -110,14 +125,18 @@ export class BrainGraphRagService {
     const rootNode = visibleNodes.find((node) => node.id === input.nodeId) ?? null;
     const keywords = rootNode ? rootNode.label.split(/\s+/).map((item) => item.trim()).filter(Boolean) : [];
 
+    const wikiCompanyWhere = this.wikiCompanyWhere(input.access);
     const documents = await prisma.wikiDoc.findMany({
-      where: keywords.length
-        ? {
-            OR: keywords.slice(0, 5).map((keyword) => ({
-              title: { contains: keyword, mode: "insensitive" },
-            })),
-          }
-        : undefined,
+      where: {
+        ...(wikiCompanyWhere ?? {}),
+        ...(keywords.length
+          ? {
+              OR: keywords.slice(0, 5).map((keyword) => ({
+                title: { contains: keyword, mode: "insensitive" },
+              })),
+            }
+          : {}),
+      },
       orderBy: { updatedAt: "desc" },
       take: maxDocs,
       select: { id: true, title: true, categoryId: true },
@@ -184,6 +203,7 @@ export class BrainGraphRagService {
       permissions: {
         hasGlobalVisibility: input.access.hasGlobalVisibility,
         allowedCompanySlugs: Array.from(input.access.allowedCompanySlugs),
+        allowedProjectIds: Array.from(input.access.allowedProjectIds),
       },
       insufficientEvidence,
     };
@@ -237,7 +257,7 @@ export class BrainGraphRagService {
     ]);
 
     const documents = await prisma.wikiDoc.findMany({
-      where: companySlug ? { companySlug } : undefined,
+      where: this.wikiCompanyWhere(input.access, companySlug),
       orderBy: { updatedAt: "desc" },
       take: 20,
       select: { id: true, title: true, categoryId: true },
@@ -297,6 +317,7 @@ export class BrainGraphRagService {
       permissions: {
         hasGlobalVisibility: input.access.hasGlobalVisibility,
         allowedCompanySlugs: Array.from(input.access.allowedCompanySlugs),
+        allowedProjectIds: Array.from(input.access.allowedProjectIds),
       },
       insufficientEvidence: filteredNodes.length === 0,
     };
@@ -372,6 +393,7 @@ export class BrainGraphRagService {
       permissions: {
         hasGlobalVisibility: input.access.hasGlobalVisibility,
         allowedCompanySlugs: Array.from(input.access.allowedCompanySlugs),
+        allowedProjectIds: Array.from(input.access.allowedProjectIds),
       },
       insufficientEvidence,
     };
@@ -386,4 +408,3 @@ export class BrainGraphRagService {
     return Array.from(ids);
   }
 }
-

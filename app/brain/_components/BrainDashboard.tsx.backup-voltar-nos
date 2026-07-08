@@ -139,7 +139,6 @@ export function BrainNeuralDashboard() {
   const [period, setPeriod] = useState<"all" | "today" | "7d" | "30d">("all");
   const [localGraphOnly, setLocalGraphOnly] = useState(false);
   const [selectedNode, setSelectedNode] = useState<BrainNode | null>(null);
-  const [nodeHistory, setNodeHistory] = useState<BrainNode[]>([]);
   const [graphSource, setGraphSource] = useState<"database" | "fallback" | "partial">("fallback");
   const [debugMode, setDebugMode] = useState(false);
   const [filterOffset, setFilterOffset] = useState({ x: 0, y: 0 });
@@ -299,22 +298,6 @@ export function BrainNeuralDashboard() {
     appliedQueryFocusRef.current = true;
   }, [graph.nodes, loadingData]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    function handleBrainPopState() {
-      const params = new URLSearchParams(window.location.search);
-      const nodeId = params.get("node");
-      const node = nodeId ? graph.nodes.find((item) => item.id === nodeId) ?? null : null;
-
-      setSelectedNode(node);
-      setLocalGraphOnly(Boolean(node));
-    }
-
-    window.addEventListener("popstate", handleBrainPopState);
-    return () => window.removeEventListener("popstate", handleBrainPopState);
-  }, [graph.nodes]);
-
   const selectedNodeConnections = useMemo(
     () => selectedNode ? visibleGraph.edges.filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id) : [],
     [selectedNode, visibleGraph.edges],
@@ -374,63 +357,14 @@ export function BrainNeuralDashboard() {
     );
   }, [activeModule, brainContext?.permissions, currentCompanyName, currentProjectName, graphSource, selectedCompanyId, selectedNode, selectedNodeConnections, selectedProfileType, selectedProjectId, visibleGraph.edges, visibleGraph.focusModule, visibleGraph.nodes, visibleOrphanNodes, visiblePendingNodes]);
 
-  function pushBrainNodeUrl(node: BrainNode | null, mode: "push" | "replace" = "push") {
-    if (typeof window === "undefined") return;
-
-    const url = new URL(window.location.href);
-
-    if (node?.id) {
-      url.searchParams.set("node", node.id);
-    } else {
-      url.searchParams.delete("node");
-    }
-
-    const state = node?.id
-      ? { source: "brain-node", nodeId: node.id }
-      : { source: "brain-core" };
-
-    if (mode === "replace") {
-      window.history.replaceState(state, "", url);
-    } else {
-      window.history.pushState(state, "", url);
-    }
-  }
-
-  function goToBrainCore() {
+  function resetScope() {
     setSelectedNode(null);
-    setNodeHistory([]);
     setActiveModule(null);
     setSelectedProfileType(null);
-    setLocalGraphOnly(false);
-    pushBrainNodeUrl(null, "replace");
-  }
-
-  function handleBackNode() {
-    const previous = nodeHistory[nodeHistory.length - 1] ?? null;
-
-    if (previous) {
-      setNodeHistory((current) => current.slice(0, -1));
-      setSelectedNode(previous);
-      setLocalGraphOnly(true);
-      pushBrainNodeUrl(previous, "replace");
-      return;
-    }
-
-    goToBrainCore();
-  }
-
-  function resetScope() {
-    goToBrainCore();
   }
 
   function handleSelectNode(node: BrainNode) {
-    if (selectedNode && selectedNode.id !== node.id) {
-      setNodeHistory((current) => [...current.filter((item) => item.id !== selectedNode.id), selectedNode].slice(-24));
-    }
-
     setSelectedNode(node);
-    setLocalGraphOnly(true);
-    pushBrainNodeUrl(node);
 
     if (node.metadata?.isScopeHub) {
       if (node.metadata.scopeType === "requests") setNodeType("access_request");
@@ -880,8 +814,6 @@ export function BrainNeuralDashboard() {
           onToggleLocalGraph={() => setLocalGraphOnly((current) => !current)}
           loading={loadingData}
           debugMode={debugMode}
-          onBackNode={handleBackNode}
-          canBackNode={Boolean(selectedNode || nodeHistory.length)}
         />
       </div>
 

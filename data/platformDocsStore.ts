@@ -11,6 +11,7 @@ export type DocBlock =
   | { id: string; type: "heading"; level: 1 | 2 | 3; text: string }
   | { id: string; type: "paragraph"; text: string }
   | { id: string; type: "card"; variant: "info" | "warning" | "danger" | "success" | "tip"; title?: string; text: string }
+  | { id: string; type: "image"; src: string; alt: string; caption?: string; href?: string }
   | { id: string; type: "code"; language: string; code: string; caption?: string }
   | { id: string; type: "list"; ordered: boolean; items: string[] }
   | { id: string; type: "divider" }

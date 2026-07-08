@@ -139,7 +139,6 @@ export function BrainNeuralDashboard() {
   const [period, setPeriod] = useState<"all" | "today" | "7d" | "30d">("all");
   const [localGraphOnly, setLocalGraphOnly] = useState(false);
   const [selectedNode, setSelectedNode] = useState<BrainNode | null>(null);
-  const [nodeHistory, setNodeHistory] = useState<BrainNode[]>([]);
   const [graphSource, setGraphSource] = useState<"database" | "fallback" | "partial">("fallback");
   const [debugMode, setDebugMode] = useState(false);
   const [filterOffset, setFilterOffset] = useState({ x: 0, y: 0 });
@@ -299,22 +298,6 @@ export function BrainNeuralDashboard() {
     appliedQueryFocusRef.current = true;
   }, [graph.nodes, loadingData]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    function handleBrainPopState() {
-      const params = new URLSearchParams(window.location.search);
-      const nodeId = params.get("node");
-      const node = nodeId ? graph.nodes.find((item) => item.id === nodeId) ?? null : null;
-
-      setSelectedNode(node);
-      setLocalGraphOnly(Boolean(node));
-    }
-
-    window.addEventListener("popstate", handleBrainPopState);
-    return () => window.removeEventListener("popstate", handleBrainPopState);
-  }, [graph.nodes]);
-
   const selectedNodeConnections = useMemo(
     () => selectedNode ? visibleGraph.edges.filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id) : [],
     [selectedNode, visibleGraph.edges],
@@ -374,63 +357,14 @@ export function BrainNeuralDashboard() {
     );
   }, [activeModule, brainContext?.permissions, currentCompanyName, currentProjectName, graphSource, selectedCompanyId, selectedNode, selectedNodeConnections, selectedProfileType, selectedProjectId, visibleGraph.edges, visibleGraph.focusModule, visibleGraph.nodes, visibleOrphanNodes, visiblePendingNodes]);
 
-  function pushBrainNodeUrl(node: BrainNode | null, mode: "push" | "replace" = "push") {
-    if (typeof window === "undefined") return;
-
-    const url = new URL(window.location.href);
-
-    if (node?.id) {
-      url.searchParams.set("node", node.id);
-    } else {
-      url.searchParams.delete("node");
-    }
-
-    const state = node?.id
-      ? { source: "brain-node", nodeId: node.id }
-      : { source: "brain-core" };
-
-    if (mode === "replace") {
-      window.history.replaceState(state, "", url);
-    } else {
-      window.history.pushState(state, "", url);
-    }
-  }
-
-  function goToBrainCore() {
+  function resetScope() {
     setSelectedNode(null);
-    setNodeHistory([]);
     setActiveModule(null);
     setSelectedProfileType(null);
-    setLocalGraphOnly(false);
-    pushBrainNodeUrl(null, "replace");
-  }
-
-  function handleBackNode() {
-    const previous = nodeHistory[nodeHistory.length - 1] ?? null;
-
-    if (previous) {
-      setNodeHistory((current) => current.slice(0, -1));
-      setSelectedNode(previous);
-      setLocalGraphOnly(true);
-      pushBrainNodeUrl(previous, "replace");
-      return;
-    }
-
-    goToBrainCore();
-  }
-
-  function resetScope() {
-    goToBrainCore();
   }
 
   function handleSelectNode(node: BrainNode) {
-    if (selectedNode && selectedNode.id !== node.id) {
-      setNodeHistory((current) => [...current.filter((item) => item.id !== selectedNode.id), selectedNode].slice(-24));
-    }
-
     setSelectedNode(node);
-    setLocalGraphOnly(true);
-    pushBrainNodeUrl(node);
 
     if (node.metadata?.isScopeHub) {
       if (node.metadata.scopeType === "requests") setNodeType("access_request");
@@ -558,13 +492,13 @@ export function BrainNeuralDashboard() {
       .trim();
 
     const degreeByNode = new Map<string, number>();
-    for (const node of graph.nodes) degreeByNode.set(node.id, 0);
-    for (const edge of graph.edges) {
+    for (const node of visibleGraph.nodes) degreeByNode.set(node.id, 0);
+    for (const edge of visibleGraph.edges) {
       degreeByNode.set(edge.source, (degreeByNode.get(edge.source) ?? 0) + 1);
       degreeByNode.set(edge.target, (degreeByNode.get(edge.target) ?? 0) + 1);
     }
 
-    const matches = graph.nodes.filter((node) => {
+    const matches = visibleGraph.nodes.filter((node) => {
       if (!query) return true;
 
       const metadata = node.metadata ?? {};
@@ -601,7 +535,7 @@ export function BrainNeuralDashboard() {
         return left.label.localeCompare(right.label, "pt-BR");
       })
       .slice(0, 10);
-  }, [graph.edges, graph.nodes, searchText]);
+  }, [searchText, visibleGraph.edges, visibleGraph.nodes]);
 
   function handleSmartFilterDragStart(event: PointerEvent<HTMLElement>) {
     if (isInteractiveTarget(event.target)) return;
@@ -632,12 +566,6 @@ export function BrainNeuralDashboard() {
   }
 
   function openNodeFromSmartFilter(node: BrainNode) {
-    setSelectedCompanyId(null);
-    setSelectedProjectId(null);
-    setNodeType("all");
-    setNodeStatus("all");
-    setShowPendingOnly(false);
-    setShowOrphansOnly(false);
     setSelectedNode(node);
     setLocalGraphOnly(true);
     setFilterCollapsed(true);
@@ -645,14 +573,8 @@ export function BrainNeuralDashboard() {
   }
 
   function applySmartContextSearch(value: string) {
-    setSelectedCompanyId(null);
-    setSelectedProjectId(null);
-    setNodeType("all");
-    setNodeStatus("all");
-    setShowPendingOnly(false);
-    setShowOrphansOnly(false);
-    setLocalGraphOnly(false);
     setSearchText(value);
+    setShowOrphansOnly(false);
     setFilterCollapsed(false);
   }
 
@@ -676,7 +598,7 @@ export function BrainNeuralDashboard() {
       {filterHelpVisible ? (
         <div className="pointer-events-none absolute -right-3 top-2 z-[-1] hidden w-56 translate-x-full rounded-2xl border border-cyan-100/20 bg-slate-950/90 p-3 text-xs font-bold leading-5 text-cyan-50 shadow-[0_18px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl xl:block">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/60">Dica rápida</p>
-          <p className="mt-1">Arraste o filtro, escolha um fluxo real do sistema e abra o nó no contexto.</p>
+          <p className="mt-1">Arraste o filtro, pesquise qualquer nó e clique em abrir para focar o contexto.</p>
         </div>
       ) : null}
 
@@ -699,7 +621,7 @@ export function BrainNeuralDashboard() {
                 Filtro inteligente
               </p>
               <p className="mt-0.5 text-xs font-bold text-slate-300">
-                {graph.nodes.length} nós · {graph.edges.length} conexões
+                {visibleGraph.nodes.length} nós · {visibleGraph.edges.length} conexões
               </p>
             </button>
 
@@ -738,45 +660,25 @@ export function BrainNeuralDashboard() {
           <div className="grid gap-2 p-3">
             <div className="grid gap-2 rounded-2xl border border-cyan-100/14 bg-cyan-100/[0.055] p-2">
               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">
-                Fluxo real do sistema
+                Use para navegar
               </p>
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchText("");
-                    setSelectedCompanyId(null);
-                    setSelectedProjectId(null);
-                    setSelectedProfileType(null);
-                    setActiveModule(null);
-                    setNodeType("all");
-                    setNodeStatus("all");
-                    setShowPendingOnly(false);
-                    setShowOrphansOnly(false);
-                    setLocalGraphOnly(false);
-                    setSelectedNode(null);
-                  }}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/80 hover:border-cyan-100/35"
-                >
-                  Todos
-                </button>
-                <button type="button" onClick={() => applySmartContextSearch("login acesso auth usuario usuário perfil permissao permissão solicitacao solicitação token session")} className="rounded-full border border-sky-100/20 bg-sky-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-sky-50">Acesso/Login</button>
-                <button type="button" onClick={() => applySmartContextSearch("empresa company projeto project application aplicacao aplicação cliente usuario usuário vinculo vínculo")} className="rounded-full border border-blue-100/20 bg-blue-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-blue-50">Empresas/Projetos</button>
-                <button type="button" onClick={() => applySmartContextSearch("brain rag memoria memória contexto log audit auditoria historico histórico")} className="rounded-full border border-cyan-100/20 bg-cyan-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-50">Brain</button>
-                <button type="button" onClick={() => applySmartContextSearch("test teste run plano case caso execucao execução resultado smoke regressao regressão")} className="rounded-full border border-emerald-100/20 bg-emerald-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-50">QA/Testes</button>
-                <button type="button" onClick={() => applySmartContextSearch("wiki documento documentacao documentação evidencia evidência manual regra conhecimento")} className="rounded-full border border-violet-100/20 bg-violet-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-violet-50">Docs/Wiki</button>
-                <button type="button" onClick={() => applySmartContextSearch("log logs auditoria audit historico histórico evento event")} className="rounded-full border border-rose-100/20 bg-rose-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-rose-50">Logs</button>
+                <button type="button" onClick={handleShowAll} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/80 hover:border-cyan-100/35">Todos</button>
+                <button type="button" onClick={() => applySmartContextSearch("login acesso usuário perfil permissão solicitação")} className="rounded-full border border-sky-100/20 bg-sky-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-sky-50">Acesso/Login</button>
+                <button type="button" onClick={() => applySmartContextSearch("brain memória contexto rag log")} className="rounded-full border border-cyan-100/20 bg-cyan-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-50">Brain</button>
+                <button type="button" onClick={() => applySmartContextSearch("test run plano case execução resultado")} className="rounded-full border border-emerald-100/20 bg-emerald-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-50">QA/Testes</button>
+                <button type="button" onClick={() => applySmartContextSearch("wiki documento documentação evidência")} className="rounded-full border border-violet-100/20 bg-violet-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-violet-50">Docs/Wiki</button>
               </div>
             </div>
 
             <label className="block rounded-xl border border-white/10 bg-black/25 px-3 py-2">
               <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
-                Buscar no Brain real
+                Buscar em todos os nós
               </span>
               <input
                 value={searchText}
                 onChange={(event) => onSearchTextChange(event.target.value)}
-                placeholder="Ex.: acesso, login, permissões, empresa, run, documentação..."
+                placeholder="Ex.: login, Brain, Quality Control, plano, run..."
                 className="mt-1 w-full bg-transparent text-sm font-bold text-white outline-none placeholder:text-slate-500"
               />
             </label>
@@ -786,7 +688,7 @@ export function BrainNeuralDashboard() {
                 <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Empresa</span>
                 <select value={selectedCompanyId ?? "all"} onChange={(event) => handleSelectCompany(event.target.value === "all" ? null : event.target.value)} className="mt-1 w-full bg-slate-950 text-xs font-bold text-white outline-none">
                   <option value="all">Todas</option>
-                  {contextCompanies.map((company) => <option key={`${company.id}:${company.name}`} value={company.id}>{company.name}</option>)}
+                  {contextCompanies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
                 </select>
               </label>
 
@@ -794,7 +696,7 @@ export function BrainNeuralDashboard() {
                 <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Projeto</span>
                 <select value={selectedProjectId ?? "all"} onChange={(event) => handleSelectProject(event.target.value === "all" ? null : event.target.value)} className="mt-1 w-full bg-slate-950 text-xs font-bold text-white outline-none">
                   <option value="all">Todos</option>
-                  {contextProjects.map((project) => <option key={`${project.id}:${project.name}`} value={project.id}>{project.name}</option>)}
+                  {contextProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                 </select>
               </label>
 
@@ -880,8 +782,6 @@ export function BrainNeuralDashboard() {
           onToggleLocalGraph={() => setLocalGraphOnly((current) => !current)}
           loading={loadingData}
           debugMode={debugMode}
-          onBackNode={handleBackNode}
-          canBackNode={Boolean(selectedNode || nodeHistory.length)}
         />
       </div>
 

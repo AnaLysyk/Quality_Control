@@ -16,6 +16,7 @@ export type BrainAccessContext = {
   canManage: boolean;
   allowedCompanySlugs: Set<string>;
   allowedCompanyIds: Set<string>;
+  allowedProjectIds: Set<string>;
 };
 
 export type BrainAccessResult =
@@ -40,6 +41,20 @@ function toRecord(value: unknown): Record<string, unknown> {
   return {};
 }
 
+function normalizeStringList(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => normalizeString(item))
+    .filter((item): item is string => Boolean(item));
+}
+
+function normalizeSlugList(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => normalizeSlug(item))
+    .filter((item): item is string => Boolean(item));
+}
+
 function normalizeKey(value: unknown) {
   const normalized = normalizeString(value);
   return normalized
@@ -61,6 +76,23 @@ function resolveAllowedCompanySlugs(user: AuthUser) {
   return slugs
     .map((slug) => normalizeSlug(slug))
     .filter((slug): slug is string => Boolean(slug));
+}
+
+async function resolveAllowedProjectIds(allowedCompanyIds: Set<string>, hasGlobalVisibility: boolean) {
+  const allowedProjectIds = new Set<string>();
+  if (hasGlobalVisibility || isE2eJsonMode() || allowedCompanyIds.size === 0) return allowedProjectIds;
+
+  const projects = await prisma.project.findMany({
+    where: { companyId: { in: Array.from(allowedCompanyIds) } },
+    select: { id: true, slug: true },
+  });
+
+  for (const project of projects) {
+    allowedProjectIds.add(project.id);
+    if (project.slug) allowedProjectIds.add(project.slug);
+  }
+
+  return allowedProjectIds;
 }
 
 function hasGlobalBrainVisibility(user: AuthUser) {
@@ -299,15 +331,35 @@ function resolveBrainNodePermissionScope(
 }
 
 function isCompanyScopeVisible(
-  scope: { companyId?: unknown; companySlug?: unknown; slug?: unknown },
+  scope: { companyId?: unknown; companySlug?: unknown; slug?: unknown; companyIds?: unknown; companySlugs?: unknown },
   access: BrainAccessContext,
 ) {
   const metadataCompanyId = normalizeString(scope.companyId);
   const metadataCompanySlug = normalizeSlug(scope.companySlug ?? scope.slug);
+  const metadataCompanyIds = normalizeStringList(scope.companyIds);
+  const metadataCompanySlugs = normalizeSlugList(scope.companySlugs);
 
   if (metadataCompanyId && access.allowedCompanyIds.has(metadataCompanyId)) return true;
   if (metadataCompanySlug && access.allowedCompanySlugs.has(metadataCompanySlug)) return true;
+  if (metadataCompanyIds.some((companyId) => access.allowedCompanyIds.has(companyId))) return true;
+  if (metadataCompanySlugs.some((companySlug) => access.allowedCompanySlugs.has(companySlug))) return true;
   return false;
+}
+
+function isProjectScopeVisible(
+  scope: { projectId?: unknown; projectSlug?: unknown; projectCode?: unknown },
+  access: BrainAccessContext,
+) {
+  if (access.hasGlobalVisibility) return true;
+
+  const metadataProjectId =
+    normalizeString(scope.projectId) ??
+    normalizeString(scope.projectSlug);
+
+  if (!metadataProjectId) return true;
+  if (access.allowedProjectIds.has(metadataProjectId)) return true;
+
+  return isE2eJsonMode() && access.allowedProjectIds.size === 0;
 }
 
 function isNonSensitiveSystemNode(node: Pick<BrainNode, "type" | "refType">) {
@@ -372,6 +424,8 @@ export async function resolveBrainAccess(req: Request, options?: { requireManage
     return { ok: false, status: 403, error: "Sem escopo de empresa para acessar o Brain" };
   }
 
+  const allowedProjectIds = await resolveAllowedProjectIds(allowedCompanyIds, hasGlobalVisibility);
+
   return {
     ok: true,
     context: {
@@ -381,6 +435,7 @@ export async function resolveBrainAccess(req: Request, options?: { requireManage
       canManage,
       allowedCompanySlugs,
       allowedCompanyIds,
+      allowedProjectIds,
     },
   };
 }
@@ -410,6 +465,8 @@ export async function buildBrainAccessContextFromAuthUser(user: AuthUser | null 
     }
   }
 
+  const allowedProjectIds = await resolveAllowedProjectIds(allowedCompanyIds, hasGlobalVisibility);
+
   return {
     user,
     userAccess,
@@ -417,6 +474,7 @@ export async function buildBrainAccessContextFromAuthUser(user: AuthUser | null 
     canManage,
     allowedCompanySlugs,
     allowedCompanyIds,
+    allowedProjectIds,
   };
 }
 
@@ -429,6 +487,7 @@ export function isBrainNodeVisible(node: Pick<BrainNode, "type" | "refType" | "r
 
   const metadataCompanyId = normalizeString(metadata.companyId);
   const metadataCompanySlug = normalizeSlug(metadata.companySlug);
+  if (!isProjectScopeVisible(metadata, access)) return false;
 
   if (node.refType === "Company" && node.refId && access.allowedCompanyIds.has(node.refId)) {
     return true;
@@ -439,8 +498,12 @@ export function isBrainNodeVisible(node: Pick<BrainNode, "type" | "refType" | "r
     if (companySlug && access.allowedCompanySlugs.has(companySlug)) return true;
   }
 
-  if (metadataCompanyId && access.allowedCompanyIds.has(metadataCompanyId)) return true;
-  if (metadataCompanySlug && access.allowedCompanySlugs.has(metadataCompanySlug)) return true;
+  if (isCompanyScopeVisible({
+    companyId: metadataCompanyId,
+    companySlug: metadataCompanySlug,
+    companyIds: metadata.companyIds,
+    companySlugs: metadata.companySlugs,
+  }, access)) return true;
   if (permissionScope === "allowed" && isNonSensitiveSystemNode(node)) return true;
 
   return false;
@@ -456,9 +519,19 @@ export function isBrainDomainNodeVisible(
   const metadata = toRecord(node.metadata);
   const nodeCompanyId = node.companyId ?? normalizeString(metadata.companyId);
   const nodeCompanySlug = normalizeString(metadata.companySlug) ?? normalizeString(metadata.slug);
+  const nodeProjectId = normalizeString(metadata.projectId) ?? normalizeString((node as { projectId?: unknown }).projectId);
+
+  if (!isProjectScopeVisible({ projectId: nodeProjectId, projectSlug: metadata.projectSlug, projectCode: metadata.projectCode }, access)) {
+    return false;
+  }
 
   if (!nodeCompanyId && !nodeCompanySlug) return true;
-  return isCompanyScopeVisible({ companyId: nodeCompanyId, companySlug: nodeCompanySlug }, access);
+  return isCompanyScopeVisible({
+    companyId: nodeCompanyId,
+    companySlug: nodeCompanySlug,
+    companyIds: metadata.companyIds,
+    companySlugs: metadata.companySlugs,
+  }, access);
 }
 
 export function filterBrainDomainGraphByAccess<
@@ -473,10 +546,20 @@ export function filterBrainDomainGraphByAccess<
     if (access.hasGlobalVisibility) return true;
 
     const metadata = toRecord(edge.metadata);
+    const edgeProjectId = normalizeString((edge as { projectId?: unknown }).projectId) ?? normalizeString(metadata.projectId);
+    if (!isProjectScopeVisible({ projectId: edgeProjectId, projectSlug: metadata.projectSlug, projectCode: metadata.projectCode }, access)) {
+      return false;
+    }
+
     const edgeCompanyId = edge.companyId ?? normalizeString(metadata.companyId);
     const edgeCompanySlug = normalizeString(metadata.companySlug) ?? normalizeString(metadata.slug);
     if (!edgeCompanyId && !edgeCompanySlug) return true;
-    return isCompanyScopeVisible({ companyId: edgeCompanyId, companySlug: edgeCompanySlug }, access);
+    return isCompanyScopeVisible({
+      companyId: edgeCompanyId,
+      companySlug: edgeCompanySlug,
+      companyIds: metadata.companyIds,
+      companySlugs: metadata.companySlugs,
+    }, access);
   });
 
   return { nodes: visibleNodes, edges: visibleEdges };
@@ -510,4 +593,3 @@ export async function assertBrainNodeAccess(nodeId: string, access: BrainAccessC
   }
   return { ok: true as const, node };
 }
-

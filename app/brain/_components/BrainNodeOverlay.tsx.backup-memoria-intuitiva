@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { FiActivity, FiExternalLink, FiMove, FiRefreshCw, FiSave, FiSearch, FiX, FiZap } from "react-icons/fi";
+import { FiActivity, FiExternalLink, FiMove, FiRefreshCw, FiSave, FiX, FiZap } from "react-icons/fi";
 import type { BrainEdge, BrainNode } from "../_types/brain.types";
 import { nodeStatusLabel, nodeTypeLabel } from "../_utils/brainGraphFormatters";
 
@@ -29,8 +29,6 @@ type BrainNodeOverlayProps = {
   onResetFocus: () => void;
   onOpenRelatedModule: (module: string) => void;
   debugMode?: boolean;
-  onBackNode?: () => void;
-  canBackNode?: boolean;
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -64,23 +62,7 @@ function readable(value: unknown): string | null {
 }
 
 function compactMetadata(node: BrainNode) {
-  const hidden = new Set([
-    "isBrainCore",
-    "isContextCore",
-    "isDetailNode",
-    "modules",
-    "key",
-    "id",
-    "refId",
-    "companyId",
-    "projectId",
-    "createdAt",
-    "updatedAt",
-    "createdBy",
-    "actorUserId",
-    "requestId",
-    "auditLogId",
-  ]);
+  const hidden = new Set(["isBrainCore", "isContextCore", "isDetailNode", "modules"]);
   return Object.entries(node.metadata ?? {})
     .filter(([key]) => !hidden.has(key))
     .map(([key, value]) => ({ key, value: readable(value) }))
@@ -123,7 +105,7 @@ function formatKey(key: string) {
   return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, onOpenRelatedModule, debugMode = false, onBackNode, canBackNode = false }: BrainNodeOverlayProps) {
+export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, onOpenRelatedModule, debugMode = false }: BrainNodeOverlayProps) {
   const relations = relationRows(node, nodes, edges);
   const relatedNodes = relations.map((item) => item.related);
   const metadata = compactMetadata(node);
@@ -131,7 +113,6 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
   const pendingItems = [...(node.missingKnowledge ?? []), ...relatedNodes.flatMap((item) => item.missingKnowledge ?? []).slice(0, 8)];
   const areaCounts = groupCounts([node, ...relatedNodes]);
   const [ragContext, setRagContext] = useState<BrainRagContext | null>(null);
-  const [ragQuery, setRagQuery] = useState(node.label);
   const [ragLoading, setRagLoading] = useState(false);
   const [memoryTitle, setMemoryTitle] = useState("");
   const [memorySummary, setMemorySummary] = useState("");
@@ -142,14 +123,12 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
 
   useEffect(() => {
     setPosition({ x: 0, y: 0 });
-    setRagQuery(node.label);
-  }, [node.id, node.label]);
+  }, [node.id]);
 
   useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams();
-    const query = ragQuery.trim() || node.label;
-    params.set("q", query);
+    params.set("q", node.label);
     params.set("module", node.module);
     params.set("limit", "8");
     setRagLoading(true);
@@ -169,7 +148,7 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
       });
 
     return () => controller.abort();
-  }, [node.id, node.label, node.module, ragQuery]);
+  }, [node.id, node.label, node.module]);
 
   function handleDragStart(event: PointerEvent<HTMLElement>) {
     if ((event.target as HTMLElement).closest("button,input,textarea,select,a")) return;
@@ -298,23 +277,9 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
 
           <section className="qc-brain-rag-context-card mt-3 rounded-2xl border border-cyan-100/14 bg-cyan-100/[0.055] p-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/55">Memórias e contexto recuperado</p><h3 className="mt-1 text-sm font-black text-white">O que o Brain encontrou para este nó</h3></div>
-              <span className="rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100">{ragLoading ? "buscando" : "contexto encontrado"}</span>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/55">Contexto RAG recuperado</p><h3 className="mt-1 text-sm font-black text-white">Memória viva deste neurônio</h3></div>
+              <span className="rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100">{ragLoading ? "buscando" : ragContext?.source ?? "contexto"}</span>
             </div>
-
-            <label className="mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-              <FiSearch className="h-4 w-4 shrink-0 text-cyan-100/70" aria-hidden />
-              <input
-                value={ragQuery}
-                onChange={(event) => setRagQuery(event.target.value)}
-                placeholder="Buscar memória, log, documento, regra ou relação deste nó..."
-                className="w-full bg-transparent text-xs font-bold text-white outline-none placeholder:text-slate-500"
-              />
-              <button type="button" onClick={() => setRagQuery(node.label)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white/70">
-                Reset
-              </button>
-            </label>
-
             {ragLoading ? <p className="mt-3 text-xs font-bold text-slate-200/78">Consultando cérebro, permissões, eventos, notas e documentos vinculados...</p> : ragContext ? (
               <div className="mt-3 grid gap-3">
                 <div className="grid gap-2 sm:grid-cols-4">
@@ -323,19 +288,19 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
                   <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Memórias</p><p className="mt-1 text-lg font-black text-white">{ragContext.summary?.memoryCount ?? ragContext.memory?.length ?? 0}</p></div>
                   <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Ações</p><p className="mt-1 text-lg font-black text-white">{ragContext.availableActions?.length ?? 0}</p></div>
                 </div>
-                {ragContext.memory?.length ? <div className="rounded-xl border border-white/10 bg-black/18 p-3"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Memórias encontradas</p><div className="mt-2 grid gap-2">{ragContext.memory.slice(0, 4).map((item) => <div key={item.id} className="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2"><p className="text-xs font-black text-slate-50">{item.title ?? item.kind ?? "Memória"}</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{item.kind ?? "contexto"}{item.status ? ` · ${item.status}` : ""}</p></div>)}</div></div> : <p className="rounded-xl border border-white/10 bg-black/18 p-3 text-xs font-bold text-slate-200/72">Nenhuma memória salva para este nó ainda. Use o campo abaixo para ensinar a regra real, ou pergunte ao Brain Chat para cruzar logs, documentos e relações.</p>}
+                {ragContext.memory?.length ? <div className="rounded-xl border border-white/10 bg-black/18 p-3"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Memórias encontradas</p><div className="mt-2 grid gap-2">{ragContext.memory.slice(0, 4).map((item) => <div key={item.id} className="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2"><p className="text-xs font-black text-slate-50">{item.title ?? item.kind ?? "Memória"}</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{item.kind ?? "contexto"}{item.status ? ` · ${item.status}` : ""}</p></div>)}</div></div> : <p className="rounded-xl border border-white/10 bg-black/18 p-3 text-xs font-bold text-slate-200/72">Nenhuma memória adicional retornou ainda. O Brain deve completar este contexto automaticamente com logs, histórico, documentos, eventos e relações do sistema.</p>}
               </div>
             ) : <p className="mt-3 text-xs font-bold text-slate-200/78">Contexto RAG ainda não respondeu para este nó.</p>}
           </section>
 
           <section className="mt-3 rounded-2xl border border-cyan-100/14 bg-slate-950/40 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Ensinar uma memória útil</p>
-            <input value={memoryTitle} onChange={(event) => setMemoryTitle(event.target.value)} placeholder="Ex.: regra real desta tela, permissão ou exceção" className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/40" />
-            <textarea value={memorySummary} onChange={(event) => setMemorySummary(event.target.value)} placeholder="Escreva a regra, vínculo, exceção ou contexto que deve ser lembrado neste nó." rows={3} className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/40" />
-            <div className="mt-2 flex items-center justify-between gap-2"><p className="text-[10px] font-bold text-slate-400">{memoryFeedback ?? "Salva uma memória manual ligada a este nó."}</p><button type="button" onClick={saveNodeMemory} disabled={savingMemory} className="inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60 disabled:opacity-60"><FiSave className="h-3.5 w-3.5" />{savingMemory ? "Salvando" : "Salvar"}</button></div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Ensinar contexto para este nó</p>
+            <input value={memoryTitle} onChange={(event) => setMemoryTitle(event.target.value)} placeholder="Título da memória" className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/40" />
+            <textarea value={memorySummary} onChange={(event) => setMemorySummary(event.target.value)} placeholder="O que o Brain precisa lembrar sobre este nó?" rows={3} className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/40" />
+            <div className="mt-2 flex items-center justify-between gap-2"><p className="text-[10px] font-bold text-slate-400">{memoryFeedback ?? "Salva contexto manual no Brain."}</p><button type="button" onClick={saveNodeMemory} disabled={savingMemory} className="inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60 disabled:opacity-60"><FiSave className="h-3.5 w-3.5" />{savingMemory ? "Salvando" : "Salvar"}</button></div>
           </section>
 
-          {metadata.length ? <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Dados úteis do nó</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{metadata.map((item) => <div key={item.key} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{formatKey(item.key)}</p><p className="mt-1 break-words text-xs font-bold text-slate-100">{item.value}</p></div>)}</div></section> : null}
+          {metadata.length ? <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Dados conhecidos</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{metadata.map((item) => <div key={item.key} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{formatKey(item.key)}</p><p className="mt-1 break-words text-xs font-bold text-slate-100">{item.value}</p></div>)}</div></section> : null}
 
           {debugMode ? <section className="mt-3 rounded-2xl border border-sky-200/18 bg-sky-200/[0.07] p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-100/70">Debug QA</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{[["nodeId", node.id], ["type", node.type], ["moduleId", node.module], ["requiredPermissions", readable(node.requiredPermissions ?? node.metadata?.requiredPermissions ?? node.metadata?.requiredPermission) ?? "nao informado"], ["visibleByPermission", String(node.visibleByPermission ?? true)], ["source", readable(node.source ?? node.metadata?.source ?? node.generatedBy ?? "initial") ?? "initial"], ["edges count", String(relations.length)], ["actions count", String(actions.length)]].map(([key, value]) => <div key={key} className="rounded-xl border border-sky-100/10 bg-black/18 px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-sky-100/45">{key}</p><p className="mt-1 break-words text-xs font-bold text-sky-50/90">{value}</p></div>)}</div></section> : null}
 
@@ -349,8 +314,7 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
         </div>
 
         <footer className="flex items-center justify-between gap-2 border-t border-white/10 bg-slate-950/72 p-3">
-          <button type="button" onClick={onBackNode ?? onResetFocus} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-white/70 hover:border-cyan-100/35 hover:text-white"><FiRefreshCw className="h-3.5 w-3.5" />{canBackNode ? "Voltar nó" : "Voltar ao núcleo"}</button>
-          <button type="button" onClick={onResetFocus} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-white/70 hover:border-cyan-100/35 hover:text-white">Núcleo Brain</button>
+          <button type="button" onClick={onResetFocus} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-white/70 hover:border-cyan-100/35 hover:text-white"><FiRefreshCw className="h-3.5 w-3.5" />Limpar foco</button>
           <button type="button" onClick={askBrainChatAboutNode} className="qc-brain-ask-chat-button inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60"><FiZap className="h-3.5 w-3.5" />Perguntar ao Brain Chat</button>
           <button type="button" onClick={() => onOpenRelatedModule(node.module)} className="inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60"><FiActivity className="h-3.5 w-3.5" />Ver área<FiExternalLink className="h-3.5 w-3.5" /></button>
         </footer>

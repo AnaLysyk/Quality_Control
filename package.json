@@ -73,7 +73,7 @@
     "test:brain:contracts": "jest --config jest.config.ts --runInBand testes/api/geral/brain-ingest-contract.test.ts testes/api/geral/brain-commands-confirmation.test.ts",
     "docs:check-api": "tsx support/functions/documentacao/verificar-cobertura-openapi.ts",
     "docs:sync-quality-control": "tsx support/functions/documentacao/sincronizar-documentacao-quality-control.ts",
-    "docs:capture-screens": "cross-env PLAYWRIGHT_USE_EXISTING=1 playwright test testes/ui/documentacao/documentacao-quality-control.spec.ts --project=chromium",
+    "docs:capture-screens": "cross-env E2E_USE_JSON=1 playwright test testes/ui/documentacao/documentacao-quality-control.spec.ts --project=chromium",
     "sonar:scan": "sonar-scanner",
     "sonar:scan:debug": "sonar-scanner -X",
     "sonar:issues": "node support/functions/infraestrutura/qualidade/baixar-problemas-sonar.mjs",

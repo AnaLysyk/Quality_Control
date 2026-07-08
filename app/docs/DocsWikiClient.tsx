@@ -5,7 +5,7 @@ import {
   FiBookOpen, FiChevronDown, FiChevronRight, FiChevronLeft, FiCode, FiDatabase,
   FiEdit2, FiGrid, FiLayers, FiMenu, FiPlus, FiSave, FiSettings,
   FiTrash2, FiX, FiAlertTriangle, FiCheckCircle, FiInfo, FiAlertCircle,
-  FiZap, FiArrowUp, FiArrowDown, FiCopy, FiCheck, FiFileText,
+  FiZap, FiArrowUp, FiArrowDown, FiCopy, FiCheck, FiFileText, FiImage,
 } from "react-icons/fi";
 import { fetchApi } from "@/lib/api";
 import styles from "./DocsWikiClient.module.css";
@@ -18,6 +18,7 @@ type DocBlock =
   | { id: string; type: "heading"; level: 1 | 2 | 3; text: string }
   | { id: string; type: "paragraph"; text: string }
   | { id: string; type: "card"; variant: "info" | "warning" | "danger" | "success" | "tip"; title?: string; text: string }
+  | { id: string; type: "image"; src: string; alt: string; caption?: string; href?: string }
   | { id: string; type: "code"; language: string; code: string; caption?: string }
   | { id: string; type: "list"; ordered: boolean; items: string[] }
   | { id: string; type: "divider" }
@@ -84,6 +85,7 @@ function CategoryIcon({ icon }: { icon?: string }) {
 
 function BlockViewer({ block }: { block: DocBlock }) {
   const [copied, setCopied] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   if (block.type === "heading") {
     const classes = block.level === 1
@@ -106,6 +108,39 @@ function BlockViewer({ block }: { block: DocBlock }) {
 
   if (block.type === "divider") {
     return <hr className="my-6 border-t border-[#e5e7eb]" />;
+  }
+
+  if (block.type === "image") {
+    const image = imageError ? (
+      <div className="flex min-h-44 flex-col items-center justify-center gap-2 bg-[#f9fafb] px-4 py-8 text-center text-sm text-[#6b7280]">
+        <FiImage size={28} className="text-[#9ca3af]" />
+        <p className="font-semibold text-[#374151]">Print ainda não disponível</p>
+        <p className="break-all text-xs">{block.src}</p>
+      </div>
+    ) : (
+      <img
+        src={block.src}
+        alt={block.alt}
+        className="w-full rounded-lg object-contain"
+        loading="lazy"
+        onError={() => setImageError(true)}
+      />
+    );
+
+    return (
+      <figure className="mb-4 overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#ffffff]">
+        {block.href ? (
+          <a href={block.href} target="_blank" rel="noreferrer" className="block hover:opacity-95">
+            {image}
+          </a>
+        ) : image}
+        {(block.caption || block.alt) && (
+          <figcaption className="border-t border-[#f3f4f6] bg-[#f9fafb] px-4 py-2 text-xs text-[#6b7280]">
+            {block.caption || block.alt}
+          </figcaption>
+        )}
+      </figure>
+    );
   }
 
   if (block.type === "list") {
@@ -343,6 +378,41 @@ function BlockEditor({
           placeholder="Código..."
           rows={5}
           className="w-full border border-[#e5e7eb] rounded px-2 py-1 text-xs font-mono text-[#374151] bg-[#f9fafb] outline-none focus:border-[#6366f1] resize-y"
+        />
+      </div>
+    ));
+  }
+
+  if (block.type === "image") {
+    return wrap("Imagem / print", (
+      <div className="space-y-2">
+        <input
+          type="text"
+          value={block.src}
+          onChange={(e) => onUpdate({ ...block, src: e.target.value })}
+          placeholder="Caminho da imagem, ex: /docs/quality-control/screenshots/documentacao.png"
+          className="w-full border border-[#e5e7eb] rounded px-2 py-1 text-xs text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1]"
+        />
+        <input
+          type="text"
+          value={block.alt}
+          onChange={(e) => onUpdate({ ...block, alt: e.target.value })}
+          placeholder="Texto alternativo"
+          className="w-full border border-[#e5e7eb] rounded px-2 py-1 text-xs text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1]"
+        />
+        <input
+          type="text"
+          value={block.caption ?? ""}
+          onChange={(e) => onUpdate({ ...block, caption: e.target.value || undefined })}
+          placeholder="Legenda (opcional)"
+          className="w-full border border-[#e5e7eb] rounded px-2 py-1 text-xs text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1]"
+        />
+        <input
+          type="text"
+          value={block.href ?? ""}
+          onChange={(e) => onUpdate({ ...block, href: e.target.value || undefined })}
+          placeholder="Link ao clicar (opcional)"
+          className="w-full border border-[#e5e7eb] rounded px-2 py-1 text-xs text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1]"
         />
       </div>
     ));
@@ -875,6 +945,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
     if (type === "heading") newBlock = { id, type: "heading", level: 2, text: "" };
     else if (type === "paragraph") newBlock = { id, type: "paragraph", text: "" };
     else if (type === "card") newBlock = { id, type: "card", variant: "info", text: "" };
+    else if (type === "image") newBlock = { id, type: "image", src: "", alt: "" };
     else if (type === "code") newBlock = { id, type: "code", language: "typescript", code: "" };
     else if (type === "list") newBlock = { id, type: "list", ordered: false, items: [""] };
     else if (type === "divider") newBlock = { id, type: "divider" };
@@ -1183,13 +1254,14 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
               </button>
               {addBlockOpen && (
                 <div className="absolute top-full left-0 mt-1 w-44 rounded-lg border border-[#e5e7eb] bg-[#ffffff] shadow-lg z-10 overflow-hidden">
-                  {(["heading","paragraph","card","code","list","divider","table"] as DocBlock["type"][]).map((t) => (
+                  {(["heading","paragraph","card","image","code","list","divider","table"] as DocBlock["type"][]).map((t) => (
                     <button
                       key={t}
                       onClick={() => addBlock(t)}
                       className="w-full text-left px-3 py-2 text-sm text-[#374151] hover:bg-[#f3f4f6] capitalize"
                     >
                       {t === "heading" ? "Título" : t === "paragraph" ? "Parágrafo" : t === "card" ? "Card" :
+                       t === "image" ? "Imagem / print" :
                        t === "code" ? "Código" : t === "list" ? "Lista" : t === "divider" ? "Divisor" : "Tabela"}
                     </button>
                   ))}
@@ -1359,4 +1431,3 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
     </div>
   );
 }
-

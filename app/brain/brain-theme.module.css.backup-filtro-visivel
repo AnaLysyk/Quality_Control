@@ -1,4 +1,4 @@
-﻿.brainTheme {
+.brainTheme {
   --brain-bg: #020713;
   --brain-panel: rgba(3, 10, 24, 0.86);
   --brain-node-bg: rgba(3, 13, 29, 0.92);
@@ -116,11 +116,11 @@
 }
 
 .brainTheme :global(.brain-filter-hud) {
-  position: fixed !important;
-  left: 236px !important;
-  top: 7.25rem !important;
+  position: absolute !important;
+  left: 1rem !important;
+  top: 1rem !important;
   right: auto !important;
-  width: min(470px, calc(100vw - 252px)) !important;
+  width: min(430px, calc(100% - 2rem)) !important;
   margin: 0 !important;
   transform: none !important;
   z-index: 2147483000 !important;

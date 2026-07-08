@@ -7,6 +7,7 @@ import type { BrainContextCompany, BrainContextProject, BrainContextResponse, Br
 import { buildAccessRequestsBrainGraph } from "../_utils/brainGraphBuilder";
 import { getVisibleGraph } from "../_utils/brainGraphLayout";
 import { getBrainProfileTypes } from "../_utils/brainProfileGraphView";
+import { BrainContextSelector } from "./BrainContextSelector";
 import { BrainNeuralCanvas } from "./BrainNeuralCanvas";
 
 function uniqueById<T extends { id: string }>(items: T[]) {
@@ -139,12 +140,9 @@ export function BrainNeuralDashboard() {
   const [period, setPeriod] = useState<"all" | "today" | "7d" | "30d">("all");
   const [localGraphOnly, setLocalGraphOnly] = useState(false);
   const [selectedNode, setSelectedNode] = useState<BrainNode | null>(null);
-  const [nodeHistory, setNodeHistory] = useState<BrainNode[]>([]);
   const [graphSource, setGraphSource] = useState<"database" | "fallback" | "partial">("fallback");
   const [debugMode, setDebugMode] = useState(false);
   const [filterOffset, setFilterOffset] = useState({ x: 0, y: 0 });
-  const [filterCollapsed, setFilterCollapsed] = useState(false);
-  const [filterHelpVisible, setFilterHelpVisible] = useState(true);
   const dragRef = useRef<{ pointerId: number; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
   const appliedQueryFocusRef = useRef(false);
 
@@ -299,22 +297,6 @@ export function BrainNeuralDashboard() {
     appliedQueryFocusRef.current = true;
   }, [graph.nodes, loadingData]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    function handleBrainPopState() {
-      const params = new URLSearchParams(window.location.search);
-      const nodeId = params.get("node");
-      const node = nodeId ? graph.nodes.find((item) => item.id === nodeId) ?? null : null;
-
-      setSelectedNode(node);
-      setLocalGraphOnly(Boolean(node));
-    }
-
-    window.addEventListener("popstate", handleBrainPopState);
-    return () => window.removeEventListener("popstate", handleBrainPopState);
-  }, [graph.nodes]);
-
   const selectedNodeConnections = useMemo(
     () => selectedNode ? visibleGraph.edges.filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id) : [],
     [selectedNode, visibleGraph.edges],
@@ -374,63 +356,14 @@ export function BrainNeuralDashboard() {
     );
   }, [activeModule, brainContext?.permissions, currentCompanyName, currentProjectName, graphSource, selectedCompanyId, selectedNode, selectedNodeConnections, selectedProfileType, selectedProjectId, visibleGraph.edges, visibleGraph.focusModule, visibleGraph.nodes, visibleOrphanNodes, visiblePendingNodes]);
 
-  function pushBrainNodeUrl(node: BrainNode | null, mode: "push" | "replace" = "push") {
-    if (typeof window === "undefined") return;
-
-    const url = new URL(window.location.href);
-
-    if (node?.id) {
-      url.searchParams.set("node", node.id);
-    } else {
-      url.searchParams.delete("node");
-    }
-
-    const state = node?.id
-      ? { source: "brain-node", nodeId: node.id }
-      : { source: "brain-core" };
-
-    if (mode === "replace") {
-      window.history.replaceState(state, "", url);
-    } else {
-      window.history.pushState(state, "", url);
-    }
-  }
-
-  function goToBrainCore() {
+  function resetScope() {
     setSelectedNode(null);
-    setNodeHistory([]);
     setActiveModule(null);
     setSelectedProfileType(null);
-    setLocalGraphOnly(false);
-    pushBrainNodeUrl(null, "replace");
-  }
-
-  function handleBackNode() {
-    const previous = nodeHistory[nodeHistory.length - 1] ?? null;
-
-    if (previous) {
-      setNodeHistory((current) => current.slice(0, -1));
-      setSelectedNode(previous);
-      setLocalGraphOnly(true);
-      pushBrainNodeUrl(previous, "replace");
-      return;
-    }
-
-    goToBrainCore();
-  }
-
-  function resetScope() {
-    goToBrainCore();
   }
 
   function handleSelectNode(node: BrainNode) {
-    if (selectedNode && selectedNode.id !== node.id) {
-      setNodeHistory((current) => [...current.filter((item) => item.id !== selectedNode.id), selectedNode].slice(-24));
-    }
-
     setSelectedNode(node);
-    setLocalGraphOnly(true);
-    pushBrainNodeUrl(node);
 
     if (node.metadata?.isScopeHub) {
       if (node.metadata.scopeType === "requests") setNodeType("access_request");
@@ -550,321 +483,69 @@ export function BrainNeuralDashboard() {
     if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
   }
 
-  const smartFilterResults = useMemo(() => {
-    const query = searchText
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\\u0300-\\u036f]/g, "")
-      .trim();
-
-    const degreeByNode = new Map<string, number>();
-    for (const node of graph.nodes) degreeByNode.set(node.id, 0);
-    for (const edge of graph.edges) {
-      degreeByNode.set(edge.source, (degreeByNode.get(edge.source) ?? 0) + 1);
-      degreeByNode.set(edge.target, (degreeByNode.get(edge.target) ?? 0) + 1);
-    }
-
-    const matches = graph.nodes.filter((node) => {
-      if (!query) return true;
-
-      const metadata = node.metadata ?? {};
-      const haystack = [
-        node.label,
-        node.type,
-        node.module,
-        node.status,
-        node.description,
-        node.information,
-        node.companyName,
-        node.projectName,
-        node.refType,
-        node.refId,
-        typeof metadata.route === "string" ? metadata.route : "",
-        typeof metadata.source === "string" ? metadata.source : "",
-        typeof metadata.entityType === "string" ? metadata.entityType : "",
-        ...(node.missingKnowledge ?? []),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\\u0300-\\u036f]/g, "");
-
-      return haystack.includes(query);
-    });
-
-    return matches
-      .sort((left, right) => {
-        const rightDegree = degreeByNode.get(right.id) ?? 0;
-        const leftDegree = degreeByNode.get(left.id) ?? 0;
-        if (rightDegree !== leftDegree) return rightDegree - leftDegree;
-        return left.label.localeCompare(right.label, "pt-BR");
-      })
-      .slice(0, 10);
-  }, [graph.edges, graph.nodes, searchText]);
-
-  function handleSmartFilterDragStart(event: PointerEvent<HTMLElement>) {
-    if (isInteractiveTarget(event.target)) return;
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      baseX: filterOffset.x,
-      baseY: filterOffset.y,
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }
-
-  function handleSmartFilterDragMove(event: PointerEvent<HTMLElement>) {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    setFilterOffset({
-      x: drag.baseX + event.clientX - drag.startX,
-      y: drag.baseY + event.clientY - drag.startY,
-    });
-  }
-
-  function handleSmartFilterDragEnd(event: PointerEvent<HTMLElement>) {
-    if (dragRef.current?.pointerId === event.pointerId) {
-      dragRef.current = null;
-    }
-  }
-
-  function openNodeFromSmartFilter(node: BrainNode) {
-    setSelectedCompanyId(null);
-    setSelectedProjectId(null);
-    setNodeType("all");
-    setNodeStatus("all");
-    setShowPendingOnly(false);
-    setShowOrphansOnly(false);
-    setSelectedNode(node);
-    setLocalGraphOnly(true);
-    setFilterCollapsed(true);
-    setSearchText(node.label);
-  }
-
-  function applySmartContextSearch(value: string) {
-    setSelectedCompanyId(null);
-    setSelectedProjectId(null);
-    setNodeType("all");
-    setNodeStatus("all");
-    setShowPendingOnly(false);
-    setShowOrphansOnly(false);
-    setLocalGraphOnly(false);
-    setSearchText(value);
-    setFilterCollapsed(false);
-  }
-
-  const nodeTypeOptions = Array.from(
-    new Set(graph.nodes.map((node) => node.type).filter((value): value is BrainNodeType => Boolean(value))),
-  ).sort();
-
-  const nodeStatusOptions = Array.from(
-    new Set(graph.nodes.map((node) => node.status).filter((value): value is BrainNodeStatus => Boolean(value))),
-  ).sort();
-
   const filterHud = (
-    <aside
-      className="pointer-events-auto fixed z-[2147483000] text-white"
+    <div
+      className="brain-filter-hud pointer-events-auto"
       style={{
-        left: 252 + filterOffset.x,
-        top: 96 + filterOffset.y,
-        width: filterCollapsed ? 210 : "min(470px, calc(100vw - 286px))",
+        position: "fixed",
+        left: `calc(220px + ${filterOffset.x}px)`,
+        top: `calc(7.25rem + ${filterOffset.y}px)`,
+        width: "min(470px, calc(100vw - 252px))",
+        zIndex: 2147483000,
       }}
+      onPointerDown={handleFilterPointerDown}
+      onPointerMove={handleFilterPointerMove}
+      onPointerUp={handleFilterPointerUp}
+      onPointerCancel={handleFilterPointerUp}
     >
-      {filterHelpVisible ? (
-        <div className="pointer-events-none absolute -right-3 top-2 z-[-1] hidden w-56 translate-x-full rounded-2xl border border-cyan-100/20 bg-slate-950/90 p-3 text-xs font-bold leading-5 text-cyan-50 shadow-[0_18px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl xl:block">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/60">Dica rápida</p>
-          <p className="mt-1">Arraste o filtro, escolha um fluxo real do sistema e abra o nó no contexto.</p>
-        </div>
-      ) : null}
-
-      <div
-        className="overflow-hidden rounded-[24px] border border-cyan-100/20 bg-slate-950/90 shadow-[0_18px_70px_rgba(0,0,0,0.46)] backdrop-blur-xl"
-        onPointerDown={handleSmartFilterDragStart}
-        onPointerMove={handleSmartFilterDragMove}
-        onPointerUp={handleSmartFilterDragEnd}
-        onPointerCancel={handleSmartFilterDragEnd}
-      >
-        <header className="cursor-move border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_36%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(88,28,135,0.34))] p-3">
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => setFilterCollapsed((current) => !current)}
-              className="text-left"
-              title="Recolher ou expandir filtro do Brain"
-            >
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/60">
-                Filtro inteligente
-              </p>
-              <p className="mt-0.5 text-xs font-bold text-slate-300">
-                {graph.nodes.length} nós · {graph.edges.length} conexões
-              </p>
-            </button>
-
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setFilterHelpVisible((current) => !current)}
-                className="rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/70 hover:border-cyan-100/35"
-                title="Mostrar dicas de uso"
-              >
-                ?
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterCollapsed((current) => !current)}
-                className="rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/70 hover:border-cyan-100/35"
-              >
-                {filterCollapsed ? "Abrir" : "Recolher"}
-              </button>
-            </div>
-          </div>
-
-          {filterCollapsed ? (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <span className="rounded-full border border-cyan-100/20 bg-cyan-100/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-cyan-50">
-                Arrastável
-              </span>
-              <span className="rounded-full border border-emerald-100/20 bg-emerald-100/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-50">
-                Busca
-              </span>
-            </div>
-          ) : null}
-        </header>
-
-        {!filterCollapsed ? (
-          <div className="grid gap-2 p-3">
-            <div className="grid gap-2 rounded-2xl border border-cyan-100/14 bg-cyan-100/[0.055] p-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">
-                Fluxo real do sistema
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchText("");
-                    setSelectedCompanyId(null);
-                    setSelectedProjectId(null);
-                    setSelectedProfileType(null);
-                    setActiveModule(null);
-                    setNodeType("all");
-                    setNodeStatus("all");
-                    setShowPendingOnly(false);
-                    setShowOrphansOnly(false);
-                    setLocalGraphOnly(false);
-                    setSelectedNode(null);
-                  }}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/80 hover:border-cyan-100/35"
-                >
-                  Todos
-                </button>
-                <button type="button" onClick={() => applySmartContextSearch("login acesso auth usuario usuário perfil permissao permissão solicitacao solicitação token session")} className="rounded-full border border-sky-100/20 bg-sky-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-sky-50">Acesso/Login</button>
-                <button type="button" onClick={() => applySmartContextSearch("empresa company projeto project application aplicacao aplicação cliente usuario usuário vinculo vínculo")} className="rounded-full border border-blue-100/20 bg-blue-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-blue-50">Empresas/Projetos</button>
-                <button type="button" onClick={() => applySmartContextSearch("brain rag memoria memória contexto log audit auditoria historico histórico")} className="rounded-full border border-cyan-100/20 bg-cyan-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-50">Brain</button>
-                <button type="button" onClick={() => applySmartContextSearch("test teste run plano case caso execucao execução resultado smoke regressao regressão")} className="rounded-full border border-emerald-100/20 bg-emerald-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-50">QA/Testes</button>
-                <button type="button" onClick={() => applySmartContextSearch("wiki documento documentacao documentação evidencia evidência manual regra conhecimento")} className="rounded-full border border-violet-100/20 bg-violet-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-violet-50">Docs/Wiki</button>
-                <button type="button" onClick={() => applySmartContextSearch("log logs auditoria audit historico histórico evento event")} className="rounded-full border border-rose-100/20 bg-rose-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-rose-50">Logs</button>
-              </div>
-            </div>
-
-            <label className="block rounded-xl border border-white/10 bg-black/25 px-3 py-2">
-              <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
-                Buscar no Brain real
-              </span>
-              <input
-                value={searchText}
-                onChange={(event) => onSearchTextChange(event.target.value)}
-                placeholder="Ex.: acesso, login, permissões, empresa, run, documentação..."
-                className="mt-1 w-full bg-transparent text-sm font-bold text-white outline-none placeholder:text-slate-500"
-              />
-            </label>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              <label className="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
-                <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Empresa</span>
-                <select value={selectedCompanyId ?? "all"} onChange={(event) => handleSelectCompany(event.target.value === "all" ? null : event.target.value)} className="mt-1 w-full bg-slate-950 text-xs font-bold text-white outline-none">
-                  <option value="all">Todas</option>
-                  {contextCompanies.map((company) => <option key={`${company.id}:${company.name}`} value={company.id}>{company.name}</option>)}
-                </select>
-              </label>
-
-              <label className="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
-                <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Projeto</span>
-                <select value={selectedProjectId ?? "all"} onChange={(event) => handleSelectProject(event.target.value === "all" ? null : event.target.value)} className="mt-1 w-full bg-slate-950 text-xs font-bold text-white outline-none">
-                  <option value="all">Todos</option>
-                  {contextProjects.map((project) => <option key={`${project.id}:${project.name}`} value={project.id}>{project.name}</option>)}
-                </select>
-              </label>
-
-              <label className="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
-                <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Tipo</span>
-                <select value={nodeType} onChange={(event) => setNodeType(event.target.value as BrainNodeType | "all")} className="mt-1 w-full bg-slate-950 text-xs font-bold text-white outline-none">
-                  <option value="all">Todos</option>
-                  {nodeTypeOptions.map((type) => <option key={type} value={type}>{type}</option>)}
-                </select>
-              </label>
-
-              <label className="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
-                <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Status</span>
-                <select value={nodeStatus} onChange={(event) => setNodeStatus(event.target.value as BrainNodeStatus | "all")} className="mt-1 w-full bg-slate-950 text-xs font-bold text-white outline-none">
-                  <option value="all">Todos</option>
-                  {nodeStatusOptions.map((status) => <option key={status} value={status}>{status}</option>)}
-                </select>
-              </label>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => setLocalGraphOnly((current) => !current)} data-active={localGraphOnly ? "true" : "false"} className="rounded-full border border-cyan-100/20 bg-cyan-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-50 data-[active=true]:bg-cyan-300/25">Grafo local</button>
-              <button type="button" onClick={() => setShowPendingOnly((current) => !current)} data-active={showPendingOnly ? "true" : "false"} className="rounded-full border border-amber-100/20 bg-amber-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-amber-50 data-[active=true]:bg-amber-300/25">Pendências</button>
-              <button type="button" onClick={() => setShowOrphansOnly((current) => !current)} data-active={showOrphansOnly ? "true" : "false"} className="rounded-full border border-rose-100/20 bg-rose-100/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-rose-50 data-[active=true]:bg-rose-300/25">Órfãos</button>
-              <button type="button" onClick={loadBrainData} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/75 hover:border-cyan-100/35">Atualizar</button>
-            </div>
-
-            <section className="rounded-2xl border border-white/10 bg-black/20 p-2">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">
-                  Nós encontrados
-                </p>
-                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-white/60">
-                  Clique para abrir
-                </span>
-              </div>
-
-              <div className="mt-2 grid max-h-56 gap-2 overflow-y-auto pr-1">
-                {smartFilterResults.map((node) => (
-                  <button
-                    key={node.id}
-                    type="button"
-                    onClick={() => openNodeFromSmartFilter(node)}
-                    className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-left hover:border-cyan-100/35 hover:bg-cyan-100/[0.08]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-black text-white">{node.label}</p>
-                        <p className="mt-1 truncate text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                          {(node.type || "contexto")} · {(node.module || "Brain")}
-                        </p>
-                      </div>
-                      <span className="shrink-0 rounded-full border border-cyan-100/20 bg-cyan-100/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-cyan-50">
-                        Abrir
-                      </span>
-                    </div>
-                  </button>
-                ))}
-
-                {!smartFilterResults.length ? (
-                  <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">
-                    Nenhum nó encontrado neste contexto.
-                  </p>
-                ) : null}
-              </div>
-            </section>
-          </div>
-        ) : null}
+      <div className="qc-brain-filter-summary-chips mb-2">
+        <span>1. Escolha o perfil</span>
+        <button type="button" onClick={() => handleSelectProfile(null)} data-active={!selectedProfileType ? "true" : "false"} className="qc-brain-filter-chip">
+          Todos os perfis
+        </button>
+        {profileTypes.slice(0, 8).map((profile) => (
+          <button key={profile} type="button" onClick={() => handleSelectProfile(profile)} data-active={selectedProfileType === profile ? "true" : "false"} className="qc-brain-filter-chip">
+            {profile}
+          </button>
+        ))}
       </div>
-    </aside>
+      <BrainContextSelector
+        nodes={graph.nodes}
+        companies={contextCompanies}
+        projects={contextProjects}
+        selectedCompanyId={selectedCompanyId}
+        selectedProjectId={selectedProjectId}
+        activeModule={activeModule}
+        searchText={searchText}
+        nodeType={nodeType}
+        nodeStatus={nodeStatus}
+        period={period}
+        showOrphansOnly={showOrphansOnly}
+        showPendingOnly={showPendingOnly}
+        visibleNodeCount={visibleGraph.nodes.length}
+        visibleEdgeCount={visibleGraph.edges.length}
+        pendingCount={visiblePendingNodes.length}
+        source={graphSource}
+        onCompanyChange={handleSelectCompany}
+        onProjectChange={handleSelectProject}
+        onModuleChange={handleSelectModule}
+        onSearchTextChange={setSearchText}
+        onNodeTypeChange={setNodeType}
+        onNodeStatusChange={setNodeStatus}
+        onPeriodChange={setPeriod}
+        onClear={handleShowAll}
+        onTogglePending={() => {
+          setShowPendingOnly((current) => !current);
+          setShowOrphansOnly(false);
+        }}
+        onToggleOrphans={() => {
+          setShowOrphansOnly((current) => !current);
+          setShowPendingOnly(false);
+        }}
+        onCenter={resetScope}
+        onRefresh={loadBrainData}
+      />
+    </div>
   );
 
   return (
@@ -880,8 +561,6 @@ export function BrainNeuralDashboard() {
           onToggleLocalGraph={() => setLocalGraphOnly((current) => !current)}
           loading={loadingData}
           debugMode={debugMode}
-          onBackNode={handleBackNode}
-          canBackNode={Boolean(selectedNode || nodeHistory.length)}
         />
       </div>
 

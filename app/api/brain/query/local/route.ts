@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
 import { BrainGraphRagService } from "@/lib/brain/graphRagService";
 
 export async function POST(req: Request) {
@@ -23,6 +23,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "nodeId e obrigatorio" }, { status: 400 });
     }
 
+    const nodeAccess = await assertBrainNodeAccess(body.nodeId, accessResult.context);
+    if (!nodeAccess.ok) {
+      return NextResponse.json({ error: nodeAccess.error }, { status: nodeAccess.status });
+    }
+
     const service = new BrainGraphRagService();
     const context = await service.buildLocalContext({
       nodeId: body.nodeId,
@@ -40,4 +45,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao montar contexto local do Brain" }, { status: 500 });
   }
 }
-

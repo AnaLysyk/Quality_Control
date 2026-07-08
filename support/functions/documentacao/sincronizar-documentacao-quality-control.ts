@@ -137,49 +137,52 @@ async function readExistingCompanyDocs(prisma: PrismaClientLike, companySlug: st
 async function writeCompanyDocs(prisma: PrismaClientLike, companySlug: string) {
   const officialStore = buildQualityControlOfficialDocsStore();
   const existingStore = await readExistingCompanyDocs(prisma, companySlug);
-  const merged = mergePlatformDocsStore(existingStore, officialStore);
+  const merged = mergePlatformDocsStore(officialStore, existingStore);
 
-  await prisma.$transaction(async (tx) => {
-    await tx.wikiDoc.deleteMany({ where: { companySlug } });
-    await tx.wikiCategory.deleteMany({ where: { companySlug } });
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.wikiDoc.deleteMany({ where: { companySlug } });
+      await tx.wikiCategory.deleteMany({ where: { companySlug } });
 
-    for (const category of merged.categories) {
-      await tx.wikiCategory.create({
-        data: {
-          id: category.id,
-          companySlug,
-          slug: category.slug,
-          title: category.title,
-          description: category.description ?? null,
-          icon: category.icon ?? null,
-          order: category.order,
-          createdBy: category.createdBy ?? null,
-          createdAt: new Date(category.createdAt),
-          updatedAt: new Date(category.updatedAt),
-        },
-      });
-    }
+      for (const category of merged.categories) {
+        await tx.wikiCategory.create({
+          data: {
+            id: category.id,
+            companySlug,
+            slug: category.slug,
+            title: category.title,
+            description: category.description ?? null,
+            icon: category.icon ?? null,
+            order: category.order,
+            createdBy: category.createdBy ?? null,
+            createdAt: new Date(category.createdAt),
+            updatedAt: new Date(category.updatedAt),
+          },
+        });
+      }
 
-    for (const doc of merged.docs) {
-      await tx.wikiDoc.create({
-        data: {
-          id: doc.id,
-          categoryId: doc.categoryId,
-          companySlug,
-          slug: doc.slug,
-          title: doc.title,
-          description: doc.description ?? null,
-          status: doc.status,
-          order: doc.order,
-          blocks: doc.blocks as object,
-          createdBy: doc.createdBy ?? null,
-          updatedBy: doc.updatedBy ?? null,
-          createdAt: new Date(doc.createdAt),
-          updatedAt: new Date(doc.updatedAt),
-        },
-      });
-    }
-  });
+      for (const doc of merged.docs) {
+        await tx.wikiDoc.create({
+          data: {
+            id: doc.id,
+            categoryId: doc.categoryId,
+            companySlug,
+            slug: doc.slug,
+            title: doc.title,
+            description: doc.description ?? null,
+            status: doc.status,
+            order: doc.order,
+            blocks: doc.blocks as object,
+            createdBy: doc.createdBy ?? null,
+            updatedBy: doc.updatedBy ?? null,
+            createdAt: new Date(doc.createdAt),
+            updatedAt: new Date(doc.updatedAt),
+          },
+        });
+      }
+    },
+    { maxWait: 10_000, timeout: 30_000 },
+  );
 
   return merged;
 }

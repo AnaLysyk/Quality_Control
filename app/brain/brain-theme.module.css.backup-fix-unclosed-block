@@ -341,8 +341,14 @@
 
 @media (max-width: 900px) {
   .brainTheme :global(.brain-filter-hud) {
-    top: 0.75rem !important;
-    left: 0.75rem !important;
-    width: calc(100% - 1.5rem) !important;
-  }
+  position: fixed !important;
+  left: 236px !important;
+  top: 7.25rem !important;
+  right: auto !important;
+  width: min(470px, calc(100vw - 252px)) !important;
+  margin: 0 !important;
+  transform: none !important;
+  z-index: 2147483000 !important;
+  pointer-events: auto !important;
 }
+

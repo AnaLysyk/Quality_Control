@@ -31,7 +31,22 @@ function getPrimaryDatabaseUrl() {
 }
 
 function getConfiguredBrainDatabaseUrl() {
-  return process.env.BRAIN_DATABASE_URL ?? process.env.BRAIN_RAG_DATABASE_URL ?? process.env.PRISMA_DATABASE_URL ?? null;
+  const brainDatabaseUrl = process.env.BRAIN_DATABASE_URL?.trim() || null;
+  const legacyRagDatabaseUrl = process.env.BRAIN_RAG_DATABASE_URL?.trim() || null;
+
+  if (
+    brainDatabaseUrl &&
+    legacyRagDatabaseUrl &&
+    normalizeDatabaseUrl(brainDatabaseUrl) !== normalizeDatabaseUrl(legacyRagDatabaseUrl)
+  ) {
+    throw new Error("BRAIN_DATABASE_URL and BRAIN_RAG_DATABASE_URL point to different databases. Use BRAIN_DATABASE_URL as the canonical Brain/RAG database URL.");
+  }
+
+  if (!brainDatabaseUrl && legacyRagDatabaseUrl && process.env.NODE_ENV !== "production") {
+    console.warn("[brain] BRAIN_RAG_DATABASE_URL is deprecated. Prefer BRAIN_DATABASE_URL for the Brain/RAG database.");
+  }
+
+  return brainDatabaseUrl ?? legacyRagDatabaseUrl;
 }
 
 function normalizeDatabaseUrl(value: string) {
@@ -47,32 +62,58 @@ function normalizeDatabaseUrl(value: string) {
   }
 }
 
+function deploymentEnvironment() {
+  return (
+    process.env.BRAIN_ENV ??
+    process.env.APP_ENV ??
+    process.env.NEXT_PUBLIC_APP_ENV ??
+    process.env.VERCEL_ENV ??
+    process.env.NODE_ENV ??
+    "development"
+  ).trim().toLowerCase();
+}
+
+function isLocalDevelopmentEnvironment() {
+  const env = deploymentEnvironment();
+  if (["production", "prod", "homolog", "homologacao", "homologation", "staging", "stage", "preview"].includes(env)) {
+    return false;
+  }
+  if (process.env.RENDER_SERVICE_ID || process.env.RENDER_EXTERNAL_HOSTNAME || process.env.VERCEL) return false;
+  return ["development", "dev", "local", "test"].includes(env);
+}
+
 function canUsePrimaryDatabaseAsBrainFallback() {
-  return process.env.NODE_ENV !== "production" || process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "true";
+  return isLocalDevelopmentEnvironment() && process.env.BRAIN_ALLOW_PRIMARY_DATABASE !== "false";
 }
 
 function getBrainDatabaseUrl() {
   const brainDatabaseUrl = getConfiguredBrainDatabaseUrl();
   const primaryDatabaseUrl = getPrimaryDatabaseUrl();
+  const isLocalEnvironment = isLocalDevelopmentEnvironment();
 
   if (!brainDatabaseUrl) {
     if (primaryDatabaseUrl && canUsePrimaryDatabaseAsBrainFallback()) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[brain] BRAIN_DATABASE_URL ausente. Usando DATABASE_URL como fallback local temporario do RAG.");
-      }
+      console.warn("[brain] BRAIN_DATABASE_URL ausente. Usando DATABASE_URL como fallback apenas em dev/local.");
       return primaryDatabaseUrl;
     }
 
-    throw new Error("BRAIN_DATABASE_URL, BRAIN_RAG_DATABASE_URL or PRISMA_DATABASE_URL is required for Brain RAG tables.");
+    throw new Error("BRAIN_DATABASE_URL is required for Brain/RAG tables outside local development. Set BRAIN_DATABASE_URL or explicitly enable local fallback.");
   }
 
-  if (
+  const usesPrimaryDatabase =
     primaryDatabaseUrl &&
-    normalizeDatabaseUrl(primaryDatabaseUrl) === normalizeDatabaseUrl(brainDatabaseUrl) &&
-    process.env.BRAIN_ALLOW_PRIMARY_DATABASE !== "true" &&
-    process.env.NODE_ENV === "production"
-  ) {
-    throw new Error("Brain RAG tables must use a separate database. Set BRAIN_DATABASE_URL or PRISMA_DATABASE_URL to a database different from DATABASE_URL.");
+    normalizeDatabaseUrl(primaryDatabaseUrl) === normalizeDatabaseUrl(brainDatabaseUrl);
+
+  if (usesPrimaryDatabase) {
+    if (!isLocalEnvironment) {
+      throw new Error("Brain/RAG database cannot equal DATABASE_URL outside local development.");
+    }
+    if (process.env.BRAIN_ALLOW_PRIMARY_DATABASE === "false") {
+      throw new Error("Brain/RAG database cannot use DATABASE_URL when BRAIN_ALLOW_PRIMARY_DATABASE=false.");
+    }
+    if (process.env.BRAIN_ALLOW_PRIMARY_DATABASE !== "true") {
+      throw new Error("Explicit BRAIN_DATABASE_URL cannot equal DATABASE_URL unless BRAIN_ALLOW_PRIMARY_DATABASE=true.");
+    }
   }
 
   return brainDatabaseUrl;

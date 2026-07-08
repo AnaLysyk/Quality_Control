@@ -17,6 +17,7 @@ import {
   FiFolder,
   FiFolderPlus,
   FiList,
+  FiMonitor,
   FiPlay,
   FiRefreshCw,
   FiSave,
@@ -587,6 +588,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   const [addingName, setAddingName] = useState("");
   const [dbLoading, setDbLoading] = useState(false);
   const [isDark, setIsDark] = useState(true);
+  const [openBrowserOnRun, setOpenBrowserOnRun] = useState(true);
 
   // â”€â”€ Runs + Agents state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
@@ -638,6 +640,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
 
   const terminalRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
+  const previewWindowRef = useRef<Window | null>(null);
 
   // â”€â”€ Detect app theme for Monaco â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -833,6 +836,45 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     [],
   );
 
+  const resolvePreviewUrl = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    const raw = config.baseURL.trim() || window.location.origin;
+    try {
+      return new URL(raw, window.location.origin).href;
+    } catch {
+      return null;
+    }
+  }, [config.baseURL]);
+
+  const openPreviewTab = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const previewUrl = resolvePreviewUrl();
+    if (!previewUrl) {
+      addTerminalLine("warn", "Base URL invalida. Corrija a URL antes de abrir a previa.");
+      return;
+    }
+
+    try {
+      const current = previewWindowRef.current;
+      const previewWindow =
+        current && !current.closed
+          ? current
+          : window.open(previewUrl, "playwright-live-preview");
+
+      if (!previewWindow) {
+        addTerminalLine("warn", "O navegador bloqueou a aba de previa. Permita pop-ups para esta pagina e execute novamente.");
+        return;
+      }
+
+      previewWindowRef.current = previewWindow;
+      previewWindow.location.href = previewUrl;
+      previewWindow.focus();
+      addTerminalLine("system", `Aba de previa aberta: ${previewUrl}`);
+    } catch (err) {
+      addTerminalLine("warn", `Nao foi possivel abrir a previa: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }, [addTerminalLine, resolvePreviewUrl]);
+
   const handleEditorChange = useCallback(
     (value: string | undefined) => {
       if (!activeFileId || value === undefined) return;
@@ -925,12 +967,29 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     setTerminal([]);
 
     const scripts = getAllFiles(tree).map((f) => ({ path: f.path, content: f.content }));
-    const selectedBrowsers = Array.from(new Set(config.browsers));
+    const selectedBrowsers = openBrowserOnRun
+      ? [config.browser]
+      : Array.from(new Set(config.browsers));
     if (!selectedBrowsers.length) {
       setRightTab("config");
       addTerminalLine("error", "Selecione ao menos um navegador para executar.");
       setIsRunning(false);
       return;
+    }
+    const runtimeHeadless = openBrowserOnRun ? false : config.headless;
+    const runtimeWorkers = openBrowserOnRun ? 1 : config.workers;
+
+    if (openBrowserOnRun) {
+      openPreviewTab();
+      addTerminalLine("system", "Modo IDE ativo: Playwright vai rodar com navegador visivel, 1 worker e uma aba de previa aberta.");
+      if (config.headless || config.workers !== 1 || config.browsers.length !== 1 || config.browsers[0] !== config.browser) {
+        setConfig((prev) => ({
+          ...prev,
+          browsers: [prev.browser],
+          headless: false,
+          workers: 1,
+        }));
+      }
     }
 
     try {
@@ -950,9 +1009,9 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             baseURL: config.baseURL,
             browser: config.browser,
             browsers: selectedBrowsers,
-            headless: config.headless,
+            headless: runtimeHeadless,
             timeoutMs: config.timeout,
-            workers: config.workers,
+            workers: runtimeWorkers,
             retries: config.retries,
             screenshotOn: config.screenshotOn,
             videoOn: config.videoOn,
@@ -1008,7 +1067,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       addTerminalLine("error", `Erro: ${err instanceof Error ? err.message : String(err)}`);
       setIsRunning(false);
     }
-  }, [isRunning, selectedCompany, activeProjectId, selectedPlanId, runMode, runHistory, tree, config, addTerminalLine, loadRuns, hasRunnableSpecs]);
+  }, [isRunning, selectedCompany, activeProjectId, selectedPlanId, runMode, runHistory, tree, config, openBrowserOnRun, addTerminalLine, openPreviewTab, loadRuns, hasRunnableSpecs]);
 
   const openFloatingAssistant = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -1540,6 +1599,29 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               Assistente flutuante
             </button>
           </div>
+          <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-lg bg-white px-2.5 py-2 text-[11px] text-slate-600 ring-1 ring-slate-200 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-700">
+            <input
+              type="checkbox"
+              checked={openBrowserOnRun}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setOpenBrowserOnRun(checked);
+                if (checked) {
+                  setConfig((prev) => ({
+                    ...prev,
+                    browsers: [prev.browser],
+                    headless: false,
+                    workers: 1,
+                  }));
+                }
+              }}
+              className="mt-0.5 h-4 w-4 rounded accent-[#ef0001]"
+            />
+            <span>
+              <span className="block font-semibold text-slate-700 dark:text-zinc-200">Modo IDE visual</span>
+              Abre uma aba de previa e roda headed com 1 worker para voce acompanhar a UI acontecendo.
+            </span>
+          </label>
         </div>
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500">
@@ -2399,7 +2481,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   // â”€â”€ Main render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
-    <div className="flex h-full min-h-0 bg-[#f3f6fb] text-slate-900 dark:bg-zinc-900 dark:text-zinc-100">
+    <div className="flex h-full min-h-0 w-full min-w-0 overflow-hidden bg-[#f3f6fb] text-slate-900 dark:bg-zinc-900 dark:text-zinc-100">
       {/* Context menu */}
       {contextMenu && (
         <>
@@ -2537,7 +2619,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             <span className="truncate text-[11px] text-slate-400 dark:text-zinc-500">
               {activeFile.path}
             </span>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
               <StatusBadge status={activeFile.status} />
               <button
                 type="button"
@@ -2555,6 +2637,30 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                   <FiUploadCloud className="h-3.5 w-3.5" /> Publicar
                 </button>
               )}
+              <label
+                className="flex h-7 cursor-pointer items-center gap-1.5 rounded-lg bg-slate-100 px-2 text-[12px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700 dark:hover:bg-zinc-700"
+                title="Abre uma aba de previa e executa Playwright com navegador visivel"
+              >
+                <input
+                  type="checkbox"
+                  checked={openBrowserOnRun}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setOpenBrowserOnRun(checked);
+                    if (checked) {
+                      setConfig((prev) => ({
+                        ...prev,
+                        browsers: [prev.browser],
+                        headless: false,
+                        workers: 1,
+                      }));
+                    }
+                  }}
+                  className="h-3.5 w-3.5 rounded accent-[#ef0001]"
+                />
+                <FiMonitor className="h-3.5 w-3.5" />
+                Modo IDE
+              </label>
               <button
                 type="button"
                 onClick={() => void handleRun()}
@@ -2683,4 +2789,3 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     </div>
   );
 }
-

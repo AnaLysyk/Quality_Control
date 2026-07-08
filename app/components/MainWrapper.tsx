@@ -18,6 +18,14 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
   const isDocumentosRoute = pathname.startsWith("/documentos");
   const isDocsRoute = pathname.startsWith("/docs") || companySection === "docs";
   const isBrainRoute = pathname.startsWith("/brain") || pathname.startsWith("/admin/brain");
+  const isBrainScrollRoute =
+    pathname === "/admin/brain/memories" ||
+    pathname.startsWith("/admin/brain/memories/") ||
+    pathname === "/admin/brain/settings" ||
+    pathname.startsWith("/admin/brain/settings/") ||
+    pathname === "/brain/settings" ||
+    pathname.startsWith("/brain/settings/");
+  const isBrainFullscreenRoute = isBrainRoute && !isBrainScrollRoute;
   const isChatRoute = pathname.startsWith("/chat");
   const isPlaywrightWorkspaceRoute =
     /^\/automacoes\/playwright(?:\/|$)/.test(pathname) ||
@@ -51,7 +59,7 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
   const beforeTopGap = isBrainRoute ? "" : isDocumentosRoute ? "mt-3 sm:mt-4 lg:mt-5" : isDocsRoute ? "mt-2 sm:mt-3" : "";
   const beforeBottomGap = isPlaywrightWorkspaceRoute || isBrainRoute || isChatRoute || isDocumentosRoute || isDocsRoute ? "mb-0" : "mb-6 sm:mb-7 lg:mb-8";
   const beforeHorizontalPad = isPlaywrightWorkspaceRoute || isBrainRoute || isDocsRoute ? "px-0" : "";
-  const heightMode = isPlaywrightWorkspaceRoute || isBrainRoute || isChatRoute
+  const heightMode = isPlaywrightWorkspaceRoute || isBrainFullscreenRoute || isChatRoute
     ? "h-full overflow-hidden flex flex-col"
     : isDocsRoute
     ? "h-full overflow-hidden flex flex-col"

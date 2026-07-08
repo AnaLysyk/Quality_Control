@@ -161,7 +161,7 @@ export function BrainMemoriesManager() {
   }
 
   return (
-    <main className="h-[100dvh] overflow-y-auto bg-slate-950 px-6 py-6 text-slate-100 [scrollbar-gutter:stable]">
+    <main className="min-h-screen bg-slate-950 px-6 py-6 text-slate-100">
       <section className="mx-auto flex max-w-7xl flex-col gap-5">
         <header className="flex flex-col gap-3 border-b border-white/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>

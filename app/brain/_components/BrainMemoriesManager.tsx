@@ -161,14 +161,14 @@ export function BrainMemoriesManager() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-6 text-slate-100">
+    <main className="h-[100dvh] overflow-y-auto bg-slate-950 px-6 py-6 text-slate-100 [scrollbar-gutter:stable]">
       <section className="mx-auto flex max-w-7xl flex-col gap-5">
         <header className="flex flex-col gap-3 border-b border-white/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200/70">Brain</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight">Memórias do Brain</h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-300">
-              Gerencie regras, decisões, padrões, exceções e contexto usado pelo RAG sem alterar dados operacionais.
+              Area de suporte para consultar e manter o banco de contexto usado pelo Brain sem alterar dados operacionais.
             </p>
           </div>
           <button type="button" onClick={load} className="rounded-lg border border-cyan-200/30 px-4 py-2 text-sm font-bold text-cyan-100 hover:bg-cyan-200/10">

@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { registerScreen } from "@/lib/brain/registry";
 import { BrainDashboard } from "../../brain/_components/BrainDashboard";
-import { BrainProviderConfigPanel } from "./BrainProviderConfigPanel";
 import styles from "../../brain/brain-theme.module.css";
 import nodeThemeStyles from "../../brain/brain-node-theme-fixes.module.css";
 import pageStyles from "../../brain/brain-page-theme.module.css";
@@ -40,7 +39,6 @@ export const metadata = {
 export default function BrainPage() {
   return (
     <div className={`${styles.brainTheme} ${nodeThemeStyles.brainNodeThemeFixes} ${pageStyles.brainPageFullscreen}`}>
-      <BrainProviderConfigPanel />
       <BrainDashboard />
     </div>
   );

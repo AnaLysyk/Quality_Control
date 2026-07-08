@@ -55,7 +55,11 @@ function numberValue(value: number | null) {
   return value === null || value === undefined ? "" : String(value);
 }
 
-export function BrainProviderConfigPanel() {
+type BrainProviderConfigPanelProps = {
+  embedded?: boolean;
+};
+
+export function BrainProviderConfigPanel({ embedded = false }: BrainProviderConfigPanelProps) {
   const [configs, setConfigs] = useState<ProviderConfig[]>([]);
   const [keyStatus, setKeyStatus] = useState<ProviderPayload["keyStatus"]>(EMPTY_KEY_STATUS);
   const [loading, setLoading] = useState(true);
@@ -112,8 +116,13 @@ export function BrainProviderConfigPanel() {
     }
   }
 
+  const panelClassName = embedded
+    ? "w-full rounded-lg border border-cyan-100/20 bg-slate-950/95 p-4 text-white shadow-[0_18px_50px_rgba(0,0,0,0.26)]"
+    : "fixed right-4 top-20 z-[2147483001] max-h-[calc(100dvh-6rem)] w-[min(460px,calc(100vw-2rem))] overflow-auto rounded-lg border border-cyan-100/20 bg-slate-950/95 p-4 text-white shadow-[0_22px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl";
+  const configGridClassName = embedded ? "mt-4 grid gap-3 xl:grid-cols-3" : "mt-4 grid gap-3";
+
   return (
-    <aside className="fixed right-4 top-20 z-[2147483001] max-h-[calc(100dvh-6rem)] w-[min(460px,calc(100vw-2rem))] overflow-auto rounded-lg border border-cyan-100/20 bg-slate-950/95 p-4 text-white shadow-[0_22px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl">
+    <aside className={panelClassName}>
       <header className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/60">Brain IA</p>
@@ -147,7 +156,7 @@ export function BrainProviderConfigPanel() {
       {feedback ? <p className="mt-3 rounded-lg border border-emerald-300/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">{feedback}</p> : null}
       {loading ? <p className="mt-3 rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300">Carregando providers...</p> : null}
 
-      <div className="mt-4 grid gap-3">
+      <div className={configGridClassName}>
         {orderedConfigs.map((config) => (
           <section key={config.provider} className="rounded-lg border border-white/10 bg-white/[0.045] p-3">
             <div className="flex items-center justify-between gap-3">

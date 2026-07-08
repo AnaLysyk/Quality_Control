@@ -122,6 +122,31 @@ function isInteractiveTarget(target: EventTarget | null) {
   return Boolean(target.closest("button,input,select,textarea,a,[role='button']"));
 }
 
+const ASSISTANT_CONTEXT_NODE_LIMIT = 80;
+const ASSISTANT_CONTEXT_EDGE_LIMIT = 120;
+const ASSISTANT_CONTEXT_STATUS_LIMIT = 40;
+
+function compactNodeForAssistant(node: BrainNode) {
+  return {
+    id: node.id,
+    label: node.label,
+    type: node.type,
+    module: node.module,
+    status: node.status,
+  };
+}
+
+function compactEdgeForAssistant(edge: BrainEdge) {
+  return {
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    label: edge.label,
+    type: edge.type,
+    status: edge.status,
+  };
+}
+
 export function BrainNeuralDashboard() {
   const [graph, setGraph] = useState<BuiltBrainGraph>(() => emptyGraph());
   const [brainContext, setBrainContext] = useState<BrainContextResponse | null>(null);
@@ -315,19 +340,65 @@ export function BrainNeuralDashboard() {
     return () => window.removeEventListener("popstate", handleBrainPopState);
   }, [graph.nodes]);
 
+  const visibleEdgesByNode = useMemo(() => {
+    const byNode = new Map<string, BrainEdge[]>();
+    for (const edge of visibleGraph.edges) {
+      const sourceEdges = byNode.get(edge.source) ?? [];
+      sourceEdges.push(edge);
+      byNode.set(edge.source, sourceEdges);
+
+      const targetEdges = byNode.get(edge.target) ?? [];
+      targetEdges.push(edge);
+      byNode.set(edge.target, targetEdges);
+    }
+    return byNode;
+  }, [visibleGraph.edges]);
   const selectedNodeConnections = useMemo(
-    () => selectedNode ? visibleGraph.edges.filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id) : [],
-    [selectedNode, visibleGraph.edges],
+    () => selectedNode ? (visibleEdgesByNode.get(selectedNode.id) ?? []).slice(0, ASSISTANT_CONTEXT_EDGE_LIMIT) : [],
+    [selectedNode?.id, visibleEdgesByNode],
   );
   const visibleConnected = useMemo(() => new Set(visibleGraph.edges.flatMap((edge) => [edge.source, edge.target])), [visibleGraph.edges]);
   const visiblePendingNodes = useMemo(
-    () => visibleGraph.nodes.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)),
+    () => visibleGraph.nodes.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)).slice(0, ASSISTANT_CONTEXT_STATUS_LIMIT),
     [visibleGraph.nodes],
   );
   const visibleOrphanNodes = useMemo(
-    () => visibleGraph.nodes.filter((node) => !visibleConnected.has(node.id)),
+    () => visibleGraph.nodes.filter((node) => !visibleConnected.has(node.id)).slice(0, ASSISTANT_CONTEXT_STATUS_LIMIT),
     [visibleConnected, visibleGraph.nodes],
   );
+  const assistantVisibleNodes = useMemo(() => {
+    const selectedId = selectedNode?.id ?? null;
+    const selected = selectedId ? visibleGraph.nodes.find((node) => node.id === selectedId) ?? null : null;
+    const output: BrainNode[] = [];
+    const seen = new Set<string>();
+    const add = (node: BrainNode | null | undefined) => {
+      if (!node || seen.has(node.id) || output.length >= ASSISTANT_CONTEXT_NODE_LIMIT) return;
+      seen.add(node.id);
+      output.push(node);
+    };
+
+    add(selected);
+    visiblePendingNodes.forEach(add);
+    visibleGraph.nodes.filter((node) => node.size === "lg" || node.type === "module" || node.type === "company" || node.type === "project").forEach(add);
+    visibleGraph.nodes.forEach(add);
+
+    return output.map(compactNodeForAssistant);
+  }, [selectedNode?.id, visibleGraph.nodes, visiblePendingNodes]);
+  const assistantVisibleNodeIds = useMemo(() => new Set(assistantVisibleNodes.map((node) => node.id)), [assistantVisibleNodes]);
+  const assistantVisibleEdges = useMemo(() => {
+    const selectedId = selectedNode?.id ?? null;
+    const output: ReturnType<typeof compactEdgeForAssistant>[] = [];
+
+    for (const edge of visibleGraph.edges) {
+      const connectsSelected = Boolean(selectedId && (edge.source === selectedId || edge.target === selectedId));
+      const connectsContext = assistantVisibleNodeIds.has(edge.source) && assistantVisibleNodeIds.has(edge.target);
+      if (!connectsSelected && !connectsContext) continue;
+      output.push(compactEdgeForAssistant(edge));
+      if (output.length >= ASSISTANT_CONTEXT_EDGE_LIMIT) break;
+    }
+
+    return output;
+  }, [assistantVisibleNodeIds, selectedNode?.id, visibleGraph.edges]);
   const currentCompanyName = contextCompanies.find((company) => company.id === selectedCompanyId)?.name ?? (canSeeAllCompanies ? "Todas as empresas" : contextCompanies[0]?.name) ?? "Contexto institucional";
   const currentProjectName = contextProjects.find((project) => project.id === selectedProjectId)?.name ?? "Todos os projetos";
 
@@ -347,10 +418,10 @@ export function BrainNeuralDashboard() {
       selectedNodeLabel: selectedNode?.label ?? null,
       selectedNodeType: selectedNode?.type ?? null,
       selectedNodeConnections,
-      visibleNodes: visibleGraph.nodes.map((node) => ({ id: node.id, label: node.label, type: node.type, module: node.module, status: node.status })),
-      visibleEdges: visibleGraph.edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target, label: edge.label, type: edge.type, status: edge.status })),
-      pendingNodes: visiblePendingNodes.map((node) => ({ id: node.id, label: node.label, module: node.module, status: node.status })),
-      orphanNodes: visibleOrphanNodes.map((node) => ({ id: node.id, label: node.label, module: node.module, status: node.status })),
+      visibleNodes: assistantVisibleNodes,
+      visibleEdges: assistantVisibleEdges,
+      pendingNodes: visiblePendingNodes.map(compactNodeForAssistant),
+      orphanNodes: visibleOrphanNodes.map(compactNodeForAssistant),
       source: graphSource,
       viewType: selectedNode ? "detail" : activeModule ? "module" : selectedCompanyId ? "company" : selectedProfileType ? "profile" : "profile-root",
       permissions: brainContext?.permissions ?? null,
@@ -372,7 +443,7 @@ export function BrainNeuralDashboard() {
         },
       }),
     );
-  }, [activeModule, brainContext?.permissions, currentCompanyName, currentProjectName, graphSource, selectedCompanyId, selectedNode, selectedNodeConnections, selectedProfileType, selectedProjectId, visibleGraph.edges, visibleGraph.focusModule, visibleGraph.nodes, visibleOrphanNodes, visiblePendingNodes]);
+  }, [activeModule, assistantVisibleEdges, assistantVisibleNodes, brainContext?.permissions, currentCompanyName, currentProjectName, graphSource, selectedCompanyId, selectedNode, selectedNodeConnections, selectedProfileType, selectedProjectId, visibleGraph.focusModule, visibleOrphanNodes, visiblePendingNodes]);
 
   function pushBrainNodeUrl(node: BrainNode | null, mode: "push" | "replace" = "push") {
     if (typeof window === "undefined") return;
@@ -656,13 +727,19 @@ export function BrainNeuralDashboard() {
     setFilterCollapsed(false);
   }
 
-  const nodeTypeOptions = Array.from(
-    new Set(graph.nodes.map((node) => node.type).filter((value): value is BrainNodeType => Boolean(value))),
-  ).sort();
+  const nodeTypeOptions = useMemo(
+    () => Array.from(
+      new Set(graph.nodes.map((node) => node.type).filter((value): value is BrainNodeType => Boolean(value))),
+    ).sort(),
+    [graph.nodes],
+  );
 
-  const nodeStatusOptions = Array.from(
-    new Set(graph.nodes.map((node) => node.status).filter((value): value is BrainNodeStatus => Boolean(value))),
-  ).sort();
+  const nodeStatusOptions = useMemo(
+    () => Array.from(
+      new Set(graph.nodes.map((node) => node.status).filter((value): value is BrainNodeStatus => Boolean(value))),
+    ).sort(),
+    [graph.nodes],
+  );
 
   const filterHud = (
     <aside

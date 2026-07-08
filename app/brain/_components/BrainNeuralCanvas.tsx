@@ -34,8 +34,17 @@ function getConnectedNodeIds(edges: BrainEdge[]) {
   return new Set(edges.flatMap((edge) => [edge.source, edge.target]));
 }
 
-function scoreNodeForOverview(node: BrainNode, edges: BrainEdge[]) {
-  const degree = edges.filter((edge) => edge.source === node.id || edge.target === node.id).length;
+function getNodeDegreeMap(edges: BrainEdge[]) {
+  const degrees = new Map<string, number>();
+  for (const edge of edges) {
+    degrees.set(edge.source, (degrees.get(edge.source) ?? 0) + 1);
+    degrees.set(edge.target, (degrees.get(edge.target) ?? 0) + 1);
+  }
+  return degrees;
+}
+
+function scoreNodeForOverview(node: BrainNode, degrees: Map<string, number>) {
+  const degree = degrees.get(node.id) ?? 0;
   const type = String(node.type).toLowerCase();
   const typeScore =
     type === "company" ? 90 :
@@ -49,9 +58,15 @@ function scoreNodeForOverview(node: BrainNode, edges: BrainEdge[]) {
 }
 
 function getFocusGraph(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: string | null) {
+  const degrees = getNodeDegreeMap(edges);
+
+  const byOverviewScore = (left: BrainNode, right: BrainNode) =>
+    scoreNodeForOverview(right, degrees) - scoreNodeForOverview(left, degrees) ||
+    left.label.localeCompare(right.label, "pt-BR");
+
   if (!selectedNodeId) {
     const selectedLayer = [...nodes]
-      .sort((left, right) => scoreNodeForOverview(right, edges) - scoreNodeForOverview(left, edges))
+      .sort(byOverviewScore)
       .slice(0, 36);
 
     const ids = new Set(selectedLayer.map((node) => node.id));
@@ -78,7 +93,7 @@ function getFocusGraph(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: s
   }
 
   if (ids.size < 10) {
-    for (const node of [...nodes].sort((left, right) => scoreNodeForOverview(right, edges) - scoreNodeForOverview(left, edges))) {
+    for (const node of [...nodes].sort(byOverviewScore)) {
       ids.add(node.id);
       if (ids.size >= 18) break;
     }
@@ -96,7 +111,8 @@ function getFocusGraph(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: s
 function layoutNodes(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: string | null, saved: Record<string, { x: number; y: number }>, canvasSize: { width: number; height: number }, themeMode: "light" | "dark") {
   const center = { x: Math.max(460, canvasSize.width / 2 - 80), y: Math.max(320, canvasSize.height / 2 - 24) };
   const connected = getConnectedNodeIds(edges);
-  const degree = (nodeId: string) => edges.filter((edge) => edge.source === nodeId || edge.target === nodeId).length;
+  const degrees = getNodeDegreeMap(edges);
+  const degree = (nodeId: string) => degrees.get(nodeId) ?? 0;
 
   const preferredCenter =
     (selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) : null) ??
@@ -264,7 +280,6 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
   const focusedGraph = useMemo(() => getFocusGraph(nodes, edges, selectedNodeId), [nodes, edges, selectedNodeId]);
   const flowNodes = useMemo<Node[]>(() => layoutNodes(focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize, themeMode), [focusedGraph.nodes, focusedGraph.edges, selectedNodeId, manualPositions, canvasSize, themeMode]);
   const flowEdges = useMemo<Edge[]>(() => focusedGraph.edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target, type: "brainNeural", animated: edge.status === "pending" || edge.status === "warning", data: { brainEdge: edge, highlighted: Boolean(selectedNodeId && (edge.source === selectedNodeId || edge.target === selectedNodeId)), themeMode } })), [focusedGraph.edges, selectedNodeId, themeMode]);
-  const flowSignature = useMemo(() => [selectedNodeId ?? "root", themeMode, focusedGraph.nodes.map((node) => node.id).join("|"), focusedGraph.edges.map((edge) => edge.id).join("|")].join("::"), [focusedGraph.edges, focusedGraph.nodes, selectedNodeId, themeMode]);
   const [reactFlowNodes, setNodes, onNodesChange] = useNodesState(flowNodes);
   const [reactFlowEdges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
@@ -292,7 +307,7 @@ export function BrainNeuralCanvas({ nodes, edges, selectedNodeId, onSelectNode, 
         <div className="absolute left-[16%] right-[16%] top-1/2 h-px" style={{ background: isDarkMode ? "linear-gradient(90deg, transparent, rgba(34,211,238,0.36), rgba(239,0,1,0.3), transparent)" : "linear-gradient(90deg, transparent, rgba(34,211,238,0.18), rgba(239,0,1,0.10), transparent)", boxShadow: isDarkMode ? "0 0 32px rgba(34,211,238,0.16)" : "0 0 24px rgba(34,211,238,0.10)" }} />
       </div>
 
-      <ReactFlow key={`brain-flow-${canvasSize.width}x${canvasSize.height}-${flowSignature}`} nodes={reactFlowNodes} edges={reactFlowEdges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView fitViewOptions={{ padding: 0.28, duration: 420 }} minZoom={0.12} maxZoom={2.3} nodesDraggable nodesConnectable={false} elementsSelectable panOnDrag panOnScroll zoomOnScroll zoomOnPinch selectionOnDrag={false} preventScrolling={false} proOptions={{ hideAttribution: true }} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onNodeDragStop={handleNodeDragStop} onNodeClick={(_, node) => { const brainNode = (node.data as { brainNode: BrainNode }).brainNode; onSelectNode(brainNode); setOverlayNode(brainNode); }} onPaneClick={() => setOverlayNode(null)} onNodeDoubleClick={(_, node) => onOpenRelatedModule(((node.data as { brainNode: BrainNode }).brainNode).module)} className="h-full w-full" style={{ width: "100%", height: "100%", background: "transparent" }}>
+      <ReactFlow nodes={reactFlowNodes} edges={reactFlowEdges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView fitViewOptions={{ padding: 0.28, duration: 160 }} minZoom={0.12} maxZoom={2.3} nodesDraggable nodesConnectable={false} elementsSelectable panOnDrag panOnScroll zoomOnScroll zoomOnPinch selectionOnDrag={false} preventScrolling={false} onlyRenderVisibleElements proOptions={{ hideAttribution: true }} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onNodeDragStop={handleNodeDragStop} onNodeClick={(_, node) => { const brainNode = (node.data as { brainNode: BrainNode }).brainNode; onSelectNode(brainNode); setOverlayNode(brainNode); }} onPaneClick={() => setOverlayNode(null)} onNodeDoubleClick={(_, node) => onOpenRelatedModule(((node.data as { brainNode: BrainNode }).brainNode).module)} className="h-full w-full" style={{ width: "100%", height: "100%", background: "transparent" }}>
         <Background color={isDarkMode ? "rgba(125,211,252,0.12)" : "rgba(1,24,72,0.10)"} gap={34} />
         <Controls className={isDarkMode ? "!bottom-5 !left-5 !rounded-2xl !border !border-white/10 !bg-slate-950/70 !text-slate-50 backdrop-blur-xl" : "!bottom-5 !left-5 !rounded-2xl !border !border-slate-200/70 !bg-white/80 !text-slate-700 backdrop-blur-xl"} />
       </ReactFlow>

@@ -239,7 +239,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                           setCompanySearch("");
                         }}
                         className={`sidebar-company-option flex w-full items-center gap-2 px-3 py-2 text-left transition ${
-                          active ? "text-white" : "text-white/72"
+                          active ? "is-active !bg-[#073c54] !text-white" : "text-white/72 hover:bg-white/10 hover:text-white"
                         }`}
                         data-active={active ? "true" : undefined}
                         data-testid={`sidebar-company-option-${client.slug}`}
@@ -247,7 +247,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                         <span className={`sidebar-company-dot h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-emerald-400" : "bg-white/35"}`} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[12px] font-semibold">{client.name}</span>
-                          <span className="sidebar-company-slug block truncate text-[10px] text-white/45">/{client.slug}</span>
+                          <span className={`sidebar-company-slug block truncate text-[10px] ${active ? "!text-white/75" : "text-white/45"}`}>/{client.slug}</span>
                         </span>
                         {active ? <FiCheck size={12} className="shrink-0 text-emerald-300" /> : null}
                       </button>

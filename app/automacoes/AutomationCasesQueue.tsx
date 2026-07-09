@@ -235,7 +235,7 @@ export default function AutomationCasesQueue({ access, activeCompanySlug, compan
           ))
         )}
       </div>
-      {!access.canView ? <p className="text-xs text-amber-700">Seu perfil pode ter restrições na automação.</p> : null}
+      {!access.canOpen ? <p className="text-xs text-amber-700">Seu perfil pode ter restrições na automação.</p> : null}
     </section>
   );
 }

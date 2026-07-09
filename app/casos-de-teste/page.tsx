@@ -1,4 +1,4 @@
-import TestCaseRepositoryClient from "./TestCaseRepositoryClient";
+import TestCaseRepositoryClientV2 from "./TestCaseRepositoryClientV2";
 import styles from "./repository-clean.module.css";
 
 export const dynamic = "force-dynamic";
@@ -20,14 +20,14 @@ export default async function CasosDeTestePage({
   if (companySlug) {
     return (
       <main className={styles.repositoryPage}>
-        <TestCaseRepositoryClient initialCompanySlug={companySlug} lockCompanyScope />
+        <TestCaseRepositoryClientV2 initialCompanySlug={companySlug} lockCompanyScope />
       </main>
     );
   }
 
   return (
     <main className={styles.repositoryPage}>
-      <TestCaseRepositoryClient />
+      <TestCaseRepositoryClientV2 />
     </main>
   );
 }

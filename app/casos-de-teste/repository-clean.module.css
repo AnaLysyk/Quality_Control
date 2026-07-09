@@ -1,0 +1,215 @@
+.repositoryPage {
+  width: 100%;
+  min-width: 0;
+  --repository-sticky-top: 0.75rem;
+}
+
+.repositoryPage :global([data-testid="test-case-repository"]) {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 0.75rem !important;
+  border-radius: 1.25rem !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tc-surface-2, #f8fafc) 58%, transparent), transparent 210px),
+    var(--tc-surface, #ffffff) !important;
+}
+
+.repositoryPage :global([data-testid="test-case-header"]) {
+  padding: 0.75rem 0.875rem !important;
+  border-radius: 1rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-header"] h1) {
+  margin-top: 0.125rem !important;
+  font-size: clamp(1.125rem, 1.4vw, 1.45rem) !important;
+}
+
+.repositoryPage :global([data-testid="test-case-header"] p) {
+  line-height: 1.35 !important;
+}
+
+.repositoryPage :global([data-testid="test-case-context-chip"]) {
+  margin-top: 0.5rem !important;
+  min-height: 1.625rem;
+}
+
+.repositoryPage :global([data-testid="test-case-metrics-bar"]) {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)) !important;
+  gap: 0.5rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-metrics-bar"] > *) {
+  min-height: 4rem;
+  padding: 0.625rem 0.75rem !important;
+  border-radius: 0.875rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-metrics-bar"] p) {
+  line-height: 1.2 !important;
+}
+
+.repositoryPage :global([data-testid="test-case-metrics-bar"] + article) {
+  padding: 0.625rem !important;
+  border-radius: 1rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-metrics-bar"] + article label) {
+  gap: 0.25rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-metrics-bar"] + article input),
+.repositoryPage :global([data-testid="test-case-metrics-bar"] + article select),
+.repositoryPage :global([data-testid="test-case-metrics-bar"] + article button) {
+  min-height: 2.15rem !important;
+  border-radius: 0.625rem !important;
+}
+
+.repositoryPage :global(div:has(> [data-testid="test-case-suite-tree"]):has(> [data-testid="test-case-table"]):has(> [data-testid="test-case-detail-panel"])) {
+  display: grid !important;
+  grid-template-columns: minmax(220px, 280px) minmax(500px, 1fr) minmax(320px, 420px) !important;
+  gap: 0.75rem !important;
+  align-items: start !important;
+}
+
+.repositoryPage :global([data-testid="test-case-suite-tree"]),
+.repositoryPage :global([data-testid="test-case-detail-panel"]) {
+  position: sticky;
+  top: var(--repository-sticky-top);
+  max-height: calc(100vh - 1.5rem) !important;
+  overflow: auto !important;
+  border-radius: 1rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-suite-tree"]) {
+  padding: 0.625rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-table"]) {
+  min-width: 0;
+  min-height: calc(100vh - 15.75rem) !important;
+  border-radius: 1rem !important;
+  overflow: hidden;
+}
+
+.repositoryPage :global([data-testid="test-case-list"]) {
+  max-height: calc(100vh - 19rem) !important;
+  min-height: 23rem !important;
+  overflow: auto !important;
+}
+
+.repositoryPage :global([data-testid="test-case-list"] table) {
+  width: 100%;
+  min-width: 920px !important;
+  border-spacing: 0 !important;
+}
+
+.repositoryPage :global([data-testid="test-case-list"] th),
+.repositoryPage :global([data-testid="test-case-list"] td) {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-card"]) {
+  max-width: min(28rem, 42vw) !important;
+}
+
+.repositoryPage :global([data-testid="test-case-detail-panel"]) {
+  padding: 0.875rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-detail-title"]) {
+  font-size: 1rem !important;
+  line-height: 1.25 !important;
+}
+
+.repositoryPage :global([data-testid="test-case-detail-panel"] section) {
+  border-radius: 0.875rem !important;
+  padding: 0.875rem !important;
+}
+
+.repositoryPage :global([data-testid="test-case-suite-tree"] button),
+.repositoryPage :global([data-testid="test-case-detail-panel"] button),
+.repositoryPage :global([data-testid="test-case-detail-panel"] a) {
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.repositoryPage :global([data-testid="test-case-suite-tree"] button:hover),
+.repositoryPage :global([data-testid="test-case-detail-panel"] button:hover),
+.repositoryPage :global([data-testid="test-case-detail-panel"] a:hover) {
+  transform: translateY(-1px);
+}
+
+.repositoryPage :global([data-testid="test-case-create-modal"]) {
+  border-radius: 1.25rem !important;
+}
+
+:global(.dark) .repositoryPage {
+  --repository-panel-bg: color-mix(in srgb, var(--tc-surface, #0f172a) 88%, #020617);
+}
+
+:global(.dark) .repositoryPage :global([data-testid="test-case-repository"]),
+:global(.dark) .repositoryPage :global([data-testid="test-case-header"]),
+:global(.dark) .repositoryPage :global([data-testid="test-case-suite-tree"]),
+:global(.dark) .repositoryPage :global([data-testid="test-case-table"]),
+:global(.dark) .repositoryPage :global([data-testid="test-case-detail-panel"]) {
+  background: var(--repository-panel-bg) !important;
+}
+
+:global(.dark) .repositoryPage :global([data-testid="test-case-repository"] [class*="bg-white"]),
+:global(.dark) .repositoryPage :global([data-testid="test-case-repository"] [class*="bg-[#fff"]) {
+  background: color-mix(in srgb, var(--tc-surface-2, #111827) 88%, #020617) !important;
+}
+
+:global(.dark) .repositoryPage :global([data-testid="test-case-list"] thead) {
+  background: color-mix(in srgb, var(--tc-surface-2, #111827) 92%, #020617) !important;
+}
+
+:global(.dark) .repositoryPage :global([data-testid="test-case-row"]:hover) {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+@media (max-width: 1440px) {
+  .repositoryPage :global(div:has(> [data-testid="test-case-suite-tree"]):has(> [data-testid="test-case-table"]):has(> [data-testid="test-case-detail-panel"])) {
+    grid-template-columns: 245px minmax(460px, 1fr) 360px !important;
+  }
+
+  .repositoryPage :global([data-testid="test-case-list"] table) {
+    min-width: 860px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .repositoryPage :global(div:has(> [data-testid="test-case-suite-tree"]):has(> [data-testid="test-case-table"]):has(> [data-testid="test-case-detail-panel"])) {
+    grid-template-columns: 260px minmax(0, 1fr) !important;
+  }
+
+  .repositoryPage :global([data-testid="test-case-detail-panel"]) {
+    position: relative;
+    top: auto;
+    max-height: none !important;
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .repositoryPage :global([data-testid="test-case-repository"]) {
+    padding: 0.5rem !important;
+  }
+
+  .repositoryPage :global(div:has(> [data-testid="test-case-suite-tree"]):has(> [data-testid="test-case-table"]):has(> [data-testid="test-case-detail-panel"])) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .repositoryPage :global([data-testid="test-case-suite-tree"]),
+  .repositoryPage :global([data-testid="test-case-detail-panel"]) {
+    position: relative;
+    top: auto;
+    max-height: none !important;
+  }
+
+  .repositoryPage :global([data-testid="test-case-list"]) {
+    max-height: 70vh !important;
+  }
+}

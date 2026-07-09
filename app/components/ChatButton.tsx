@@ -7,6 +7,7 @@ import { FiChevronRight, FiMaximize2, FiMinimize2, FiSend, FiSidebar, FiTrash2, 
 import type { AssistantAction, AssistantContextEntityType, AssistantConversationTurn, AssistantOpenEventDetail, AssistantPanelMode, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
+import { getScreenPermissionModuleId } from "@/lib/navigation/screenPermissions";
 import {
   runAccessRequestsBrainCommand,
   type AccessRequestsBrainPendingAction,
@@ -70,6 +71,7 @@ const SIDE_PANEL_WIDTH_KEY = "assistant_side_panel_width_v1";
 const DEFAULT_SIDE_PANEL_WIDTH = 460;
 const MIN_SIDE_PANEL_WIDTH = 340;
 const MAX_SIDE_PANEL_WIDTH = 760;
+const CHAT_SCREEN_PERMISSION_MODULE_ID = getScreenPermissionModuleId("chat.principal");
 
 function sanitizePromptList(value: unknown, fallback: string[]) {
   if (!Array.isArray(value)) return fallback;
@@ -695,8 +697,9 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
   if (!assistantEnabled) return null;
   if (!user) return null;
-  const isGlobalAdmin = user.isGlobalAdmin === true || (user as { is_global_admin?: boolean }).is_global_admin === true;
-  if (!isGlobalAdmin && (!can("ai", "view") || !can("ai", "use"))) return null;
+  const canUseAssistant = can("ai", "view") && can("ai", "use");
+  const canOpenChat = can("chat", "view") && can(CHAT_SCREEN_PERMISSION_MODULE_ID, "view");
+  if (!canUseAssistant || !canOpenChat) return null;
 
   const activeScreenLabel = assistantContext.screenLabel ?? screenContext.screenLabel;
   const hasConversation = messages.length > 0;
@@ -1469,4 +1472,3 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     </div>
   );
 }
-

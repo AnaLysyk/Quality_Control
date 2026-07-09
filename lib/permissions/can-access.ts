@@ -1,6 +1,7 @@
-﻿import type { SystemPermission, SystemRouteDefinition } from "@/lib/navigation/navigation.types";
+import type { SystemPermission, SystemRouteDefinition } from "@/lib/navigation/navigation.types";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import type { UserAccessContext } from "./get-user-access-context";
+import { getRouteScreenPermission } from "@/lib/navigation/screenPermissions";
 
 export type AccessPermission = SystemPermission | `${string}.${string}`;
 
@@ -31,9 +32,20 @@ export function canAccess(context: UserAccessContext | null | undefined, permiss
   );
 }
 
-export function canAccessRoute(context: UserAccessContext | null | undefined, route: Pick<SystemRouteDefinition, "requiredPermission">) {
+export function canAccessRoute(
+  context: UserAccessContext | null | undefined,
+  route: Pick<SystemRouteDefinition, "requiredPermission"> & Partial<Pick<SystemRouteDefinition, "id">>,
+) {
   if (!context) return false;
-  if (!route.requiredPermission) return true;
-  return canAccess(context, route.requiredPermission);
+
+  if (route.requiredPermission && !canAccess(context, route.requiredPermission)) {
+    return false;
+  }
+
+  if (typeof route.id === "string" && route.id.trim()) {
+    return canAccess(context, getRouteScreenPermission({ id: route.id }));
+  }
+
+  return true;
 }
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
@@ -18,7 +18,11 @@ function hrefMatches(currentPath: string, href: string | undefined): boolean {
   const target = splitPath(href);
 
   if (target.path === "/") return current.path === "/";
-  const pathMatches = current.path === target.path || current.path.startsWith(`${target.path}/`);
+
+  const pathMatches =
+    current.path === target.path ||
+    current.path.startsWith(target.path + "/");
+
   if (!pathMatches) return false;
   if (!href.includes("?")) return true;
 
@@ -28,6 +32,7 @@ function hrefMatches(currentPath: string, href: string | undefined): boolean {
   for (const key of NAV_QUERY_KEYS) {
     const expected = target.query.get(key);
     const actual = current.query.get(key);
+
     if (expected !== null && actual !== expected) return false;
     if (expected === null && actual !== null) return false;
   }
@@ -35,37 +40,66 @@ function hrefMatches(currentPath: string, href: string | undefined): boolean {
   return true;
 }
 
-function itemIsActive(item: NavItemDef, currentPath: string): boolean {
-  return hrefMatches(currentPath, item.href);
+function getMatchScore(currentPath: string, href: string | undefined): number {
+  if (!hrefMatches(currentPath, href)) return 0;
+
+  const target = splitPath(href ?? "");
+  let score = target.path.length;
+
+  // query espec?fica vale mais que rota gen?rica
+  if ((href ?? "").includes("?")) score += 1000;
+
+  return score;
 }
 
-function moduleIsActive(mod: NavModuleDef, currentPath: string): boolean {
-  if (hrefMatches(currentPath, mod.href)) return true;
-  return mod.items.some((item) => itemIsActive(item, currentPath));
+function collectItems(items: NavItemDef[]): NavItemDef[] {
+  return items.flatMap((item) => [item, ...collectItems(item.children ?? [])]);
 }
 
 export function useActiveNavigation(modules: NavModuleDef[], currentPath: string) {
-  const activeModuleId = useMemo<string | null>(() => {
-    for (const mod of modules) {
-      if (moduleIsActive(mod, currentPath)) return mod.id;
-    }
-    return null;
-  }, [modules, currentPath]);
+  const activeItemIds = useMemo(() => {
+    const matches: Array<{ id: string; score: number }> = [];
 
-  const isModuleActive = useMemo(
-    () =>
-      (mod: NavModuleDef): boolean =>
-        moduleIsActive(mod, currentPath),
-    [currentPath],
-  );
+    for (const mod of modules) {
+      for (const item of collectItems(mod.items)) {
+        const score = getMatchScore(currentPath, item.href);
+        if (score > 0) matches.push({ id: item.id, score });
+      }
+    }
+
+    const bestScore = Math.max(0, ...matches.map((match) => match.score));
+
+    return new Set(
+      matches
+        .filter((match) => match.score === bestScore)
+        .map((match) => match.id),
+    );
+  }, [modules, currentPath]);
 
   const isItemActive = useMemo(
     () =>
       (item: NavItemDef): boolean =>
-        itemIsActive(item, currentPath),
-    [currentPath],
+        activeItemIds.has(item.id),
+    [activeItemIds],
   );
+
+  const isModuleActive = useMemo(
+    () =>
+      (mod: NavModuleDef): boolean => {
+        if (getMatchScore(currentPath, mod.href) > 0) return true;
+
+        return collectItems(mod.items).some((item) => activeItemIds.has(item.id));
+      },
+    [activeItemIds, currentPath],
+  );
+
+  const activeModuleId = useMemo<string | null>(() => {
+    for (const mod of modules) {
+      if (isModuleActive(mod)) return mod.id;
+    }
+
+    return null;
+  }, [isModuleActive, modules]);
 
   return { activeModuleId, isModuleActive, isItemActive };
 }
-

@@ -59,6 +59,58 @@ function normalize(value: string) {
     .trim();
 }
 
+function buildAdjacencyMap(edges: BrainEdge[]) {
+  const adjacency = new Map<string, Set<string>>();
+
+  for (const edge of edges) {
+    const sourceNeighbors = adjacency.get(edge.source) ?? new Set<string>();
+    sourceNeighbors.add(edge.target);
+    adjacency.set(edge.source, sourceNeighbors);
+
+    const targetNeighbors = adjacency.get(edge.target) ?? new Set<string>();
+    targetNeighbors.add(edge.source);
+    adjacency.set(edge.target, targetNeighbors);
+  }
+
+  return adjacency;
+}
+
+function expandConnectedNodeIds(seedIds: Iterable<string>, adjacency: Map<string, Set<string>>, maxDepth: number) {
+  const visited = new Set<string>();
+  const queue: Array<{ id: string; depth: number }> = [];
+
+  for (const seedId of seedIds) {
+    if (!seedId || visited.has(seedId)) continue;
+    visited.add(seedId);
+    queue.push({ id: seedId, depth: 0 });
+  }
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) break;
+    if (current.depth >= maxDepth) continue;
+
+    const neighbors = adjacency.get(current.id);
+    if (!neighbors) continue;
+
+    for (const neighborId of neighbors) {
+      if (visited.has(neighborId)) continue;
+      visited.add(neighborId);
+      queue.push({ id: neighborId, depth: current.depth + 1 });
+    }
+  }
+
+  return visited;
+}
+
+function readMetadataString(node: BrainNode, keys: string[]) {
+  for (const key of keys) {
+    const value = node.metadata?.[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+}
+
 function belongsToSelectedCompany(node: BrainNode, companyId: string | null) {
   if (!companyId) return true;
 
@@ -120,6 +172,7 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
   } = options;
 
   const connected = getConnectedNodeIds(edges);
+  const adjacency = buildAdjacencyMap(edges);
   const localIds = new Set<string>();
 
   if (localGraphOnly && focusNodeId) {
@@ -132,9 +185,41 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
 
   const query = normalize(searchText);
   const queryTokens = query.split(/\s+/).filter(Boolean);
+  const profileSeedIds = profileType
+    ? nodes
+        .filter((node) => {
+          const nodeProfileType =
+            typeof node.metadata?.profileType === "string"
+              ? node.metadata.profileType
+              : node.type === "profile" && node.id.startsWith("profile:")
+                ? node.id.slice("profile:".length)
+                : null;
+          return nodeProfileType === profileType;
+        })
+        .map((node) => node.id)
+    : [];
+  const profileScopedIds = profileSeedIds.length > 0 ? expandConnectedNodeIds(profileSeedIds, adjacency, 3) : null;
+  const companySeedIds = companyId
+    ? nodes
+        .filter((node) => {
+          const metadataCompanyId = readMetadataString(node, ["companyId", "company_id"]);
+          return node.id === `company:${companyId}` || node.companyId === companyId || metadataCompanyId === companyId;
+        })
+        .map((node) => node.id)
+    : [];
+  const companyScopedIds = companySeedIds.length > 0 ? expandConnectedNodeIds(companySeedIds, adjacency, 3) : null;
+  const projectSeedIds = projectId
+    ? nodes
+        .filter((node) => {
+          const metadataProjectId = readMetadataString(node, ["projectId", "project_id"]);
+          return node.id === `project:${projectId}` || node.projectId === projectId || metadataProjectId === projectId;
+        })
+        .map((node) => node.id)
+    : [];
+  const projectScopedIds = projectSeedIds.length > 0 ? expandConnectedNodeIds(projectSeedIds, adjacency, 2) : null;
 
   const visibleNodes = nodes.filter((node) => {
-    if (profileType && node.metadata?.profileType && node.metadata.profileType !== profileType) return false;
+    if (profileScopedIds && !profileScopedIds.has(node.id)) return false;
 
     if (subjectKind === "user" && subjectId) {
       const createdByMatch = node.createdBy === subjectId;
@@ -146,8 +231,13 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
     if (subjectKind === "company" && subjectId) {
       if (node.companyId && node.companyId !== subjectId) return false;
     } else {
-      if (!belongsToSelectedCompany(node, companyId)) return false;
-      if (!belongsToSelectedProject(node, projectId)) return false;
+      const companyMatch = belongsToSelectedCompany(node, companyId);
+      const projectMatch = belongsToSelectedProject(node, projectId);
+      const connectedToCompany = companyScopedIds?.has(node.id) ?? false;
+      const connectedToProject = projectScopedIds?.has(node.id) ?? false;
+
+      if (companyId && !companyMatch && !connectedToCompany) return false;
+      if (projectId && !projectMatch && !connectedToProject) return false;
     }
     if (moduleFilter && node.module !== moduleFilter) return false;
     if (nodeType !== "all" && node.type !== nodeType) return false;

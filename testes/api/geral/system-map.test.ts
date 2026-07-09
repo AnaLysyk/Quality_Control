@@ -4,6 +4,7 @@ import path from "node:path";
 import { SYSTEM_MODULES } from "@/lib/navigation/module-map";
 import { NAV_CATALOG } from "@/lib/navigation/navigationCatalog";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
+import { getUnmappedSystemPageFiles } from "@/lib/navigation/systemPageAudit";
 import { PERMISSION_MODULES } from "@/lib/permissionCatalog";
 
 function flattenMenuRouteIds() {
@@ -35,6 +36,10 @@ describe("mapa do sistema", () => {
       const absolutePath = path.join(process.cwd(), routeDefinition.mainFile);
       expect(fs.existsSync(absolutePath)).toBe(true);
     }
+  });
+
+  it("mantem toda page.tsx autenticada mapeada ou explicitamente excluida da matriz", () => {
+    expect(getUnmappedSystemPageFiles(SYSTEM_ROUTES)).toEqual([]);
   });
 
   it("mantem todos os itens do menu ligados a rotas mapeadas", () => {

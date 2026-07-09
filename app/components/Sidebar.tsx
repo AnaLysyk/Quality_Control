@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
@@ -16,6 +16,7 @@ import SidebarFooter from "./navigation/SidebarFooter";
 import ProjectSelector from "./ProjectSelector";
 import CreateSupportTicketButton from "./CreateSupportTicketButton";
 import type { NavModuleDef } from "@/lib/navigation/navigationCatalog";
+import type { NavItemDef } from "@/lib/navigation/navigationCatalog";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const REMOVED_MODULE_IDS = new Set<string>(["operations"]);
@@ -52,6 +53,21 @@ function normalizeSearch(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+
+function navItemMatchesSearch(item: NavItemDef, query: string) {
+  return normalizeSearch(item.label + " " + item.id + " " + (item.routeId ?? "") + " " + (item.group ?? "")).includes(query);
+}
+
+function filterNavItemBySearch(item: NavItemDef, query: string): NavItemDef | null {
+  const children = (item.children ?? [])
+    .map((child) => filterNavItemBySearch(child, query))
+    .filter((child): child is NavItemDef => Boolean(child));
+
+  if (navItemMatchesSearch(item, query)) return item;
+  if (children.length > 0) return { ...item, children };
+  return null;
 }
 
 function simplifySupportMenu(mod: NavModuleDef): NavModuleDef {
@@ -158,10 +174,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     if (!query) return modules;
     return modules
       .map((mod) => {
-        const moduleMatches = normalizeSearch(`${mod.label} ${mod.id}`).includes(query);
-        const matchingItems = mod.items.filter((item) =>
-          normalizeSearch(`${item.label} ${item.id} ${item.routeId ?? ""} ${item.group ?? ""}`).includes(query),
-        );
+        const moduleMatches = normalizeSearch(mod.label + " " + mod.id).includes(query);
+        const matchingItems = mod.items
+          .map((item) => filterNavItemBySearch(item, query))
+          .filter((item): item is NavItemDef => Boolean(item));
         if (moduleMatches) return mod;
         if (matchingItems.length > 0) return { ...mod, items: matchingItems };
         return null;
@@ -210,8 +226,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           </button>
 
           {companyOpen ? (
-            <div className="sidebar-dropdown absolute left-3 right-3 top-full z-50 mt-1 overflow-hidden rounded-xl border shadow-2xl">
-              <div className="sidebar-dropdown-search-wrap border-b p-2">
+            <div className="sidebar-dropdown pointer-events-auto absolute left-3 right-3 top-full z-[140] mt-1 isolate overflow-hidden rounded-xl border bg-[var(--tc-surface,#ffffff)] shadow-2xl">
+              <div className="sidebar-dropdown-search-wrap border-b bg-[var(--tc-surface,#ffffff)] p-2">
                 <div className="sidebar-search flex items-center gap-2 rounded-lg border px-2 py-1.5">
                   <FiSearch size={12} className="shrink-0 text-white/55" />
                   <input
@@ -225,7 +241,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                 </div>
               </div>
 
-              <div className="max-h-[min(18rem,45vh)] overflow-y-auto py-1 [scrollbar-width:thin]">
+              <div className="max-h-[min(18rem,45vh)] overflow-y-auto bg-[var(--tc-surface,#ffffff)] py-1 [scrollbar-width:thin]">
                 {filteredCompanies.length > 0 ? (
                   filteredCompanies.map((client) => {
                     const active = client.slug === activeClientSlug;
@@ -304,7 +320,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         )}
 
         {!effectiveCollapsed && (
-          <nav className="px-3 pb-3 pt-0" aria-label="NavegaÃ§Ã£o principal">
+          <nav className="px-3 pb-3 pt-0" aria-label="Navegação principal">
             <div className="space-y-0.5">
               {!loading &&
                 visibleModules.map((mod) => (
@@ -322,7 +338,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
             {!loading && visibleModules.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/15 bg-white/8 px-3 py-4 text-center text-xs text-white/65">
-                Nenhum mÃ³dulo encontrado.
+                Nenhum módulo encontrado.
               </div>
             ) : null}
           </nav>
@@ -367,7 +383,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             onClick={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"
-            aria-label="Menu de navegaÃ§Ã£o"
+            aria-label="Menu de navegação"
           >
             {sidebarBody}
           </div>

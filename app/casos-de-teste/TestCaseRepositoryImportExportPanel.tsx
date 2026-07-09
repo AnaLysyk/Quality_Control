@@ -322,7 +322,11 @@ function exportFilename(format: ExportFormat, projectSlug?: string | null) {
   return `${suffix}-casos-${date}.${extension}`;
 }
 
-export default function TestCaseRepositoryImportExportPanel() {
+export default function TestCaseRepositoryImportExportPanel({
+  initialCompanySlug,
+}: {
+  initialCompanySlug?: string | null;
+} = {}) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { activeClientSlug } = useClientContext();
   const { activeProject } = useProjectContext();
@@ -332,12 +336,12 @@ export default function TestCaseRepositoryImportExportPanel() {
 
   const context = useMemo(
     () => ({
-      companySlug: activeClientSlug ?? null,
+      companySlug: initialCompanySlug ?? activeClientSlug ?? null,
       projectId: activeProject?.id ?? null,
       projectCode: activeProject?.qaseProjectCode ?? activeProject?.slug ?? null,
       projectName: activeProject?.name ?? null,
     }),
-    [activeClientSlug, activeProject],
+    [activeClientSlug, activeProject, initialCompanySlug],
   );
 
   async function loadCurrentCases() {

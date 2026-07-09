@@ -1,6 +1,4 @@
-import CompanyTestCasesRepositoryClient from "../components/CompanyTestCasesRepositoryClient";
 import TestCaseRepositoryClient from "./TestCaseRepositoryClient";
-import TestCaseRepositoryImportExportPanel from "./TestCaseRepositoryImportExportPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +17,8 @@ export default async function CasosDeTestePage({
   const companySlug = firstParam(resolvedSearchParams?.companySlug)?.trim();
 
   if (companySlug) {
-    return <CompanyTestCasesRepositoryClient initialCompanySlug={companySlug} />;
+    return <TestCaseRepositoryClient initialCompanySlug={companySlug} lockCompanyScope />;
   }
 
-  return (
-    <>
-      <TestCaseRepositoryImportExportPanel />
-      <TestCaseRepositoryClient />
-    </>
-  );
+  return <TestCaseRepositoryClient />;
 }

@@ -1,6 +1,4 @@
-﻿"use client";
-
-
+"use client";
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 12000) {
   const controller = new AbortController();
@@ -17,30 +15,17 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
 }
 export const dynamic = "force-dynamic";
 
+import { getPermissionModulesWithScreens } from "@/lib/navigation/screenPermissions";
+
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FiAlertTriangle,
-  FiCheck,
-  FiChevronDown,
-  FiChevronRight,
-  FiClock,
-  FiEye,
-  FiEyeOff,
-  FiRefreshCw,
-  FiRotateCcw,
-  FiSave,
-  FiSearch,
-  FiShield,
-  FiSliders,
-  FiUsers,
-  FiX,
-} from "react-icons/fi";
+  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiRefreshCw, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, FiX, } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { PERMISSION_MODULES, type PermissionModule } from "@/lib/permissionCatalog";
+import { getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
@@ -385,6 +370,60 @@ function getModuleState(module: PermissionModule, permissions: PermissionMatrix)
   };
 }
 
+function UserPermissionActionToggle(props: {
+  moduleId: string;
+  action: string;
+  systemDefaults: PermissionMatrix;
+  effectivePermissions: PermissionMatrix;
+  disabled: boolean;
+  onToggle: (moduleId: string, action: string, checked: boolean) => void;
+}) {
+  const { moduleId, action, systemDefaults, effectivePermissions, disabled, onToggle } = props;
+  const checked = hasPermissionAccess(effectivePermissions, moduleId, action);
+  const baseChecked = hasPermissionAccess(systemDefaults, moduleId, action);
+  const changed = checked !== baseChecked;
+
+  return (
+    <label
+      className={[
+        "group flex min-w-0 items-center gap-3 rounded-xl border bg-white px-3 py-2 text-sm font-semibold transition",
+        checked ? "border-emerald-200 text-emerald-950" : "border-slate-200 text-slate-600",
+        changed ? "ring-2 ring-[#011848]/10" : "",
+        disabled ? "cursor-not-allowed opacity-65" : "cursor-pointer hover:border-[#011848]/35 hover:bg-slate-50",
+      ].join(" ")}
+    >
+      <span
+        className={[
+          "relative flex h-5 w-9 shrink-0 items-center rounded-full border transition",
+          checked ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-slate-200",
+        ].join(" ")}
+      >
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={checked}
+          disabled={disabled}
+          onChange={(event) => onToggle(moduleId, action, event.target.checked)}
+        />
+        <span
+          className={[
+            "absolute h-4 w-4 rounded-full bg-white shadow-sm transition",
+            checked ? "left-4" : "left-0.5",
+          ].join(" ")}
+        />
+      </span>
+
+      <span className="min-w-0 flex-1 truncate">{getActionLabel(action)}</span>
+
+      {changed ? (
+        <span className="rounded-full border border-[#011848]/15 bg-[#011848]/5 px-2 py-0.5 text-[10px] font-black uppercase text-[#011848]">
+          Ajuste
+        </span>
+      ) : null}
+    </label>
+  );
+}
+
 export default function UsersPermissionsPage() {
   const { user, accessContext, loading, can, refreshUser } = usePermissionAccess();
 
@@ -409,8 +448,10 @@ export default function UsersPermissionsPage() {
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
   const [detailsByUserId, setDetailsByUserId] = useState<Record<string, UserPermissionsResponse>>({});
   const [draftsByUserId, setDraftsByUserId] = useState<Record<string, PermissionOverride>>({});
+  const [expandedPermissionModulesByUser, setExpandedPermissionModulesByUser] = useState<Record<string, string[]>>({});
 
   const canView = can("permissions", "view");
+  const permissionModules = useMemo(() => getPermissionModulesWithScreens(), []);
 
   const canSeeAllUsers = can("users", "view_all");
 
@@ -546,6 +587,32 @@ export default function UsersPermissionsPage() {
       );
 
       return { ...current, [profileUser.id]: nextDraft };
+    });
+  }
+
+  function handleUserActionToggle(profileUser: UserPermissionRow, moduleId: string, action: string, checked: boolean) {
+    const systemDefaults = getUserSystemDefaults(profileUser);
+
+    setDraftsByUserId((current) => {
+      const currentDraft = current[profileUser.id] ?? { role: profileUser.role, allow: {}, deny: {} };
+      const nextDraft = toggleOverrideAction(currentDraft, systemDefaults, moduleId, action, checked);
+      return { ...current, [profileUser.id]: nextDraft };
+    });
+  }
+
+  function isUserPermissionModuleExpanded(userId: string, moduleId: string) {
+    return (expandedPermissionModulesByUser[userId] ?? []).includes(moduleId);
+  }
+
+  function toggleUserPermissionModule(userId: string, moduleId: string) {
+    setExpandedPermissionModulesByUser((current) => {
+      const currentModules = current[userId] ?? [];
+      const exists = currentModules.includes(moduleId);
+      const nextModules = exists
+        ? currentModules.filter((item) => item !== moduleId)
+        : [...currentModules, moduleId];
+
+      return { ...current, [userId]: nextModules };
     });
   }
 
@@ -1266,45 +1333,94 @@ export default function UsersPermissionsPage() {
                                       </div>
                                     </div>
 
-                                    <div className="grid max-h-[520px] gap-0 overflow-y-auto">
-                                      {PERMISSION_MODULES.map((module) => {
-                                        const state = getModuleState(module, effectivePermissions);
-                                        const StateIcon = state.icon;
+                                    <div className="max-h-[620px] overflow-y-auto">
+                                      <div className="divide-y divide-slate-100">
+                                        {permissionModules.map((module) => {
+                                          const systemDefaults = getUserSystemDefaults(profileUser);
+                                          const state = getModuleState(module, effectivePermissions);
+                                          const StateIcon = state.icon;
+                                          const moduleExpanded = isUserPermissionModuleExpanded(profileUser.id, module.id);
+                                          const changedActions = module.actions.filter(
+                                            (action) =>
+                                              hasPermissionAccess(effectivePermissions, module.id, action) !==
+                                              hasPermissionAccess(systemDefaults, module.id, action),
+                                          ).length;
 
-                                        return (
-                                          <div key={module.id} className="grid gap-3 border-b border-slate-100 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_110px_160px] sm:items-center">
-                                            <div className="min-w-0">
-                                              <p className="truncate text-sm font-black text-[#0f172a]">{module.label}</p>
-                                              <p className="truncate text-xs font-semibold text-slate-500">{module.description}</p>
+                                          return (
+                                            <div key={module.id} className="bg-white">
+                                              <div className="grid gap-3 px-4 py-3 xl:grid-cols-[minmax(0,1fr)_120px_110px_180px] xl:items-center">
+                                                <div className="min-w-0">
+                                                  <div className="flex min-w-0 items-start gap-2">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => toggleUserPermissionModule(profileUser.id, module.id)}
+                                                      className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:border-[#011848] hover:text-[#011848]"
+                                                      aria-label={moduleExpanded ? `Recolher ${module.label}` : `Expandir ${module.label}`}
+                                                    >
+                                                      {moduleExpanded ? <FiChevronDown className="h-3.5 w-3.5" /> : <FiChevronRight className="h-3.5 w-3.5" />}
+                                                    </button>
+
+                                                    <div className="min-w-0">
+                                                      <p className="truncate text-sm font-black text-[#0f172a]">{module.label}</p>
+                                                      <p className="truncate text-xs font-semibold text-slate-500">{module.description}</p>
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                <span className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-black ${state.tone}`}>
+                                                  <StateIcon className="h-3.5 w-3.5" />
+                                                  {state.label}
+                                                </span>
+
+                                                <span className="w-fit rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-black text-slate-600">
+                                                  {state.allowed}/{state.total}
+                                                  {changedActions ? ` ? ${changedActions} ajuste${changedActions === 1 ? "" : "s"}` : ""}
+                                                </span>
+
+                                                <div className="flex justify-start gap-2 xl:justify-end">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => handleUserModuleToggle(profileUser, module, true)}
+                                                    disabled={!canEditUser || savingThisUser}
+                                                    className="h-8 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-black text-emerald-800 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                  >
+                                                    Ativar tudo
+                                                  </button>
+
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => handleUserModuleToggle(profileUser, module, false)}
+                                                    disabled={!canEditUser || savingThisUser}
+                                                    className="h-8 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-black text-rose-800 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                  >
+                                                    Ocultar tudo
+                                                  </button>
+                                                </div>
+                                              </div>
+
+                                              {moduleExpanded ? (
+                                                <div className="border-t border-slate-100 bg-slate-50 px-4 py-3">
+                                                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                                                    {module.actions.map((action) => (
+                                                      <UserPermissionActionToggle
+                                                        key={`${profileUser.id}-${module.id}-${action}`}
+                                                        moduleId={module.id}
+                                                        action={action}
+                                                        systemDefaults={systemDefaults}
+                                                        effectivePermissions={effectivePermissions}
+                                                        disabled={!canEditUser || savingThisUser}
+                                                        onToggle={(moduleId, actionName, checked) =>
+                                                          handleUserActionToggle(profileUser, moduleId, actionName, checked)
+                                                        }
+                                                      />
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              ) : null}
                                             </div>
-
-                                            <span className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-black ${state.tone}`}>
-                                              <StateIcon className="h-3.5 w-3.5" />
-                                              {state.label}
-                                            </span>
-
-                                            <div className="flex justify-start gap-2 sm:justify-end">
-                                              <button
-                                                type="button"
-                                                onClick={() => handleUserModuleToggle(profileUser, module, true)}
-                                                disabled={!canEditUser || savingThisUser}
-                                                className="h-8 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-black text-emerald-800 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                              >
-                                                Ativar
-                                              </button>
-
-                                              <button
-                                                type="button"
-                                                onClick={() => handleUserModuleToggle(profileUser, module, false)}
-                                                disabled={!canEditUser || savingThisUser}
-                                                className="h-8 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-black text-rose-800 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                              >
-                                                Desativar
-                                              </button>
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
+                                          );
+                                        })}
+                                      </div>
                                     </div>
                                   </section>
 

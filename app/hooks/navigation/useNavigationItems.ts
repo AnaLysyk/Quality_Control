@@ -86,6 +86,12 @@ const PROJECT_SCOPED_ITEM_IDS = new Set([
   "auto-base64",
   "auto-arquivos",
   "auto-logs",
+  "quality-automation-cases",
+  "quality-automation-plans",
+  "quality-automation-runs",
+  "quality-automation-defects",
+  "quality-doc-links",
+  "quality-doc-repository",
 ]);
 const PROJECT_OPTIONAL_SCOPED_ITEM_IDS = new Set<string>();
 const ENABLED_NAV_CATALOG = NAV_CATALOG;
@@ -304,32 +310,134 @@ function buildBrainItems(
 
 function buildQualityItems(items: NavItemDef[], companySlug: string | null): NavItemDef[] {
   if (!companySlug) return items;
-  const projectItem: NavItemDef = {
-    id: "quality-projects",
-    routeId: "empresa.projetos",
-    label: "Projetos",
-    iconKey: "folder",
-    module: "quality",
-    companyRoute: "projetos",
-    favoriteEnabled: true,
-    testId: "nav-company-projects",
+
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const clone = (id: string, overrides: Partial<NavItemDef> = {}): NavItemDef | null => {
+    const item = byId.get(id);
+    if (!item) return null;
+    return { ...item, group: undefined, ...overrides };
   };
-  const documentationItem: NavItemDef = {
-    id: "docs-central",
-    routeId: "",
-    label: "Documentação",
-    iconKey: "file-text",
-    module: "quality",
-    href: "/documentos",
-    requiredPermission: { moduleId: "documents", action: "view" },
-    favoriteEnabled: true,
-    group: "Projeto",
-    testId: "nav-project-documents",
-  };
+
+  const manualChildren = [
+    clone("quality-cases", {
+      label: "Repositório de casos de teste",
+      testId: "nav-quality-manual-cases",
+    }),
+    clone("quality-plans", {
+      label: "Planos de teste",
+      testId: "nav-quality-manual-plans",
+    }),
+    clone("quality-runs", {
+      label: "Execuções de casos de teste",
+      testId: "nav-quality-manual-runs",
+    }),
+    clone("quality-defects", {
+      label: "Defeitos",
+      testId: "nav-quality-manual-defects",
+    }),
+  ].filter((item): item is NavItemDef => Boolean(item));
+
+  const automatedChildren: NavItemDef[] = [
+    {
+      id: "quality-automation-cases",
+      routeId: "",
+      label: "Repositório de casos de teste",
+      iconKey: "clipboard",
+      module: "quality",
+      href: "/automacoes/casos",
+      requiredPermission: { moduleId: "playwright", action: "read" },
+      favoriteEnabled: true,
+      testId: "nav-quality-automation-cases",
+    },
+    {
+      id: "quality-automation-plans",
+      routeId: "",
+      label: "Planos de teste",
+      iconKey: "list",
+      module: "quality",
+      href: "/automacoes/fluxos",
+      requiredPermission: { moduleId: "playwright", action: "read" },
+      favoriteEnabled: true,
+      testId: "nav-quality-automation-plans",
+    },
+    {
+      id: "quality-automation-runs",
+      routeId: "",
+      label: "Execução",
+      iconKey: "play",
+      module: "quality",
+      href: "/automacoes/execucoes",
+      requiredPermission: { moduleId: "playwright", action: "read" },
+      favoriteEnabled: true,
+      testId: "nav-quality-automation-runs",
+    },
+    {
+      id: "quality-automation-defects",
+      routeId: "",
+      label: "Defeitos",
+      iconKey: "alert-triangle",
+      module: "quality",
+      href: "/defeitos",
+      requiredPermission: { moduleId: "defect_tracking", action: "read" },
+      favoriteEnabled: true,
+      testId: "nav-quality-automation-defects",
+    },
+  ];
+
+  const documentationChildren: NavItemDef[] = [
+    {
+      id: "quality-doc-links",
+      routeId: "",
+      label: "Anexos e links",
+      iconKey: "link",
+      module: "quality",
+      href: "/documentos",
+      requiredPermission: { moduleId: "documents", action: "view" },
+      favoriteEnabled: true,
+      testId: "nav-quality-doc-links",
+    },
+    {
+      id: "quality-doc-repository",
+      routeId: "",
+      label: "Repositório publicado",
+      iconKey: "book-open",
+      module: "quality",
+      href: "/documentos/repositorio",
+      requiredPermission: { moduleId: "documents", action: "view" },
+      favoriteEnabled: true,
+      testId: "nav-quality-doc-repository",
+    },
+  ];
+
   return [
-    projectItem,
-    ...items.filter((item) => item.id !== projectItem.id && item.id !== documentationItem.id),
-    documentationItem,
+    {
+      id: "quality-manual-tests",
+      routeId: "",
+      label: "Testes manuais",
+      iconKey: "clipboard",
+      module: "quality",
+      children: manualChildren,
+      testId: "nav-quality-manual-tests",
+    },
+    {
+      id: "quality-automated-tests",
+      routeId: "",
+      label: "Testes automatizados",
+      iconKey: "zap",
+      module: "quality",
+      children: automatedChildren,
+      testId: "nav-quality-automated-tests",
+    },
+    {
+      id: "quality-documentation",
+      routeId: "",
+      label: "Documentação",
+      iconKey: "file-text",
+      module: "quality",
+      requiredPermission: { moduleId: "documents", action: "view" },
+      children: documentationChildren,
+      testId: "nav-quality-documentation",
+    },
   ];
 }
 
@@ -466,6 +574,35 @@ function withScopedManagementModule(catalog: NavModuleDef[], effectiveRole: Syst
   return [...catalog.filter((module) => module.id !== "management"), managementModule];
 }
 
+
+function resolveScopedNavItem(
+  item: NavItemDef,
+  companySlug: string | null,
+  projectSlug: string | null,
+  companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
+  effectiveRole: SystemRole | null,
+  permissions?: PermissionMatrix | null,
+): NavItemDef | null {
+  if (DISABLED_ITEM_IDS.has(item.id)) return null;
+  if (PROJECT_SCOPED_ITEM_IDS.has(item.id) && !projectSlug) return null;
+
+  const children = (item.children ?? [])
+    .map((child) => resolveScopedNavItem(child, companySlug, projectSlug, companyRouteInput, effectiveRole, permissions))
+    .filter((child): child is NavItemDef => Boolean(child));
+
+  const canSeeSelf = canSeeNavItem(item, effectiveRole, permissions);
+  if (!canSeeSelf && children.length === 0) return null;
+
+  const href = resolveItemHref(item, companySlug, projectSlug, companyRouteInput);
+  if (!href && children.length === 0) return null;
+
+  return {
+    ...item,
+    href,
+    children: children.length > 0 ? children : undefined,
+  };
+}
+
 function resolveModuleItems(
   mod: NavModuleDef,
   companySlug: string | null,
@@ -490,18 +627,8 @@ function resolveModuleItems(
     label: usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
-      .filter((item) => {
-        if (DISABLED_ITEM_IDS.has(item.id)) return false;
-        if (!canSeeNavItem(item, effectiveRole, permissions)) return false;
-        if (PROJECT_SCOPED_ITEM_IDS.has(item.id)) return Boolean(projectSlug);
-        return true;
-      })
-      .map((item) => ({
-        ...item,
-        label: item.label,
-        href: resolveItemHref(item, companySlug, projectSlug, companyRouteInput),
-        testId: item.testId,
-      })),
+      .map((item) => resolveScopedNavItem(item, companySlug, projectSlug, companyRouteInput, effectiveRole, permissions))
+      .filter((item): item is NavItemDef => Boolean(item)),
   };
 }
 

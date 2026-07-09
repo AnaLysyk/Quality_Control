@@ -18,6 +18,7 @@ import { canAccess } from "@/lib/permissions/can-access";
 type SistemaMapaClientProps = {
   modules: readonly SystemModuleDefinition[];
   routes: readonly SystemRouteDefinition[];
+  unmappedPages: readonly string[];
 };
 
 const STATUS_OPTIONS: Array<{ value: SystemMapStatus; label: string }> = [
@@ -81,7 +82,7 @@ function StatusBadge({ status }: { status: SystemMapStatus }) {
   );
 }
 
-export default function SistemaMapaClient({ modules, routes }: SistemaMapaClientProps) {
+export default function SistemaMapaClient({ modules, routes, unmappedPages }: SistemaMapaClientProps) {
   const { accessContext, loading: accessLoading } = usePermissionAccess();
   const [query, setQuery] = useState("");
   const [moduleFilter, setModuleFilter] = useState("todos");
@@ -203,9 +204,40 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
                   {routes.length - statusCounts.ativo}
                 </div>
               </div>
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">
+                <div className="text-xs font-semibold">Fora da matriz</div>
+                <div className="mt-1 text-2xl font-black">{unmappedPages.length}</div>
+              </div>
             </div>
           </div>
         </section>
+
+        {unmappedPages.length > 0 ? (
+          <section className="rounded-[28px] border border-rose-200 bg-rose-50/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-5">
+            <div className="flex flex-col gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-700">
+                  Atenção
+                </p>
+                <h2 className="mt-1 text-lg font-black tracking-[-0.02em] text-rose-950">
+                  Existem telas fora da matriz de permissões
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-rose-900/80">
+                  Essas páginas existem no sistema, mas ainda não foram cadastradas em <code>SYSTEM_ROUTES</code>.
+                  Enquanto isso, elas não aparecem na Gestão de perfil/usuário como telas governáveis.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-rose-200 bg-white/70 p-3">
+                <div className="max-h-64 overflow-y-auto rounded-xl bg-white px-3 py-2 font-mono text-xs leading-6 text-rose-900">
+                  {unmappedPages.map((pagePath) => (
+                    <div key={pagePath}>{pagePath}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-5">
           <div className="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_240px_200px_auto]">
@@ -369,5 +401,4 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
     </main>
   );
 }
-
 

@@ -112,6 +112,34 @@ function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
+function normalizeProjectKey(value?: string | null) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function resolveProjectForCompany(
+  projects: Array<{ id: string; companyId: string; name: string; slug: string }>,
+  companyId: string | null | undefined,
+  candidate: string | null | undefined,
+) {
+  if (!companyId || !candidate) return null;
+  const normalizedCandidate = normalizeProjectKey(candidate);
+  if (!normalizedCandidate) return null;
+
+  return (
+    projects.find(
+      (project) =>
+        project.companyId === companyId &&
+        (normalizeProjectKey(project.slug) === normalizedCandidate || normalizeProjectKey(project.name) === normalizedCandidate),
+    ) ?? null
+  );
+}
+
 async function resolveScopedCompanies(access: BrainAccessContext) {
   if (access.hasGlobalVisibility) {
     return prisma.company.findMany({
@@ -290,6 +318,7 @@ export async function GET(req: Request) {
 
   const nodes: DomainNode[] = [];
   const edges: DomainEdge[] = [];
+  const projectById = new Map(projects.map((project) => [project.id, project]));
 
   const addNode = (node: DomainNode) => nodes.push(node);
   const addEdge = (edge: DomainEdge) => edges.push(edge);
@@ -527,12 +556,17 @@ export async function GET(req: Request) {
   for (const ticket of tickets) {
     const company = ticket.companyId ? companyById.get(ticket.companyId) : ticket.companySlug ? companyBySlug.get(ticket.companySlug) : null;
     const companyId = ticket.companyId || company?.id || undefined;
+    const fallbackProject = companyId && projects.filter((project) => project.companyId === companyId).length === 1
+      ? projects.find((project) => project.companyId === companyId) ?? null
+      : null;
     addNode({
       id: `ticket:${ticket.id}`,
       type: "event",
       module: "Suporte",
       companyId,
       companyName: company?.company_name || company?.name,
+      projectId: fallbackProject?.id,
+      projectName: fallbackProject?.name,
       label: ticket.code ? `${ticket.code} · ${ticket.title}` : ticket.title,
       description: ticket.description,
       status: statusFromGeneric(ticket.status),
@@ -547,6 +581,7 @@ export async function GET(req: Request) {
       metadata: { code: ticket.code, type: ticket.type, priority: ticket.priority, tags: ticket.tags, assignedToUserId: ticket.assignedToUserId, actorUserId: ticket.createdBy, subjectKind: "user" },
     });
     if (companyId) addEdge({ id: `company-${companyId}-ticket-${ticket.id}`, source: `company:${companyId}`, target: `ticket:${ticket.id}`, label: "possui chamado", type: "contains", status: "ok", companyId });
+    if (fallbackProject) addEdge({ id: `project-${fallbackProject.id}-ticket-${ticket.id}`, source: `project:${fallbackProject.id}`, target: `ticket:${ticket.id}`, label: "organiza chamado", type: "belongs_to_project", status: "ok", companyId, projectId: fallbackProject.id });
     addEdge({ id: `ticket-${ticket.id}-creator-${ticket.createdBy}`, source: `user:${ticket.createdBy}`, target: `ticket:${ticket.id}`, label: "criou chamado", type: "created_by", status: "ok", companyId, metadata: { subjectKind: "user", subjectId: ticket.createdBy } });
     if (ticket.assignedToUserId) addEdge({ id: `ticket-${ticket.id}-assignee-${ticket.assignedToUserId}`, source: `user:${ticket.assignedToUserId}`, target: `ticket:${ticket.id}`, label: "responsável por chamado", type: "action", status: "ok", companyId, metadata: { subjectKind: "user", subjectId: ticket.assignedToUserId } });
   }
@@ -617,6 +652,7 @@ export async function GET(req: Request) {
 
   for (const card of kanbanCards) {
     const company = card.clientSlug ? companyBySlug.get(card.clientSlug) : null;
+    const relatedProject = resolveProjectForCompany(projects, company?.id, card.project);
     const label = card.title || card.bug || `Cartão ${card.id}`;
     addNode({
       id: `kanban-defect:${card.id}`,
@@ -624,7 +660,8 @@ export async function GET(req: Request) {
       module: "Defeitos",
       companyId: company?.id,
       companyName: company?.company_name || company?.name,
-      projectName: card.project,
+      projectId: relatedProject?.id,
+      projectName: relatedProject?.name ?? card.project,
       label,
       description: card.bug || card.link || "Cartão Kanban relacionado a defeito ou execução.",
       status: statusFromGeneric(card.status),
@@ -636,6 +673,50 @@ export async function GET(req: Request) {
       metadata: { runId: card.runId, caseId: card.caseId, link: card.link, clientSlug: card.clientSlug },
     });
     if (company) addEdge({ id: `company-${company.id}-kanban-${card.id}`, source: `company:${company.id}`, target: `kanban-defect:${card.id}`, label: "possui cartão de defeito", type: "contains", status: statusFromGeneric(card.status), companyId: company.id });
+    if (relatedProject) addEdge({ id: `project-${relatedProject.id}-kanban-${card.id}`, source: `project:${relatedProject.id}`, target: `kanban-defect:${card.id}`, label: "contém item", type: "contains", status: statusFromGeneric(card.status), companyId: company?.id, projectId: relatedProject.id });
+    if (card.runId != null) {
+      addNode({
+        id: `run:${card.runId}`,
+        type: "execution",
+        module: "Execuções",
+        companyId: company?.id,
+        companyName: company?.company_name || company?.name,
+        projectId: relatedProject?.id,
+        projectName: relatedProject?.name ?? card.project,
+        label: `Run ${card.runId}`,
+        description: `Execução relacionada ao item ${label}.`,
+        status: statusFromGeneric(card.status),
+        size: "sm",
+        information: `Run ${card.runId} ligada ao item ${label}.`,
+        entityType: "run",
+        entityId: String(card.runId),
+        metadata: { subjectKind: "project", subjectId: relatedProject?.id ?? null },
+      });
+      addEdge({ id: `kanban-${card.id}-run-${card.runId}`, source: `kanban-defect:${card.id}`, target: `run:${card.runId}`, label: "vem da execução", type: "belongs_to_project", status: statusFromGeneric(card.status), companyId: company?.id, projectId: relatedProject?.id });
+      if (relatedProject) addEdge({ id: `project-${relatedProject.id}-run-${card.runId}`, source: `project:${relatedProject.id}`, target: `run:${card.runId}`, label: "possui execução", type: "contains", status: "ok", companyId: company?.id, projectId: relatedProject.id });
+    }
+    if (card.caseId != null) {
+      addNode({
+        id: `case:${card.caseId}`,
+        type: "test_case",
+        module: "Casos de Teste",
+        companyId: company?.id,
+        companyName: company?.company_name || company?.name,
+        projectId: relatedProject?.id,
+        projectName: relatedProject?.name ?? card.project,
+        label: `Caso ${card.caseId}`,
+        description: `Caso relacionado ao item ${label}.`,
+        status: "ok",
+        size: "sm",
+        information: `Caso ${card.caseId} conectado ao item ${label}.`,
+        entityType: "test_case",
+        entityId: String(card.caseId),
+        metadata: { subjectKind: "project", subjectId: relatedProject?.id ?? null },
+      });
+      addEdge({ id: `kanban-${card.id}-case-${card.caseId}`, source: `kanban-defect:${card.id}`, target: `case:${card.caseId}`, label: "vem do caso", type: "contains", status: "ok", companyId: company?.id, projectId: relatedProject?.id });
+      if (card.runId != null) addEdge({ id: `run-${card.runId}-case-${card.caseId}`, source: `run:${card.runId}`, target: `case:${card.caseId}`, label: "executa caso", type: "contains", status: "ok", companyId: company?.id, projectId: relatedProject?.id });
+      if (relatedProject) addEdge({ id: `project-${relatedProject.id}-case-${card.caseId}`, source: `project:${relatedProject.id}`, target: `case:${card.caseId}`, label: "possui caso", type: "contains", status: "ok", companyId: company?.id, projectId: relatedProject.id });
+    }
   }
 
   for (const note of visibleNotes) {
@@ -704,4 +785,3 @@ export async function GET(req: Request) {
     },
   });
 }
-

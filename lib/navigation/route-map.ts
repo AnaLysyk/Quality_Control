@@ -28,7 +28,126 @@ const COMPANY_PROFILES: SystemRole[] = [
   SYSTEM_ROLES.COMPANY_USER,
 ];
 
-export const SYSTEM_ROUTES = [
+function formatSupplementalRouteLabel(pathname: string) {
+  const segments = pathname.split("/").filter(Boolean);
+  const rawSegment = segments[segments.length - 1] ?? "tela";
+
+  if (/^\[.+\]$/.test(rawSegment)) {
+    const previousSegment = segments[segments.length - 2] ?? "detalhe";
+    return `${previousSegment.replace(/-/g, " ")} detalhe`;
+  }
+
+  return rawSegment.replace(/-/g, " ");
+}
+
+function getSupplementalModuleId(pathname: string): SystemRouteDefinition["moduleId"] {
+  if (pathname.startsWith("/admin/requests") || pathname === "/requests") return "solicitacoes";
+  if (pathname.startsWith("/admin/support") || pathname.includes("/chamados") || pathname === "/issues" || pathname === "/kanban-it") return "suporte";
+  if (pathname.startsWith("/admin/runs") || pathname.startsWith("/admin/releases") || pathname.startsWith("/admin/defeitos")) return "testes-manuais";
+  if (pathname.startsWith("/admin/docs")) return "documentos";
+  if (pathname.startsWith("/admin/audit-logs") || pathname.startsWith("/admin/alerts")) return "configuracoes";
+  if (pathname.startsWith("/admin/home") || pathname === "/admin" || pathname.startsWith("/admin/test-metric")) return "dashboards";
+  if (pathname.startsWith("/admin")) return "configuracoes";
+  if (pathname.startsWith("/agenda")) return "agenda";
+  if (pathname.startsWith("/applications")) return "empresas";
+  if (pathname.startsWith("/automacoes")) return "automacao";
+  if (pathname.startsWith("/brain")) return "brain";
+  if (pathname === "/brand-identity" || pathname === "/central-de-qualidade" || pathname === "/modelo-qualidade") return "documentos";
+  if (pathname === "/clients" || pathname === "/clients-list" || pathname === "/empresas" || pathname.startsWith("/empresas")) return "empresas";
+  if (pathname.startsWith("/dashboard") || pathname === "/metrics") return "dashboards";
+  if (pathname === "/docs" || pathname === "/documentacao") return "documentos";
+  if (pathname === "/issues" || pathname === "/notificacoes") return "suporte";
+  if (pathname === "/me" || pathname.startsWith("/settings")) return "configuracoes";
+  if (pathname.startsWith("/release") || pathname.startsWith("/runs")) return "testes-manuais";
+  return "configuracoes";
+}
+
+function getSupplementalPermission(moduleId: SystemRouteDefinition["moduleId"]) {
+  switch (moduleId) {
+    case "empresas":
+      return { moduleId: "applications", action: "view" } as const;
+    case "usuarios":
+      return { moduleId: "users", action: "view" } as const;
+    case "permissoes":
+      return { moduleId: "permissions", action: "view" } as const;
+    case "testes-manuais":
+      return { moduleId: "test_repository", action: "read" } as const;
+    case "automacao":
+      return { moduleId: "playwright", action: "read" } as const;
+    case "brain":
+      return { moduleId: "brain", action: "view" } as const;
+    case "assistente":
+      return { moduleId: "ai", action: "use" } as const;
+    case "chat":
+      return { moduleId: "chat", action: "view" } as const;
+    case "suporte":
+      return { moduleId: "support", action: "view" } as const;
+    case "solicitacoes":
+      return { moduleId: "access_requests", action: "view" } as const;
+    case "documentos":
+      return { moduleId: "documents", action: "view" } as const;
+    case "dashboards":
+      return { moduleId: "dashboard", action: "view" } as const;
+    case "operacao":
+      return { moduleId: "operations", action: "view" } as const;
+    case "agenda":
+      return { moduleId: "release_calendar", action: "view" } as const;
+    case "configuracoes":
+    default:
+      return { moduleId: "settings", action: "view" } as const;
+  }
+}
+
+function getSupplementalProfiles(pathname: string): SystemRole[] {
+  if (pathname.startsWith("/admin")) return ADMIN_PROFILES;
+  if (pathname.startsWith("/automacoes")) return INTERNAL_PROFILES;
+  if (pathname.startsWith("/brain")) return ALL_PROFILES;
+  if (pathname.startsWith("/empresas")) return COMPANY_PROFILES;
+  return ALL_PROFILES;
+}
+
+function getSupplementalStatus(pathname: string): SystemRouteDefinition["status"] {
+  if (
+    pathname === "/admin" ||
+    pathname === "/clients" ||
+    pathname === "/clients-list" ||
+    pathname === "/docs" ||
+    pathname === "/documentacao" ||
+    pathname === "/me" ||
+    pathname === "/release" ||
+    pathname === "/requests" ||
+    pathname === "/settings"
+  ) {
+    return "legado";
+  }
+
+  return "parcial";
+}
+
+function buildSupplementalRoute(mainFile: string): SystemRouteDefinition {
+  const pathWithoutPrefix = mainFile.replace(/^app\//, "").replace(/\/page\.tsx$/, "");
+  const pathname = `/${pathWithoutPrefix}`;
+  const moduleId = getSupplementalModuleId(pathname);
+  const normalizedId = pathWithoutPrefix
+    .replace(/\//g, ".")
+    .replace(/\[([^\]]+)\]/g, "$1")
+    .replace(/[^a-zA-Z0-9._-]/g, "-");
+
+  return {
+    id: `suplementar.${normalizedId}`,
+    moduleId,
+    path: pathname,
+    label: formatSupplementalRouteLabel(pathname),
+    description: `Tela suplementar mapeada para governança de visibilidade: ${pathname}.`,
+    requiredPermission: getSupplementalPermission(moduleId),
+    expectedProfiles: getSupplementalProfiles(pathname),
+    status: getSupplementalStatus(pathname),
+    mainFile,
+    notes: "Entrada complementar criada para garantir governança da tela na matriz de perfil e usuário.",
+  };
+}
+
+const CORE_SYSTEM_ROUTES = [
   {
     id: "home.principal",
     moduleId: "dashboards",
@@ -831,6 +950,73 @@ export const SYSTEM_ROUTES = [
     mainFile: "app/profile/page.tsx",
     notes: "Avaliar consolidação com /settings/profile.",
   },
+] as const satisfies readonly SystemRouteDefinition[];
+
+const SUPPLEMENTAL_SYSTEM_ROUTES = [
+  "app/admin/alerts/page.tsx",
+  "app/admin/audit-logs/page.tsx",
+  "app/admin/chamados/page.tsx",
+  "app/admin/defeitos/page.tsx",
+  "app/admin/docs/page.tsx",
+  "app/admin/home/page.tsx",
+  "app/admin/page.tsx",
+  "app/admin/releases/page.tsx",
+  "app/admin/requests/page.tsx",
+  "app/admin/runs/page.tsx",
+  "app/admin/support/page.tsx",
+  "app/admin/test-metric/page.tsx",
+  "app/agenda/calendario-geral/page.tsx",
+  "app/agenda/meus-agendamentos/page.tsx",
+  "app/agenda/novo/page.tsx",
+  "app/applications-hub/page.tsx",
+  "app/applications-panel/page.tsx",
+  "app/automacoes/arquivos/page.tsx",
+  "app/automacoes/ferramentas/page.tsx",
+  "app/automacoes/quality-control/page.tsx",
+  "app/brain/acoes/page.tsx",
+  "app/brain/prompts/page.tsx",
+  "app/brain/qa/page.tsx",
+  "app/brain/solicitacoes/page.tsx",
+  "app/brain/validacoes/page.tsx",
+  "app/brand-identity/page.tsx",
+  "app/central-de-qualidade/page.tsx",
+  "app/clients-list/page.tsx",
+  "app/clients/page.tsx",
+  "app/dashboard/apps/page.tsx",
+  "app/docs/page.tsx",
+  "app/documentacao/page.tsx",
+  "app/empresas/[slug]/admin/page.tsx",
+  "app/empresas/[slug]/casos-de-teste/page.tsx",
+  "app/empresas/[slug]/chamados/page.tsx",
+  "app/empresas/[slug]/defeitos/kanban/page.tsx",
+  "app/empresas/[slug]/docs/page.tsx",
+  "app/empresas/[slug]/documentos/page.tsx",
+  "app/empresas/[slug]/metrics/page.tsx",
+  "app/empresas/[slug]/page.tsx",
+  "app/empresas/[slug]/perfil/page.tsx",
+  "app/empresas/[slug]/profile/page.tsx",
+  "app/empresas/[slug]/projetos/page.tsx",
+  "app/empresas/[slug]/releases/[releaseSlug]/page.tsx",
+  "app/empresas/[slug]/runs/[runSlug]/page.tsx",
+  "app/empresas/page.tsx",
+  "app/issues/page.tsx",
+  "app/kanban-it/page.tsx",
+  "app/me/page.tsx",
+  "app/metrics/page.tsx",
+  "app/modelo-qualidade/page.tsx",
+  "app/notificacoes/page.tsx",
+  "app/painel-releases-manuais-autenticado/page.tsx",
+  "app/painel-releases-manuais/page.tsx",
+  "app/release/[slug]/page.tsx",
+  "app/release/page.tsx",
+  "app/requests/page.tsx",
+  "app/runs/[id]/page.tsx",
+  "app/settings/page.tsx",
+] as const satisfies readonly string[];
+
+export const SYSTEM_ROUTES = [
+  ...CORE_SYSTEM_ROUTES,
+  ...SUPPLEMENTAL_SYSTEM_ROUTES.map((mainFile) => buildSupplementalRoute(mainFile)),
 ] as const satisfies readonly SystemRouteDefinition[];
 
 export const SYSTEM_ROUTE_BY_ID: ReadonlyMap<string, SystemRouteDefinition> = new Map(

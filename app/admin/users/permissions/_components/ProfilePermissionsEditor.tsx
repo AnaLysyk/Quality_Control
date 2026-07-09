@@ -1,31 +1,16 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import {
-  FiAlertTriangle,
-  FiCheck,
-  FiChevronDown,
-  FiChevronRight,
-  FiEye,
-  FiEyeOff,
-  FiGrid,
-  FiInfo,
-  FiLock,
-  FiRefreshCw,
-  FiSave,
-  FiSearch,
-  FiShield,
-  FiSliders,
-  FiUnlock,
-  FiUsers,
-} from "react-icons/fi";
+  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiEye, FiEyeOff, FiGrid, FiInfo, FiLock, FiRefreshCw, FiSave, FiSearch, FiShield, FiSliders, FiUnlock, FiUsers, } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileHint, getFixedProfileLabel, getFixedProfileTone } from "@/lib/fixedProfilePresentation";
-import { ACTION_LABELS, PERMISSION_MODULES, getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { ACTION_LABELS, getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { getPermissionModulesWithScreens } from "@/lib/navigation/screenPermissions";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
@@ -321,6 +306,7 @@ export default function ProfilePermissionsEditor({
 
   const canView = can("permissions", "view");
   const canEdit = profileState?.canEdit === true && can("permissions", "edit");
+  const permissionModules = useMemo(() => getPermissionModulesWithScreens(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -415,8 +401,8 @@ export default function ProfilePermissionsEditor({
   }, [normalizedUserQuery, profileUsers]);
 
   const filteredModules = useMemo(() => {
-    if (!normalizedQuery) return PERMISSION_MODULES;
-    return PERMISSION_MODULES.filter((permissionModule) => {
+    if (!normalizedQuery) return permissionModules;
+    return permissionModules.filter((permissionModule) => {
       const haystack = normalizeText(
         `${permissionModule.id} ${permissionModule.label} ${permissionModule.description} ${permissionModule.category} ${permissionModule.actions.join(" ")}`,
       );
@@ -429,7 +415,7 @@ export default function ProfilePermissionsEditor({
       const permission = resolveRoutePermission(route.requiredPermission, route.moduleId);
       const visible = routePermissionAllowed(effectivePermissions, permission);
       const moduleLabel =
-        PERMISSION_MODULES.find((permissionModule) => permissionModule.id === permission?.moduleId)?.label ??
+        permissionModules.find((permissionModule) => permissionModule.id === permission?.moduleId)?.label ??
         permission?.moduleId ??
         "Controlada pelo produto";
       return { route, permission, visible, moduleLabel };
@@ -459,15 +445,15 @@ export default function ProfilePermissionsEditor({
   const hiddenScreenCount = allScreenRows.length - visibleScreenCount;
   const effectivePermissionCount = countPermissionActions(effectivePermissions);
   const overriddenCount = countPermissionActions(draftOverride.allow) + countPermissionActions(draftOverride.deny);
-  const quickModules = PERMISSION_MODULES.filter((module) => QUICK_CONTROL_MODULES.has(module.id));
-  const fullModuleCount = PERMISSION_MODULES.filter(
+  const quickModules = permissionModules.filter((module) => QUICK_CONTROL_MODULES.has(module.id));
+  const fullModuleCount = permissionModules.filter(
     (module) => getModulePermissionState(module, systemDefaults, effectivePermissions).allowed === module.actions.length,
   ).length;
-  const hiddenModuleCount = PERMISSION_MODULES.filter(
+  const hiddenModuleCount = permissionModules.filter(
     (module) => getModulePermissionState(module, systemDefaults, effectivePermissions).allowed === 0,
   ).length;
-  const partialModuleCount = PERMISSION_MODULES.length - fullModuleCount - hiddenModuleCount;
-  const adjustedModuleCount = PERMISSION_MODULES.filter((module) => {
+  const partialModuleCount = permissionModules.length - fullModuleCount - hiddenModuleCount;
+  const adjustedModuleCount = permissionModules.filter((module) => {
     const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
     return state.allowed !== state.baseAllowed;
   }).length;
@@ -1314,7 +1300,7 @@ export default function ProfilePermissionsEditor({
                               actions: ["view", "view_company", "view_all"],
                             },
                           ].map((resource) => {
-                            const hasModule = PERMISSION_MODULES.find((m) => m.id === resource.id);
+                            const hasModule = permissionModules.find((m) => m.id === resource.id);
                             const allowedActions = hasModule
                               ? resource.actions.filter((a) => hasPermissionAccess(effectivePermissions, resource.id, a))
                               : [];
@@ -1339,7 +1325,7 @@ export default function ProfilePermissionsEditor({
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          const m = PERMISSION_MODULES.find((mod) => mod.id === resource.id);
+                                          const m = permissionModules.find((mod) => mod.id === resource.id);
                                           if (m) handleModuleToggle(m, true);
                                         }}
                                         disabled={!canEdit || loadingProfile || saving}
@@ -1350,7 +1336,7 @@ export default function ProfilePermissionsEditor({
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          const m = PERMISSION_MODULES.find((mod) => mod.id === resource.id);
+                                          const m = permissionModules.find((mod) => mod.id === resource.id);
                                           if (m) handleModuleToggle(m, false);
                                         }}
                                         disabled={!canEdit || loadingProfile || saving}

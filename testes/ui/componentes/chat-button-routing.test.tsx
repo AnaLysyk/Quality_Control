@@ -8,6 +8,7 @@ import ChatButton from "../../../app/components/ChatButton";
 const fetchApiMock = jest.fn<
   (input: string, init?: RequestInit) => Promise<Response>
 >();
+const canMock = jest.fn<(moduleId: string, action: string) => boolean>();
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/admin/dashboard",
@@ -25,12 +26,13 @@ jest.mock("@/hooks/usePermissionAccess", () => ({
       userOrigin: "testing_company",
       isGlobalAdmin: true,
     },
-    can: () => true,
+    can: (moduleId: string, action: string) => canMock(moduleId, action),
     normalizedUser: {
       companySlugs: ["acme"],
       primaryCompanySlug: "acme",
       defaultCompanySlug: "acme",
     },
+    permissions: {},
   }),
 }));
 
@@ -41,6 +43,8 @@ jest.mock("@/lib/api", () => ({
 describe("ChatButton API routing", () => {
   beforeEach(() => {
     fetchApiMock.mockReset();
+    canMock.mockReset();
+    canMock.mockReturnValue(true);
     fetchApiMock.mockResolvedValue({
       ok: true,
       json: async () => ({ reply: "ok", tool: "use_brain", actions: [], context: null }),
@@ -54,6 +58,17 @@ describe("ChatButton API routing", () => {
     globalThis.fetch = fetchMock;
 
     localStorage.clear();
+  });
+
+  it("does not render when chat screen permission is disabled", () => {
+    canMock.mockImplementation((moduleId, action) => {
+      if (moduleId === "screen:chat.principal" && action === "view") return false;
+      return true;
+    });
+
+    render(<ChatButton defaultOpen />);
+
+    expect(screen.queryByRole("textbox")).toBeNull();
   });
 
   it("uses /api/assistente/ask when no brain context is active", async () => {
@@ -97,4 +112,3 @@ describe("ChatButton API routing", () => {
     expect(requestBody.brainContext.source).toBe("brain");
   });
 });
-

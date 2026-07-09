@@ -1,31 +1,20 @@
 "use client";
 
+import { getPermissionModulesWithScreens, getRouteScreenPermission, isScreenPermissionModuleId } from "@/lib/navigation/screenPermissions";
+
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import {
-  FiAlertTriangle,
-  FiCheck,
-  FiChevronDown,
-  FiChevronRight,
-  FiClock,
-  FiEye,
-  FiEyeOff,
-  FiRotateCcw,
-  FiSave,
-  FiSearch,
-  FiShield,
-  FiSliders,
-  FiUsers,
-} from "react-icons/fi";
+  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, } from "react-icons/fi";
 
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
-import { PERMISSION_MODULES, getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
@@ -254,6 +243,10 @@ function getRouteValue(route: unknown, key: string) {
 }
 
 function getRoutesForModule(permissionModule: PermissionModule) {
+  if (isScreenPermissionModuleId(permissionModule.id)) {
+    return SYSTEM_ROUTES.filter((route) => getRouteScreenPermission(route).moduleId === permissionModule.id);
+  }
+
   return SYSTEM_ROUTES.filter((route) => {
     const record = toRecord(route);
     const requiredPermission = getRoutePermission(route);
@@ -344,6 +337,7 @@ export default function AdminPermissionsPage() {
   const [notice, setNotice] = useState<NoticeState>({ type: "idle" });
 
   const canView = can("permissions", "view");
+  const permissionModules = useMemo(() => getPermissionModulesWithScreens(), []);
 
   const canEdit = profileState?.canEdit === true && can("permissions", "edit");
   const canReset = profileState?.canEdit === true && can("permissions", "reset");
@@ -426,7 +420,7 @@ export default function AdminPermissionsPage() {
       PROFILE_ORDER.map((role) => {
         const defaults = normalizePermissionMatrix(resolveRoleDefaults(role));
         const permissions = role === selectedRole ? effectivePermissions : defaults;
-        const visibleModules = PERMISSION_MODULES.filter((permissionModule) =>
+        const visibleModules = permissionModules.filter((permissionModule) =>
           permissionModule.actions.some((action) => hasPermissionAccess(permissions, permissionModule.id, action)),
         ).length;
         const activeActions = countPermissionActions(permissions);
@@ -445,7 +439,7 @@ export default function AdminPermissionsPage() {
   const moduleRows = useMemo<ModuleRow[]>(() => {
     const normalizedQuery = normalizeText(query);
 
-    return PERMISSION_MODULES.map((permissionModule) => {
+    return permissionModules.map((permissionModule) => {
       const routes = getRoutesForModule(permissionModule);
       const state = getModuleState(permissionModule, systemDefaults, effectivePermissions);
       const changedActions = permissionModule.actions.filter(
@@ -473,7 +467,7 @@ export default function AdminPermissionsPage() {
         content,
       };
     }).filter((row) => !normalizedQuery || row.content.includes(normalizedQuery));
-  }, [effectivePermissions, query, systemDefaults]);
+  }, [effectivePermissions, query, systemDefaults, permissionModules]);
 
   const sortedRows = useMemo(() => {
     const rows = [...moduleRows];
@@ -522,11 +516,11 @@ export default function AdminPermissionsPage() {
   const currentPage = Math.min(page, totalPages);
   const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const visibleModuleCount = PERMISSION_MODULES.filter(
+  const visibleModuleCount = permissionModules.filter(
     (permissionModule) => getModuleState(permissionModule, systemDefaults, effectivePermissions).allowed > 0,
   ).length;
 
-  const hiddenModuleCount = PERMISSION_MODULES.filter(
+  const hiddenModuleCount = permissionModules.filter(
     (permissionModule) => getModuleState(permissionModule, systemDefaults, effectivePermissions).allowed === 0,
   ).length;
 
@@ -560,7 +554,7 @@ export default function AdminPermissionsPage() {
   const searchSuggestions = useMemo(() => {
     const suggestions = new Set<string>();
 
-    for (const permissionModule of PERMISSION_MODULES) {
+    for (const permissionModule of permissionModules) {
       suggestions.add(permissionModule.label);
       suggestions.add(permissionModule.id);
       suggestions.add(permissionModule.category);
@@ -587,7 +581,7 @@ export default function AdminPermissionsPage() {
       .map((item) => item.trim())
       .filter(Boolean)
       .slice(0, 160);
-  }, []);
+  }, [permissionModules]);
 
   function handleSelectRole(role: SystemRole) {
     setSelectedRole(role);
@@ -754,7 +748,7 @@ export default function AdminPermissionsPage() {
     return () => {
       document.body.classList.remove("qc-permissions-profile-route");
     };
-  }, []);
+  }, [permissionModules]);
 
   if (loading) return <AccessDeniedState state="loading" />;
 

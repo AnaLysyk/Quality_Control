@@ -1,4 +1,4 @@
-import CompanyTestCasesRepositoryClient from "../../../components/CompanyTestCasesRepositoryClient";
+import TestCaseRepositoryClient from "../../../casos-de-teste/TestCaseRepositoryClient";
 
 export const dynamic = "force-dynamic";
 
@@ -8,5 +8,5 @@ type CompanyTestCasesPageProps = {
 
 export default async function CompanyTestCasesPage({ params }: CompanyTestCasesPageProps) {
   const { slug } = await params;
-  return <CompanyTestCasesRepositoryClient initialCompanySlug={slug} />;
+  return <TestCaseRepositoryClient initialCompanySlug={slug} lockCompanyScope />;
 }

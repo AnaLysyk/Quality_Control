@@ -11,14 +11,17 @@ import {
   FiCode,
   FiEdit2,
   FiFilter,
+  FiFolderPlus,
   FiLayers,
   FiLoader,
+  FiPlay,
   FiPlus,
   FiRefreshCcw,
   FiSave,
   FiSearch,
   FiShield,
   FiTrash2,
+  FiUploadCloud,
   FiX,
 } from "react-icons/fi";
 import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
@@ -26,6 +29,7 @@ import { fetchApi } from "@/lib/api";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
 import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import TestCaseRepositoryImportExportPanel from "./TestCaseRepositoryImportExportPanel";
 
 type TestCaseStep = {
   id: string;
@@ -268,6 +272,28 @@ const AUTOMATION_LABEL: Record<string, string> = {
   disabled: "Desativada",
 };
 
+const PRIORITY_LABEL: Record<string, string> = {
+  low: "Baixa",
+  medium: "Média",
+  high: "Alta",
+  critical: "Crítica",
+};
+
+const TYPE_LABEL: Record<string, string> = {
+  manual: "Manual",
+  automated: "Automatizado",
+  hybrid: "Híbrido",
+};
+
+const EXECUTION_LABEL: Record<string, string> = {
+  passed: "Passed",
+  failed: "Failed",
+  blocked: "Blocked",
+  skipped: "Skipped",
+  invalid: "Invalid",
+  not_run: "Não executado",
+};
+
 const PROFILE_LABEL: Record<string, string> = {
   empresa: "Empresa",
   technical_support: "Suporte Técnico",
@@ -285,21 +311,60 @@ const APPROVAL_LABEL: Record<string, string> = {
 };
 
 type DraftApprovalAction = "request_qa_review" | "approve_publish" | "approve_execution" | "approve_healing" | "reset";
+type RepositoryQuickView = "all" | "coverage_gap" | "review_queue" | "automation_backlog" | "playwright_linked";
 
-export default function TestCaseRepositoryClient() {
+type TestCaseRepositoryClientProps = {
+  initialCompanySlug?: string;
+  lockCompanyScope?: boolean;
+};
+
+function normalizeCompanySlug(value?: string) {
+  return value?.trim().toLowerCase() || "all";
+}
+
+function normalizeSearchText(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return "--";
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return "--";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(timestamp);
+}
+
+export default function TestCaseRepositoryClient({
+  initialCompanySlug,
+  lockCompanyScope = false,
+}: TestCaseRepositoryClientProps) {
   const { user, normalizedUser } = useAuthUser();
   const { activeClientSlug } = useClientContext();
   const { activeProject: selectedProject } = useProjectContext();
+  const normalizedInitialCompanySlug = normalizeCompanySlug(initialCompanySlug);
   const [hydrated, setHydrated] = useState(false);
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("all");
   const [status, setStatus] = useState("all");
   const [automationStatus, setAutomationStatus] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [executionFilter, setExecutionFilter] = useState<"all" | "never">("all");
   const [applicationFilter, setApplicationFilter] = useState("all");
   const [moduleFilter, setModuleFilter] = useState("all");
   const [projectFilter, setProjectFilter] = useState("all");
   const [suiteFilter, setSuiteFilter] = useState("all");
-  const [companySlug, setCompanySlug] = useState("all");
+  const [suiteSearch, setSuiteSearch] = useState("");
+  const [companySlug, setCompanySlug] = useState(normalizedInitialCompanySlug);
   const [items, setItems] = useState<TestCaseRecord[]>([]);
   const [testProjects, setTestProjects] = useState<TestProject[]>([]);
   const [testProjectsWarning, setTestProjectsWarning] = useState<string | null>(null);
@@ -309,6 +374,7 @@ export default function TestCaseRepositoryClient() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<"case" | "steps" | "automation" | "runs" | "history">("case");
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const [isImportPanelOpen, setIsImportPanelOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createMode, setCreateMode] = useState<"manual" | "automated" | "ai">("manual");
@@ -324,6 +390,7 @@ export default function TestCaseRepositoryClient() {
   const [assistantLogs, setAssistantLogs] = useState<AssistantLog[]>([]);
   const [assistantBusy, setAssistantBusy] = useState(false);
   const [agentRuns, setAgentRuns] = useState<AutomationAgentRun[]>([]);
+  const [selectedBulkIds, setSelectedBulkIds] = useState<string[]>([]);
 
   useEffect(() => {
     setHydrated(true);
@@ -336,9 +403,10 @@ export default function TestCaseRepositoryClient() {
     "";
   const resolvedRoleLabel = PROFILE_LABEL[roleKey.toLowerCase()] ?? (roleKey || "Perfil");
   const roleLabel = hydrated ? resolvedRoleLabel : "Perfil";
-  const canViewCompanyFilter =
+  const canViewCompanyFilter = !lockCompanyScope && (
     user?.isGlobalAdmin === true ||
-    ["leader_tc", "technical_support", "admin"].includes(roleKey.toLowerCase());
+    ["leader_tc", "technical_support", "admin"].includes(roleKey.toLowerCase())
+  );
   const defaultCompanyForCreate =
     companySlug !== "all"
       ? companySlug
@@ -348,6 +416,24 @@ export default function TestCaseRepositoryClient() {
     () => items.find((item) => item.testCase.id === selectedId) ?? items[0] ?? null,
     [items, selectedId],
   );
+
+  const selectedBulkRecords = useMemo(
+    () => items.filter((item) => selectedBulkIds.includes(item.testCase.id)),
+    [items, selectedBulkIds],
+  );
+
+  const displayItems = useMemo(
+    () =>
+      executionFilter === "never"
+        ? items.filter((item) => !item.testCase.lastExecutedAt && !item.testCase.lastExecutionStatus)
+        : items,
+    [executionFilter, items],
+  );
+
+  const runHref =
+    companySlug !== "all"
+      ? `/empresas/${encodeURIComponent(companySlug)}/runs`
+      : "/runs";
 
   const companyOptions = useMemo(() => {
     const values = Array.from(
@@ -421,6 +507,55 @@ export default function TestCaseRepositoryClient() {
     return Array.from(byId.entries()).sort((left, right) => left[1].localeCompare(right[1]));
   }, [items, projectFilter, testProjects]);
 
+  const filteredTestProjects = useMemo(() => {
+    const term = normalizeSearchText(suiteSearch);
+    if (!term) return testProjects;
+    return testProjects
+      .map((project) => ({
+        ...project,
+        suites: project.suites.filter((suite) =>
+          normalizeSearchText(`${project.code ?? ""} ${project.name} ${suite.name}`).includes(term),
+        ),
+      }))
+      .filter((project) => normalizeSearchText(`${project.code ?? ""} ${project.name}`).includes(term) || project.suites.length > 0);
+  }, [suiteSearch, testProjects]);
+
+  const repositoryInsights = useMemo(() => {
+    const reviewQueue = items.filter((item) => item.testCase.status === "review").length;
+    const draftCases = items.filter((item) => item.testCase.status === "draft").length;
+    const coverageGap = items.filter((item) => item.testCase.automationStatus === "none").length;
+    const automationBacklog = items.filter((item) => ["planned", "review", "ai_generated"].includes(item.testCase.automationStatus)).length;
+    const playwrightLinked = items.filter((item) => ["linked", "stable", "approved"].includes(item.testCase.automationStatus)).length;
+    const projectCount = new Set(
+      items
+        .map((item) => item.testCase.testProjectCode)
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0),
+    ).size;
+    const suiteCount = new Set(
+      items
+        .map((item) => item.testCase.suiteId || item.testCase.suiteName)
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0),
+    ).size;
+
+    return {
+      reviewQueue,
+      draftCases,
+      coverageGap,
+      automationBacklog,
+      playwrightLinked,
+      projectCount,
+      suiteCount,
+    };
+  }, [items]);
+
+  const activeQuickView: RepositoryQuickView = useMemo(() => {
+    if (status === "review" && automationStatus === "all") return "review_queue";
+    if (automationStatus === "none") return "coverage_gap";
+    if (["planned", "review", "ai_generated"].includes(automationStatus)) return "automation_backlog";
+    if (["linked", "stable", "approved"].includes(automationStatus)) return "playwright_linked";
+    return "all";
+  }, [automationStatus, status]);
+
   const visibleCompanyCount = hydrated && canViewCompanyFilter
     ? Math.max(companyOptions.length, normalizedUser.companySlugs.length)
     : 1;
@@ -460,10 +595,17 @@ export default function TestCaseRepositoryClient() {
   useAppShellCoverSlot(coverContent);
 
   useEffect(() => {
+    if (lockCompanyScope) {
+      setCompanySlug(normalizedInitialCompanySlug);
+    }
+  }, [lockCompanyScope, normalizedInitialCompanySlug]);
+
+  useEffect(() => {
+    if (lockCompanyScope) return;
     if (canViewCompanyFilter) return;
     const fixedCompany = activeClientSlug || normalizedUser.primaryCompanySlug || normalizedUser.companySlugs[0] || "all";
     setCompanySlug(fixedCompany);
-  }, [activeClientSlug, canViewCompanyFilter, normalizedUser.companySlugs, normalizedUser.primaryCompanySlug]);
+  }, [activeClientSlug, canViewCompanyFilter, lockCompanyScope, normalizedUser.companySlugs, normalizedUser.primaryCompanySlug]);
 
   useEffect(() => {
     setSuiteFilter("all");
@@ -527,6 +669,8 @@ export default function TestCaseRepositoryClient() {
       if (source !== "all") params.set("source", source);
       if (status !== "all") params.set("status", status);
       if (automationStatus !== "all") params.set("automationStatus", automationStatus);
+      if (priorityFilter !== "all") params.set("priority", priorityFilter);
+      if (typeFilter !== "all") params.set("type", typeFilter);
       if (applicationFilter !== "all") params.set("applicationId", applicationFilter);
       if (moduleFilter !== "all") params.set("moduleId", moduleFilter);
       if (projectFilter !== "all") params.set("projectCode", projectFilter);
@@ -565,11 +709,16 @@ export default function TestCaseRepositoryClient() {
     void load();
 
     return () => controller.abort();
-  }, [applicationFilter, automationStatus, companySlug, moduleFilter, projectFilter, query, selectedProject, source, status, suiteFilter]);
+  }, [applicationFilter, automationStatus, companySlug, moduleFilter, priorityFilter, projectFilter, query, selectedProject, source, status, suiteFilter, typeFilter]);
 
   useEffect(() => {
     if (!selectedId && items[0]) setSelectedId(items[0].testCase.id);
   }, [items, selectedId]);
+
+  useEffect(() => {
+    const visibleIds = new Set(displayItems.map((item) => item.testCase.id));
+    setSelectedBulkIds((current) => current.filter((id) => visibleIds.has(id)));
+  }, [displayItems]);
 
   useEffect(() => {
     if (detailTab !== "automation" || !selected?.testCase.id) return;
@@ -603,7 +752,7 @@ export default function TestCaseRepositoryClient() {
   }, [detailTab, selected?.testCase.id, draftRefreshToken]);
 
   useEffect(() => {
-    if (detailTab !== "automation" || !selected?.testCase.id) return;
+    if (!["automation", "runs"].includes(detailTab) || !selected?.testCase.id) return;
     let canceled = false;
 
     async function loadRuns() {
@@ -691,6 +840,45 @@ export default function TestCaseRepositoryClient() {
       }));
     }
     setIsFormOpen(true);
+  }
+
+  function applyQuickView(view: RepositoryQuickView) {
+    setQuery("");
+    setProjectFilter("all");
+    setSuiteFilter("all");
+    setApplicationFilter("all");
+    setModuleFilter("all");
+    setSource("all");
+    setPriorityFilter("all");
+    setTypeFilter("all");
+    setExecutionFilter("all");
+
+    if (view === "coverage_gap") {
+      setStatus("all");
+      setAutomationStatus("none");
+      return;
+    }
+
+    if (view === "review_queue") {
+      setStatus("review");
+      setAutomationStatus("all");
+      return;
+    }
+
+    if (view === "automation_backlog") {
+      setStatus("all");
+      setAutomationStatus("planned");
+      return;
+    }
+
+    if (view === "playwright_linked") {
+      setStatus("all");
+      setAutomationStatus("linked");
+      return;
+    }
+
+    setStatus("all");
+    setAutomationStatus("all");
   }
 
   function openEditForm(record: TestCaseRecord | null) {
@@ -875,6 +1063,52 @@ export default function TestCaseRepositoryClient() {
     if (selectedId === archived.testCase.id) {
       setSelectedId(archived.testCase.id);
     }
+  }
+
+  function toggleBulkSelection(id: string, checked: boolean) {
+    setSelectedBulkIds((current) =>
+      checked ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id),
+    );
+  }
+
+  function toggleAllVisible(checked: boolean) {
+    setSelectedBulkIds(checked ? displayItems.map((item) => item.testCase.id) : []);
+  }
+
+  async function handleBulkStatus(nextStatus: string) {
+    const records = selectedBulkRecords;
+    if (records.length === 0) return;
+    const updated = await Promise.all(
+      records.map(async (record) => {
+        const response = await fetchApi(`/api/test-cases/${record.testCase.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: nextStatus }),
+        });
+        if (!response.ok) return null;
+        return (await response.json()) as TestCaseRecord;
+      }),
+    );
+    const byId = new Map(updated.filter((record): record is TestCaseRecord => Boolean(record)).map((record) => [record.testCase.id, record]));
+    setItems((current) => current.map((item) => byId.get(item.testCase.id) ?? item));
+    setSelectedBulkIds([]);
+  }
+
+  async function handleBulkArchive() {
+    const records = selectedBulkRecords;
+    if (records.length === 0) return;
+    const confirmed = window.confirm(`Arquivar ${records.length} caso(s) selecionado(s)?`);
+    if (!confirmed) return;
+    const updated = await Promise.all(
+      records.map(async (record) => {
+        const response = await fetchApi(`/api/test-cases/${record.testCase.id}`, { method: "DELETE" });
+        if (!response.ok) return null;
+        return (await response.json()) as TestCaseRecord;
+      }),
+    );
+    const byId = new Map(updated.filter((record): record is TestCaseRecord => Boolean(record)).map((record) => [record.testCase.id, record]));
+    setItems((current) => current.map((item) => byId.get(item.testCase.id) ?? item));
+    setSelectedBulkIds([]);
   }
 
   async function handleGeneratePlaywrightDraft() {
@@ -1163,26 +1397,90 @@ export default function TestCaseRepositoryClient() {
   return (
     <section
       data-testid="test-case-repository"
-      className="space-y-4 rounded-4xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-sm sm:p-6"
+      className="space-y-3 rounded-[24px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3 text-[var(--tc-text,#0b1a3c)] shadow-sm sm:p-4"
     >
-      <header data-testid="test-case-header" className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4 shadow-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Repositório de Casos de Teste</p>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)] sm:text-2xl">Fonte central dos casos da operação QA</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-              Fonte oficial dos casos manuais, integrados e automatizados. Planos, runs e Playwright apenas vinculam casos daqui.
+      <header data-testid="test-case-header" className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3 shadow-sm">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--tc-accent,#ef0001)]">Repositório Central</p>
+            <h1 className="mt-1 text-xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)] sm:text-2xl">Casos de Teste</h1>
+            <p className="mt-1 max-w-3xl text-sm leading-5 text-[var(--tc-text-secondary,#4b5563)]">
+              Fonte única de casos manuais, automatizados e vinculados ao Playwright.
             </p>
             <p
               data-testid="test-case-context-chip"
-              className="mt-3 inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-bold text-[var(--tc-text,#0b1a3c)]"
+              className="mt-2 inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-1 text-xs font-bold text-[var(--tc-text,#0b1a3c)]"
             >
               {roleLabel}
               {companySlug !== "all" ? ` - ${companySlug}` : ""}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsCreateMenuOpen((current) => !current)}
+                data-testid="test-case-new-button"
+                className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-[var(--tc-primary,#011848)] px-3 py-2 text-xs font-bold text-white"
+              >
+                <FiPlus className="h-4 w-4" />
+                Novo caso de teste
+                <FiChevronDown className="h-4 w-4" />
+              </button>
+
+              {isCreateMenuOpen ? (
+                <div data-testid="test-case-new-menu" className="absolute right-0 z-20 mt-2 w-64 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-2 shadow-xl">
+                  <button
+                    type="button"
+                    data-testid="test-case-new-manual"
+                    onClick={() => openCreateForm("manual")}
+                    className="flex w-full items-center justify-start gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--tc-text,#0b1a3c)] hover:bg-[var(--tc-surface-2,#f8fafc)]"
+                  >
+                    Caso manual
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="test-case-new-automated"
+                    onClick={() => openCreateForm("automated")}
+                    className="flex w-full items-center justify-start gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--tc-text,#0b1a3c)] hover:bg-[var(--tc-surface-2,#f8fafc)]"
+                  >
+                    Caso automatizado Playwright
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="test-case-new-ai"
+                    onClick={() => openCreateForm("ai")}
+                    className="flex w-full items-center justify-start gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--tc-text,#0b1a3c)] hover:bg-[var(--tc-surface-2,#f8fafc)]"
+                  >
+                    Gerar com IA
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              title="Criação de suite será vinculada ao projeto quando houver integração disponível"
+              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2 text-xs font-bold text-[var(--tc-text,#0b1a3c)]"
+            >
+              <FiFolderPlus className="h-4 w-4" />
+              Nova suite
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsImportPanelOpen(true)}
+              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2 text-xs font-bold text-[var(--tc-text,#0b1a3c)]"
+            >
+              <FiUploadCloud className="h-4 w-4" />
+              Importar
+            </button>
+            <Link
+              href={runHref}
+              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2 text-xs font-bold text-[var(--tc-text,#0b1a3c)]"
+            >
+              <FiPlay className="h-4 w-4" />
+              Iniciar run
+            </Link>
             <button
               type="button"
               onClick={() => {
@@ -1197,74 +1495,124 @@ export default function TestCaseRepositoryClient() {
                   }));
                 }
               }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[rgba(1,24,72,0.3)] hover:text-[var(--tc-primary,#011848)]"
+              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2 text-xs font-bold text-[var(--tc-text,#0b1a3c)]"
             >
-              ðŸ§  Perguntar IA
+              Perguntar IA
             </button>
-            <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsCreateMenuOpen((current) => !current)}
-              data-testid="test-case-new-button"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-bold text-white"
-            >
-              <FiPlus className="h-4 w-4" />
-              Novo
-              <FiChevronDown className="h-4 w-4" />
-            </button>
-
-            {isCreateMenuOpen ? (
-              <div data-testid="test-case-new-menu" className="absolute right-0 z-20 mt-2 w-64 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-2 shadow-xl">
-                <button
-                  type="button"
-                  data-testid="test-case-new-manual"
-                  onClick={() => openCreateForm("manual")}
-                  className="flex w-full items-center justify-start gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--tc-text,#0b1a3c)] hover:bg-[var(--tc-surface-2,#f8fafc)]"
-                >
-                  Caso manual
-                </button>
-                <button
-                  type="button"
-                  data-testid="test-case-new-automated"
-                  onClick={() => openCreateForm("automated")}
-                  className="flex w-full items-center justify-start gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--tc-text,#0b1a3c)] hover:bg-[var(--tc-surface-2,#f8fafc)]"
-                >
-                  Caso automatizado Playwright
-                </button>
-                <button
-                  type="button"
-                  data-testid="test-case-new-ai"
-                  onClick={() => openCreateForm("ai")}
-                  className="flex w-full items-center justify-start gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--tc-text,#0b1a3c)] hover:bg-[var(--tc-surface-2,#f8fafc)]"
-                >
-                  Gerar com IA
-                </button>
-              </div>
-            ) : null}
-          </div>
           </div>
         </div>
       </header>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        <Metric label="Total" value={metrics?.total ?? 0} icon={<FiClipboard />} />
-        <Metric label="Automatizados" value={metrics?.automated ?? 0} icon={<FiCheckCircle />} />
-        <Metric label="Sem automação" value={metrics?.withoutAutomation ?? 0} icon={<FiShield />} />
-        <Metric label="Nunca executados" value={metrics?.neverExecuted ?? 0} icon={<FiFilter />} />
+      <div data-testid="test-case-metrics-bar" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
+        <Metric active={activeQuickView === "all"} label="Total de casos" value={metrics?.total ?? 0} icon={<FiClipboard />} onClick={() => applyQuickView("all")} />
+        <Metric active={activeQuickView === "playwright_linked"} label="Automatizados" value={metrics?.automated ?? 0} icon={<FiCheckCircle />} onClick={() => applyQuickView("playwright_linked")} />
+        <Metric active={activeQuickView === "coverage_gap"} label="Sem automação" value={metrics?.withoutAutomation ?? 0} icon={<FiShield />} onClick={() => applyQuickView("coverage_gap")} />
+        <Metric active={activeQuickView === "review_queue"} label="Em revisão" value={repositoryInsights.reviewQueue} icon={<FiFilter />} onClick={() => applyQuickView("review_queue")} />
+        <Metric active={executionFilter === "never"} label="Nunca executados" value={metrics?.neverExecuted ?? 0} icon={<FiClipboard />} onClick={() => { applyQuickView("all"); setExecutionFilter("never"); }} />
+        <Metric active={automationStatus === "broken"} label="Flaky" value={metrics?.brokenAutomation ?? 0} icon={<FiCode />} onClick={() => { applyQuickView("all"); setAutomationStatus("broken"); }} />
+        <Metric label="Cobertura de automação" value={metrics?.automationCoverage ?? 0} suffix="%" icon={<FiLayers />} onClick={() => applyQuickView("playwright_linked")} />
       </div>
 
-      <article className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
-          <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
+      <section className="hidden">
+        <article className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[linear-gradient(135deg,#08142a_0%,#0d1d3f_60%,#132956_100%)] p-5 text-white shadow-[0_20px_48px_rgba(1,24,72,.18)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/65">Mapa do repositório</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/65">Empresa</p>
+              <p className="mt-2 text-lg font-black">{companySlug === "all" ? "Operação geral" : companySlug}</p>
+              <p className="mt-1 text-xs text-white/60">{visibleCompanyCount} escopo(s) disponível(eis)</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/65">Projetos</p>
+              <p className="mt-2 text-lg font-black">{repositoryInsights.projectCount || testProjects.length}</p>
+              <p className="mt-1 text-xs text-white/60">com casos visíveis no filtro atual</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/65">Suites</p>
+              <p className="mt-2 text-lg font-black">{repositoryInsights.suiteCount || suiteOptions.length}</p>
+              <p className="mt-1 text-xs text-white/60">pastas e agrupadores ativos</p>
+            </div>
+          </div>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-black/15 p-4">
+            <p className="text-sm font-semibold text-white/84">
+              {lockCompanyScope
+                ? "Esta visão está ancorada na empresa da rota e já organiza casos, projetos e suites no mesmo fluxo."
+                : "Use as visões rápidas para alternar entre lacunas, revisão e automação sem reconfigurar filtro por filtro."}
+            </p>
+          </div>
+        </article>
+
+        <article className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-white p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Visões rápidas</p>
+              <h2 className="mt-2 text-lg font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">Troca de foco sem ruído</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => applyQuickView("all")}
+              className="text-xs font-semibold text-[var(--tc-accent,#ef0001)]"
+            >
+              Resetar
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            <QuickViewButton
+              active={activeQuickView === "coverage_gap"}
+              label="Sem automação"
+              note={`${repositoryInsights.coverageGap} caso(s) com gap de cobertura`}
+              onClick={() => applyQuickView("coverage_gap")}
+            />
+            <QuickViewButton
+              active={activeQuickView === "review_queue"}
+              label="Fila de revisão"
+              note={`${repositoryInsights.reviewQueue} caso(s) aguardando revisão`}
+              onClick={() => applyQuickView("review_queue")}
+            />
+            <QuickViewButton
+              active={activeQuickView === "automation_backlog"}
+              label="Backlog de automação"
+              note={`${repositoryInsights.automationBacklog} caso(s) planejados ou em avaliação`}
+              onClick={() => applyQuickView("automation_backlog")}
+            />
+            <QuickViewButton
+              active={activeQuickView === "playwright_linked"}
+              label="Playwright vinculado"
+              note={`${repositoryInsights.playwrightLinked} caso(s) já conectados à automação`}
+              onClick={() => applyQuickView("playwright_linked")}
+            />
+          </div>
+        </article>
+
+        <article className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Atenção imediata</p>
+          <div className="mt-4 space-y-3">
+            <InsightRow label="Rascunhos" value={repositoryInsights.draftCases} tone="neutral" />
+            <InsightRow label="Em revisão" value={repositoryInsights.reviewQueue} tone="warn" />
+            <InsightRow label="Sem automação" value={repositoryInsights.coverageGap} tone="danger" />
+            <InsightRow label="Backlog técnico" value={repositoryInsights.automationBacklog} tone="neutral" />
+          </div>
+          <div className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Cobertura atual</p>
+            <p className="mt-2 text-2xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)]">{metrics?.automationCoverage ?? 0}%</p>
+            <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">percentual dos casos visíveis já conectado à camada de automação</p>
+          </div>
+        </article>
+      </section>
+
+      <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5 2xl:grid-cols-10">
+          <label className="grid gap-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)] xl:col-span-2">
             Buscar
             <span className="relative">
-              <FiSearch className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
+              <FiSearch className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
               <input
                 data-testid="test-case-search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Código, título, tag, aplicação ou módulo"
-                className="min-h-11 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white pr-4 pl-11 text-sm outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
+                className="min-h-9 w-full rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-input-bg,#ffffff)] pr-3 pl-9 text-xs text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               />
             </span>
           </label>
@@ -1361,15 +1709,62 @@ export default function TestCaseRepositoryClient() {
               ["disabled", AUTOMATION_LABEL.disabled],
             ]}
           />
+
+          <Select
+            testId="test-case-filter-priority"
+            label="Prioridade"
+            value={priorityFilter}
+            onChange={setPriorityFilter}
+            options={[
+              ["all", "Todas"],
+              ["low", PRIORITY_LABEL.low],
+              ["medium", PRIORITY_LABEL.medium],
+              ["high", PRIORITY_LABEL.high],
+              ["critical", PRIORITY_LABEL.critical],
+            ]}
+          />
+
+          <Select
+            testId="test-case-filter-type"
+            label="Tipo"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            options={[
+              ["all", "Todos"],
+              ["manual", TYPE_LABEL.manual],
+              ["automated", TYPE_LABEL.automated],
+              ["hybrid", TYPE_LABEL.hybrid],
+            ]}
+          />
+
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              setSource("all");
+              setStatus("all");
+              setAutomationStatus("all");
+              setPriorityFilter("all");
+              setTypeFilter("all");
+              setExecutionFilter("all");
+              setApplicationFilter("all");
+              setModuleFilter("all");
+              setProjectFilter("all");
+              setSuiteFilter("all");
+            }}
+            className="min-h-9 self-end rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 text-xs font-bold text-[var(--tc-text,#0b1a3c)]"
+          >
+            Limpar
+          </button>
         </div>
       </article>
 
-      <div className="grid items-start gap-4 xl:grid-cols-12">
-        <aside data-testid="test-case-suite-tree" className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-white p-4 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
+      <div className="grid items-start gap-3 xl:grid-cols-[260px_minmax(420px,1fr)_360px] 2xl:grid-cols-[300px_minmax(0,1fr)_440px]">
+        <aside data-testid="test-case-suite-tree" className="max-h-[calc(100vh-220px)] overflow-hidden rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3 xl:sticky xl:top-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Casos</p>
-              <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{loading ? "Carregando..." : `${items.length} resultado(s)`}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Repositório / Suites</p>
+              <p className="mt-1 text-xs text-[var(--tc-text-secondary,#4b5563)]">{loading ? "Carregando..." : `${displayItems.length} caso(s) no filtro`}</p>
             </div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
               <FiFilter className="h-3.5 w-3.5" />
@@ -1377,7 +1772,7 @@ export default function TestCaseRepositoryClient() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
+          <div className="mt-3 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-2">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Projetos e suites</p>
               <button
@@ -1391,6 +1786,15 @@ export default function TestCaseRepositoryClient() {
                 Limpar
               </button>
             </div>
+            <label className="mt-2 block">
+              <span className="sr-only">Buscar suite</span>
+              <input
+                value={suiteSearch}
+                onChange={(event) => setSuiteSearch(event.target.value)}
+                placeholder="Buscar suite"
+                className="min-h-8 w-full rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-input-bg,#ffffff)] px-3 text-xs text-[var(--tc-text,#0b1a3c)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
+              />
+            </label>
             {testProjectsWarning ? (
               <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
                 {testProjectsWarning}
@@ -1400,23 +1804,23 @@ export default function TestCaseRepositoryClient() {
               <p className="mt-2 text-xs text-[var(--tc-text-muted,#6b7280)]">Selecione uma empresa para carregar integrações por aplicação.</p>
             ) : testProjectsLoading ? (
               <p className="mt-2 text-xs text-[var(--tc-text-muted,#6b7280)]">Carregando projetos vinculados...</p>
-            ) : testProjects.length === 0 ? (
+            ) : filteredTestProjects.length === 0 ? (
               <p className="mt-2 text-xs text-[var(--tc-text-muted,#6b7280)]">Nenhum projeto de casos vinculado para o contexto atual.</p>
             ) : (
-              <div className="mt-3 space-y-3">
-                {testProjects.map((project) => {
+              <div className="mt-3 max-h-[calc(100vh-360px)] space-y-2 overflow-auto pr-1">
+                {filteredTestProjects.map((project) => {
                   const projectCode = project.code ?? "";
                   const activeProject = projectCode ? projectFilter === projectCode : false;
                   return (
-                    <div key={project.id} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-2">
+                    <div key={project.id} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-1.5">
                       <button
                         type="button"
                         onClick={() => {
                           if (projectCode) setProjectFilter(projectCode);
                           setSuiteFilter("all");
                         }}
-                        className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-sm font-bold ${
-                          activeProject ? "bg-[#fff5f5] text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text,#0b1a3c)]"
+                        className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-bold ${
+                          activeProject ? "border-l-2 border-[var(--tc-accent,#ef0001)] bg-[rgba(239,0,1,0.08)] text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text,#0b1a3c)]"
                         }`}
                       >
                         <span className="min-w-0 truncate">{project.code ? `${project.code} - ${project.name}` : project.name}</span>
@@ -1426,7 +1830,7 @@ export default function TestCaseRepositoryClient() {
                       </button>
                       {project.suites.length ? (
                         <div className="mt-1 space-y-1 pl-3">
-                          {project.suites.slice(0, 8).map((suite) => {
+                          {project.suites.map((suite) => {
                             const activeSuite = suiteFilter === suite.id;
                             return (
                               <button
@@ -1436,8 +1840,8 @@ export default function TestCaseRepositoryClient() {
                                   if (projectCode) setProjectFilter(projectCode);
                                   setSuiteFilter(suite.id);
                                 }}
-                                className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-semibold ${
-                                  activeSuite ? "bg-[#fff5f5] text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-secondary,#4b5563)]"
+                                className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-[11px] font-semibold ${
+                                  activeSuite ? "border-l-2 border-[var(--tc-accent,#ef0001)] bg-[rgba(239,0,1,0.08)] text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-secondary,#4b5563)]"
                                 }`}
                               >
                                 <span className="min-w-0 truncate">{suite.name}</span>
@@ -1445,11 +1849,6 @@ export default function TestCaseRepositoryClient() {
                               </button>
                             );
                           })}
-                          {project.suites.length > 8 ? (
-                            <p className="px-2 py-1 text-[11px] font-semibold text-[var(--tc-text-muted,#6b7280)]">
-                              +{project.suites.length - 8} suite(s)
-                            </p>
-                          ) : null}
                         </div>
                       ) : null}
                     </div>
@@ -1459,8 +1858,8 @@ export default function TestCaseRepositoryClient() {
             )}
           </div>
 
-          <div data-testid="test-case-table" className="mt-4 space-y-2">
-            <div data-testid="test-case-list" className="space-y-2">
+          <div data-testid="test-case-tree-legacy-table" className="hidden">
+            <div data-testid="test-case-tree-legacy-list" className="space-y-2">
             {items.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-6 text-sm text-[var(--tc-text-muted,#6b7280)]">
                 Nenhum caso encontrado para os filtros atuais.
@@ -1469,9 +1868,9 @@ export default function TestCaseRepositoryClient() {
               items.map((record) => {
                 const active = selected?.testCase.id === record.testCase.id;
                 return (
-                  <div key={record.testCase.id} data-testid="test-case-row">
+                  <div key={record.testCase.id} data-testid="test-case-tree-legacy-row">
                     <button
-                      data-testid="test-case-card"
+                      data-testid="test-case-tree-legacy-card"
                       type="button"
                       onClick={() => setSelectedId(record.testCase.id)}
                       className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
@@ -1481,7 +1880,7 @@ export default function TestCaseRepositoryClient() {
                       }`}
                     >
                       <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
-                        <span data-testid="test-case-key">{record.testCase.key}</span> • {SOURCE_LABEL[record.testCase.source] ?? record.testCase.source}
+                        <span data-testid="test-case-tree-legacy-key">{record.testCase.key}</span> • {SOURCE_LABEL[record.testCase.source] ?? record.testCase.source}
                       </p>
                       <h3 className="mt-1 wrap-break-word text-base font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{record.testCase.title}</h3>
                       <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">
@@ -1499,29 +1898,142 @@ export default function TestCaseRepositoryClient() {
           </div>
         </aside>
 
-        <article data-testid="test-case-detail-panel" className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-white p-5 xl:col-span-8 2xl:col-span-9">
+        <article data-testid="test-case-table" className="min-h-[420px] rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)]">
+          <div className="flex min-h-12 flex-wrap items-center justify-between gap-2 border-b border-[var(--tc-border,#d7deea)] px-3 py-2">
+            <div>
+              <h2 className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">Casos do repositório</h2>
+              <p className="text-xs text-[var(--tc-text-secondary,#4b5563)]">{displayItems.length} registro(s) encontrados.</p>
+            </div>
+            {selectedBulkIds.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
+                  {selectedBulkIds.length} selecionado(s)
+                </span>
+                <Link href={runHref} className="rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
+                  Iniciar run
+                </Link>
+                <button type="button" onClick={() => void handleBulkStatus("review")} className="rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
+                  Enviar para revisão
+                </button>
+                <button type="button" onClick={() => void handleBulkStatus("active")} className="rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
+                  Alterar status
+                </button>
+                <button type="button" onClick={() => void handleBulkArchive()} className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-400/30 dark:bg-rose-500/10 dark:text-rose-100">
+                  Arquivar
+                </button>
+              </div>
+            ) : loading ? (
+              <FiLoader className="h-4 w-4 animate-spin text-[var(--tc-text-muted,#6b7280)]" />
+            ) : null}
+          </div>
+
+          <div data-testid="test-case-list" className="max-h-[calc(100vh-310px)] min-h-[360px] overflow-auto">
+            {displayItems.length === 0 ? (
+              <div className="m-3 rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
+                Nenhum caso encontrado para os filtros atuais.
+              </div>
+            ) : (
+              <table className="min-w-[980px] w-full border-separate border-spacing-0 text-left text-xs">
+                <thead className="sticky top-0 z-10 bg-[var(--tc-surface-2,#f8fafc)] text-[10px] uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">
+                  <tr>
+                    <th className="w-9 border-b border-[var(--tc-border,#d7deea)] px-3 py-2">
+                      <input
+                        type="checkbox"
+                        aria-label="Selecionar todos os casos visíveis"
+                        checked={displayItems.length > 0 && selectedBulkIds.length === displayItems.length}
+                        onChange={(event) => toggleAllVisible(event.target.checked)}
+                      />
+                    </th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Código</th>
+                    <th className="min-w-64 border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Título</th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Status</th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Prioridade</th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Severidade</th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Tipo</th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Camada</th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Automação</th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Última execução</th>
+                    <th className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2">Atualizado em</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayItems.map((record) => {
+                    const active = selected?.testCase.id === record.testCase.id;
+                    const checked = selectedBulkIds.includes(record.testCase.id);
+                    return (
+                      <tr
+                        key={record.testCase.id}
+                        data-testid="test-case-row"
+                        className={`transition ${
+                          active
+                            ? "bg-[rgba(239,0,1,0.08)] shadow-[inset_3px_0_0_var(--tc-accent,#ef0001)]"
+                            : "hover:bg-[var(--tc-surface-2,#f8fafc)]"
+                        }`}
+                      >
+                        <td className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">
+                          <input
+                            type="checkbox"
+                            aria-label={`Selecionar ${record.testCase.key}`}
+                            checked={checked}
+                            onChange={(event) => toggleBulkSelection(record.testCase.id, event.target.checked)}
+                          />
+                        </td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top font-bold text-[var(--tc-text,#0b1a3c)]">
+                          <span data-testid="test-case-key">{record.testCase.key}</span>
+                        </td>
+                        <td className="border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">
+                          <button
+                            type="button"
+                            data-testid="test-case-card"
+                            onClick={() => setSelectedId(record.testCase.id)}
+                            className="block max-w-[24rem] text-left"
+                          >
+                            <span className="block truncate font-bold text-[var(--tc-text,#0b1a3c)]">{record.testCase.title}</span>
+                            <span className="mt-0.5 block truncate text-[11px] text-[var(--tc-text-muted,#6b7280)]">
+                              {[record.testCase.testProjectCode, record.testCase.suiteName, record.testCase.moduleId].filter(Boolean).join(" / ") || "Sem projeto/suite"}
+                            </span>
+                          </button>
+                        </td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">{STATUS_LABEL[record.testCase.status] ?? record.testCase.status}</td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">{PRIORITY_LABEL[record.testCase.priority] ?? record.testCase.priority}</td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">{PRIORITY_LABEL[record.testCase.severity || ""] ?? record.testCase.severity ?? "--"}</td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">{TYPE_LABEL[record.testCase.type] ?? record.testCase.type}</td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">{SOURCE_LABEL[record.testCase.source] ?? record.testCase.source}</td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">{AUTOMATION_LABEL[record.testCase.automationStatus] ?? record.testCase.automationStatus}</td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">{record.testCase.lastExecutionStatus ? EXECUTION_LABEL[record.testCase.lastExecutionStatus] ?? record.testCase.lastExecutionStatus : "Nunca"}</td>
+                        <td className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-3 py-2 align-top">{formatDateTime(record.testCase.updatedAt)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </article>
+
+        <article data-testid="test-case-detail-panel" className="max-h-[calc(100vh-220px)] overflow-auto rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 xl:sticky xl:top-4">
           <div data-testid="test-case-detail">
           {selected ? (
             <>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Caso selecionado</p>
-                  <h2 data-testid="test-case-detail-title" className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{selected.testCase.title}</h2>
-                  <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{selected.testCase.description || "Sem descrição detalhada."}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-accent,#ef0001)]">{selected.testCase.key}</p>
+                  <h2 data-testid="test-case-detail-title" className="mt-1 text-lg font-black tracking-[-0.02em] text-[var(--tc-text,#0b1a3c)]">{selected.testCase.title}</h2>
+                  <p className="mt-2 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{selected.testCase.description || "Sem descrição detalhada."}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href={`/automacoes/playwright?testCaseId=${encodeURIComponent(selected.testCase.id)}`}
                     data-testid="test-case-automation-action"
-                    className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]"
                   >
                     Automatizar
                   </Link>
                   <button
                     type="button"
                     onClick={() => openEditForm(selected)}
-                    className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]"
                   >
                     <FiEdit2 className="h-4 w-4" />
                     Editar
@@ -1529,11 +2041,18 @@ export default function TestCaseRepositoryClient() {
                   <button
                     type="button"
                     onClick={() => handleArchive(selected)}
-                    className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]"
                   >
                     <FiArchive className="h-4 w-4" />
                     Arquivar
                   </button>
+                  <Link
+                    href={runHref}
+                    className="inline-flex items-center gap-2 rounded-lg bg-[var(--tc-primary,#011848)] px-3 py-1.5 text-xs font-semibold text-white"
+                  >
+                    <FiPlay className="h-4 w-4" />
+                    Iniciar run
+                  </Link>
                 </div>
               </div>
 
@@ -1555,7 +2074,7 @@ export default function TestCaseRepositoryClient() {
                 ) : null}
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <DrawerTabButton label="Caso" active={detailTab === "case"} onClick={() => setDetailTab("case")} testId="test-case-tab-case" />
                 <DrawerTabButton label="Passos" active={detailTab === "steps"} onClick={() => setDetailTab("steps")} testId="test-case-tab-steps" />
                 <DrawerTabButton label="Automação" active={detailTab === "automation"} onClick={() => setDetailTab("automation")} testId="test-case-tab-automation" />
@@ -1613,35 +2132,37 @@ export default function TestCaseRepositoryClient() {
                         data-testid="automation-generate-ai-button"
                         onClick={() => void handleGeneratePlaywrightDraft()}
                         disabled={generatingDraft}
-                        className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] disabled:opacity-60"
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] disabled:opacity-60"
                       >
                         {generatingDraft ? <FiLoader className="h-4 w-4 animate-spin" /> : <FiCode className="h-4 w-4" />}
                         Gerar draft com IA
                       </button>
                       <Link
                         href={`/automacoes/playwright?testCaseId=${encodeURIComponent(selected.testCase.id)}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
                       >
-                        Abrir contexto Playwright
+                        Vincular teste
                       </Link>
                     </div>
                   </div>
 
                   {selected.automationLink ? (
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
-                      <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 text-sm text-[var(--tc-text,#0b1a3c)]">
+                      <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3 text-sm text-[var(--tc-text,#0b1a3c)]">
                         <p><strong>Spec file:</strong> {selected.automationLink.specFile}</p>
                         <p className="mt-1"><strong>Test title:</strong> {selected.automationLink.testTitle || "Não informado"}</p>
                         <p className="mt-1"><strong>Project:</strong> {selected.automationLink.playwrightProject || "Não informado"}</p>
                       </div>
-                      <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 text-sm text-[var(--tc-text,#0b1a3c)]">
-                        <p><strong>Status:</strong> {selected.automationLink.status}</p>
+                      <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3 text-sm text-[var(--tc-text,#0b1a3c)]">
+                        <p><strong>Status da automação:</strong> {AUTOMATION_LABEL[selected.testCase.automationStatus] ?? selected.automationLink.status}</p>
+                        <p className="mt-1"><strong>Última execução:</strong> {formatDateTime(selected.testCase.lastExecutedAt)}</p>
+                        <p className="mt-1"><strong>Último resultado:</strong> {selected.testCase.lastExecutionStatus ? EXECUTION_LABEL[selected.testCase.lastExecutionStatus] ?? selected.testCase.lastExecutionStatus : "Não executado"}</p>
                         <p className="mt-1"><strong>Tags:</strong> {selected.automationLink.tags.length ? selected.automationLink.tags.join(" ") : "Sem tags"}</p>
                         <p className="mt-1"><strong>Command:</strong> {selected.automationLink.command || "Não informado"}</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-4 rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                    <div className="mt-4 rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 py-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                       Este caso ainda não possui vínculo técnico com Playwright.
                     </div>
                   )}
@@ -1651,7 +2172,7 @@ export default function TestCaseRepositoryClient() {
                     <button
                       type="button"
                       onClick={() => setDraftRefreshToken((current) => current + 1)}
-                      className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]"
+                      className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]"
                     >
                       <FiRefreshCcw className="h-3.5 w-3.5" />
                       Atualizar
@@ -1665,7 +2186,7 @@ export default function TestCaseRepositoryClient() {
                   ) : (
                     <div className="mt-3 space-y-3">
                       {drafts.map((draft) => (
-                        <div key={draft.id} data-testid="automation-draft-preview" className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 text-sm text-[var(--tc-text,#0b1a3c)]">
+                        <div key={draft.id} data-testid="automation-draft-preview" className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3 text-sm text-[var(--tc-text,#0b1a3c)]">
                           <p><strong>ID:</strong> {draft.id}</p>
                           <p><strong>Status:</strong> {draft.status}</p>
                           <p><strong>Maturidade:</strong> {AUTOMATION_LABEL[draft.maturityStatus || ""] ?? draft.maturityStatus ?? "n/a"}</p>
@@ -1776,7 +2297,7 @@ export default function TestCaseRepositoryClient() {
 
                   {draftError ? <p className="mt-3 text-sm font-semibold text-rose-700">{draftError}</p> : null}
 
-                  <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3">
+                  <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3">
                     <h5 className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">Assistente QA (terminal inicial)</h5>
                     <p className="mt-1 text-xs text-[var(--tc-text-secondary,#4b5563)]">
                       Comandos: gerar, aprovar &lt;draftId&gt;, vincular &lt;draftId&gt;, descartar &lt;draftId&gt;, publicar &lt;draftId&gt;, review &lt;draftId&gt;, heal &lt;draftId&gt;, approval &lt;draftId&gt; review|publish|execution|healing|reset
@@ -1805,7 +2326,7 @@ export default function TestCaseRepositoryClient() {
                           }
                         }}
                         placeholder="Digite um comando do assistente"
-                        className="min-h-10 flex-1 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm"
+                        className="min-h-10 flex-1 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-input-bg,#ffffff)] px-3 text-sm text-[var(--tc-text,#0b1a3c)]"
                       />
                       <button
                         type="button"
@@ -1834,14 +2355,48 @@ export default function TestCaseRepositoryClient() {
               ) : null}
 
               {detailTab === "runs" ? (
-                <section className="mt-4 rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-                  Execuções deste caso aparecerão aqui conforme runs vinculadas.
+                <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4 text-sm text-[var(--tc-text,#0b1a3c)]">
+                  <h3 className="text-sm font-black">Últimas execuções</h3>
+                  <div className="mt-3 grid gap-2">
+                    <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">Resultado mais recente</p>
+                      <p className="mt-1 font-semibold">
+                        {selected.testCase.lastExecutionStatus
+                          ? EXECUTION_LABEL[selected.testCase.lastExecutionStatus] ?? selected.testCase.lastExecutionStatus
+                          : "Nunca executado"}
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--tc-text-secondary,#4b5563)]">
+                        Ambiente: {selected.automationLink?.playwrightProject || "Não informado"} · Data: {formatDateTime(selected.testCase.lastExecutedAt)}
+                      </p>
+                    </div>
+                    {agentRuns.slice(0, 4).map((run) => (
+                      <div key={run.id} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3">
+                        <p className="font-semibold">{run.agentName}</p>
+                        <p className="mt-1 text-xs text-[var(--tc-text-secondary,#4b5563)]">
+                          Resultado: {run.status} · Ambiente: automação · Data: {formatDateTime(run.createdAt)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </section>
               ) : null}
 
               {detailTab === "history" ? (
-                <section className="mt-4 rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-                  Histórico de alterações e versões do caso.
+                <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4 text-sm text-[var(--tc-text,#0b1a3c)]">
+                  <h3 className="text-sm font-black">Histórico</h3>
+                  <div className="mt-3 space-y-2">
+                    <p className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3">
+                      Criado em {formatDateTime(selected.testCase.createdAt)} por {selected.testCase.createdBy || "sistema"}.
+                    </p>
+                    <p className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3">
+                      Última atualização em {formatDateTime(selected.testCase.updatedAt)}.
+                    </p>
+                    {(selected.versions ?? []).slice(0, 4).map((version) => (
+                      <p key={version.id} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3">
+                        Versão {version.version} registrada no repositório.
+                      </p>
+                    ))}
+                  </div>
                 </section>
               ) : null}
             </>
@@ -1854,9 +2409,27 @@ export default function TestCaseRepositoryClient() {
         </article>
       </div>
 
+      {isImportPanelOpen ? (
+        <div className="fixed inset-0 z-50 overflow-auto bg-black/50 p-4 backdrop-blur-sm">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsImportPanelOpen(false)}
+                aria-label="Fechar importação"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white text-[#011848] shadow-xl"
+              >
+                <FiX className="h-4 w-4" />
+              </button>
+            </div>
+            <TestCaseRepositoryImportExportPanel initialCompanySlug={companySlug !== "all" ? companySlug : undefined} />
+          </div>
+        </div>
+      ) : null}
+
       {isFormOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div data-testid="test-case-create-modal" className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-4xl border border-[var(--tc-border,#d7deea)] bg-white p-5 shadow-2xl">
+          <div data-testid="test-case-create-modal" className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-2xl">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">
@@ -2032,14 +2605,87 @@ export default function TestCaseRepositoryClient() {
   );
 }
 
-function Metric({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+function Metric({
+  label,
+  value,
+  suffix,
+  icon,
+  active = false,
+  onClick,
+}: {
+  label: string;
+  value: number | string;
+  suffix?: string;
+  icon: React.ReactNode;
+  active?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border px-3 py-2 text-left transition ${
+        active
+          ? "border-[var(--tc-accent,#ef0001)] bg-[rgba(239,0,1,0.08)]"
+          : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] hover:border-[var(--tc-accent,#ef0001)]"
+      }`}
+    >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">{label}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">{label}</p>
         <span className="text-[var(--tc-accent,#ef0001)]">{icon}</span>
       </div>
-      <p className="mt-2 text-lg font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{value}</p>
+      <p className="mt-1 text-lg font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{value}{suffix ?? ""}</p>
+    </button>
+  );
+}
+
+function QuickViewButton({
+  active,
+  label,
+  note,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  note: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-2xl border px-4 py-3 text-left transition ${
+        active
+          ? "border-[var(--tc-accent,#ef0001)] bg-[rgba(239,0,1,0.08)] shadow-[0_10px_24px_rgba(239,0,1,0.08)]"
+          : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] hover:border-[var(--tc-accent,#ef0001)]"
+      }`}
+    >
+      <p className="text-sm font-black tracking-[-0.02em] text-[var(--tc-text,#0b1a3c)]">{label}</p>
+      <p className="mt-1 text-xs text-[var(--tc-text-secondary,#4b5563)]">{note}</p>
+    </button>
+  );
+}
+
+function InsightRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "neutral" | "warn" | "danger";
+}) {
+  const toneClass =
+    tone === "danger"
+      ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-100 dark:border-rose-400/30"
+      : tone === "warn"
+        ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-100 dark:border-amber-400/30"
+        : "bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text,#0b1a3c)] border-[var(--tc-border,#d7deea)]";
+
+  return (
+    <div className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 ${toneClass}`}>
+      <span className="text-sm font-semibold">{label}</span>
+      <span className="text-lg font-black tracking-[-0.03em]">{value}</span>
     </div>
   );
 }
@@ -2058,13 +2704,13 @@ function Select({
   testId?: string;
 }) {
   return (
-    <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
+    <label className="grid gap-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
       {label}
       <select
         data-testid={testId}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="min-h-11 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
+        className="min-h-9 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-input-bg,#ffffff)] px-3 text-xs text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
       >
         {options.map(([optionValue, optionLabel]) => (
           <option key={optionValue} value={optionValue}>
@@ -2097,7 +2743,7 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="min-h-11 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
+        className="min-h-11 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-input-bg,#ffffff)] px-4 text-sm text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
       />
     </label>
   );
@@ -2122,7 +2768,7 @@ function TextAreaField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={4}
-        className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
+        className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-input-bg,#ffffff)] px-4 py-3 text-sm text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
       />
     </label>
   );
@@ -2146,8 +2792,8 @@ function DrawerTabButton({
       onClick={onClick}
       className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
         active
-          ? "border-[var(--tc-accent,#ef0001)] bg-[#fff5f5] text-[var(--tc-accent,#ef0001)]"
-          : "border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
+          ? "border-[var(--tc-accent,#ef0001)] bg-[rgba(239,0,1,0.08)] text-[var(--tc-accent,#ef0001)]"
+          : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text,#0b1a3c)]"
       }`}
     >
       {label}
@@ -2160,7 +2806,7 @@ function TransitionBadge({ label, active }: { label: string; active: boolean }) 
     <span
       className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] ${
         active
-          ? "border-[var(--tc-accent,#ef0001)] bg-[#fff0f0] text-[var(--tc-accent,#ef0001)]"
+          ? "border-[var(--tc-accent,#ef0001)] bg-[rgba(239,0,1,0.08)] text-[var(--tc-accent,#ef0001)]"
           : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text-muted,#6b7280)]"
       }`}
     >
@@ -2172,4 +2818,3 @@ function TransitionBadge({ label, active }: { label: string; active: boolean }) 
 function Badge({ children }: { children: React.ReactNode }) {
   return <span className="inline-flex rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[var(--tc-text,#0b1a3c)]">{children}</span>;
 }
-

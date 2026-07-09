@@ -1,4 +1,5 @@
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { getScreenPermissionDefaultsForRole } from "@/lib/navigation/screenPermissions";
 
 export type Role = SystemRole;
 
@@ -188,5 +189,10 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
 
 export function resolveRoleDefaults(role?: string | null) {
   const normalizedRole = normalizeLegacyRole(role);
-  return normalizedRole ? ROLE_DEFAULTS[normalizedRole] : {};
+  if (!normalizedRole) return {};
+
+  return {
+    ...ROLE_DEFAULTS[normalizedRole],
+    ...getScreenPermissionDefaultsForRole(normalizedRole),
+  };
 }

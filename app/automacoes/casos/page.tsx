@@ -110,10 +110,13 @@ export default function AutomacoesCasosPage() {
 
     let canceled = false;
     async function loadCase() {
+      const caseId = testCaseId;
+      if (!caseId) return;
+
       setLoading(true);
       setError(null);
       try {
-        const response = await fetchApi(`/api/test-cases/${encodeURIComponent(testCaseId)}/automation`, { cache: "no-store" });
+        const response = await fetchApi(`/api/test-cases/${encodeURIComponent(caseId)}/automation`, { cache: "no-store" });
         if (!response.ok) throw new Error("Não foi possível carregar o contexto técnico do caso.");
         const payload = (await response.json()) as AutomationApiPayload;
         if (canceled) return;

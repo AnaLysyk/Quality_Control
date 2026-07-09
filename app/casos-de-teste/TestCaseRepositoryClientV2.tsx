@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   FiArchive,
   FiCheckCircle,
@@ -702,7 +702,7 @@ export default function TestCaseRepositoryClientV2({
   );
 }
 
-function SummaryChip({ label, value, icon }: { label: string; value: number | string; icon: JSX.Element }) {
+function SummaryChip({ label, value, icon }: { label: string; value: number | string; icon: ReactNode }) {
   return <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2"><div className="flex items-center justify-between gap-2"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">{label}</p><span className="text-[var(--tc-accent,#ef0001)]">{icon}</span></div><p className="mt-1 text-xl font-black tracking-[-0.03em]">{value}</p></div>;
 }
 

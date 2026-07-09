@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FiAlertTriangle, FiCheckCircle, FiCode, FiGitBranch, FiRefreshCcw, FiSearch } from "react-icons/fi";
 import { fetchApi } from "@/lib/api";
 import { useProjectContext } from "@/lib/core/project/ProjectContext";
@@ -240,6 +240,6 @@ export default function AutomationCasesQueue({ access, activeCompanySlug, compan
   );
 }
 
-function Metric({ label, value, icon }: { label: string; value: number; icon: JSX.Element }) {
+function Metric({ label, value, icon }: { label: string; value: number; icon: ReactNode }) {
   return <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2"><div className="flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">{label}</p><span className="text-[var(--tc-accent,#ef0001)]">{icon}</span></div><p className="mt-1 text-xl font-black">{value}</p></div>;
 }

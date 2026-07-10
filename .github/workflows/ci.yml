@@ -12,6 +12,20 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       CI: "true"
       NEXT_DISABLE_FONT_DOWNLOAD: "1"
@@ -51,6 +65,12 @@ jobs:
         run: |
           mkdir -p test-results/emails .tmp/e2e-auth
           : > "$EMAIL_CAPTURE_FILE"
+
+      - name: Apply Prisma migrations to CI Postgres
+        shell: bash
+        run: |
+          export DATABASE_URL="$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql ci ci 127.0.0.1 5432 ci)"
+          npx prisma migrate deploy --config prisma.config.ts
 
       - name: Block obvious committed database secrets
         shell: bash

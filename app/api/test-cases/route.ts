@@ -145,8 +145,22 @@ export async function POST(req: Request) {
   const payload = (await req.json()) as CreateTestCaseInput & { companySlug?: string | null };
   const companySlug = payload.companySlug ?? payload.companyId ?? null;
 
-  if (!canCreateTestCaseForCompany(user, companySlug)) {
+  if (!canCreateTestCaseForCompany(user, companySlug, payload.projectId)) {
     return NextResponse.json({ message: "Sem permissão para criar caso neste contexto" }, { status: 403 });
+  }
+
+  if (payload.projectId) {
+    const { prisma } = await import("@/lib/prismaClient");
+    const project = await prisma.project.findUnique({
+      where: { id: payload.projectId },
+      select: { manualCreationDisabled: true },
+    });
+    if (project?.manualCreationDisabled) {
+      return NextResponse.json(
+        { message: "Este projeto está configurado para usar só integração (Qase/Jira); criação manual está desabilitada." },
+        { status: 403 },
+      );
+    }
   }
 
   try {

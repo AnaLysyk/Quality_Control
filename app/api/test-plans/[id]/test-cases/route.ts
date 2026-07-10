@@ -3,7 +3,7 @@ import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
-import { canAccessTestCaseRecord, canCreateTestCaseForCompany } from "@/lib/test-cases/testCasePermissions";
+import { canAccessTestCaseRecord, canCreateTestCaseForCompany, resolveAllowedProjectIds } from "@/lib/test-cases/testCasePermissions";
 import { getManualTestPlan, updateManualTestPlan } from "@/lib/testPlansStore";
 
 type TestCaseRecord = Awaited<ReturnType<typeof listTestCaseRecords>>[number];
@@ -43,7 +43,7 @@ async function requireTestPlanMutationAccess(request: Request, companySlug: stri
 
 function canLinkCaseToPlanCompany(user: AuthUser, record: TestCaseRecord, companySlug: string) {
   if (!canAccessTestCaseRecord(user, record)) return false;
-  if (!canCreateTestCaseForCompany(user, record.testCase.companyId)) return false;
+  if (!canCreateTestCaseForCompany(user, record.testCase.companyId, record.testCase.projectId)) return false;
 
   const caseCompanySlug = record.testCase.companyId?.trim().toLowerCase() || null;
   return !caseCompanySlug || caseCompanySlug === companySlug;
@@ -81,6 +81,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const plan = await getManualTestPlan({ companySlug, id: planId });
   if (!plan) return NextResponse.json({ message: "Plano nao encontrado" }, { status: 404 });
+  const allowedProjectIds = resolveAllowedProjectIds(user);
+  if (allowedProjectIds && !(plan.projectId && allowedProjectIds.includes(plan.projectId))) {
+    return NextResponse.json({ message: "Plano nao encontrado" }, { status: 404 });
+  }
 
   try {
     const records = await resolveCasesByIds(testCaseIds);

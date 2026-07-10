@@ -2,6 +2,7 @@
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { createQualityProjects } from "./playwright.projects";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const runHeaded = process.env.PLAYWRIGHT_HEADED === "1" || process.env.PLAYWRIGHT_HEADED === "true";
@@ -113,10 +114,7 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
-    {
-      name: "quality-smoke",
-      use: { ...devices["Desktop Chrome"] },
-    },
+    ...createQualityProjects(),
     ...(includeEdge
       ? [
           {

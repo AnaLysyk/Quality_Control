@@ -60,6 +60,7 @@ export type LocalAuthMembership = {
   companyId: string;
   role?: "company_admin" | "user" | "viewer" | string | null;
   capabilities?: string[];
+  allowedProjectIds?: string[];
   createdAt?: string | null;
 };
 
@@ -1017,6 +1018,7 @@ export async function upsertLocalLink(input: {
   companyId: string;
   role?: string | null;
   capabilities?: string[] | null;
+  allowedProjectIds?: string[] | null;
 }) {
   if (shouldUsePostgresAuthStore()) return (await pg()).pgUpsertLocalLink(input);
   const store = await loadStoreForWrite();
@@ -1032,6 +1034,7 @@ export async function upsertLocalLink(input: {
       ...memberships[idx],
       role,
       ...(input.capabilities ? { capabilities: input.capabilities } : {}),
+      ...(input.allowedProjectIds !== undefined ? { allowedProjectIds: input.allowedProjectIds ?? [] } : {}),
     };
   } else {
     memberships.push({
@@ -1040,6 +1043,7 @@ export async function upsertLocalLink(input: {
       companyId: input.companyId,
       role,
       capabilities: input.capabilities ?? undefined,
+      allowedProjectIds: input.allowedProjectIds ?? undefined,
       createdAt: new Date().toISOString(),
     });
   }

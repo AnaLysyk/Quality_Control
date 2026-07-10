@@ -991,6 +991,7 @@ const SUPPLEMENTAL_SYSTEM_ROUTES = [
   "app/empresas/[slug]/defeitos/kanban/page.tsx",
   "app/empresas/[slug]/docs/page.tsx",
   "app/empresas/[slug]/documentos/page.tsx",
+  "app/empresas/[slug]/jira/page.tsx",
   "app/empresas/[slug]/metrics/page.tsx",
   "app/empresas/[slug]/page.tsx",
   "app/empresas/[slug]/perfil/page.tsx",

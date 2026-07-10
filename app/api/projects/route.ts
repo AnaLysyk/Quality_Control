@@ -62,6 +62,9 @@ export async function GET(request: Request) {
       iconKey: true,
       companyId: true,
       createdAt: true,
+      qaseProjectCode: true,
+      jiraProjectKey: true,
+      manualCreationDisabled: true,
     },
   });
 
@@ -83,6 +86,9 @@ const CreateSchema = z.object({
   description: z.string().optional(),
   color: z.string().optional(),
   iconKey: z.string().optional(),
+  qaseProjectCode: z.string().trim().optional(),
+  jiraProjectKey: z.string().trim().optional(),
+  manualCreationDisabled: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -92,7 +98,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
   }
 
-  const { companySlug, slug, name, description, color, iconKey } = parsed.data;
+  const { companySlug, slug, name, description, color, iconKey, qaseProjectCode, jiraProjectKey, manualCreationDisabled } = parsed.data;
   const contextResult = await resolveOperationalContext(request, {
     moduleId: "context",
     action: "switch_project",
@@ -130,6 +136,9 @@ export async function POST(request: Request) {
       description,
       color,
       iconKey,
+      qaseProjectCode: qaseProjectCode || null,
+      jiraProjectKey: jiraProjectKey || null,
+      manualCreationDisabled: manualCreationDisabled ?? false,
       createdById: contextResult.context.access.userId,
     },
     select: {
@@ -142,6 +151,9 @@ export async function POST(request: Request) {
       iconKey: true,
       companyId: true,
       createdAt: true,
+      qaseProjectCode: true,
+      jiraProjectKey: true,
+      manualCreationDisabled: true,
     },
   });
 

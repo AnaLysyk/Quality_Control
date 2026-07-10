@@ -24,12 +24,12 @@ test.describe("Repositorio central de casos de teste", () => {
 
     const repository = page.getByTestId("test-case-repository");
     await expect(repository).toBeVisible();
-    await expect(repository.getByRole("heading", { name: "Casos de Teste" })).toBeVisible();
-    await expect(repository.getByText(/Repositório Central/i)).toBeVisible();
-    await expect(repository.getByRole("button", { name: "Novo caso de teste" })).toBeVisible();
-    await expect(repository.getByLabel("Origem")).toBeVisible();
-    await expect(repository.getByLabel("Status")).toBeVisible();
+    await expect(repository.getByRole("heading", { level: 1, name: "Repositório de Casos de Teste" })).toBeVisible();
+    await expect(repository.getByRole("button", { name: "Novo caso" })).toBeVisible();
+    await expect(repository.getByLabel("Tipo")).toBeVisible();
     await expect(repository.getByLabel("Automação")).toBeVisible();
+    await expect(repository.getByLabel("Prioridade")).toBeVisible();
+    await expect(repository.getByLabel("Suite/Pasta")).toBeVisible();
   });
 });
 

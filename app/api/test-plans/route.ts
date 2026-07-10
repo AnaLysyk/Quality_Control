@@ -7,7 +7,7 @@ import { listApplications } from "@/lib/applicationsStore";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { QaseError } from "@/lib/qaseSdk";
 import { listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
-import { canAccessTestCaseRecord } from "@/lib/test-cases/testCasePermissions";
+import { canAccessTestCaseRecord, resolveAllowedProjectIds } from "@/lib/test-cases/testCasePermissions";
 import {
   extractNumericCaseIds,
   parseTestPlanCases,
@@ -48,7 +48,18 @@ function hasGlobalTestPlanWriteAccess(user: AuthUser) {
     .some((role) => normalizeLegacyRole(role) === SYSTEM_ROLES.LEADER_TC);
 }
 
-async function requireTestPlanCompanyAccess(request: Request, companySlug: string, mode: "read" | "write") {
+function matchesPlanProjectScope(user: AuthUser, projectId?: string | null) {
+  const allowedProjectIds = resolveAllowedProjectIds(user);
+  if (!allowedProjectIds) return true;
+  return Boolean(projectId && allowedProjectIds.includes(projectId));
+}
+
+async function requireTestPlanCompanyAccess(
+  request: Request,
+  companySlug: string,
+  mode: "read" | "write",
+  projectId?: string | null,
+) {
   const user = await authenticateRequest(request);
   if (!user) {
     return { response: NextResponse.json({ error: "Não autorizado" }, { status: 401 }) };
@@ -58,17 +69,19 @@ async function requireTestPlanCompanyAccess(request: Request, companySlug: strin
   }
 
   const allowedSlugs = resolveNormalizedCompanySlugs(user);
-  if (mode === "read" && hasGlobalCompanyVisibility(user)) {
-    return { user };
+  const hasCompanyAccess =
+    (mode === "read" && hasGlobalCompanyVisibility(user)) ||
+    (mode === "write" && hasGlobalTestPlanWriteAccess(user)) ||
+    allowedSlugs.includes(companySlug);
+
+  if (!hasCompanyAccess) {
+    return { response: NextResponse.json({ error: "Acesso proibido" }, { status: 403 }) };
   }
-  if (mode === "write" && hasGlobalTestPlanWriteAccess(user)) {
-    return { user };
-  }
-  if (allowedSlugs.includes(companySlug)) {
-    return { user };
+  if (projectId !== undefined && !matchesPlanProjectScope(user, projectId)) {
+    return { response: NextResponse.json({ error: "Acesso proibido" }, { status: 403 }) };
   }
 
-  return { response: NextResponse.json({ error: "Acesso proibido" }, { status: 403 }) };
+  return { user };
 }
 
 function assertCaseCanBeUsedInPlan(user: AuthUser, record: Awaited<ReturnType<typeof listTestCaseRecords>>[number], companySlug: string) {
@@ -244,22 +257,25 @@ export async function GET(request: Request) {
   const planId = url.searchParams.get("planId")?.trim() || "";
   const source = normalizeSource(url.searchParams.get("source"));
 
-  const access = await requireTestPlanCompanyAccess(request, companySlug, "read");
+  const access = await requireTestPlanCompanyAccess(request, companySlug, "read", projectId || undefined);
   if ("response" in access) return access.response;
   const { user } = access;
 
   const { applications, selectedApplication } = await resolveApplication(companySlug, applicationId);
   const projectCode = requestedProjectCode || normalizeProjectCode(selectedApplication?.qaseProjectCode);
-  const manualPlans = await listManualTestPlans({
-    companySlug,
-    applicationId: applicationId || undefined,
-    projectId: projectId || undefined,
-  });
+  const allowedProjectIds = resolveAllowedProjectIds(user);
+  const manualPlans = (
+    await listManualTestPlans({
+      companySlug,
+      applicationId: applicationId || undefined,
+      projectId: projectId || undefined,
+    })
+  ).filter((plan) => !allowedProjectIds || (plan.projectId && allowedProjectIds.includes(plan.projectId)));
 
   if (planId) {
     if (source === "manual") {
       const plan = await getManualTestPlan({ companySlug, id: planId });
-      if (!plan) {
+      if (!plan || !matchesPlanProjectScope(user, plan.projectId)) {
         return NextResponse.json({ error: "Plan not found" }, { status: 404 });
       }
       return NextResponse.json({
@@ -421,7 +437,7 @@ export async function POST(request: Request) {
     ? body.testCaseIds.map((item) => String(item ?? "").trim()).filter(Boolean)
     : [];
 
-  const access = await requireTestPlanCompanyAccess(request, companySlug, "write");
+  const access = await requireTestPlanCompanyAccess(request, companySlug, "write", planProjectId);
   if ("response" in access) return access.response;
   const { user } = access;
 
@@ -539,6 +555,13 @@ export async function PATCH(request: Request) {
 
   if (!planId) {
     return NextResponse.json({ error: "companySlug and planId are required" }, { status: 400 });
+  }
+
+  if (source === "manual") {
+    const existingPlan = await getManualTestPlan({ companySlug, id: planId });
+    if (!existingPlan || !matchesPlanProjectScope(user, existingPlan.projectId)) {
+      return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+    }
   }
 
   const caseRefs = body.cases === undefined ? undefined : parseTestPlanCases(body.cases);
@@ -668,9 +691,17 @@ export async function DELETE(request: Request) {
 
   const access = await requireTestPlanCompanyAccess(request, companySlug, "write");
   if ("response" in access) return access.response;
+  const { user } = access;
 
   if (!planId) {
     return NextResponse.json({ error: "companySlug and planId are required" }, { status: 400 });
+  }
+
+  if (source === "manual") {
+    const existingPlan = await getManualTestPlan({ companySlug, id: planId });
+    if (!existingPlan || !matchesPlanProjectScope(user, existingPlan.projectId)) {
+      return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+    }
   }
 
   if (source === "qase") {

@@ -56,8 +56,12 @@ jobs:
         shell: bash
         run: |
           db_url_re='postgres(ql)?://[^[:space:]]+@[^[:space:]]+'
-          if git grep -nE "$db_url_re" -- .github scripts app lib ':!.github/workflows/ci.yml'; then
+          safe_host_re='@(localhost|127\.0\.0\.1)([:/]|$)'
+          matches=$(git grep -nE "$db_url_re" -- .github scripts app lib ':!.github/workflows/ci.yml' || true)
+          leaks=$(printf '%s\n' "$matches" | grep -vE "$safe_host_re" || true)
+          if [ -n "$leaks" ]; then
             echo "Found an obvious committed database URL. Replace it with an environment variable before merging."
+            printf '%s\n' "$leaks"
             exit 1
           fi
 

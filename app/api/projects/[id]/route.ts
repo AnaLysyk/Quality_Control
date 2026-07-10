@@ -35,6 +35,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       updatedAt: true,
       archivedAt: true,
       archivedById: true,
+      qaseProjectCode: true,
+      jiraProjectKey: true,
+      manualCreationDisabled: true,
     },
   });
 
@@ -64,6 +67,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (typeof body.status === "string") patch.status = body.status;
   if (typeof body.color === "string") patch.color = body.color;
   if (typeof body.iconKey === "string") patch.iconKey = body.iconKey;
+  if (typeof body.qaseProjectCode === "string") patch.qaseProjectCode = body.qaseProjectCode.trim() || null;
+  if (typeof body.jiraProjectKey === "string") patch.jiraProjectKey = body.jiraProjectKey.trim() || null;
+  if (typeof body.manualCreationDisabled === "boolean") patch.manualCreationDisabled = body.manualCreationDisabled;
 
   if (body.archive === true) {
     patch.archivedAt = new Date();

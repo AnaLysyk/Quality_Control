@@ -96,25 +96,15 @@ async function assertRepositoryContext(page: Page, profile: ProfileScenario) {
   await expect(page).not.toHaveURL(/\/automacoes\/casos/);
 
   await expect(page.getByTestId("test-case-repository")).toBeVisible();
-  await expect(page.getByRole("heading", { name: /casos de teste/i })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Repositório de Casos de Teste" })).toBeVisible();
 
-  await expect(page.getByTestId("test-case-context-chip")).toContainText(profile.label);
-
-  if (profile.isGlobal) {
-    await expect(page.getByTestId("test-case-company-filter")).toBeVisible();
-  } else {
-    await expect(page.getByTestId("test-case-company-filter")).toBeHidden();
-  }
+  // Empresa e projeto vêm do contexto/menu lateral (não há mais seletor duplicado na tela).
+  void profile;
 }
 
 async function selectCompanyIfGlobal(page: Page, profile: ProfileScenario) {
   if (!profile.isGlobal) return;
-
-  const filter = page.getByTestId("test-case-company-filter");
-  await expect(filter).toBeVisible();
-  await filter.selectOption(profile.companySlug);
-
-  await expect(page.getByTestId("test-case-context-chip")).toContainText(profile.companySlug);
+  // Troca de empresa acontece pelo menu lateral, não por um filtro dentro do repositório.
 }
 
 async function resolveCaseIdByTitle(context: BrowserContext, title: string) {
@@ -130,7 +120,6 @@ async function createCase(page: Page, context: BrowserContext, profile: ProfileS
   const title = `Caso E2E ${profile.label} ${suffix}`;
 
   await page.getByTestId("test-case-new-button").click();
-  await page.getByTestId("test-case-new-manual").click();
   await expect(page.getByTestId("test-case-create-modal")).toBeVisible();
 
   await page.getByTestId("test-case-title-input").fill(title);
@@ -194,6 +183,7 @@ async function createPlanAndLinkCase(
     .getByTestId("test-plan-description-input")
     .fill(`Plano criado no Playwright para validar vínculo com caso do perfil ${profile.label}.`);
 
+  await page.getByTestId("test-plan-add-manual-case-button").click();
   const caseIdInput = page.getByLabel(/ID do caso|Case ID/i).first();
   await caseIdInput.fill(testCase.id);
 
@@ -232,7 +222,7 @@ async function createRunFromPlan(
   await page.getByTestId("test-run-new-button").click();
   await expect(page.getByTestId("test-run-create-modal")).toBeVisible();
 
-  await page.getByTestId("test-run-title-input").first().fill(title);
+  await page.getByRole("button", { name: "Integração" }).click();
 
   const planSelect = page.getByTestId("test-run-plan-search-input").first();
   const optionCount = await planSelect.locator("option").count();
@@ -254,6 +244,7 @@ async function createRunFromPlan(
   }
 
   await page.getByRole("button", { name: /Aplicar plano/i }).first().click();
+  await page.getByTestId("test-run-title-input").first().fill(title);
   await page.getByTestId("test-run-save-button").first().click();
 
   await expect(page.getByTestId("test-run-list")).toContainText(title);
@@ -279,7 +270,6 @@ async function assertProfileCannotSwitchContext(page: Page, profile: ProfileScen
   await page.goto("/casos-de-teste");
 
   await expect(page.getByTestId("test-case-repository")).toBeVisible();
-  await expect(page.getByTestId("test-case-company-filter")).toBeHidden();
 }
 
 test.describe("Repositório Central - ciclo completo por perfil", () => {

@@ -87,7 +87,7 @@ export async function POST(req: Request) {
     const normalized = normalizeCase(rawCase);
     const companySlug = normalized.companyId ?? null;
 
-    if (!canCreateTestCaseForCompany(user, companySlug)) {
+    if (!canCreateTestCaseForCompany(user, companySlug, normalized.projectId)) {
       errors.push({ index: index + 1, title: normalized.title, message: "Sem permissão para criar caso neste contexto" });
       continue;
     }

@@ -288,13 +288,21 @@ function formFromRecord(record: TestCaseRecord): CaseForm {
 }
 
 export default function TestCaseRepositoryClientV2({ initialCompanySlug, lockCompanyScope = false }: TestCaseRepositoryClientV2Props) {
-  const { activeClientSlug } = useClientContext();
+  const { activeClientSlug, loading: clientContextLoading } = useClientContext();
   const { activeProject } = useProjectContext();
   const projectId = getProjectValue(activeProject, ["id"]);
   const projectCode = getProjectValue(activeProject, ["qaseProjectCode", "code", "slug"]);
   const projectName = getProjectValue(activeProject, ["name"]);
   const projectLabel = getProjectValue(activeProject, ["name", "slug", "id"]) ?? "Projeto não selecionado";
   const companySlug = lockCompanyScope ? normalizeCompanySlug(initialCompanySlug) : normalizeCompanySlug(activeClientSlug ?? initialCompanySlug);
+  // Enquanto o contexto de empresa (menu lateral) ainda está resolvendo de forma assíncrona,
+  // companySlug cai em "all" mesmo para perfis não-globais — isso faz criar/listar caso no
+  // escopo errado (ou 403). Só liberamos ações de escrita quando o contexto está pronto.
+  const companyContextReady = lockCompanyScope || !clientContextLoading;
+  // Projeto configurado para usar só integração (Qase/Jira): mantém visualização,
+  // mas não permite criar caso manualmente.
+  const manualCreationDisabled = Boolean((activeProject as { manualCreationDisabled?: boolean } | null)?.manualCreationDisabled);
+  const canCreateManually = companyContextReady && !manualCreationDisabled;
 
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -332,6 +340,7 @@ export default function TestCaseRepositoryClientV2({ initialCompanySlug, lockCom
   }, [contextKey, resetFilters]);
 
   const loadCases = useCallback(async () => {
+    if (!companyContextReady) return;
     setLoading(true);
     const params = new URLSearchParams({ includeIntegrated: "true" });
     if (companySlug !== "all") params.set("companySlug", companySlug);
@@ -355,7 +364,7 @@ export default function TestCaseRepositoryClientV2({ initialCompanySlug, lockCom
     } finally {
       setLoading(false);
     }
-  }, [automationFilter, companySlug, priorityFilter, projectId, query, suiteFilter, typeFilter]);
+  }, [automationFilter, companyContextReady, companySlug, priorityFilter, projectId, query, suiteFilter, typeFilter]);
 
   useEffect(() => {
     void loadCases();
@@ -455,6 +464,15 @@ export default function TestCaseRepositoryClientV2({ initialCompanySlug, lockCom
   }
 
   async function handleSave() {
+    if (!companyContextReady) {
+      setFormError("Contexto de empresa ainda carregando. Aguarde um instante e tente novamente.");
+      return;
+    }
+    if (manualCreationDisabled) {
+      setFormError("Este projeto está configurado para usar só integração (Qase/Jira); criação manual está desabilitada.");
+      return;
+    }
+
     setSaving(true);
     setFormError(null);
 
@@ -558,7 +576,7 @@ export default function TestCaseRepositoryClientV2({ initialCompanySlug, lockCom
             <Link href="/automacoes/casos" className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
               <FiCode className="h-4 w-4" /> Ver automação
             </Link>
-            <button type="button" data-testid="test-case-new-button" onClick={() => openCreateForm(false)} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-[var(--tc-accent,#ef0001)] px-4 text-xs font-black text-white">
+            <button type="button" data-testid="test-case-new-button" onClick={() => openCreateForm(false)} disabled={!canCreateManually} title={!companyContextReady ? "Carregando contexto de empresa..." : manualCreationDisabled ? "Este projeto usa só integração (Qase/Jira); criação manual desabilitada." : undefined} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-[var(--tc-accent,#ef0001)] px-4 text-xs font-black text-white disabled:opacity-60">
               <FiPlus className="h-4 w-4" /> Novo caso
             </button>
           </div>
@@ -606,7 +624,7 @@ export default function TestCaseRepositoryClientV2({ initialCompanySlug, lockCom
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(239,0,1,0.10)] text-[var(--tc-accent,#ef0001)]"><FiClipboard className="h-6 w-6" /></div>
             <h2 className="mt-4 text-xl font-black">Nenhum caso criado neste projeto ainda</h2>
             <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Comece criando o primeiro caso manual ou marque um cenário como automatizável para aparecer na fila de automação.</p>
-            <button type="button" onClick={() => openCreateForm(false)} className="mt-5 rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-black text-white">Criar primeiro caso</button>
+            <button type="button" onClick={() => openCreateForm(false)} disabled={!canCreateManually} className="mt-5 rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-black text-white disabled:opacity-60">Criar primeiro caso</button>
           </div>
         </div>
       ) : (

@@ -1,6 +1,22 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { emitBrainEvent } from "@/lib/brain/events";
+import {
+  canUseGlobalTestCaseScope,
+  resolveAllowedProjectIds,
+  resolveAllowedTestCaseCompanies,
+} from "@/lib/test-cases/testCasePermissions";
+
+function matchesRunScope(user: AuthUser, companyId?: string | null, projectId?: string | null) {
+  if (!canUseGlobalTestCaseScope(user)) {
+    const allowedCompanies = resolveAllowedTestCaseCompanies(user);
+    const normalizedCompanyId = companyId?.trim().toLowerCase();
+    if (!normalizedCompanyId || !allowedCompanies.includes(normalizedCompanyId)) return false;
+  }
+  const allowedProjectIds = resolveAllowedProjectIds(user);
+  if (!allowedProjectIds) return true;
+  return Boolean(projectId && allowedProjectIds.includes(projectId));
+}
 
 function durationSeconds(startedAt: Date | null | undefined, finishedAt: Date | null | undefined) {
   if (!startedAt) return null;
@@ -38,11 +54,23 @@ export async function GET(req: Request) {
   const status = url.searchParams.get("status");
   const take = Math.min(Number(url.searchParams.get("take") ?? "50"), 200);
 
+  if (!canUseGlobalTestCaseScope(user)) {
+    const allowedCompanies = resolveAllowedTestCaseCompanies(user);
+    const normalizedCompanyId = companyId?.trim().toLowerCase();
+    if (!normalizedCompanyId || !allowedCompanies.includes(normalizedCompanyId)) {
+      return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+    }
+  }
+  const allowedProjectIds = resolveAllowedProjectIds(user);
+  if (allowedProjectIds && projectId && !allowedProjectIds.includes(projectId)) {
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+  }
+
   const prisma = await getPrisma();
   const runs = await prisma.testRun.findMany({
     where: {
       ...(companyId ? { companyId } : {}),
-      ...(projectId ? { projectId } : {}),
+      ...(projectId ? { projectId } : allowedProjectIds ? { projectId: { in: allowedProjectIds } } : {}),
       ...(planId ? { planId } : {}),
       ...(status ? { status } : {}),
     },
@@ -77,6 +105,10 @@ export async function POST(req: Request) {
   const title = String(body.title ?? "Execução manual").trim();
   const source = String(body.source ?? "manual").trim();
   const status = normalizeRunStatus(body.status) ?? "pending";
+
+  if (!matchesRunScope(user, companyId, projectId)) {
+    return NextResponse.json({ message: "Sem permissão para criar execução neste contexto" }, { status: 403 });
+  }
 
   const prisma = await getPrisma();
   const run = await prisma.testRun.create({
@@ -117,7 +149,9 @@ export async function PATCH(req: Request) {
 
   const prisma = await getPrisma();
   const existing = await prisma.testRun.findUnique({ where: { id: String(body.id) } });
-  if (!existing) return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
+  if (!existing || !matchesRunScope(user, existing.companyId, existing.projectId)) {
+    return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
+  }
 
   const status = normalizeRunStatus(body.status);
 

@@ -356,6 +356,8 @@ export async function updateTestCaseRecord(
     priority?: TestCasePriority;
     automationStatus?: TestCaseAutomationStatus;
     companyId?: string | null;
+    externalKey?: string;
+    externalUrl?: string;
   },
   actorId: string,
 ): Promise<TestCaseRecord | null> {
@@ -399,6 +401,8 @@ export async function updateTestCaseRecord(
     suiteId: patch.suiteId !== undefined ? normalizeText(patch.suiteId) || null : current.testCase.suiteId,
     suiteName: patch.suiteName !== undefined ? normalizeText(patch.suiteName) || null : current.testCase.suiteName,
     featureId: patch.featureId !== undefined ? normalizeText(patch.featureId) || null : current.testCase.featureId,
+    externalKey: patch.externalKey !== undefined ? normalizeText(patch.externalKey) || undefined : current.testCase.externalKey,
+    externalUrl: patch.externalUrl !== undefined ? normalizeText(patch.externalUrl) || undefined : current.testCase.externalUrl,
     tags: patch.tags ? normalizeTags(patch.tags) : current.testCase.tags,
     automationStatus: ensureAllowedEnum(
       "INVALID_TEST_CASE_AUTOMATION_STATUS",

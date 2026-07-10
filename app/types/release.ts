@@ -31,6 +31,7 @@ export type Release = {
   testPlanName?: string | null;
   testPlanSource?: "manual" | "qase" | null;
   testPlanProjectCode?: string | null;
+  projectId?: string | null;
   clientSlug?: string | null;
   environments: string[];
   source: ReleaseSource;

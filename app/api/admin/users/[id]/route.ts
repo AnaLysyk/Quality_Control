@@ -155,6 +155,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
+  const hasAllowedProjectIds = hasOwn(body as Record<string, unknown> | null, "allowed_project_ids");
+  const allowedProjectIds = hasAllowedProjectIds && Array.isArray(body?.allowed_project_ids)
+    ? body.allowed_project_ids.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0)
+    : undefined;
 
   if (wantsGlobalAdmin && !canManageProfiles) {
     return NextResponse.json({ error: "Somente Lider TC pode atribuir perfis privilegiados" }, { status: 403 });
@@ -244,6 +248,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           companyId,
           role,
           capabilities: nextCapabilities,
+          ...(companyId === clientId ? { allowedProjectIds } : {}),
         });
       }
     } catch (error) {
@@ -254,7 +259,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   } else if (clientId) {
     try {
-      await upsertLocalLink({ userId: id, companyId: clientId, role, capabilities });
+      await upsertLocalLink({ userId: id, companyId: clientId, role, capabilities, allowedProjectIds });
     } catch (error) {
       if (isUserScopeLockedError(error)) {
         return NextResponse.json({ error: error.message }, { status: 409 });

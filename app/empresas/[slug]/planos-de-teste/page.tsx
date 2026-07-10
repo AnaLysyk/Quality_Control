@@ -1524,6 +1524,7 @@ export default function TestPlansPage() {
                   {draft.source !== "qase" ? (
                     <button
                       type="button"
+                      data-testid="test-plan-add-manual-case-button"
                       onClick={handleAddManualCase}
                       className="inline-flex items-center gap-2 rounded-2xl bg-[var(--tc-accent,#ef0001)] px-4 py-3 text-sm font-semibold text-white shadow-sm"
                     >

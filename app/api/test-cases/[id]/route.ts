@@ -61,6 +61,8 @@ function normalizePayload(
   priority?: TestCasePriority;
   automationStatus?: TestCaseAutomationStatus;
   companyId?: string | null;
+  externalKey?: string;
+  externalUrl?: string;
 } {
   return {
     title: typeof body.title === "string" ? body.title : undefined,
@@ -109,6 +111,8 @@ function normalizePayload(
           .filter((item): item is NonNullable<typeof item> => item !== null)
       : undefined,
     automationStatus: pickEnum(body.automationStatus, TEST_CASE_AUTOMATION_STATUSES),
+    externalKey: typeof body.externalKey === "string" ? body.externalKey : undefined,
+    externalUrl: typeof body.externalUrl === "string" ? body.externalUrl : undefined,
   };
 }
 
@@ -142,8 +146,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const payload = normalizePayload(body);
   const nextCompanySlug = payload.companyId ?? existing.testCase.companyId;
+  const nextProjectId = (payload as { projectId?: string | null }).projectId ?? existing.testCase.projectId;
 
-  if (!canCreateTestCaseForCompany(user, nextCompanySlug)) {
+  if (!canCreateTestCaseForCompany(user, nextCompanySlug, nextProjectId)) {
     return NextResponse.json({ message: "Sem permissão para alterar este caso neste contexto" }, { status: 403 });
   }
 

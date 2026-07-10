@@ -478,6 +478,13 @@ model Project {
   archivedAt   DateTime?
   archivedById String?
 
+  // Integração por projeto: credenciais (token/base URL) continuam na empresa
+  // (Company.jira_*/qase_token); aqui só o identificador do projeto dentro
+  // daquela integração — mesmo modelo do Jira/Qase reais (1 site, N projetos).
+  qaseProjectCode        String?
+  jiraProjectKey         String?
+  manualCreationDisabled Boolean @default(false)
+
   company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   testPlans TestPlan[]
   testRuns  TestRun[]
@@ -522,12 +529,15 @@ model CompanyIntegration {
 }
 
 model Membership {
-  id           String   @id @default(cuid())
-  userId       String
-  companyId    String
-  role         Role?    @default(user)
-  capabilities String[] @default([])
-  createdAt    DateTime @default(now())
+  id                String   @id @default(cuid())
+  userId            String
+  companyId         String
+  role              Role?    @default(user)
+  capabilities      String[] @default([])
+  // Empty array = sem restrição (enxerga todos os projetos da empresa). Só é aplicado
+  // para papéis escopados por projeto (company_user, testing_company_user).
+  allowedProjectIds String[] @default([])
+  createdAt         DateTime @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)

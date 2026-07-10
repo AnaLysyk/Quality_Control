@@ -14,6 +14,7 @@ import { notifyManualRunCreated } from "@/lib/notificationService";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
+import { resolveAllowedProjectIds } from "@/lib/test-cases/testCasePermissions";
 
 async function resolveActor(authUser: AuthUser | null) {
   if (!authUser) return { actorId: null, actorName: null };
@@ -71,6 +72,10 @@ export async function GET(req: Request) {
   if (kindFilter) {
     filtered = filtered.filter((r) => resolveManualReleaseKind(r) === kindFilter);
   }
+  const allowedProjectIds = resolveAllowedProjectIds(effectiveAuthUser as AuthUser);
+  if (allowedProjectIds) {
+    filtered = filtered.filter((r) => resolveManualReleaseKind(r) !== "run" || (r.projectId && allowedProjectIds.includes(r.projectId)));
+  }
   const normalized = filtered.map((r) => ({
     ...r,
     kind: resolveManualReleaseKind(r),
@@ -116,6 +121,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
     const kind = body.kind === "defect" ? "defect" : "run";
+    const projectId = body.projectId ? String(body.projectId).trim() : null;
+    if (kind === "run") {
+      const allowedProjectIds = resolveAllowedProjectIds(effectiveAuthUser);
+      if (allowedProjectIds && !(projectId && allowedProjectIds.includes(projectId))) {
+        return NextResponse.json({ message: "Sem permissão para criar execução neste projeto" }, { status: 403 });
+      }
+    }
     const stats = (body.stats ?? {}) as Partial<Stats>;
     const now = new Date().toISOString();
     const actor = await resolveActor(effectiveAuthUser);
@@ -146,6 +158,7 @@ export async function POST(req: Request) {
       testPlanName: body.testPlanName ? String(body.testPlanName) : null,
       testPlanSource: body.testPlanSource === "qase" ? "qase" : body.testPlanSource === "manual" ? "manual" : null,
       testPlanProjectCode: body.testPlanProjectCode ? String(body.testPlanProjectCode).trim().toUpperCase() : null,
+      projectId,
       source: "MANUAL",
       status,
       severity: normalizeOptionalLabel(body.severity),

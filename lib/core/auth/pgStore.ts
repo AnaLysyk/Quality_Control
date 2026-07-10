@@ -78,6 +78,7 @@ type PrismaMembership = {
   companyId: string;
   role: string | null;
   capabilities: string[];
+  allowedProjectIds: string[];
   createdAt: Date;
 };
 
@@ -192,6 +193,7 @@ function toLocalMembership(m: PrismaMembership): LocalAuthMembership {
     companyId: m.companyId,
     role: (m.role as string) as LocalAuthMembership["role"],
     capabilities: m.capabilities,
+    allowedProjectIds: m.allowedProjectIds,
     createdAt: m.createdAt.toISOString(),
   };
 }
@@ -625,6 +627,7 @@ export async function pgUpsertLocalLink(input: {
   companyId: string;
   role?: string | null;
   capabilities?: string[] | null;
+  allowedProjectIds?: string[] | null;
 }): Promise<string> {
   const user = await prisma.user.findUnique({
     where: { id: input.userId },
@@ -646,10 +649,12 @@ export async function pgUpsertLocalLink(input: {
       companyId: input.companyId,
       role: role as any,
       capabilities: input.capabilities ?? [],
+      allowedProjectIds: input.allowedProjectIds ?? [],
     },
     update: {
       role: role as any,
       ...(input.capabilities ? { capabilities: input.capabilities } : {}),
+      ...(input.allowedProjectIds !== undefined ? { allowedProjectIds: input.allowedProjectIds ?? [] } : {}),
     },
   });
   // Return legacy role string for backwards compatibility

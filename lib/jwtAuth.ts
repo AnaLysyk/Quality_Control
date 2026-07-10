@@ -20,6 +20,8 @@ export type AuthUser = {
   companyId?: string | null;
   companySlug?: string | null;
   companySlugs?: string[];
+  // null/undefined = sem restrição de projeto; array = restrito a esses projectIds.
+  allowedProjectIds?: string[] | null;
   permissions?: PermissionMatrix;
   permissionRole?: string | null;
 };
@@ -107,6 +109,7 @@ async function resolveAccessContextAuthUser(req: Request): Promise<AuthUser | nu
     companyId: access.companyId,
     companySlug: access.companySlug,
     companySlugs: access.companySlugs,
+    allowedProjectIds: access.allowedProjectIds,
     permissions: permissionAccess.permissions,
     permissionRole: permissionAccess.roleKey,
   };
@@ -183,6 +186,11 @@ async function resolveLocalAuthUser(identifier: string): Promise<AuthUser | null
     membershipCapabilities: primaryLink?.capabilities ?? null,
   });
   const permissionAccess = await resolvePermissionAccessForUser(user.id);
+  const isProjectScopedRole = companyRole === "company_user" || companyRole === "testing_company_user";
+  const allowedProjectIds =
+    shouldBindCompanyContext && isProjectScopedRole && primaryLink?.allowedProjectIds?.length
+      ? primaryLink.allowedProjectIds
+      : null;
 
   return {
     id: user.id,
@@ -195,6 +203,7 @@ async function resolveLocalAuthUser(identifier: string): Promise<AuthUser | null
     companyId: shouldBindCompanyContext ? primary?.id ?? null : null,
     companySlug: shouldBindCompanyContext ? primary?.slug ?? null : null,
     companySlugs,
+    allowedProjectIds,
     permissions: permissionAccess.permissions,
     permissionRole: permissionAccess.roleKey,
   };

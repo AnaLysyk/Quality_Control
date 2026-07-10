@@ -251,6 +251,17 @@ export const NAV_CATALOG: NavModuleDef[] = [
     testId: "nav-automation",
     items: [
       {
+        id: "auto-tools",
+        routeId: "automacao.ferramentas",
+        label: "Tools",
+        iconKey: "tool",
+        module: "automation",
+        href: "/automacoes/tools",
+        favoriteEnabled: true,
+        group: "Workspace",
+        testId: "nav-automation-tools",
+      },
+      {
         id: "auto-playwright",
         routeId: "automacao.playwright",
         label: "Playwright",
@@ -260,6 +271,17 @@ export const NAV_CATALOG: NavModuleDef[] = [
         favoriteEnabled: true,
         group: "Workspace",
         testId: "nav-automation-playwright",
+      },
+      {
+        id: "auto-ui-studio",
+        routeId: "automacao.studio",
+        label: "UI Studio",
+        iconKey: "layout",
+        module: "automation",
+        href: "/automacoes/ui-studio",
+        favoriteEnabled: true,
+        group: "Workspace",
+        testId: "nav-automation-ui-studio",
       },
       {
         id: "auto-api-lab",
@@ -293,6 +315,17 @@ export const NAV_CATALOG: NavModuleDef[] = [
         favoriteEnabled: true,
         group: "Workspace",
         testId: "nav-automation-arquivos",
+      },
+      {
+        id: "auto-execucoes",
+        routeId: "automacao.execucoes",
+        label: "Execuções",
+        iconKey: "activity",
+        module: "automation",
+        href: "/automacoes/execucoes",
+        favoriteEnabled: true,
+        group: "Ativos",
+        testId: "nav-automation-execucoes",
       },
       {
         id: "auto-logs",

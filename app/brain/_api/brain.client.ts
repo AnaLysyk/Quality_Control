@@ -62,7 +62,51 @@ type BrainGraphApiEdge = {
   source: string;
   target: string;
   type?: string | null;
+  weight?: number | null;
+  metadata?: Record<string, unknown> | null;
+  createdAt?: string | null;
 };
+
+const EDGE_TYPE_LABELS: Record<string, string> = {
+  belongs_to_company: "pertence a",
+  belongs_to_project: "pertence a",
+  belongs_to_module: "pertence a",
+  belongs_to: "pertence a",
+  created_by: "criado por",
+  generated_by: "gerado por",
+  has_status: "esta com status",
+  has_log: "possui log",
+  has_comment: "possui comentario",
+  has_document: "possui documento",
+  has_email: "possui e-mail",
+  has_pdf: "possui pdf",
+  has_decision: "possui decisao",
+  has_adjustment: "possui ajuste",
+  depends_on: "depende de",
+  mentions: "menciona",
+  forms_information: "informa",
+  permission_allows: "permite",
+  permission_blocks: "bloqueia",
+  permission: "depende de permissao",
+  action: "permite acao",
+  contains: "contem",
+  generates: "gera",
+  history: "possui historico",
+  updated_by: "atualizado por",
+  assigned_to: "atribuido a",
+  executed_in: "executado em",
+  found: "encontrou",
+  related_to: "relacionado a",
+  blocks: "bloqueia",
+  has_evidence: "possui evidencia",
+};
+
+function edgeTypeToLabel(type: string | null | undefined): string {
+  if (!type) return "relacionado a";
+  const known = EDGE_TYPE_LABELS[type];
+  if (known) return known;
+  return type.replace(/_/g, " ");
+}
 
 type BrainGraphApiResponse = {
   nodes?: BrainGraphApiNode[];
@@ -270,12 +314,22 @@ function mapGraphApiNode(node: BrainGraphApiNode): BrainNode {
 }
 
 function mapGraphApiEdge(edge: BrainGraphApiEdge): BrainEdge {
+  const metadata = asRecord(edge.metadata);
   return {
     id: edge.id,
     source: edge.source,
     target: edge.target,
-    label: edge.type ?? "relaciona",
-    type: "relation",
+    label: edgeTypeToLabel(edge.type),
+    type: (edge.type as BrainEdge["type"]) ?? "relation",
+    status: normalizeNodeStatus(readFirst(metadata, ["status"]) ?? undefined),
+    companyId: readFirst(metadata, ["companyId", "clientId"]) ?? undefined,
+    projectId: readFirst(metadata, ["projectId"]) ?? undefined,
+    module: readFirst(metadata, ["module", "moduleId"]) ?? undefined,
+    metadata: {
+      ...metadata,
+      weight: edge.weight ?? undefined,
+      createdAt: edge.createdAt ?? undefined,
+    },
   };
 }
 

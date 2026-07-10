@@ -5,6 +5,7 @@ import crypto from "crypto";
 import type { BrainAccessContext } from "@/lib/brain/access";
 import { canAccess } from "@/lib/permissions/can-access";
 import { prisma } from "@/lib/prismaClient";
+import { guardOutboundUrl } from "@/lib/brain/ssrfGuard";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -229,6 +230,10 @@ function collectConfig(input: JsonRecord) {
       authSourceId: input.authSourceId,
       allowFreeWebFallback: boolValue(input.allowFreeWebFallback, false),
     },
+    github: {
+      owner: input.githubOwner,
+      repo: input.githubRepo,
+    },
   }) as JsonRecord;
 }
 
@@ -259,6 +264,33 @@ function maskSecret(value: string) {
   if (!value) return "";
   if (value.length <= 8) return "***";
   return `${value.slice(0, 2)}***${value.slice(-4)}`;
+}
+
+function decryptSecret(value: string) {
+  const [version, ivPart, tagPart, dataPart] = value.split(":");
+  if (version !== "v1" || !ivPart || !tagPart || !dataPart) {
+    throw new Error("Formato de segredo desconhecido");
+  }
+  const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey(), Buffer.from(ivPart, "base64url"));
+  decipher.setAuthTag(Buffer.from(tagPart, "base64url"));
+  const decrypted = Buffer.concat([decipher.update(Buffer.from(dataPart, "base64url")), decipher.final()]);
+  return decrypted.toString("utf8");
+}
+
+/**
+ * Le e descriptografa um segredo de uma fonte, para uso pontual no backend (ex.: token para
+ * chamar uma API externa em nome do usuario). Nunca retornar isso para o frontend.
+ * Sempre valida visibilidade/permissao via getBrainSourceById antes de descriptografar.
+ */
+export async function getDecryptedSourceSecret(sourceId: string, key: string, access: BrainAccessContext) {
+  const source = await getBrainSourceById(sourceId, access);
+  if (!source) return null;
+
+  const secretDelegate = getDelegate("brainSourceSecret");
+  const rows = (await secretDelegate?.findMany?.({ where: { sourceId, key } }) ?? []) as BrainSourceSecretRow[];
+  const row = rows[0];
+  if (!row?.encryptedValue) return null;
+  return decryptSecret(row.encryptedValue);
 }
 
 function extractSecrets(input: JsonRecord) {
@@ -409,6 +441,50 @@ function serializeSource(row: unknown) {
   };
 }
 
+// Convencao da ponte Configuracao -> Memoria: uma BrainMemory gerada a partir do
+// processamento de uma fonte configurada usa sourceType="BRAIN_SOURCE" e sourceId=<id da fonte>.
+export const BRAIN_SOURCE_MEMORY_TYPE = "BRAIN_SOURCE";
+
+function computeProcessingStatus(
+  source: Pick<BrainSourceRow, "status" | "lastErrorAt" | "lastSuccessAt">,
+  memoriesGenerated: number,
+) {
+  if (source.status === "inactive" || source.status === "draft") return "desativado";
+  if (source.lastErrorAt) return "erro";
+  if (memoriesGenerated > 0) return "indexado";
+  if (source.lastSuccessAt) return "aguardando_processamento";
+  return "configurado";
+}
+
+async function attachMemoryStats<T extends { id: string; status: string; lastErrorAt: string | null; lastSuccessAt: string | null }>(
+  sources: T[],
+) {
+  if (!sources.length) return sources.map((source) => ({ ...source, memoriesGenerated: 0, lastMemoryAt: null, processingStatus: computeProcessingStatus(source, 0) }));
+
+  const ids = sources.map((source) => source.id);
+  const grouped = await prisma.brainMemory.groupBy({
+    by: ["sourceId"],
+    where: { sourceType: BRAIN_SOURCE_MEMORY_TYPE, sourceId: { in: ids }, status: "ACTIVE" },
+    _count: { _all: true },
+    _max: { createdAt: true },
+  }).catch(() => [] as Array<{ sourceId: string | null; _count: { _all: number }; _max: { createdAt: Date | null } }>);
+
+  const statsById = new Map(
+    grouped.filter((item) => item.sourceId).map((item) => [item.sourceId as string, item]),
+  );
+
+  return sources.map((source) => {
+    const stats = statsById.get(source.id);
+    const memoriesGenerated = stats?._count._all ?? 0;
+    return {
+      ...source,
+      memoriesGenerated,
+      lastMemoryAt: stats?._max.createdAt ? stats._max.createdAt.toISOString() : null,
+      processingStatus: computeProcessingStatus(source, memoriesGenerated),
+    };
+  });
+}
+
 async function writeSourceAudit(sourceId: string | null, action: string, access: BrainAccessContext, before?: unknown, after?: unknown, reason?: string) {
   const audit = getDelegate("brainSourceAuditLog");
   await audit?.create?.({
@@ -499,7 +575,7 @@ export async function listBrainSources(access: BrainAccessContext, params?: { st
     take: 200,
   }) ?? [];
 
-  return rows.map(serializeSource);
+  return attachMemoryStats(rows.map(serializeSource));
 }
 
 export async function getBrainSourceById(id: string, access: BrainAccessContext) {
@@ -521,7 +597,8 @@ export async function createBrainSource(access: BrainAccessContext, body: unknow
   await upsertSecrets(created.id, input, access);
   await writeSourceAudit(created.id, "CREATE_SOURCE", access, null, created, "Fonte criada nas Configuracoes do Brain");
   const complete = await getBrainSourceById(created.id, access);
-  return serializeSource(complete ?? created);
+  const [enriched] = await attachMemoryStats([serializeSource(complete ?? created)]);
+  return enriched;
 }
 
 export async function updateBrainSource(access: BrainAccessContext, id: string, body: unknown) {
@@ -538,7 +615,8 @@ export async function updateBrainSource(access: BrainAccessContext, id: string, 
   await upsertSecrets(id, input, access);
   await writeSourceAudit(id, "UPDATE_SOURCE", access, existing, updated, "Fonte atualizada nas Configuracoes do Brain");
   const complete = await getBrainSourceById(id, access);
-  return serializeSource(complete ?? updated);
+  const [enriched] = await attachMemoryStats([serializeSource(complete ?? updated)]);
+  return enriched;
 }
 
 export async function setBrainSourceStatus(access: BrainAccessContext, id: string, status: "active" | "inactive") {
@@ -552,7 +630,8 @@ export async function setBrainSourceStatus(access: BrainAccessContext, id: strin
   }) as BrainSourceRow;
   await writeSourceAudit(id, status === "active" ? "ENABLE_SOURCE" : "DISABLE_SOURCE", access, existing, updated);
   const complete = await getBrainSourceById(id, access);
-  return serializeSource(complete ?? updated);
+  const [enriched] = await attachMemoryStats([serializeSource(complete ?? updated)]);
+  return enriched;
 }
 
 export async function deleteBrainSource(access: BrainAccessContext, id: string) {
@@ -572,16 +651,11 @@ async function probeHttpSource(source: BrainSourceRow) {
   const url = asString(api.healthCheckUrl) ?? asString(api.testEndpoint) ?? asString(api.baseUrl) ?? asString(web.baseUrl);
   if (!url) return { ok: false, status: "error", message: "URL de teste nao informada." };
 
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return { ok: false, status: "error", message: "URL de teste invalida." };
+  const guard = await guardOutboundUrl(url);
+  if (!guard.ok) {
+    return { ok: false, status: "error", message: `URL de teste bloqueada: ${guard.reason}` };
   }
-
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    return { ok: false, status: "error", message: "URL de teste deve usar http ou https." };
-  }
+  const parsed = guard.url;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
@@ -590,11 +664,13 @@ async function probeHttpSource(source: BrainSourceRow) {
       method: "GET",
       cache: "no-store",
       signal: controller.signal,
+      redirect: "manual",
     });
+    const isRedirect = response.status >= 300 && response.status < 400;
     return {
-      ok: response.status < 500,
-      status: response.status < 500 ? "success" : "error",
-      message: `HTTP ${response.status}`,
+      ok: !isRedirect && response.status < 500,
+      status: isRedirect ? "error" : response.status < 500 ? "success" : "error",
+      message: isRedirect ? "Redirecionamento bloqueado por seguranca." : `HTTP ${response.status}`,
       metadata: { url: parsed.origin, responseStatus: response.status },
     };
   } catch (error) {

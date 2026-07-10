@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { fetchBrainDashboardData } from "../_api/brain.client";
 import { buildMockBrainGraph } from "../_data/brainMockGraph";
 import type { BrainContextCompany, BrainContextProject, BrainContextResponse, BrainEdge, BrainGraphSummary, BrainNode, BrainNodeStatus, BrainNodeType, BuiltBrainGraph } from "../_types/brain.types";
-import { buildAccessRequestsBrainGraph } from "../_utils/brainGraphBuilder";
+import { buildAccessRequestsBrainGraph, mergeBrainGraphs } from "../_utils/brainGraphBuilder";
 import { getVisibleGraph } from "../_utils/brainGraphLayout";
 import { getBrainProfileTypes } from "../_utils/brainProfileGraphView";
 import { BrainNeuralCanvas } from "./BrainNeuralCanvas";
@@ -72,25 +72,42 @@ function emptyGraph() {
   return buildMockBrainGraph();
 }
 
-function roleValues(context: BrainContextResponse | null) {
-  const user = context?.user as Record<string, unknown> | undefined;
-  return [user?.role, user?.companyRole, user?.globalRole, user?.userOrigin]
-    .filter(Boolean)
-    .map((value) => String(value).toLowerCase());
+type FetchedBrainDashboardData = Awaited<ReturnType<typeof fetchBrainDashboardData>>;
+
+/**
+ * Une graph (executiveContext + subgrafo real), domainGraph e o grafo operacional de
+ * solicitacoes num unico grafo, deduplicando por ID e descartando arestas orfas.
+ * Nunca escolhe uma fonte e descarta as outras.
+ */
+function buildMergedGraph(data: FetchedBrainDashboardData): BuiltBrainGraph {
+  const accessBuilt = buildAccessRequestsBrainGraph({
+    requests: data.requests,
+    removalHistory: data.removalHistory,
+    auditLogs: data.auditLogs,
+    domainNodes: data.domainGraph.nodes,
+    domainEdges: data.domainGraph.edges,
+    realBrainNodes: data.graph.nodes,
+    realBrainEdges: data.graph.edges,
+  });
+
+  const merged = mergeBrainGraphs(accessBuilt, { nodes: data.graph.nodes, edges: data.graph.edges });
+
+  const built: BuiltBrainGraph = {
+    nodes: merged.nodes,
+    edges: merged.edges,
+    requests: data.requests,
+    removalHistory: data.removalHistory,
+    auditLogs: data.auditLogs,
+    summary: summarize(merged.nodes, merged.edges, accessBuilt),
+  };
+
+  return built.nodes.length > 0 ? built : mergeWithNeuralMock(built);
 }
 
 function brainCanSeeAllCompanies(context: BrainContextResponse | null) {
-  const user = context?.user as Record<string, unknown> | undefined;
-  const permissions = context?.permissions as Record<string, unknown> | undefined;
-  const roles = roleValues(context);
-
-  return Boolean(
-    permissions?.canViewAll ||
-      permissions?.canViewAllCompanies ||
-      permissions?.canViewSupport ||
-      user?.isGlobalAdmin ||
-      roles.some((role) => ["leader_tc", "technical_support", "admin", "global_admin"].includes(role)),
-  );
+  // Fonte unica de verdade: o backend (resolveBrainAccess/hasGlobalBrainVisibility) ja calcula
+  // isso a partir da matriz efetiva de permissoes. Nao duplicar a regra aqui por nome de perfil.
+  return Boolean(context?.permissions?.canViewGlobalBrain);
 }
 
 function defaultCompanyForBrain(context: BrainContextResponse | null) {
@@ -188,28 +205,7 @@ export function BrainNeuralDashboard() {
     setLoadingData(true);
     fetchBrainDashboardData()
       .then((data) => {
-        const accessBuilt = buildAccessRequestsBrainGraph({
-          requests: data.requests,
-          removalHistory: data.removalHistory,
-          auditLogs: data.auditLogs,
-          domainNodes: data.domainGraph.nodes,
-          domainEdges: data.domainGraph.edges,
-          realBrainNodes: data.graph.nodes,
-          realBrainEdges: data.graph.edges,
-        });
-
-        const built = data.graph.nodes.length > 0
-          ? {
-              nodes: data.graph.nodes,
-              edges: data.graph.edges,
-              requests: data.requests,
-              removalHistory: data.removalHistory,
-              auditLogs: data.auditLogs,
-              summary: summarize(data.graph.nodes, data.graph.edges, accessBuilt),
-            }
-          : accessBuilt;
-
-        const merged = built.nodes.length > 0 ? built : mergeWithNeuralMock(built);
+        const merged = buildMergedGraph(data);
         setBrainContext(data.context);
         setSelectedCompanyId(defaultCompanyForBrain(data.context));
         setSelectedProjectId(defaultProjectForBrain(data.context));
@@ -235,28 +231,7 @@ export function BrainNeuralDashboard() {
     fetchBrainDashboardData()
       .then((data) => {
         if (cancelled) return;
-        const accessBuilt = buildAccessRequestsBrainGraph({
-          requests: data.requests,
-          removalHistory: data.removalHistory,
-          auditLogs: data.auditLogs,
-          domainNodes: data.domainGraph.nodes,
-          domainEdges: data.domainGraph.edges,
-          realBrainNodes: data.graph.nodes,
-          realBrainEdges: data.graph.edges,
-        });
-
-        const built = data.graph.nodes.length > 0
-          ? {
-              nodes: data.graph.nodes,
-              edges: data.graph.edges,
-              requests: data.requests,
-              removalHistory: data.removalHistory,
-              auditLogs: data.auditLogs,
-              summary: summarize(data.graph.nodes, data.graph.edges, accessBuilt),
-            }
-          : accessBuilt;
-
-        const merged = built.nodes.length > 0 ? built : mergeWithNeuralMock(built);
+        const merged = buildMergedGraph(data);
         setBrainContext(data.context);
         setSelectedCompanyId(defaultCompanyForBrain(data.context));
         setSelectedProjectId(defaultProjectForBrain(data.context));

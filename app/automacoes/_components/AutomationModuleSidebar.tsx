@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
-import { FiActivity, FiClipboard, FiCode, FiFolder, FiServer, FiTool } from "react-icons/fi";
+import { FiActivity, FiCode, FiFileText, FiFolder, FiPlay, FiServer, FiTool } from "react-icons/fi";
 
 type NavItem = {
   href: string;
@@ -11,13 +11,17 @@ type NavItem = {
   label: string;
 };
 
+// Reflete as telas reais e distintas do modulo (lib/navigation/route-map.ts, moduleId "automacao").
+// Fluxos/Scripts nao entram aqui: sao aliases legados que redirecionam para UI Studio.
+// Casos tambem nao entra: a navegacao canonica de casos manuais fica em /casos-de-teste.
 const NAV_ITEMS: NavItem[] = [
   { href: "/automacoes/tools", icon: FiTool, label: "Tools" },
+  { href: "/automacoes/playwright", icon: FiPlay, label: "Playwright" },
   { href: "/automacoes/api-lab", icon: FiServer, label: "API Lab" },
   { href: "/automacoes/ui-studio", icon: FiCode, label: "UI Studio" },
-  { href: "/casos-de-teste", icon: FiClipboard, label: "Casos" },
   { href: "/automacoes/base64?tab=library", icon: FiFolder, label: "Biblioteca" },
   { href: "/automacoes/execucoes", icon: FiActivity, label: "Runs" },
+  { href: "/automacoes/logs", icon: FiFileText, label: "Logs" },
 ];
 
 export default function AutomationModuleSidebar() {

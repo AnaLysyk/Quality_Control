@@ -76,26 +76,25 @@ function getFocusGraph(nodes: BrainNode[], edges: BrainEdge[], selectedNodeId: s
     };
   }
 
-  const ids = new Set<string>([selectedNodeId]);
-
+  // Primeiro nivel: sempre mostrado (conexoes diretas do no selecionado).
+  const firstLevel = new Set<string>([selectedNodeId]);
   for (const edge of edges) {
-    if (edge.source === selectedNodeId) ids.add(edge.target);
-    if (edge.target === selectedNodeId) ids.add(edge.source);
+    if (edge.source === selectedNodeId) firstLevel.add(edge.target);
+    if (edge.target === selectedNodeId) firstLevel.add(edge.source);
   }
 
-  const firstPass = Array.from(ids);
-  for (const edge of edges) {
-    if (firstPass.includes(edge.source) || firstPass.includes(edge.target)) {
-      ids.add(edge.source);
-      ids.add(edge.target);
-    }
-    if (ids.size >= 30) break;
-  }
+  const ids = new Set<string>(firstLevel);
 
-  if (ids.size < 10) {
-    for (const node of [...nodes].sort(byOverviewScore)) {
-      ids.add(node.id);
-      if (ids.size >= 18) break;
+  // Segundo nivel: so entra quando o primeiro nivel e insuficiente para
+  // dar contexto (poucas conexoes diretas). Nunca preenche com nos aleatorios.
+  const FIRST_LEVEL_CONTEXT_THRESHOLD = 5;
+  if (firstLevel.size <= FIRST_LEVEL_CONTEXT_THRESHOLD) {
+    for (const edge of edges) {
+      if (firstLevel.has(edge.source) || firstLevel.has(edge.target)) {
+        ids.add(edge.source);
+        ids.add(edge.target);
+      }
+      if (ids.size >= 24) break;
     }
   }
 

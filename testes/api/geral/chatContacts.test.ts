@@ -12,7 +12,12 @@ import { listAdminUserItems } from "@/lib/adminUsers";
 import { listLocalCompanies } from "@/lib/auth/localStore";
 import { listChatContacts } from "@/lib/chatContacts";
 
-describe("chatContacts", () => {
+// listChatContacts usa prisma.$executeRawUnsafe/$queryRaw diretamente (nao mockado aqui),
+// entao esta suite precisa de um Postgres real. Sem DATABASE_URL, pula (mesmo padrao
+// describePg usado em testes/api/geral/solicitacoes-acesso.test.ts e outros).
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
+describePg("chatContacts", () => {
   const companies = [
     { id: "company-alpha-id", name: "Alpha", slug: "alpha" },
     { id: "company-beta-id", name: "Beta", slug: "beta" },

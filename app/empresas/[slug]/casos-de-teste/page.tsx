@@ -1,4 +1,4 @@
-import TestCaseRepositoryClient from "../../../casos-de-teste/TestCaseRepositoryClient";
+import TestCaseRepositoryClientV2 from "../../../casos-de-teste/TestCaseRepositoryClientV2";
 import styles from "../../../casos-de-teste/repository-clean.module.css";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export default async function CompanyTestCasesPage({ params }: CompanyTestCasesP
 
   return (
     <main className={styles.repositoryPage}>
-      <TestCaseRepositoryClient initialCompanySlug={slug} lockCompanyScope />
+      <TestCaseRepositoryClientV2 initialCompanySlug={slug} lockCompanyScope />
     </main>
   );
 }

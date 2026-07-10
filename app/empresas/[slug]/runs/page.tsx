@@ -668,7 +668,7 @@ export default function CompanyRunsPage() {
                   <span className="font-semibold text-[var(--tc-text-muted,#6b7280)]">{m.label}</span>
                 </div>
               ))}
-              <CreateManualReleaseButton companySlug={companySlug} manualOnly onCreated={() => setReloadToken((c) => c + 1)} />
+              <CreateManualReleaseButton companySlug={companySlug} onCreated={() => setReloadToken((c) => c + 1)} />
             </div>
           </div>
 

@@ -64,6 +64,40 @@ npm run build
 npm run test:e2e:smoke
 ```
 
+## Como ver o que tem de teste e rodar
+
+O projeto tem dois tipos de teste em `testes/`:
+
+- `*.spec.ts` — end-to-end com **Playwright** (`testes/ui`, alguns em `testes/bd`)
+- `*.test.ts` — unitario/integracao com **Jest** (`testes/api`, `testes/bd`, `testes/unit`)
+
+Cada pasta de suite dentro de `testes/` tem um `README.md` proprio, gerado a
+partir do codigo, com a lista de casos e o comando exato pra rodar isolado ou
+junto com o resto da pasta.
+
+Rodar tudo:
+
+```powershell
+npx playwright test
+npx jest --config jest.config.ts
+```
+
+Rodar só uma area (todos os arquivos daquela pasta juntos):
+
+```powershell
+npx playwright test testes/ui
+npx jest --config jest.config.ts testes/api
+npx jest --config jest.config.ts testes/bd
+```
+
+Rodar um arquivo isolado (copie o comando direto do README da pasta dele).
+
+Ver todos os projetos/tags configurados no Playwright:
+
+```powershell
+npm run test:e2e:projects
+```
+
 ## Render Deployment
 
 Minimum recommended environment variables:

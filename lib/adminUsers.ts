@@ -57,6 +57,7 @@ export type AdminUserItem = {
   allow_multi_company_link?: boolean;
   origin_label?: string;
   profile_kind?: AdminUserProfileKind;
+  allowed_project_ids?: string[];
 };
 
 const ROLE_WEIGHT: Record<string, number> = {
@@ -278,6 +279,7 @@ export function buildAdminUserItem(
     companies[0] ??
     null;
 
+  const primaryLink = primaryCompany ? uniqueLinks.get(primaryCompany.id) ?? null : null;
   const permissionRole = resolvePermissionRoleForUser(user, Array.from(uniqueLinks.values()));
   const profileKind = resolveAdminUserProfileKind(user, Array.from(uniqueLinks.values()), primaryCompany);
   const mappedRole = normalizeLegacyRole(permissionRole) ?? profileKind;
@@ -315,6 +317,7 @@ export function buildAdminUserItem(
     ),
     origin_label: resolveUserOriginLabel(user.user_origin),
     profile_kind: profileKind,
+    allowed_project_ids: primaryLink?.allowedProjectIds ?? [],
   };
 }
 

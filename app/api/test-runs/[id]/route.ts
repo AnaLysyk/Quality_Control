@@ -1,7 +1,23 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
 import { checkPermission } from "@/lib/permissions/checkPermission";
+import {
+  canUseGlobalTestCaseScope,
+  resolveAllowedProjectIds,
+  resolveAllowedTestCaseCompanies,
+} from "@/lib/test-cases/testCasePermissions";
+
+function matchesRunScope(user: AuthUser, companyId?: string | null, projectId?: string | null) {
+  if (!canUseGlobalTestCaseScope(user)) {
+    const allowedCompanies = resolveAllowedTestCaseCompanies(user);
+    const normalizedCompanyId = companyId?.trim().toLowerCase();
+    if (!normalizedCompanyId || !allowedCompanies.includes(normalizedCompanyId)) return false;
+  }
+  const allowedProjectIds = resolveAllowedProjectIds(user);
+  if (!allowedProjectIds) return true;
+  return Boolean(projectId && allowedProjectIds.includes(projectId));
+}
 
 function durationSeconds(startedAt: Date | null | undefined, finishedAt: Date | null | undefined) {
   if (!startedAt) return null;
@@ -50,7 +66,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     },
   });
 
-  if (!run) return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
+  if (!run || !matchesRunScope(user, run.companyId, run.projectId)) {
+    return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
+  }
   return NextResponse.json({
     ...run,
     durationSeconds: durationSeconds(run.startedAt, run.finishedAt),
@@ -71,7 +89,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const db = await getDb();
   const existing = await db.testRun.findUnique({ where: { id } });
-  if (!existing) return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
+  if (!existing || !matchesRunScope(user, existing.companyId, existing.projectId)) {
+    return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
+  }
 
   const patch: Record<string, unknown> = {};
   if (typeof body.title === "string") patch.title = body.title.trim() || existing.title;

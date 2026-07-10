@@ -13,9 +13,12 @@ describeDb("jiraSync.syncJiraIssuesToApplications", () => {
       { id: "1002", key: "PROJ-2", summary: "Second issue" },
     ];
 
-    // Mock integrations config lookup
-    const integrations = await import("@/lib/integrations");
-    jest.spyOn(integrations, "getCompanyIntegrationConfig").mockResolvedValue({ baseUrl: "https://jira.local", email: "a@x.com", token: "tok" } as any);
+    // Mock company Jira credentials lookup
+    jest.spyOn(prisma.company, "findUnique" as any).mockResolvedValue({
+      jira_base_url: "https://jira.local",
+      jira_email: "a@x.com",
+      jira_api_token: "tok",
+    } as any);
 
     // Mock global fetch to return fake issues
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ issues: fakeIssues }) });

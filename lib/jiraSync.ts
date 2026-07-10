@@ -1,5 +1,4 @@
 ﻿import "server-only";
-import { getCompanyIntegrationConfig } from "@/lib/integrations";
 import { prisma } from "@/lib/prismaClient";
 import { info, warn, error } from "@/lib/logger";
 
@@ -7,18 +6,33 @@ function buildBasicAuth(email: string, token: string) {
   return `Basic ${Buffer.from(`${email}:${token}`).toString("base64")}`;
 }
 
-export async function fetchJiraIssuesForCompany(slug: string, maxResults = 50) {
+async function getCompanyJiraCredentials(slug: string) {
+  const company = await prisma.company.findUnique({
+    where: { slug },
+    select: { jira_base_url: true, jira_email: true, jira_api_token: true },
+  });
+  if (!company) return null;
+  const baseUrl = company.jira_base_url?.replace(/\/+$/, "") || null;
+  const email = company.jira_email || null;
+  const token = company.jira_api_token || null;
+  if (!baseUrl || !email || !token) return null;
+  return { baseUrl, email, token };
+}
+
+// Credenciais (token/base URL/e-mail) vivem na empresa — um site Jira Cloud por
+// empresa. `projectKey` escopa a busca a um projeto Jira específico dentro desse
+// site (mesmo modelo real do Jira: 1 site, N projetos identificados por key).
+export async function fetchJiraIssuesForCompany(slug: string, maxResults = 50, projectKey?: string | null) {
   if (!slug) return { issues: [] };
-  info(`fetchJiraIssuesForCompany start`, { company: slug, maxResults });
-  const cfg = await getCompanyIntegrationConfig(slug, "JIRA");
-  if (!cfg) return { issues: [] };
+  info(`fetchJiraIssuesForCompany start`, { company: slug, maxResults, projectKey: projectKey ?? null });
+  const credentials = await getCompanyJiraCredentials(slug);
+  if (!credentials) return { issues: [] };
+  const { baseUrl, email, token } = credentials;
 
-  const baseUrl = typeof cfg.baseUrl === "string" ? cfg.baseUrl.replace(/\/$/, "") : null;
-  const email = typeof cfg.email === "string" ? cfg.email : null;
-  const token = typeof cfg.token === "string" ? cfg.token : null;
-  if (!baseUrl || !email || !token) return { issues: [] };
-
-  const url = `${baseUrl}/rest/api/2/search?jql=order+by+created+DESC&maxResults=${Number(maxResults)}`;
+  const jql = projectKey
+    ? `project = ${JSON.stringify(projectKey)} order by created DESC`
+    : "order by created DESC";
+  const url = `${baseUrl}/rest/api/2/search?jql=${encodeURIComponent(jql)}&maxResults=${Number(maxResults)}`;
   const res = await fetch(url, { headers: { Authorization: buildBasicAuth(email, token), Accept: "application/json" }, cache: "no-store" });
   if (!res.ok) return { issues: [] };
   const json = await res.json().catch(() => null);

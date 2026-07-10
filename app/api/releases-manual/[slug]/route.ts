@@ -13,6 +13,14 @@ import { notifyDefectAssigned, notifyDefectStatusChanged, notifyManualRunFailure
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
+import { resolveAllowedProjectIds } from "@/lib/test-cases/testCasePermissions";
+
+function isRunOutOfProjectScope(user: AuthUser, release: Release) {
+  if (resolveManualReleaseKind(release) !== "run") return false;
+  const allowedProjectIds = resolveAllowedProjectIds(user);
+  if (!allowedProjectIds) return false;
+  return !(release.projectId && allowedProjectIds.includes(release.projectId));
+}
 
 async function resolveActor(authUser: AuthUser | null) {
   if (!authUser) return { actorId: null, actorName: null };
@@ -80,6 +88,9 @@ export async function GET(_req: Request, context: { params: Promise<{ slug: stri
       return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
     }
   }
+  if (isRunOutOfProjectScope(effectiveAuthUser as AuthUser, release)) {
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+  }
 
   return NextResponse.json({
     ...release,
@@ -110,6 +121,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
     if (current.clientSlug && !allowed.includes(current.clientSlug)) {
       return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
     }
+  }
+  if (isRunOutOfProjectScope(effectiveAuthUser as AuthUser, current)) {
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
   const role = await resolveDefectRole(effectiveAuthUser as AuthUser, current.clientSlug ?? null);
@@ -336,6 +350,9 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
     if (target.clientSlug && !allowed.includes(target.clientSlug)) {
       return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
     }
+  }
+  if (isRunOutOfProjectScope(effectiveAuthUser as AuthUser, target)) {
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
   const role = await resolveDefectRole(effectiveAuthUser as AuthUser, target.clientSlug ?? null);

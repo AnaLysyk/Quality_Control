@@ -670,7 +670,7 @@ function withReleaseAgendaModule(modules: NavModuleDef[], effectiveRole: SystemR
 export function useNavigationItems() {
   const { user, loading, permissions, accessContext } = usePermissionAccess();
   const { activeClientSlug } = useClientContext();
-  const { activeProjectSlug } = useProjectContext();
+  const { activeProjectSlug, activeProject } = useProjectContext();
 
   const normalizedRole = useMemo<SystemRole | null>(() => {
     const r =
@@ -752,5 +752,36 @@ export function useNavigationItems() {
     companyRouteInput,
   ]);
 
-  return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
+  // Tela de tickets do Jira: só aparece quando o projeto ativo tem uma chave
+  // de projeto Jira configurada (tela de Projetos da empresa).
+  const modulesWithJira = useMemo<NavModuleDef[]>(() => {
+    if (!companySlug || !activeProject?.jiraProjectKey) return modules;
+    const qualityIndex = modules.findIndex((mod) => mod.id === "quality");
+    if (qualityIndex < 0) return modules;
+
+    const href = withScopeQuery(
+      buildCompanyPathForAccess(companySlug, "jira", companyRouteInput),
+      companySlug,
+      activeProjectSlug,
+      true,
+    );
+    const jiraItem: NavItemDef = {
+      id: "quality-jira",
+      routeId: "",
+      label: "Jira",
+      iconKey: "link",
+      module: "quality",
+      href,
+      favoriteEnabled: true,
+      testId: "nav-quality-jira",
+    };
+
+    const nextModules = [...modules];
+    const qualityModule = nextModules[qualityIndex];
+    if (qualityModule.items.some((item) => item.id === "quality-jira")) return modules;
+    nextModules[qualityIndex] = { ...qualityModule, items: [...qualityModule.items, jiraItem] };
+    return nextModules;
+  }, [modules, companySlug, activeProject?.jiraProjectKey, activeProjectSlug, companyRouteInput]);
+
+  return { modules: modulesWithJira, loading, companySlug, effectiveRole, isGlobalAdmin };
 }

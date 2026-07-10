@@ -30,12 +30,17 @@ type ProjectItem = {
   description?: string | null;
   source?: string | null;
   qaseProjectCode?: string | null;
+  jiraProjectKey?: string | null;
+  manualCreationDisabled?: boolean;
 };
 
 type ProjectDraft = {
   name: string;
   slug: string;
   description: string;
+  qaseProjectCode: string;
+  jiraProjectKey: string;
+  manualCreationDisabled: boolean;
 };
 
 type SourceFilter = "all" | "manual" | "qase";
@@ -117,7 +122,14 @@ export default function CompanyProjectsPage() {
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [createOpen, setCreateOpen] = useState(false);
-  const [draft, setDraft] = useState<ProjectDraft>({ name: "", slug: "", description: "" });
+  const [draft, setDraft] = useState<ProjectDraft>({
+    name: "",
+    slug: "",
+    description: "",
+    qaseProjectCode: "",
+    jiraProjectKey: "",
+    manualCreationDisabled: false,
+  });
 
   async function loadProjects(forceQase = false) {
     if (!companySlug) return;
@@ -228,12 +240,15 @@ export default function CompanyProjectsPage() {
           slug: slugValue,
           description: draft.description.trim() || undefined,
           iconKey: "folder",
+          qaseProjectCode: draft.qaseProjectCode.trim() || undefined,
+          jiraProjectKey: draft.jiraProjectKey.trim() || undefined,
+          manualCreationDisabled: draft.manualCreationDisabled,
         }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || "Erro ao criar projeto.");
       setCreateOpen(false);
-      setDraft({ name: "", slug: "", description: "" });
+      setDraft({ name: "", slug: "", description: "", qaseProjectCode: "", jiraProjectKey: "", manualCreationDisabled: false });
       await loadProjects(false);
       await refreshProjects();
     } catch (err) {
@@ -308,7 +323,12 @@ export default function CompanyProjectsPage() {
                       {activeProjectSlug === (project.qaseProjectCode ?? project.slug) ? <span className="inline-flex items-center gap-1 rounded-full border border-(--tc-accent,#ef0001) bg-red-50 px-2.5 py-1 text-xs font-bold text-(--tc-accent,#ef0001)"><FiCheckCircle /> Ativo</span> : null}
                     </div>
                     <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{project.description || "Sem descrição."}</p>
-                    <p className="mt-2 text-xs font-semibold text-(--tc-text-muted,#6b7280)">Slug: {project.slug}{project.qaseProjectCode ? ` · Qase: ${project.qaseProjectCode}` : ""}</p>
+                    <p className="mt-2 text-xs font-semibold text-(--tc-text-muted,#6b7280)">
+                      Slug: {project.slug}
+                      {project.qaseProjectCode ? ` · Qase: ${project.qaseProjectCode}` : ""}
+                      {project.jiraProjectKey ? ` · Jira: ${project.jiraProjectKey}` : ""}
+                      {project.manualCreationDisabled ? " · Só integração (criação manual desabilitada)" : ""}
+                    </p>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[540px]">
                     {OPERATION_MODULES.map((module) => {
@@ -349,6 +369,23 @@ export default function CompanyProjectsPage() {
               <label className="grid gap-2 text-sm font-semibold">Descrição
                 <textarea value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} rows={3} className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3" />
               </label>
+
+              <div className="mt-2 grid gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Integração por projeto</p>
+                <label className="grid gap-2 text-sm font-semibold">Código do projeto no Qase
+                  <input value={draft.qaseProjectCode} onChange={(event) => setDraft((current) => ({ ...current, qaseProjectCode: event.target.value }))} placeholder="Ex: QC" className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4" />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold">Chave do projeto no Jira
+                  <input value={draft.jiraProjectKey} onChange={(event) => setDraft((current) => ({ ...current, jiraProjectKey: event.target.value }))} placeholder="Ex: SUP" className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4" />
+                </label>
+                <p className="text-xs text-(--tc-text-secondary,#4b5563)">
+                  As credenciais (token/URL) do Qase e do Jira são as mesmas cadastradas nas configurações da empresa; aqui você só informa qual projeto/chave usar.
+                </p>
+                <label className="flex items-center gap-2 text-sm font-semibold">
+                  <input type="checkbox" checked={draft.manualCreationDisabled} onChange={(event) => setDraft((current) => ({ ...current, manualCreationDisabled: event.target.checked }))} className="h-4 w-4 accent-(--tc-accent,#ef0001)" />
+                  Desabilitar criação manual (usar só integração)
+                </label>
+              </div>
             </div>
 
             <div className="mt-5 flex justify-end gap-2">

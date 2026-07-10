@@ -22,6 +22,8 @@ export type ProjectRecord = {
   companyId: string;
   source?: string | null;
   qaseProjectCode?: string | null;
+  jiraProjectKey?: string | null;
+  manualCreationDisabled?: boolean;
   createdAt?: string | null;
 };
 
@@ -106,6 +108,8 @@ function toProjectRecord(item: Partial<ProjectRecord>, companySlug: string): Pro
     companyId: item.companyId ?? companySlug,
     source: item.source ?? (item.qaseProjectCode ? "qase" : "manual"),
     qaseProjectCode: item.qaseProjectCode ?? null,
+    jiraProjectKey: item.jiraProjectKey ?? null,
+    manualCreationDisabled: item.manualCreationDisabled ?? false,
     createdAt: item.createdAt ?? null,
   };
 }

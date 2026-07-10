@@ -27,26 +27,48 @@ export function resolveAllowedTestCaseCompanies(user: AuthUser) {
   );
 }
 
+// null = sem restrição de projeto (empresa/leader_tc/technical_support/admin global);
+// array = usuário (company_user ou testing_company_user) restrito a esses projectIds.
+export function resolveAllowedProjectIds(user: AuthUser): string[] | null {
+  if (canUseGlobalTestCaseScope(user)) return null;
+  return Array.isArray(user.allowedProjectIds) && user.allowedProjectIds.length > 0
+    ? user.allowedProjectIds
+    : null;
+}
+
+function matchesProjectScope(user: AuthUser, projectId?: string | null) {
+  const allowedProjectIds = resolveAllowedProjectIds(user);
+  if (!allowedProjectIds) return true;
+  return Boolean(projectId && allowedProjectIds.includes(projectId));
+}
+
 export function filterTestCasesByPermission(records: TestCaseRecord[], user: AuthUser) {
-  if (canUseGlobalTestCaseScope(user)) return records;
-  const allowedCompanies = resolveAllowedTestCaseCompanies(user);
+  const allowedCompanies = canUseGlobalTestCaseScope(user) ? null : resolveAllowedTestCaseCompanies(user);
   return records.filter((record) => {
     const companySlug = record.testCase.companyId?.toLowerCase();
-    return Boolean(companySlug && allowedCompanies.includes(companySlug));
+    if (allowedCompanies && !(companySlug && allowedCompanies.includes(companySlug))) return false;
+    return matchesProjectScope(user, record.testCase.projectId);
   });
 }
 
-export function canCreateTestCaseForCompany(user: AuthUser, companySlug: string | null | undefined) {
-  if (canUseGlobalTestCaseScope(user)) return true;
-  const normalizedCompanySlug = companySlug?.trim().toLowerCase();
-  if (!normalizedCompanySlug) return false;
-  return resolveAllowedTestCaseCompanies(user).includes(normalizedCompanySlug);
+export function canCreateTestCaseForCompany(
+  user: AuthUser,
+  companySlug: string | null | undefined,
+  projectId?: string | null,
+) {
+  if (!canUseGlobalTestCaseScope(user)) {
+    const normalizedCompanySlug = companySlug?.trim().toLowerCase();
+    if (!normalizedCompanySlug) return false;
+    if (!resolveAllowedTestCaseCompanies(user).includes(normalizedCompanySlug)) return false;
+  }
+  return matchesProjectScope(user, projectId);
 }
 
 export function canAccessTestCaseRecord(user: AuthUser, record: TestCaseRecord) {
-  if (canUseGlobalTestCaseScope(user)) return true;
-  const companySlug = record.testCase.companyId?.toLowerCase();
-  if (!companySlug) return false;
-  return resolveAllowedTestCaseCompanies(user).includes(companySlug);
+  if (!canUseGlobalTestCaseScope(user)) {
+    const companySlug = record.testCase.companyId?.toLowerCase();
+    if (!companySlug || !resolveAllowedTestCaseCompanies(user).includes(companySlug)) return false;
+  }
+  return matchesProjectScope(user, record.testCase.projectId);
 }
 

@@ -10,7 +10,9 @@ import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type ClientOption = { id: string; name: string };
+type ClientOption = { id: string; name: string; slug?: string | null };
+
+type ProjectOption = { id: string; name: string };
 
 type UserItem = {
   id: string;
@@ -24,6 +26,7 @@ type UserItem = {
   phone?: string | null;
   linkedin_url?: string;
   avatar_url?: string | null;
+  allowed_project_ids?: string[];
 };
 
 type Props = {
@@ -91,6 +94,7 @@ function isDirty(a: {
   linkedin: string;
   avatarUrl: string;
   active: boolean;
+  allowedProjectIds: string[];
 }, b: {
   name: string;
   login: string;
@@ -102,7 +106,10 @@ function isDirty(a: {
   linkedin: string;
   avatarUrl: string;
   active: boolean;
+  allowedProjectIds: string[];
 }) {
+  const sortedA = [...a.allowedProjectIds].sort();
+  const sortedB = [...b.allowedProjectIds].sort();
   return (
     a.name !== b.name ||
     a.login !== b.login ||
@@ -113,7 +120,9 @@ function isDirty(a: {
     a.jobTitle !== b.jobTitle ||
     a.linkedin !== b.linkedin ||
     a.avatarUrl !== b.avatarUrl ||
-    a.active !== b.active
+    a.active !== b.active ||
+    sortedA.length !== sortedB.length ||
+    sortedA.some((value, index) => value !== sortedB[index])
   );
 }
 
@@ -130,6 +139,9 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
   const [avatarUrl, setAvatarUrl] = useState("");
   const [active, setActive] = useState(true);
   const [clientId, setClientId] = useState<string | null>(null);
+  const [allowedProjectIds, setAllowedProjectIds] = useState<string[]>([]);
+  const [availableProjects, setAvailableProjects] = useState<ProjectOption[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -149,6 +161,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         linkedin: "",
         avatarUrl: "",
         active: true,
+        allowedProjectIds: [] as string[],
       };
     }
 
@@ -163,12 +176,15 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
       linkedin: u.linkedin_url ?? "",
       avatarUrl: (u.avatar_url ?? "") || "",
       active: u.active ?? true,
+      allowedProjectIds: Array.isArray(u.allowed_project_ids) ? u.allowed_project_ids : [],
     };
   }, [user]);
 
+  const isProjectScopedRole = role === "company_user" || role === "testing_company_user";
+
   const draft = useMemo(
-    () => ({ name, login, email, phone, role, clientId, jobTitle, linkedin, avatarUrl, active }),
-    [name, login, email, phone, role, clientId, jobTitle, linkedin, avatarUrl, active],
+    () => ({ name, login, email, phone, role, clientId, jobTitle, linkedin, avatarUrl, active, allowedProjectIds }),
+    [name, login, email, phone, role, clientId, jobTitle, linkedin, avatarUrl, active, allowedProjectIds],
   );
 
   const dirty = useMemo(() => isDirty(initial, draft), [initial, draft]);
@@ -237,11 +253,47 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     setLinkedin(initial.linkedin);
     setAvatarUrl(initial.avatarUrl);
     setActive(initial.active);
+    setAllowedProjectIds(initial.allowedProjectIds);
   }, [open, initial]);
 
   useEffect(() => {
     onDirtyChange?.(open && dirty);
   }, [open, dirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!open || !isProjectScopedRole || !clientId) {
+      setAvailableProjects([]);
+      return;
+    }
+    const clientSlug = clients?.find((client) => client.id === clientId)?.slug;
+    if (!clientSlug) {
+      setAvailableProjects([]);
+      return;
+    }
+    let canceled = false;
+    async function loadProjects() {
+      setLoadingProjects(true);
+      try {
+        const res = await fetch(`/api/projects?companySlug=${encodeURIComponent(clientSlug as string)}`, { credentials: "include" });
+        const json = (await res.json().catch(() => ({}))) as { projects?: ProjectOption[] };
+        if (!canceled) setAvailableProjects(Array.isArray(json.projects) ? json.projects : []);
+      } catch {
+        if (!canceled) setAvailableProjects([]);
+      } finally {
+        if (!canceled) setLoadingProjects(false);
+      }
+    }
+    void loadProjects();
+    return () => {
+      canceled = true;
+    };
+  }, [open, isProjectScopedRole, clientId, clients]);
+
+  function toggleProjectId(projectId: string) {
+    setAllowedProjectIds((current) =>
+      current.includes(projectId) ? current.filter((id) => id !== projectId) : [...current, projectId],
+    );
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -317,6 +369,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         linkedin_url: linkedin.trim() || undefined,
         avatar_url: avatarUrl.trim() || null,
         active,
+        ...(isProjectScopedRole ? { allowed_project_ids: allowedProjectIds } : {}),
       };
 
       const res = await fetch(`/api/admin/users/${user.id}`, {
@@ -554,6 +607,45 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     <span className="text-sm font-semibold text-[#081f4d]">{active ? "Usuário ativo" : "Usuário inativo"}</span>
                   </label>
                 </label>
+
+                {isProjectScopedRole ? (
+                  <label className="block text-sm md:col-span-2">
+                    <span className={labelClass}>Projetos permitidos</span>
+                    <p className="mt-1 text-xs font-semibold text-[#5f77a2]">
+                      Nenhum projeto marcado = acesso a todos os projetos da empresa vinculada.
+                    </p>
+                    {!clientId ? (
+                      <div className={`${fieldClass} mt-2 flex items-center bg-[#f7faff] text-[#4f658d]`}>
+                        Selecione uma empresa para listar os projetos.
+                      </div>
+                    ) : loadingProjects ? (
+                      <div className={`${fieldClass} mt-2 flex items-center bg-[#f7faff] text-[#4f658d]`}>
+                        Carregando projetos...
+                      </div>
+                    ) : availableProjects.length === 0 ? (
+                      <div className={`${fieldClass} mt-2 flex items-center bg-[#f7faff] text-[#4f658d]`}>
+                        Nenhum projeto encontrado para esta empresa.
+                      </div>
+                    ) : (
+                      <div className="mt-2 grid gap-2 rounded-2xl border border-[#d8dfeb] bg-white p-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)] sm:grid-cols-2">
+                        {availableProjects.map((project) => (
+                          <label
+                            key={project.id}
+                            className="flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-sm font-medium text-[#081f4d] hover:bg-[#f7faff]"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={allowedProjectIds.includes(project.id)}
+                              onChange={() => toggleProjectId(project.id)}
+                              className="h-4 w-4 accent-[#ef0001]"
+                            />
+                            {project.name}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </label>
+                ) : null}
               </div>
             </section>
           </div>

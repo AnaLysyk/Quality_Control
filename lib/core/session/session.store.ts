@@ -43,6 +43,9 @@ export type AccessContext = {
   companyId: string | null;
   companySlug: string | null;
   companySlugs: string[];
+  // null = sem restrição de projeto; array = restrito a esses projectIds (só aplicado
+  // para company_user/testing_company_user via Membership.allowedProjectIds).
+  allowedProjectIds: string[] | null;
 };
 
 const SESSION_COOKIE = "session_id";
@@ -244,6 +247,14 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   });
   const effectiveRole = hasForcedGlobalAccess ? "leader_tc" : permissionRole;
 
+  // Só company_user e testing_company_user podem ser restritos por projeto; empresa (admin
+  // da empresa), leader_tc e technical_support sempre enxergam todos os projetos.
+  const isProjectScopedRole = companyRole === "company_user" || companyRole === "testing_company_user";
+  const allowedProjectIds =
+    shouldBindCompanyContext && isProjectScopedRole && primaryLink?.allowedProjectIds?.length
+      ? primaryLink.allowedProjectIds
+      : null;
+
   // 9) Retorna o contexto final consumido pelo restante do app.
   return {
     userId: user.id,
@@ -259,5 +270,6 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     companyId: shouldBindCompanyContext ? session.companyId ?? primaryCompany?.id ?? null : null,
     companySlug: shouldBindCompanyContext ? session.companySlug ?? primaryCompany?.slug ?? user.default_company_slug ?? null : null,
     companySlugs,
+    allowedProjectIds,
   };
 }

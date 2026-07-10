@@ -23,6 +23,17 @@ type BrainSource = {
   lastSuccessAt?: string | null;
   lastErrorAt?: string | null;
   lastErrorMessage?: string | null;
+  memoriesGenerated?: number;
+  lastMemoryAt?: string | null;
+  processingStatus?: string;
+};
+
+const PROCESSING_STATUS_LABELS: Record<string, string> = {
+  desativado: "Desativado",
+  erro: "Erro",
+  indexado: "Indexado",
+  aguardando_processamento: "Aguardando processamento",
+  configurado: "Configurado",
 };
 
 type AuditItem = {
@@ -101,6 +112,8 @@ export function BrainSourcesSettings() {
     startUrls: "",
     crawlDepth: "1",
     maxPages: "25",
+    githubOwner: "",
+    githubRepo: "",
     useForCompanyContext: false,
     useForGeneralQuestions: true,
     useForRagIngestion: false,
@@ -134,6 +147,7 @@ export function BrainSourcesSettings() {
     const api = (source.config?.api ?? {}) as Record<string, unknown>;
     const database = (source.config?.database ?? {}) as Record<string, unknown>;
     const web = (source.config?.web ?? {}) as Record<string, unknown>;
+    const github = (source.config?.github ?? {}) as Record<string, unknown>;
     setEditingId(source.id);
     setForm((current) => ({
       ...current,
@@ -165,6 +179,8 @@ export function BrainSourcesSettings() {
       startUrls: Array.isArray(web.startUrls) ? web.startUrls.join(", ") : "",
       crawlDepth: String(web.crawlDepth ?? "1"),
       maxPages: String(web.maxPages ?? "25"),
+      githubOwner: String(github.owner ?? ""),
+      githubRepo: String(github.repo ?? ""),
       token: "",
       username: "",
       password: "",
@@ -287,6 +303,9 @@ export function BrainSourcesSettings() {
                       <span className="rounded-full bg-cyan-300/15 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100">{source.sourceType}</span>
                       <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-300">{source.status}</span>
                       <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-300">{source.scopeType}</span>
+                      <span className="rounded-full bg-emerald-300/15 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100">
+                        {PROCESSING_STATUS_LABELS[source.processingStatus ?? "configurado"] ?? source.processingStatus}
+                      </span>
                     </div>
                     <h2 className="mt-3 text-lg font-black">{source.name}</h2>
                     <p className="mt-2 text-sm leading-6 text-slate-300">{source.description || "Sem descricao."}</p>
@@ -294,6 +313,7 @@ export function BrainSourcesSettings() {
                       <span>Provider: {source.provider || "nao informado"} · Ambiente: {source.environment}</span>
                       <span>Empresa: {source.companySlug || "global/nao informado"} · Projeto: {source.projectSlug || "todos"}</span>
                       <span>Ultimo sucesso: {dateLabel(source.lastSuccessAt)} · Ultimo erro: {source.lastErrorMessage || "nenhum"}</span>
+                      <span>Memorias geradas: {source.memoriesGenerated ?? 0} · Ultimo consumo: {dateLabel(source.lastMemoryAt)}</span>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {source.secrets?.map((secret) => (
@@ -345,7 +365,18 @@ export function BrainSourcesSettings() {
                     <option value="dev">Dev</option>
                   </select>
                 </div>
-                <input value={form.provider} onChange={(event) => setForm((current) => ({ ...current, provider: event.target.value }))} placeholder="Provider" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
+                <input value={form.provider} onChange={(event) => setForm((current) => ({ ...current, provider: event.target.value }))} placeholder="Provider (ex.: github, qase, jira)" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
+
+                {form.provider.trim().toLowerCase() === "github" ? (
+                  <div className="rounded-lg border border-white/10 p-3">
+                    <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-slate-400">Repositório GitHub</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input value={form.githubOwner} onChange={(event) => setForm((current) => ({ ...current, githubOwner: event.target.value }))} placeholder="owner/organização" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
+                      <input value={form.githubRepo} onChange={(event) => setForm((current) => ({ ...current, githubRepo: event.target.value }))} placeholder="repositório" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
+                    </div>
+                    <p className="mt-2 text-[11px] text-slate-500">Use o campo de segredo &quot;token/api key/bearer&quot; abaixo para o Personal Access Token com permissão de issues.</p>
+                  </div>
+                ) : null}
                 <div className="grid grid-cols-2 gap-3">
                   <input value={form.companySlug} onChange={(event) => setForm((current) => ({ ...current, companySlug: event.target.value }))} placeholder="companySlug" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
                   <input value={form.projectSlug} onChange={(event) => setForm((current) => ({ ...current, projectSlug: event.target.value }))} placeholder="projectSlug" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />

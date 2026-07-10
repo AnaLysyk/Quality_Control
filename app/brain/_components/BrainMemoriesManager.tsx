@@ -18,6 +18,17 @@ type BrainMemoryItem = {
   updatedAt: string;
 };
 
+type BrainSourceOption = { id: string; name: string; sourceType: string };
+
+type BrainMemoryCandidate = {
+  id: string;
+  kind?: string;
+  title: string;
+  summary?: string | null;
+  payload?: { memoryType?: string; message?: string; requestedBy?: string } | null;
+  createdAt: string;
+};
+
 type BrainAuditItem = {
   id: string;
   action: string;
@@ -42,9 +53,13 @@ function dateLabel(value: string) {
   return date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
+const BRAIN_SOURCE_MEMORY_TYPE = "BRAIN_SOURCE";
+
 export function BrainMemoriesManager() {
   const [memories, setMemories] = useState<BrainMemoryItem[]>([]);
   const [audit, setAudit] = useState<BrainAuditItem[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<BrainSourceOption[]>([]);
+  const [candidates, setCandidates] = useState<BrainMemoryCandidate[]>([]);
   const [q, setQ] = useState("");
   const [type, setType] = useState("all");
   const [nodeId, setNodeId] = useState("");
@@ -65,6 +80,15 @@ export function BrainMemoriesManager() {
   });
 
   const filteredMemories = useMemo(() => memories, [memories]);
+  const sourcesById = useMemo(() => new Map(sourceOptions.map((item) => [item.id, item])), [sourceOptions]);
+
+  function originLabel(memory: BrainMemoryItem) {
+    if (memory.sourceType === BRAIN_SOURCE_MEMORY_TYPE && memory.sourceId) {
+      const source = sourcesById.get(memory.sourceId);
+      return source ? `Fonte configurada: ${source.name}` : "Fonte configurada (removida)";
+    }
+    return memory.sourceType ? `Origem: ${memory.sourceType}` : "Origem: manual";
+  }
 
   async function load() {
     setLoading(true);
@@ -75,12 +99,16 @@ export function BrainMemoriesManager() {
     if (nodeId.trim()) params.set("nodeId", nodeId.trim());
     if (source.trim()) params.set("source", source.trim());
     try {
-      const [memoryData, auditData] = await Promise.all([
+      const [memoryData, auditData, sourceData, candidateData] = await Promise.all([
         fetchJson<{ memories: BrainMemoryItem[] }>(`/api/brain/memories?${params.toString()}`),
         fetchJson<{ logs?: BrainAuditItem[] }>(`/api/brain/audit?entityType=BrainMemory&limit=40`).catch(() => ({ logs: [] })),
+        fetchJson<{ sources?: BrainSourceOption[] }>(`/api/brain/settings/sources`).catch(() => ({ sources: [] })),
+        fetchJson<{ items?: BrainMemoryCandidate[] }>(`/api/brain/inbox?status=pending`).catch(() => ({ items: [] })),
       ]);
       setMemories(memoryData.memories ?? []);
       setAudit(auditData.logs ?? []);
+      setSourceOptions(sourceData.sources ?? []);
+      setCandidates((candidateData.items ?? []).filter((item) => item.kind === "conversation_memory_candidate"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar memorias");
     } finally {
@@ -148,6 +176,22 @@ export function BrainMemoriesManager() {
     }
   }
 
+  async function reviewCandidate(id: string, action: "approve" | "reject") {
+    setError(null);
+    setFeedback(null);
+    try {
+      await fetchJson("/api/brain/inbox", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action }),
+      });
+      setFeedback(action === "approve" ? "Memória aprovada e criada." : "Candidato ignorado.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao revisar candidato de memória");
+    }
+  }
+
   async function disable(memory: BrainMemoryItem) {
     setError(null);
     setFeedback(null);
@@ -175,6 +219,30 @@ export function BrainMemoriesManager() {
             Atualizar
           </button>
         </header>
+
+        {candidates.length ? (
+          <section className="rounded-lg border border-amber-300/25 bg-amber-500/[0.06] p-4">
+            <h2 className="text-sm font-black uppercase tracking-[0.16em] text-amber-100">Itens pendentes de revisão</h2>
+            <p className="mt-1 text-xs text-amber-100/70">Conteúdo identificado em conversas com o Brain que pode virar memória permanente.</p>
+            <div className="mt-3 grid gap-2">
+              {candidates.map((candidate) => (
+                <article key={candidate.id} className="rounded-lg border border-white/10 bg-black/20 p-3">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <span className="rounded-full bg-amber-300/15 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100">{candidate.payload?.memoryType ?? "CONTEXT"}</span>
+                      <p className="mt-2 text-sm font-bold text-white">{candidate.title}</p>
+                      <p className="mt-1 text-xs text-slate-400">{candidate.summary}</p>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <button type="button" onClick={() => reviewCandidate(candidate.id, "approve")} className="rounded-lg border border-emerald-300/30 px-3 py-2 text-xs font-bold text-emerald-100 hover:bg-emerald-500/10">Aprovar</button>
+                      <button type="button" onClick={() => reviewCandidate(candidate.id, "reject")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-slate-100 hover:bg-white/10">Ignorar</button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
           <section className="space-y-4">
@@ -211,6 +279,7 @@ export function BrainMemoriesManager() {
                       <p className="mt-3 text-xs text-slate-500">
                         {memory.node ? `No: ${memory.node.label} (${memory.node.type})` : "Sem no vinculado"} · Atualizada em {dateLabel(memory.updatedAt)}
                       </p>
+                      <p className="mt-1 text-xs text-slate-500">{originLabel(memory)}</p>
                     </div>
                     <div className="flex shrink-0 gap-2">
                       <button type="button" onClick={() => startEdit(memory)} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-slate-100 hover:bg-white/10">Editar</button>
@@ -232,8 +301,23 @@ export function BrainMemoriesManager() {
                   {MEMORY_TYPES.map((item) => <option key={item} value={item}>{item}</option>)}
                 </select>
                 <input value={form.nodeId} onChange={(event) => setForm((current) => ({ ...current, nodeId: event.target.value }))} placeholder="nodeId opcional" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
+                <select
+                  value={form.sourceType === BRAIN_SOURCE_MEMORY_TYPE ? form.sourceId : ""}
+                  onChange={(event) => {
+                    const sourceId = event.target.value;
+                    setForm((current) => (
+                      sourceId
+                        ? { ...current, sourceType: BRAIN_SOURCE_MEMORY_TYPE, sourceId }
+                        : { ...current, sourceType: "MANUAL", sourceId: "" }
+                    ));
+                  }}
+                  className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none"
+                >
+                  <option value="">Sem fonte configurada (manual)</option>
+                  {sourceOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
                 <div className="grid grid-cols-2 gap-3">
-                  <input value={form.sourceType} onChange={(event) => setForm((current) => ({ ...current, sourceType: event.target.value }))} placeholder="Fonte" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
+                  <input value={form.sourceType} onChange={(event) => setForm((current) => ({ ...current, sourceType: event.target.value }))} placeholder="Fonte (texto livre)" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
                   <input value={form.importance} onChange={(event) => setForm((current) => ({ ...current, importance: event.target.value }))} type="number" min="1" max="5" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none" />
                 </div>
                 <button disabled={saving} className="rounded-lg bg-cyan-300 px-4 py-2 text-sm font-black text-slate-950 disabled:opacity-60">{saving ? "Salvando..." : editingId ? "Salvar edicao" : "Criar memoria"}</button>

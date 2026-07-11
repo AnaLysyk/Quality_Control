@@ -261,6 +261,17 @@ function buildBrainItems(
         favoriteEnabled: true,
         testId: "nav-brain-settings",
       },
+      {
+        id: "brain-behavior-profiles-admin",
+        routeId: "brain.behavior-profiles",
+        label: "Perfis de comportamento",
+        iconKey: "message-square",
+        module: "brain",
+        href: "/admin/brain/behavior-profiles",
+        requiredPermission: { moduleId: "brain", action: "use" },
+        favoriteEnabled: true,
+        testId: "nav-brain-behavior-profiles",
+      },
     ];
   }
 
@@ -291,6 +302,17 @@ function buildBrainItems(
             testId: "nav-brain-settings-company",
           }]
         : []),
+      {
+        id: "brain-behavior-profiles-company",
+        routeId: "brain.behavior-profiles",
+        label: "Perfis de comportamento",
+        iconKey: "message-square",
+        module: "brain" as const,
+        href: "/admin/brain/behavior-profiles",
+        requiredPermission: { moduleId: "brain", action: "use" },
+        favoriteEnabled: true,
+        testId: "nav-brain-behavior-profiles-company",
+      },
     ];
   }
 
@@ -304,6 +326,17 @@ function buildBrainItems(
       href: "/brain",
       favoriteEnabled: true,
       testId: "nav-brain-graph",
+    },
+    {
+      id: "brain-behavior-profiles",
+      routeId: "brain.behavior-profiles",
+      label: "Perfis de comportamento",
+      iconKey: "message-square",
+      module: "brain",
+      href: "/admin/brain/behavior-profiles",
+      requiredPermission: { moduleId: "brain", action: "use" },
+      favoriteEnabled: true,
+      testId: "nav-brain-behavior-profiles-fallback",
     },
   ];
 }

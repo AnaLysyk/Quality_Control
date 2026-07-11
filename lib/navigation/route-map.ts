@@ -584,6 +584,17 @@ const CORE_SYSTEM_ROUTES = [
     mainFile: "app/admin/brain/settings/page.tsx",
   },
   {
+    id: "brain.behavior-profiles",
+    moduleId: "brain",
+    path: "/admin/brain/behavior-profiles",
+    label: "Perfis de comportamento do Brain",
+    description: "Define o tom de conversa do Brain e onde cada perfil se aplica (pessoal, empresa, projeto ou global).",
+    requiredPermission: { moduleId: "brain", action: "use" },
+    expectedProfiles: ALL_PROFILES,
+    status: "ativo",
+    mainFile: "app/admin/brain/behavior-profiles/page.tsx",
+  },
+  {
     id: "brain.settings.company",
     moduleId: "brain",
     path: "/brain/settings",

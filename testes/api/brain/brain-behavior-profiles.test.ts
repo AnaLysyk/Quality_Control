@@ -6,6 +6,7 @@ jest.mock("@/lib/prismaClient", () => ({
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      upsert: jest.fn(),
     },
     brainBehaviorProfileAssignment: {
       findMany: jest.fn(),
@@ -91,6 +92,15 @@ describe("listBehaviorProfiles", () => {
     const profiles = await listBehaviorProfiles(fakeAccess());
     expect(profiles.some((profile) => profile.id === DEFAULT_BEHAVIOR_PROFILE_ID)).toBe(true);
     expect(profiles.filter((profile) => profile.isSystem).length).toBeGreaterThanOrEqual(9);
+  });
+
+  it("nao duplica um preset que ja foi semeado no banco (setBehaviorAssignment grava a linha)", async () => {
+    (prisma.brainBehaviorProfile.findMany as jest.Mock).mockResolvedValue([
+      { id: DEFAULT_BEHAVIOR_PROFILE_ID, name: "Profissional", instructions: "x", scopeType: "global", isSystem: true, status: "active", version: 1, createdAt: new Date(), updatedAt: new Date() },
+    ]);
+
+    const profiles = await listBehaviorProfiles(fakeAccess());
+    expect(profiles.filter((profile) => profile.id === DEFAULT_BEHAVIOR_PROFILE_ID)).toHaveLength(1);
   });
 });
 
@@ -210,5 +220,35 @@ describe("setBehaviorAssignment", () => {
         where: { scopeType_scopeId_surface: { scopeType: "user", scopeId: "user-1", surface: "chat" } },
       }),
     );
+  });
+
+  it("semeia o preset do sistema na tabela antes de criar a atribuicao (a FK exige a linha existir)", async () => {
+    (prisma.brainBehaviorProfileAssignment.upsert as jest.Mock).mockResolvedValue({ id: "assignment-1" });
+
+    await setBehaviorAssignment(fakeAccess(), { scopeType: "user", surface: "chat", profileId: DEFAULT_BEHAVIOR_PROFILE_ID });
+
+    expect(prisma.brainBehaviorProfile.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: DEFAULT_BEHAVIOR_PROFILE_ID },
+        create: expect.objectContaining({ id: DEFAULT_BEHAVIOR_PROFILE_ID, isSystem: true }),
+      }),
+    );
+  });
+
+  it("tolera corrida entre duas requisicoes semeando o mesmo preset ao mesmo tempo (P2002)", async () => {
+    (prisma.brainBehaviorProfile.upsert as jest.Mock).mockRejectedValue({ code: "P2002", message: "Unique constraint failed" });
+    (prisma.brainBehaviorProfileAssignment.upsert as jest.Mock).mockResolvedValue({ id: "assignment-2" });
+
+    await expect(
+      setBehaviorAssignment(fakeAccess(), { scopeType: "user", surface: "home", profileId: DEFAULT_BEHAVIOR_PROFILE_ID }),
+    ).resolves.toEqual({ id: "assignment-2" });
+  });
+
+  it("propaga erro do seed quando nao e conflito de unicidade (P2002)", async () => {
+    (prisma.brainBehaviorProfile.upsert as jest.Mock).mockRejectedValue({ code: "P2003", message: "outro erro" });
+
+    await expect(
+      setBehaviorAssignment(fakeAccess(), { scopeType: "user", surface: "home", profileId: DEFAULT_BEHAVIOR_PROFILE_ID }),
+    ).rejects.toMatchObject({ code: "P2003" });
   });
 });

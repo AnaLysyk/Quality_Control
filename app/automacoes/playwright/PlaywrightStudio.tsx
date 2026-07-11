@@ -16,6 +16,7 @@ import {
   FiFilePlus,
   FiFolder,
   FiFolderPlus,
+  FiGithub,
   FiList,
   FiMonitor,
   FiPlay,
@@ -547,9 +548,20 @@ const TERM_COLORS: Record<TerminalLine["type"], string> = {
 type Props = {
   activeCompanySlug: string | null;
   companies: CompanyOption[];
+  /** When set (usually from the automation queue), loads the linked draft + manual test case into the IDE on mount. */
+  testCaseId?: string | null;
+  draftId?: string | null;
 };
 
-export default function PlaywrightStudio({ activeCompanySlug, companies }: Props) {
+type LinkedTestCase = {
+  id: string;
+  key?: string;
+  title: string;
+  objective?: string | null;
+  steps: Array<{ id: string; order: number; action: string; expectedResult: string }>;
+};
+
+export default function PlaywrightStudio({ activeCompanySlug, companies, testCaseId, draftId }: Props) {
   const { activeProjectId, activeProject } = useProjectContext();
   const [tree, setTree] = useState<ProjectTree>(buildDefaultTree);
   const [activeFileId, setActiveFileId] = useState<string | null>(() => {
@@ -589,6 +601,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   const [dbLoading, setDbLoading] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const [openBrowserOnRun, setOpenBrowserOnRun] = useState(true);
+  const [linkedTestCase, setLinkedTestCase] = useState<LinkedTestCase | null>(null);
+  const [linkedBannerOpen, setLinkedBannerOpen] = useState(true);
 
   // â”€â”€ Runs + Agents state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
@@ -600,6 +614,10 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   const [runDetails, setRunDetails] = useState<Record<string, RunResultRecord[]>>({});
   const [runComparisons, setRunComparisons] = useState<Record<string, RunComparison | null>>({});
   const [runMode, setRunMode] = useState<"all" | "changed" | "failed">("all");
+  const [execMode, setExecMode] = useState<"spec" | "script">("spec");
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState<string | null>(null);
   const [runStatusFilter, setRunStatusFilter] = useState<"all" | "queued" | "running" | "passed" | "failed" | "error">(() => {
     if (typeof window === "undefined") return "all";
     const raw = window.localStorage.getItem(RUN_STATUS_FILTER_STORAGE_KEY);
@@ -694,6 +712,63 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       prev.includes(activeFileId) ? prev : [...prev, activeFileId],
     );
   }, [activeFileId]);
+
+  // Load a manual test case + its automation draft (from the automation queue) into the IDE
+  useEffect(() => {
+    if (!testCaseId) return;
+    let canceled = false;
+
+    async function loadLinkedCase() {
+      try {
+        const caseRes = await fetch(`/api/test-cases/${encodeURIComponent(testCaseId!)}`);
+        if (!caseRes.ok) return;
+        const caseData = (await caseRes.json()) as {
+          testCase: { id: string; key?: string; title: string; objective?: string | null };
+          steps: Array<{ id: string; order: number; action: string; expectedResult: string }>;
+        };
+        if (canceled) return;
+        setLinkedTestCase({
+          id: caseData.testCase.id,
+          key: caseData.testCase.key,
+          title: caseData.testCase.title,
+          objective: caseData.testCase.objective,
+          steps: caseData.steps ?? [],
+        });
+
+        if (!draftId) return;
+        const draftRes = await fetch(`/api/test-cases/${encodeURIComponent(testCaseId!)}/automation/drafts/${encodeURIComponent(draftId)}`);
+        if (!draftRes.ok) return;
+        const draft = (await draftRes.json()) as { specFile?: string | null; specCode?: string | null };
+        if (canceled || !draft.specCode) return;
+
+        const filePath = draft.specFile || `tests/${caseData.testCase.key ?? testCaseId}.spec.ts`;
+        const fileName = filePath.split("/").pop() ?? "case.spec.ts";
+        const newFile: ProjectFile = {
+          id: uid(),
+          name: fileName,
+          path: filePath,
+          content: draft.specCode,
+          language: "typescript",
+          status: "draft",
+          updatedAt: now(),
+        };
+        setTree((prev) => ({
+          ...prev,
+          folders: prev.folders.map((f) =>
+            f.name === "tests" ? { ...f, children: [...f.children.filter((c) => !("path" in c) || c.path !== filePath), newFile] } : f,
+          ),
+        }));
+        setActiveFileId(newFile.id);
+      } catch {
+        // Best-effort: IDE still opens even if the linked case/draft can't be loaded.
+      }
+    }
+
+    void loadLinkedCase();
+    return () => {
+      canceled = true;
+    };
+  }, [testCaseId, draftId]);
 
   // Init open tabs with first spec
   useEffect(() => {
@@ -1068,6 +1143,96 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       setIsRunning(false);
     }
   }, [isRunning, selectedCompany, activeProjectId, selectedPlanId, runMode, runHistory, tree, config, openBrowserOnRun, addTerminalLine, openPreviewTab, loadRuns, hasRunnableSpecs]);
+
+  const handleRunScript = useCallback(async () => {
+    if (isRunning || !selectedCompany) return;
+    if (!activeFile || !activeFile.content.trim()) {
+      setRightTab("terminal");
+      addTerminalLine("error", "Abra ou escreva um script antes de executar.");
+      return;
+    }
+
+    setIsRunning(true);
+    setRightTab("terminal");
+    setTerminal([]);
+
+    try {
+      const startRes = await fetch("/api/automations/scripts/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companySlug: selectedCompany,
+          title: `Script ${activeFile.name} — ${new Date().toLocaleString("pt-BR")}`,
+          scriptContent: activeFile.content,
+        }),
+      });
+
+      if (!startRes.ok) {
+        const err = (await startRes.json().catch(() => ({ error: "Erro desconhecido" }))) as { error?: string };
+        addTerminalLine("error", `Falha ao iniciar: ${err.error ?? startRes.statusText}`);
+        setIsRunning(false);
+        return;
+      }
+
+      const { runId } = (await startRes.json()) as { runId: string };
+      setActiveRunId(runId);
+      addTerminalLine("system", `► Script iniciado — ID: ${runId}`);
+
+      const evtSource = new EventSource(`/api/playwright/run/${runId}/events`);
+
+      evtSource.onmessage = (e) => {
+        const data = JSON.parse(e.data) as { type: string; line?: string; status?: string };
+        if (data.type === "line" && data.line) {
+          const raw = data.line;
+          let type: TerminalLine["type"] = "info";
+          if (raw.startsWith("[system]")) type = "system";
+          else if (raw.startsWith("[error]")) type = "error";
+          else if (raw.startsWith("[stderr]")) type = "warn";
+          const text = raw.replace(/^\[(system|stdout|stderr|error)\]\s?/, "");
+          addTerminalLine(type, text);
+        } else if (data.type === "done") {
+          evtSource.close();
+          setIsRunning(false);
+        }
+      };
+
+      evtSource.onerror = () => {
+        evtSource.close();
+        setIsRunning(false);
+      };
+    } catch (err) {
+      addTerminalLine("error", `Erro: ${err instanceof Error ? err.message : String(err)}`);
+      setIsRunning(false);
+    }
+  }, [isRunning, selectedCompany, activeFile, addTerminalLine]);
+
+  const publishToGithub = useCallback(async () => {
+    if (!activeFile) return;
+    setPublishing(true);
+    setPublishMessage(null);
+    try {
+      const slug = activeFile.path.replace(/[^a-zA-Z0-9_\-./]/g, "-");
+      const response = await fetch("/api/automations/github/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confirm: true,
+          branch: `automation-ide/${slug.replace(/\//g, "-")}-${Date.now()}`,
+          files: [{ path: `tests-ide/${slug}`, content: activeFile.content }],
+          commitMessage: `[ide] publish ${activeFile.path}`,
+          prTitle: `[IDE] Publicar: ${activeFile.path}`,
+          prBody: `Arquivo exportado da IDE interna (tests-ide/${slug}).`,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.message || "Falha ao publicar no GitHub.");
+      setPublishMessage(`Publicado: ${payload.pullRequestUrl}`);
+    } catch (error) {
+      setPublishMessage(error instanceof Error ? error.message : "Falha ao publicar no GitHub.");
+    } finally {
+      setPublishing(false);
+    }
+  }, [activeFile]);
 
   const openFloatingAssistant = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -2587,6 +2752,38 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
 
       {/* â”€â”€ Panel 2: Editor â”€â”€ */}
       <div className="flex min-w-0 flex-1 flex-col bg-white dark:bg-zinc-950">
+        {linkedTestCase && (
+          <div className="border-b border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/30">
+            <button
+              type="button"
+              onClick={() => setLinkedBannerOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[12px] font-semibold text-amber-800 dark:text-amber-300"
+            >
+              <span className="truncate">
+                Caso vinculado: {linkedTestCase.key ?? linkedTestCase.id.slice(0, 8)} — {linkedTestCase.title}
+              </span>
+              {linkedBannerOpen ? <FiChevronDown className="h-3.5 w-3.5 shrink-0" /> : <FiChevronRight className="h-3.5 w-3.5 shrink-0" />}
+            </button>
+            {linkedBannerOpen && (
+              <div className="max-h-48 overflow-y-auto px-3 pb-3 text-[12px] text-amber-900 dark:text-amber-200">
+                {linkedTestCase.objective && (
+                  <p className="mb-2">
+                    <span className="font-bold">Objetivo:</span> {linkedTestCase.objective}
+                  </p>
+                )}
+                {linkedTestCase.steps.length > 0 && (
+                  <ol className="list-decimal space-y-1 pl-4">
+                    {linkedTestCase.steps.map((step) => (
+                      <li key={step.id}>
+                        {step.action} — <span className="italic">esperado: {step.expectedResult}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         {/* Tabs bar */}
         <div className="flex min-h-9 items-end gap-0 overflow-x-auto border-b border-slate-200 bg-slate-50 scrollbar-none dark:border-zinc-800 dark:bg-zinc-900">
           {openFiles.map((file) => {
@@ -2661,44 +2858,64 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 <FiMonitor className="h-3.5 w-3.5" />
                 Modo IDE
               </label>
+              <select
+                value={execMode}
+                onChange={(e) => setExecMode(e.target.value as "spec" | "script")}
+                className="h-7 rounded-lg bg-slate-100 px-2 text-[12px] font-semibold text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700"
+                title="Modo de execução"
+              >
+                <option value="spec">Spec Playwright</option>
+                <option value="script">Script Node</option>
+              </select>
               <button
                 type="button"
-                onClick={() => void handleRun()}
-                disabled={isRunning || !hasRunnableSpecs}
+                onClick={() => (execMode === "script" ? void handleRunScript() : void handleRun())}
+                disabled={isRunning || (execMode === "spec" && !hasRunnableSpecs)}
                 className="flex items-center gap-1.5 rounded-lg bg-[#ef0001] px-3 py-1 text-[12px] font-semibold text-white hover:opacity-90 disabled:opacity-50"
-                title={!hasRunnableSpecs ? "Crie um arquivo tests/*.spec.ts para habilitar a execução" : undefined}
+                title={execMode === "spec" && !hasRunnableSpecs ? "Crie um arquivo tests/*.spec.ts para habilitar a execução" : undefined}
               >
                 <FiPlay className="h-3.5 w-3.5" />
                 {isRunning ? "Executando..." : "Executar"}
               </button>
-              <select
-                value={runMode}
-                onChange={(e) => setRunMode(e.target.value as "all" | "changed" | "failed")}
-                className="h-7 rounded-lg bg-slate-100 px-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700"
-                title="Modo de execução"
-              >
-                <option value="all">Modo: all specs</option>
-                <option value="changed">Modo: changed specs</option>
-                <option value="failed">Modo: failed specs</option>
-              </select>
               <button
                 type="button"
-                onClick={() => void handleRun("changed")}
-                disabled={isRunning || !hasRunnableSpecs}
-                className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1 text-[12px] font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50 dark:bg-blue-900/20 dark:text-blue-300"
-                title="Executar somente specs alterados"
+                onClick={() => setShowPublishDialog(true)}
+                className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1 text-[12px] font-semibold text-slate-700 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
               >
-                <FiZap className="h-3.5 w-3.5" /> Run changed specs
+                <FiGithub className="h-3.5 w-3.5" /> Enviar para GitHub
               </button>
-              <button
-                type="button"
-                onClick={() => void handleRun("failed")}
-                disabled={isRunning}
-                className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1 text-[12px] font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-50 dark:bg-amber-900/20 dark:text-amber-300"
-                title="Reexecutar apenas specs falhos da última run"
-              >
-                <FiRefreshCw className="h-3.5 w-3.5" /> Rerun failed
-              </button>
+              {execMode === "spec" && (
+                <>
+                  <select
+                    value={runMode}
+                    onChange={(e) => setRunMode(e.target.value as "all" | "changed" | "failed")}
+                    className="h-7 rounded-lg bg-slate-100 px-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700"
+                    title="Modo de execução"
+                  >
+                    <option value="all">Modo: all specs</option>
+                    <option value="changed">Modo: changed specs</option>
+                    <option value="failed">Modo: failed specs</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => void handleRun("changed")}
+                    disabled={isRunning || !hasRunnableSpecs}
+                    className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1 text-[12px] font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50 dark:bg-blue-900/20 dark:text-blue-300"
+                    title="Executar somente specs alterados"
+                  >
+                    <FiZap className="h-3.5 w-3.5" /> Run changed specs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleRun("failed")}
+                    disabled={isRunning}
+                    className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1 text-[12px] font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-50 dark:bg-amber-900/20 dark:text-amber-300"
+                    title="Reexecutar apenas specs falhos da última run"
+                  >
+                    <FiRefreshCw className="h-3.5 w-3.5" /> Rerun failed
+                  </button>
+                </>
+              )}
               {activeProject && (
                 <span className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-600 dark:bg-zinc-800 dark:text-zinc-300" title="Projeto ativo para esta execução">
                   Projeto ativo: {activeProject.name}
@@ -2786,6 +3003,54 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           {rightTab === "agents" && renderAgents()}
         </div>
       </aside>
+
+      {showPublishDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 text-slate-900 shadow-xl dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+            <div className="flex items-center justify-between gap-3">
+              <p className="inline-flex items-center gap-2 text-sm font-bold">
+                <FiGithub className="h-4 w-4" />
+                Publicar no GitHub
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowPublishDialog(false)}
+                aria-label="Fechar"
+                className="text-slate-400 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-200"
+              >
+                <FiX className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-zinc-400">
+              Publicar <span className="font-semibold">{activeFile?.path ?? "arquivo atual"}</span> em{" "}
+              <span className="font-mono text-xs">AnaLysyk/Quality_Control</span>. Isso cria/atualiza uma branch e abre um Pull Request.
+            </p>
+            {publishMessage && (
+              <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs break-all text-slate-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+                {publishMessage}
+              </div>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPublishDialog(false)}
+                className="inline-flex min-h-9 items-center justify-center rounded-md border border-slate-200 bg-transparent px-4 text-sm font-semibold text-slate-700 dark:border-zinc-700 dark:text-zinc-200"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void publishToGithub()}
+                disabled={publishing || !activeFile}
+                className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-[#ef0001] px-4 text-sm font-bold text-white disabled:opacity-60"
+              >
+                <FiGithub className="h-4 w-4" />
+                {publishing ? "Publicando…" : "Confirmar publicação"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

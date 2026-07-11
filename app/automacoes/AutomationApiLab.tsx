@@ -2,19 +2,21 @@
 
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
-  FiClock,
   FiCopy,
   FiDatabase,
+  FiFolder,
+  FiGithub,
   FiGlobe,
   FiKey,
   FiLock,
-  FiPlay,
   FiPlus,
   FiSave,
+  FiSend,
   FiServer,
   FiShield,
   FiSliders,
   FiTrash2,
+  FiX,
 } from "react-icons/fi";
 
 import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
@@ -204,6 +206,27 @@ function authLabel(auth: AutomationRequestAuth) {
   return "Sem autenticação";
 }
 
+const METHOD_COLORS: Record<string, string> = {
+  GET: "text-emerald-400",
+  POST: "text-amber-400",
+  PUT: "text-sky-400",
+  PATCH: "text-violet-400",
+  DELETE: "text-rose-400",
+  HEAD: "text-slate-400",
+  OPTIONS: "text-slate-400",
+};
+
+function slugify(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "request"
+  );
+}
+
 export default function AutomationApiLab({ activeCompanySlug, companies }: Props) {
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(
     isTestingCompanyScope(activeCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"),
@@ -225,6 +248,9 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   const [responseTab, setResponseTab] = useState<"json" | "raw" | "headers">("json");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<EditorPanel>("params");
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState<string | null>(null);
 
   const selectedCompany = useMemo(
     () => companies.find((company) => company.slug === activeCompanySlug) ?? companies[0] ?? null,
@@ -497,20 +523,67 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     window.setTimeout(() => setCopyFeedback(null), 1400);
   }
 
+  async function publishToGithub() {
+    setPublishing(true);
+    setPublishMessage(null);
+    try {
+      const slug = slugify(requestName);
+      const collectionPath = `automation-lab/collections/${slug}.json`;
+      const collection = {
+        title: requestName,
+        method,
+        path,
+        body,
+        auth,
+        headers: sanitizeKeyValueRows(headerRows),
+        queryParams: sanitizeKeyValueRows(queryRows),
+        variables: sanitizeKeyValueRows(localVariableRows),
+        environment: currentEnvironment.id,
+        exportedAt: new Date().toISOString(),
+      };
+
+      const response = await fetch("/api/automations/github/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confirm: true,
+          branch: `automation-lab/${slug}-${Date.now()}`,
+          files: [{ path: collectionPath, content: JSON.stringify(collection, null, 2) }],
+          commitMessage: `[postman] publish ${requestName}`,
+          prTitle: `[Postman] Publicar coleção: ${requestName}`,
+          prBody: `Coleção exportada do Postman interno (${collectionPath}).`,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.message || "Falha ao publicar no GitHub.");
+      setPublishMessage(`Publicado: ${payload.pullRequestUrl}`);
+    } catch (error) {
+      setPublishMessage(error instanceof Error ? error.message : "Falha ao publicar no GitHub.");
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  const tabClass = (active: boolean) =>
+    `inline-flex min-h-9 items-center gap-2 border-b-2 px-3 py-2 text-[13px] font-semibold transition ${
+      active ? "border-[#FF6C37] text-white" : "border-transparent text-[#9195a3] hover:text-[#d6d8de]"
+    }`;
+
   return (
-    <section className="space-y-4 rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-sm sm:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
-        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
-            <FiServer className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
-            API Lab
+    <section className="flex h-full min-h-[calc(100vh-160px)] flex-col overflow-hidden rounded-[16px] border border-[#2b2d3a] bg-[#1b1c26] text-[#e4e6ef] shadow-sm">
+      {/* Top bar — Postman-style brand strip */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#2b2d3a] bg-[#20212e] px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#9195a3]">
+          <span className="inline-flex items-center gap-2 rounded-md bg-[#2a2c3b] px-2.5 py-1 text-[#FF6C37]">
+            <FiSend className="h-3.5 w-3.5" />
+            Postman
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
-            <FiGlobe className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
+          <span className="inline-flex items-center gap-1.5">
+            <FiGlobe className="h-3.5 w-3.5" />
             {currentEnvironment?.title}
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
-            <FiShield className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
+          <span className="inline-flex items-center gap-1.5">
+            <FiShield className="h-3.5 w-3.5" />
             {authLabel(auth)}
           </span>
         </div>
@@ -518,555 +591,563 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           <button
             type="button"
             onClick={saveCurrentRequest}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
+            className="inline-flex min-h-8 items-center justify-center gap-2 rounded-md border border-[#3a3c4d] bg-[#2a2c3b] px-3 text-xs font-semibold text-[#e4e6ef] hover:bg-[#33354a]"
           >
-            <FiSave className="h-4 w-4" />
+            <FiSave className="h-3.5 w-3.5" />
             Salvar
           </button>
           <button
             type="button"
-            onClick={executeRequest}
-            disabled={loading}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            onClick={() => setShowPublishDialog(true)}
+            className="inline-flex min-h-8 items-center justify-center gap-2 rounded-md border border-[#3a3c4d] bg-[#2a2c3b] px-3 text-xs font-semibold text-[#e4e6ef] hover:bg-[#33354a]"
           >
-            <FiPlay className="h-4 w-4" />
-            {loading ? "Executando" : "Executar"}
+            <FiGithub className="h-3.5 w-3.5" />
+            Enviar para GitHub
           </button>
         </div>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-12">
-        <aside className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Coleção</p>
-            <span className="inline-flex rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+      <div className="flex min-h-0 flex-1 flex-col xl:flex-row">
+        {/* Sidebar — collections */}
+        <aside className="flex w-full flex-col border-b border-[#2b2d3a] bg-[#20212e] xl:w-64 xl:border-b-0 xl:border-r">
+          <div className="flex items-center justify-between gap-2 px-3 py-3">
+            <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#9195a3]">
+              <FiFolder className="h-3.5 w-3.5" />
+              Coleções
+            </p>
+            <span className="inline-flex rounded-full bg-[#2a2c3b] px-2 py-0.5 text-[10px] font-semibold text-[#9195a3]">
               {visiblePresets.length}
             </span>
           </div>
-          <div className="mt-3 space-y-2">
+          <div className="max-h-64 space-y-0.5 overflow-y-auto px-2 pb-3 xl:max-h-none xl:flex-1">
             {visiblePresets.map((preset) => {
               const active = selectedPresetId === preset.id;
               const isSaved = "source" in preset && preset.source === "saved";
               return (
-                <div key={preset.id} className={`rounded-xl border ${active ? "border-[var(--tc-accent,#ef0001)] bg-white" : "border-[var(--tc-border,#d7deea)] bg-white/70"}`}>
-                  <button type="button" onClick={() => applyPreset(preset)} className="w-full px-3 py-3 text-left">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{preset.title}</p>
-                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
-                          {preset.method} {preset.tags.join(" • ")}
-                        </p>
-                      </div>
-                      {isSaved ? <FiDatabase className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tc-accent,#ef0001)]" /> : null}
-                    </div>
-                  </button>
-                  {isSaved ? (
-                    <div className="border-t border-[var(--tc-border,#d7deea)] px-3 py-2">
+                <div key={preset.id} className={`rounded-md ${active ? "bg-[#2a2c3b]" : "hover:bg-[#252634]"}`}>
+                  <button type="button" onClick={() => applyPreset(preset)} className="flex w-full items-center gap-2 px-2 py-2 text-left">
+                    <span className={`w-11 shrink-0 text-[10px] font-black uppercase ${METHOD_COLORS[preset.method] ?? "text-[#9195a3]"}`}>
+                      {preset.method}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[#e4e6ef]">{preset.title}</span>
+                    {isSaved ? (
                       <button
                         type="button"
-                        onClick={() => removeSavedRequest(preset.id)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          removeSavedRequest(preset.id);
+                        }}
+                        aria-label="Remover request salvo"
+                        title="Remover request salvo"
+                        className="shrink-0 text-[#6b6e7f] hover:text-rose-400"
                       >
                         <FiTrash2 className="h-3.5 w-3.5" />
-                        Remover
                       </button>
-                    </div>
-                  ) : null}
+                    ) : null}
+                  </button>
                 </div>
               );
             })}
           </div>
         </aside>
 
-        <article className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 xl:col-span-8 2xl:col-span-5">
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_110px_180px] 2xl:grid-cols-[minmax(0,1fr)_110px_180px_auto]">
-            <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-              Request
-              <input
-                value={requestName}
-                onChange={(event) => setRequestName(event.target.value)}
-                className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-              Método
+        <div className="flex min-h-0 flex-1 flex-col xl:flex-row xl:divide-x xl:divide-[#2b2d3a]">
+          {/* Request editor */}
+          <article className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 xl:basis-3/5">
+            <input
+              value={requestName}
+              onChange={(event) => setRequestName(event.target.value)}
+              className="mb-3 w-full rounded-md border border-transparent bg-transparent text-lg font-bold text-[#e4e6ef] outline-none focus:border-[#3a3c4d]"
+              placeholder="Nome do request"
+            />
+
+            {/* Method + URL bar */}
+            <div className="flex flex-wrap items-stretch gap-2">
               <select
                 value={method}
                 onChange={(event) => setMethod(event.target.value as AutomationHttpMethod)}
-                className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
+                className={`min-h-10 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 text-sm font-black outline-none ${METHOD_COLORS[method] ?? "text-[#e4e6ef]"}`}
               >
                 {AUTOMATION_IDE_METHODS.map((item) => (
-                  <option key={item} value={item}>
+                  <option key={item} value={item} className="bg-[#20212e] text-white">
                     {item}
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-              Ambiente
+              <input
+                value={path}
+                onChange={(event) => setPath(event.target.value)}
+                placeholder="/api/health"
+                className="min-h-10 min-w-0 flex-1 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none focus:border-[#FF6C37]"
+              />
+              <button
+                type="button"
+                onClick={executeRequest}
+                disabled={loading}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#FF6C37] px-5 text-sm font-bold text-white transition hover:bg-[#e85f2c] disabled:opacity-60"
+              >
+                <FiSend className="h-4 w-4" />
+                {loading ? "Enviando…" : "Send"}
+              </button>
+            </div>
+
+            <div className="mt-2 flex items-center gap-2 rounded-md bg-[#141520] px-3 py-2">
               <select
                 value={selectedEnvironmentId}
                 onChange={(event) => setSelectedEnvironmentId(event.target.value)}
-                className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
+                className="rounded border border-transparent bg-transparent text-[11px] font-semibold text-[#9195a3] outline-none"
               >
                 {AUTOMATION_ENVIRONMENTS.map((environment) => (
-                  <option key={environment.id} value={environment.id}>
+                  <option key={environment.id} value={environment.id} className="bg-[#20212e] text-white">
                     {environment.title}
                   </option>
                 ))}
               </select>
-            </label>
-            <div className="flex items-end xl:col-span-3 2xl:col-span-1">
-              <div className="inline-flex min-h-11 items-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]">
-                {currentEnvironment?.baseUrl}
-              </div>
+              <span className="truncate font-mono text-[11px] text-[#6b6e7f]">{resolvedUrlPreview}</span>
             </div>
-          </div>
 
-          <label className="mt-4 grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-            Path / URL
-            <input
-              value={path}
-              onChange={(event) => setPath(event.target.value)}
-              className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
-            />
-          </label>
+            {missingVariableKeys.length > 0 ? (
+              <div className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300">
+                Variáveis pendentes: {missingVariableKeys.join(", ")}
+              </div>
+            ) : null}
 
-          <div className="mt-3 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[#081227] px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">URL resolvida</p>
-            <p className="mt-1 break-all font-mono text-xs leading-6 text-white">{resolvedUrlPreview}</p>
-          </div>
-
-          {missingVariableKeys.length > 0 ? (
-            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-700">
-              Variáveis pendentes: {missingVariableKeys.join(", ")}
+            {/* Tabs */}
+            <div className="mt-4 flex gap-1 border-b border-[#2b2d3a]">
+              {[
+                { id: "params" as const, label: "Params", icon: FiSliders },
+                { id: "auth" as const, label: "Auth", icon: FiLock },
+                { id: "variables" as const, label: "Variáveis", icon: FiDatabase },
+                { id: "headers" as const, label: "Headers", icon: FiKey },
+                { id: "body" as const, label: "Body", icon: FiServer },
+              ].map((tab) => {
+                const active = activePanel === tab.id;
+                const Icon = tab.icon;
+                return (
+                  <button key={tab.id} type="button" onClick={() => setActivePanel(tab.id)} className={tabClass(active)}>
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
-          ) : null}
 
-          <div className="mt-4 flex flex-wrap gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-2">
-            {[
-              { id: "params" as const, label: "Params", icon: FiSliders },
-              { id: "auth" as const, label: "Auth", icon: FiLock },
-              { id: "variables" as const, label: "Variáveis", icon: FiDatabase },
-              { id: "headers" as const, label: "Headers", icon: FiKey },
-              { id: "body" as const, label: "Body", icon: FiServer },
-            ].map((tab) => {
-              const active = activePanel === tab.id;
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActivePanel(tab.id)}
-                  className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition ${
-                    active
-                      ? "border-[var(--tc-accent,#ef0001)] bg-white text-[var(--tc-accent,#ef0001)]"
-                      : "border-transparent bg-transparent text-[var(--tc-text,#0b1a3c)] hover:border-[var(--tc-border,#d7deea)] hover:bg-white"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {activePanel === "params" ? (
-            <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Query params</p>
-                  <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Monte a query string sem editar a URL inteira.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => appendKeyValueRow(setQueryRows)}
-                  aria-label="Adicionar query param"
-                  title="Adicionar query param"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
-                >
-                  <FiPlus className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="mt-3 space-y-2">
-                {queryRows.map((row) => (
-                  <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
-                    <input
-                      value={row.key}
-                      onChange={(event) => updateKeyValueRow(setQueryRows, row.id, "key", event.target.value)}
-                      placeholder="param"
-                      className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
-                    />
-                    <input
-                      value={row.value}
-                      onChange={(event) => updateKeyValueRow(setQueryRows, row.id, "value", event.target.value)}
-                      placeholder="valor ou {{variavel}}"
-                      className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeKeyValueRow(setQueryRows, row.id)}
-                      aria-label="Remover query param"
-                      title="Remover query param"
-                      className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
-                    >
-                      <FiTrash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {activePanel === "auth" ? (
-            <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  Tipo de autenticação
-                  <select
-                    value={auth.type}
-                    onChange={(event) =>
-                      setAuth((current) => ({
-                        ...current,
-                        type: event.target.value as AutomationRequestAuth["type"],
-                        addTo: event.target.value === "api-key" ? current.addTo ?? "header" : current.addTo,
-                      }))
-                    }
-                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
+            {activePanel === "params" ? (
+              <section className="mt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-[#9195a3]">Query params — monte a query string sem editar a URL inteira.</p>
+                  <button
+                    type="button"
+                    onClick={() => appendKeyValueRow(setQueryRows)}
+                    aria-label="Adicionar query param"
+                    title="Adicionar query param"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#e4e6ef]"
                   >
-                    <option value="none">None</option>
-                    <option value="bearer">Bearer</option>
-                    <option value="basic">Basic</option>
-                    <option value="api-key">API Key</option>
-                    <option value="session">Sessão atual</option>
-                  </select>
-                </label>
-
-                <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                  {auth.type === "session"
-                    ? "Reaproveita os cookies da sessão atual para chamadas internas do próprio painel."
-                    : auth.type === "api-key"
-                      ? "A chave pode entrar em header ou query string."
-                      : auth.type === "basic"
-                        ? "Monta automaticamente o header Authorization Basic."
-                        : auth.type === "bearer"
-                          ? "Monta automaticamente o header Authorization Bearer."
-                          : "A request segue sem autenticação adicional."}
+                    <FiPlus className="h-3.5 w-3.5" />
+                  </button>
                 </div>
-              </div>
-
-              {auth.type === "bearer" ? (
-                <label className="mt-3 grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  Token Bearer
-                  <input
-                    value={auth.value ?? ""}
-                    onChange={(event) => setAuth((current) => ({ ...current, value: event.target.value }))}
-                    placeholder="token ou {{token}}"
-                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
-                  />
-                </label>
-              ) : null}
-
-              {auth.type === "basic" ? (
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                    Usuário
-                    <input
-                      value={auth.username ?? ""}
-                      onChange={(event) => setAuth((current) => ({ ...current, username: event.target.value }))}
-                      placeholder="user ou {{user}}"
-                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                    Senha
-                    <input
-                      value={auth.password ?? ""}
-                      onChange={(event) => setAuth((current) => ({ ...current, password: event.target.value }))}
-                      placeholder="senha ou {{password}}"
-                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
-                    />
-                  </label>
+                <div className="mt-2 space-y-1.5">
+                  {queryRows.map((row) => (
+                    <div key={row.id} className="grid gap-1.5 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_32px]">
+                      <input
+                        value={row.key}
+                        onChange={(event) => updateKeyValueRow(setQueryRows, row.id, "key", event.target.value)}
+                        placeholder="param"
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
+                      />
+                      <input
+                        value={row.value}
+                        onChange={(event) => updateKeyValueRow(setQueryRows, row.id, "value", event.target.value)}
+                        placeholder="valor ou {{variavel}}"
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeKeyValueRow(setQueryRows, row.id)}
+                        aria-label="Remover query param"
+                        title="Remover query param"
+                        className="inline-flex h-9 w-8 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#6b6e7f] hover:text-rose-400"
+                      >
+                        <FiTrash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : null}
+              </section>
+            ) : null}
 
-              {auth.type === "api-key" ? (
-                <div className="mt-3 grid gap-3 md:grid-cols-3">
-                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                    Nome
-                    <input
-                      value={auth.key ?? ""}
-                      onChange={(event) => setAuth((current) => ({ ...current, key: event.target.value }))}
-                      placeholder="x-api-key"
-                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
-                    />
+            {activePanel === "auth" ? (
+              <section className="mt-3 space-y-3">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="grid gap-1.5 text-xs font-semibold text-[#9195a3]">
+                    Tipo de autenticação
+                    <select
+                      value={auth.type}
+                      onChange={(event) =>
+                        setAuth((current) => ({
+                          ...current,
+                          type: event.target.value as AutomationRequestAuth["type"],
+                          addTo: event.target.value === "api-key" ? current.addTo ?? "header" : current.addTo,
+                        }))
+                      }
+                      className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 text-sm text-[#e4e6ef] outline-none"
+                    >
+                      <option value="none">None</option>
+                      <option value="bearer">Bearer</option>
+                      <option value="basic">Basic</option>
+                      <option value="api-key">API Key</option>
+                      <option value="session">Sessão atual</option>
+                    </select>
                   </label>
-                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                    Valor
+
+                  <div className="rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 py-2 text-xs leading-6 text-[#9195a3]">
+                    {auth.type === "session"
+                      ? "Reaproveita os cookies da sessão atual para chamadas internas do próprio painel."
+                      : auth.type === "api-key"
+                        ? "A chave pode entrar em header ou query string."
+                        : auth.type === "basic"
+                          ? "Monta automaticamente o header Authorization Basic."
+                          : auth.type === "bearer"
+                            ? "Monta automaticamente o header Authorization Bearer."
+                            : "A request segue sem autenticação adicional."}
+                  </div>
+                </div>
+
+                {auth.type === "bearer" ? (
+                  <label className="grid gap-1.5 text-xs font-semibold text-[#9195a3]">
+                    Token Bearer
                     <input
                       value={auth.value ?? ""}
                       onChange={(event) => setAuth((current) => ({ ...current, value: event.target.value }))}
-                      placeholder="valor ou {{apiKey}}"
-                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
+                      placeholder="token ou {{token}}"
+                      className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
                     />
                   </label>
-                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                    Inserir em
-                    <select
-                      value={auth.addTo ?? "header"}
-                      onChange={(event) => setAuth((current) => ({ ...current, addTo: event.target.value as "header" | "query" }))}
-                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
-                    >
-                      <option value="header">Header</option>
-                      <option value="query">Query</option>
-                    </select>
-                  </label>
-                </div>
-              ) : null}
-            </section>
-          ) : null}
+                ) : null}
 
-          {activePanel === "variables" ? (
-            <section className="mt-4 grid gap-4 xl:grid-cols-2">
-              <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Variáveis do ambiente</p>
-                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Persistidas por empresa + ambiente selecionado.</p>
+                {auth.type === "basic" ? (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#9195a3]">
+                      Usuário
+                      <input
+                        value={auth.username ?? ""}
+                        onChange={(event) => setAuth((current) => ({ ...current, username: event.target.value }))}
+                        placeholder="user ou {{user}}"
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 text-sm text-[#e4e6ef] outline-none"
+                      />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#9195a3]">
+                      Senha
+                      <input
+                        value={auth.password ?? ""}
+                        onChange={(event) => setAuth((current) => ({ ...current, password: event.target.value }))}
+                        placeholder="senha ou {{password}}"
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 text-sm text-[#e4e6ef] outline-none"
+                      />
+                    </label>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => appendKeyValueRow(setEnvironmentVariableRows)}
-                    aria-label="Adicionar variável de ambiente"
-                    title="Adicionar variável de ambiente"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
-                  >
-                    <FiPlus className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="mt-3 space-y-2">
-                  {environmentVariableRows.map((row) => (
-                    <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
-                      <input
-                        value={row.key}
-                        onChange={(event) => updateKeyValueRow(setEnvironmentVariableRows, row.id, "key", event.target.value)}
-                        placeholder="apiKey"
-                        className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
-                      />
-                      <input
-                        value={row.value}
-                        onChange={(event) => updateKeyValueRow(setEnvironmentVariableRows, row.id, "value", event.target.value)}
-                        placeholder="valor"
-                        className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeKeyValueRow(setEnvironmentVariableRows, row.id)}
-                        aria-label="Remover variável de ambiente"
-                        title="Remover variável de ambiente"
-                        className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
-                      >
-                        <FiTrash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </article>
+                ) : null}
 
-              <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Variáveis do request</p>
-                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Sobrescrevem o ambiente só nessa request.</p>
+                {auth.type === "api-key" ? (
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#9195a3]">
+                      Nome
+                      <input
+                        value={auth.key ?? ""}
+                        onChange={(event) => setAuth((current) => ({ ...current, key: event.target.value }))}
+                        placeholder="x-api-key"
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 text-sm text-[#e4e6ef] outline-none"
+                      />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#9195a3]">
+                      Valor
+                      <input
+                        value={auth.value ?? ""}
+                        onChange={(event) => setAuth((current) => ({ ...current, value: event.target.value }))}
+                        placeholder="valor ou {{apiKey}}"
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 text-sm text-[#e4e6ef] outline-none"
+                      />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#9195a3]">
+                      Inserir em
+                      <select
+                        value={auth.addTo ?? "header"}
+                        onChange={(event) => setAuth((current) => ({ ...current, addTo: event.target.value as "header" | "query" }))}
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 text-sm text-[#e4e6ef] outline-none"
+                      >
+                        <option value="header">Header</option>
+                        <option value="query">Query</option>
+                      </select>
+                    </label>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => appendKeyValueRow(setLocalVariableRows)}
-                    aria-label="Adicionar variável da request"
-                    title="Adicionar variável da request"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
-                  >
-                    <FiPlus className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="mt-3 space-y-2">
-                  {localVariableRows.map((row) => (
-                    <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
-                      <input
-                        value={row.key}
-                        onChange={(event) => updateKeyValueRow(setLocalVariableRows, row.id, "key", event.target.value)}
-                        placeholder="cpf"
-                        className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
-                      />
-                      <input
-                        value={row.value}
-                        onChange={(event) => updateKeyValueRow(setLocalVariableRows, row.id, "value", event.target.value)}
-                        placeholder="12345678900"
-                        className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeKeyValueRow(setLocalVariableRows, row.id)}
-                        aria-label="Remover variável da request"
-                        title="Remover variável da request"
-                        className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
-                      >
-                        <FiTrash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </article>
+                ) : null}
+              </section>
+            ) : null}
 
-              <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 xl:col-span-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Variáveis de sistema</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {systemVariables.map((item) => (
-                    <span
-                      key={item.key}
-                      className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]"
-                    >
-                      {`{{${item.key}}}`} = {item.value || "--"}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            </section>
-          ) : null}
-
-          {activePanel === "headers" ? (
-            <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Headers</p>
-                  <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">{"Pode usar placeholders como `{{token}}`."}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => appendKeyValueRow(setHeaderRows)}
-                  aria-label="Adicionar header"
-                  title="Adicionar header"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
-                >
-                  <FiPlus className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="mt-3 space-y-2">
-                {headerRows.map((row) => (
-                  <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_36px]">
-                    <input
-                      value={row.key}
-                      onChange={(event) => updateKeyValueRow(setHeaderRows, row.id, "key", event.target.value)}
-                      placeholder="Header"
-                      className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
-                    />
-                    <input
-                      value={row.value}
-                      onChange={(event) => updateKeyValueRow(setHeaderRows, row.id, "value", event.target.value)}
-                      placeholder="Valor"
-                      className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
-                    />
+            {activePanel === "variables" ? (
+              <section className="mt-3 grid gap-4 xl:grid-cols-2">
+                <article>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-[#9195a3]">Variáveis do ambiente — persistidas por empresa + ambiente.</p>
                     <button
                       type="button"
-                      onClick={() => removeKeyValueRow(setHeaderRows, row.id)}
-                      aria-label="Remover header"
-                      title="Remover header"
-                      className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
+                      onClick={() => appendKeyValueRow(setEnvironmentVariableRows)}
+                      aria-label="Adicionar variável de ambiente"
+                      title="Adicionar variável de ambiente"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#e4e6ef]"
                     >
-                      <FiTrash2 className="h-4 w-4" />
+                      <FiPlus className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
+                  <div className="mt-2 space-y-1.5">
+                    {environmentVariableRows.map((row) => (
+                      <div key={row.id} className="grid gap-1.5 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_32px]">
+                        <input
+                          value={row.key}
+                          onChange={(event) => updateKeyValueRow(setEnvironmentVariableRows, row.id, "key", event.target.value)}
+                          placeholder="apiKey"
+                          className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
+                        />
+                        <input
+                          value={row.value}
+                          onChange={(event) => updateKeyValueRow(setEnvironmentVariableRows, row.id, "value", event.target.value)}
+                          placeholder="valor"
+                          className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeKeyValueRow(setEnvironmentVariableRows, row.id)}
+                          aria-label="Remover variável de ambiente"
+                          title="Remover variável de ambiente"
+                          className="inline-flex h-9 w-8 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#6b6e7f] hover:text-rose-400"
+                        >
+                          <FiTrash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </article>
 
-          {activePanel === "body" ? (
-            <label className="mt-4 grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-              Body
+                <article>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-[#9195a3]">Variáveis do request — sobrescrevem o ambiente só nessa request.</p>
+                    <button
+                      type="button"
+                      onClick={() => appendKeyValueRow(setLocalVariableRows)}
+                      aria-label="Adicionar variável da request"
+                      title="Adicionar variável da request"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#e4e6ef]"
+                    >
+                      <FiPlus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="mt-2 space-y-1.5">
+                    {localVariableRows.map((row) => (
+                      <div key={row.id} className="grid gap-1.5 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_32px]">
+                        <input
+                          value={row.key}
+                          onChange={(event) => updateKeyValueRow(setLocalVariableRows, row.id, "key", event.target.value)}
+                          placeholder="cpf"
+                          className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
+                        />
+                        <input
+                          value={row.value}
+                          onChange={(event) => updateKeyValueRow(setLocalVariableRows, row.id, "value", event.target.value)}
+                          placeholder="12345678900"
+                          className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeKeyValueRow(setLocalVariableRows, row.id)}
+                          aria-label="Remover variável da request"
+                          title="Remover variável da request"
+                          className="inline-flex h-9 w-8 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#6b6e7f] hover:text-rose-400"
+                        >
+                          <FiTrash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+
+                <article className="xl:col-span-2">
+                  <p className="text-xs text-[#9195a3]">Variáveis de sistema</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {systemVariables.map((item) => (
+                      <span
+                        key={item.key}
+                        className="inline-flex items-center gap-2 rounded-md border border-[#3a3c4d] bg-[#20212e] px-2.5 py-1 font-mono text-xs text-[#e4e6ef]"
+                      >
+                        {`{{${item.key}}}`} = {item.value || "--"}
+                      </span>
+                    ))}
+                  </div>
+                </article>
+              </section>
+            ) : null}
+
+            {activePanel === "headers" ? (
+              <section className="mt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-[#9195a3]">{"Headers — pode usar placeholders como `{{token}}`."}</p>
+                  <button
+                    type="button"
+                    onClick={() => appendKeyValueRow(setHeaderRows)}
+                    aria-label="Adicionar header"
+                    title="Adicionar header"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#e4e6ef]"
+                  >
+                    <FiPlus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  {headerRows.map((row) => (
+                    <div key={row.id} className="grid gap-1.5 md:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)_32px]">
+                      <input
+                        value={row.key}
+                        onChange={(event) => updateKeyValueRow(setHeaderRows, row.id, "key", event.target.value)}
+                        placeholder="Header"
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
+                      />
+                      <input
+                        value={row.value}
+                        onChange={(event) => updateKeyValueRow(setHeaderRows, row.id, "value", event.target.value)}
+                        placeholder="Valor"
+                        className="min-h-9 rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 font-mono text-sm text-[#e4e6ef] outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeKeyValueRow(setHeaderRows, row.id)}
+                        aria-label="Remover header"
+                        title="Remover header"
+                        className="inline-flex h-9 w-8 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#6b6e7f] hover:text-rose-400"
+                      >
+                        <FiTrash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {activePanel === "body" ? (
               <textarea
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 rows={14}
                 placeholder='{"cpf":"{{cpf}}"}'
-                className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
+                className="mt-3 rounded-md border border-[#3a3c4d] bg-[#141520] px-4 py-3 font-mono text-sm leading-7 text-[#e4e6ef] outline-none focus:border-[#FF6C37]"
               />
-            </label>
-          ) : null}
-        </article>
+            ) : null}
+          </article>
 
-        <aside className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3 xl:col-span-12 2xl:col-span-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Response</p>
-            <div className="flex gap-2">
+          {/* Response panel */}
+          <aside className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#17181f] p-4 xl:basis-2/5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9195a3]">Response</p>
               <button
                 type="button"
                 onClick={copyResponse}
                 disabled={!response}
                 aria-label="Copiar resposta"
                 title="Copiar resposta"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)] disabled:opacity-40"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3a3c4d] bg-[#20212e] text-[#e4e6ef] disabled:opacity-40"
               >
-                <FiCopy className="h-4 w-4" />
+                <FiCopy className="h-3.5 w-3.5" />
               </button>
             </div>
-          </div>
 
-          <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
-            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Status</p>
-              <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{response ? `${response.status} ${response.statusText}` : "--"}</p>
+            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-2">
+              <div className="rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6b6e7f]">Status</p>
+                <p className={`mt-1 text-sm font-bold ${response && response.status < 400 ? "text-emerald-400" : response ? "text-rose-400" : "text-[#e4e6ef]"}`}>
+                  {response ? `${response.status} ${response.statusText}` : "--"}
+                </p>
+              </div>
+              <div className="rounded-md border border-[#3a3c4d] bg-[#20212e] px-3 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6b6e7f]">Duração</p>
+                <p className="mt-1 text-sm font-bold text-[#e4e6ef]">{response ? `${response.durationMs} ms` : "--"}</p>
+              </div>
             </div>
-            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Duração</p>
-              <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{response ? `${response.durationMs} ms` : "--"}</p>
+
+            {errorMessage ? (
+              <div className="mt-3 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300">{errorMessage}</div>
+            ) : null}
+            {copyFeedback ? (
+              <div className="mt-3 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300">{copyFeedback}</div>
+            ) : null}
+
+            <div className="mt-3 flex gap-1 border-b border-[#2b2d3a]">
+              {[
+                { id: "json", label: "JSON" },
+                { id: "raw", label: "Raw" },
+                { id: "headers", label: "Headers" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setResponseTab(tab.id as typeof responseTab)}
+                  className={tabClass(responseTab === tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">URL</p>
-              <p className="mt-1 truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{response?.url ?? resolvedUrlPreview}</p>
+
+            <div className="mt-3 min-h-80 flex-1 overflow-auto rounded-md bg-[#141520] p-4">
+              <pre className="whitespace-pre-wrap font-mono text-xs leading-6 text-[#d6d8de]">
+                {responseTab === "headers"
+                  ? JSON.stringify(response?.headers ?? {}, null, 2)
+                  : responseTab === "raw"
+                    ? response?.text || ""
+                    : JSON.stringify(response?.json ?? null, null, 2)}
+              </pre>
             </div>
-          </div>
-
-          {errorMessage ? (
-            <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-3 text-sm font-semibold text-rose-700">{errorMessage}</div>
-          ) : null}
-          {copyFeedback ? (
-            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">{copyFeedback}</div>
-          ) : null}
-
-          <div className="mt-4 inline-flex rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-1">
-            {[
-              { id: "json", label: "JSON" },
-              { id: "raw", label: "Raw" },
-              { id: "headers", label: "Headers" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setResponseTab(tab.id as typeof responseTab)}
-                className={`min-h-9 rounded-lg px-3 text-sm font-semibold ${responseTab === tab.id ? "bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)]"}`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-3 min-h-105 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[#081227] p-4">
-            <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs leading-6 text-white">
-              {responseTab === "headers"
-                ? JSON.stringify(response?.headers ?? {}, null, 2)
-                : responseTab === "raw"
-                  ? response?.text || ""
-                  : JSON.stringify(response?.json ?? null, null, 2)}
-            </pre>
-          </div>
-
-          <div className="mt-3 flex items-center gap-2 text-xs text-[var(--tc-text-muted,#6b7280)]">
-            <FiClock className="h-4 w-4" />
-            BFF interno para request com auth, params e variáveis sem abrir Postman.
-          </div>
-        </aside>
+          </aside>
+        </div>
       </div>
+
+      {showPublishDialog ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-xl border border-[#3a3c4d] bg-[#20212e] p-5 text-[#e4e6ef] shadow-xl">
+            <div className="flex items-center justify-between gap-3">
+              <p className="inline-flex items-center gap-2 text-sm font-bold">
+                <FiGithub className="h-4 w-4" />
+                Publicar no GitHub
+              </p>
+              <button type="button" onClick={() => setShowPublishDialog(false)} aria-label="Fechar" className="text-[#9195a3] hover:text-white">
+                <FiX className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-[#9195a3]">
+              Publicar <span className="font-semibold text-[#e4e6ef]">{requestName}</span> em{" "}
+              <span className="font-mono text-xs text-[#e4e6ef]">AnaLysyk/Quality_Control</span>. Isso cria/atualiza uma branch e abre um Pull
+              Request.
+            </p>
+            {publishMessage ? (
+              <div className="mt-3 rounded-md border border-[#3a3c4d] bg-[#141520] px-3 py-2 text-xs text-[#d6d8de] break-all">{publishMessage}</div>
+            ) : null}
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPublishDialog(false)}
+                className="inline-flex min-h-9 items-center justify-center rounded-md border border-[#3a3c4d] bg-transparent px-4 text-sm font-semibold text-[#e4e6ef]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={publishToGithub}
+                disabled={publishing}
+                className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-[#FF6C37] px-4 text-sm font-bold text-white disabled:opacity-60"
+              >
+                <FiGithub className="h-4 w-4" />
+                {publishing ? "Publicando…" : "Confirmar publicação"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -3,9 +3,10 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FiActivity, FiPlay } from "react-icons/fi";
+import { FiActivity, FiInbox, FiPlay } from "react-icons/fi";
 
 import { useAutomationModuleContext } from "../_components/AutomationModuleContext";
+import AutomationQueueBoard from "../AutomationQueueBoard";
 
 const BiometricAutomationRunner = dynamic(() => import("../BiometricAutomationRunner"), {
   loading: () => (
@@ -21,9 +22,10 @@ const AutomationExecutionsDashboard = dynamic(() => import("./AutomationExecutio
   ssr: false,
 });
 
-type ViewMode = "dashboard" | "biometria";
+type ViewMode = "queue" | "dashboard" | "biometria";
 
 const TABS: Array<{ view: ViewMode; label: string; icon: typeof FiActivity }> = [
+  { view: "queue", label: "Fila de automação", icon: FiInbox },
   { view: "dashboard", label: "Dashboard de execuções", icon: FiActivity },
   { view: "biometria", label: "Runner biométrico", icon: FiPlay },
 ];
@@ -32,7 +34,7 @@ export default function AutomacoesExecucoesPage() {
   const { access, clients, activeClient } = useAutomationModuleContext();
   const searchParams = useSearchParams();
   const rawView = searchParams.get("view");
-  const view: ViewMode = rawView === "biometria" ? "biometria" : "dashboard";
+  const view: ViewMode = rawView === "biometria" || rawView === "dashboard" ? rawView : "queue";
 
   return (
     <div className="space-y-4">
@@ -40,7 +42,7 @@ export default function AutomacoesExecucoesPage() {
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = view === tab.view;
-          const href = tab.view === "dashboard" ? "/automacoes/execucoes" : "/automacoes/execucoes?view=biometria";
+          const href = tab.view === "queue" ? "/automacoes/execucoes" : `/automacoes/execucoes?view=${tab.view}`;
           return (
             <Link
               key={tab.view}
@@ -55,6 +57,8 @@ export default function AutomacoesExecucoesPage() {
           );
         })}
       </div>
+
+      {view === "queue" ? <AutomationQueueBoard activeCompanySlug={activeClient?.slug ?? null} /> : null}
 
       {view === "dashboard" ? <AutomationExecutionsDashboard /> : null}
 

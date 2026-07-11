@@ -15,6 +15,10 @@ function hasAnyPermission(
 }
 
 function canOpenAdminPath(pathname: string, permissions: PermissionMatrix) {
+  if (pathname.startsWith("/admin/users/vinculos")) {
+    return hasPermissionAccess(permissions, "relationships", "view");
+  }
+
   if (
     pathname.startsWith("/admin/permissions") ||
     pathname.startsWith("/admin/users/permissions") ||

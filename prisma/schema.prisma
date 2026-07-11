@@ -465,6 +465,7 @@ model User {
   accessRequests     AccessRequest[]
   requests           Request[]
   permissionOverride UserPermissionOverride?
+  projectTeamAssignments ProjectTeamAssignment[]
 
   @@map("users")
 }
@@ -505,6 +506,7 @@ model Company {
   releases     Release[]
   applications Application[]
   projects     Project[]
+  projectTeamAssignments ProjectTeamAssignment[]
 
   @@map("companies")
 }
@@ -536,10 +538,37 @@ model Project {
   company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   testPlans TestPlan[]
   testRuns  TestRun[]
+  teamAssignments ProjectTeamAssignment[]
 
   @@unique([companyId, slug])
   @@index([companyId])
   @@map("projects")
+}
+
+model ProjectTeamAssignment {
+  id            String   @id @default(cuid())
+  userId        String
+  companyId     String
+  projectId     String
+  role          String   // leader_tc | qa_tc
+  status        String   @default("active") // active | removed
+  createdBy     String
+  removedBy     String?
+  removedAt     DateTime?
+  removalReason String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([projectId])
+  @@index([projectId, role, status])
+  @@index([companyId, status])
+  @@map("project_team_assignments")
 }
 
 enum IntegrationType {

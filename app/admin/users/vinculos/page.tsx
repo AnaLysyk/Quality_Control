@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export default function RelationshipManagementAdminPage() {
   return (
     <>
-      <link rel="stylesheet" href="/brain-home-orb-reference.css" />
+      <link rel="stylesheet" href="/relationship-management.css" />
       <RelationshipManagementClient />
     </>
   );

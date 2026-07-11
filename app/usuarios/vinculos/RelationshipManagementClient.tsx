@@ -19,8 +19,9 @@ import {
   FiX,
 } from "react-icons/fi";
 
+type SearchMode = "companies" | "leaders" | "qa_users" | "business_users";
 type Company = { id: string; name: string; company_name?: string | null; slug: string };
-type Project = { id: string; companyId: string; name: string; slug: string; status: string; company?: Company };
+type Project = { id: string; companyId: string; name: string; slug: string; status: string };
 type Assignment = {
   id: string;
   role: string;
@@ -30,6 +31,12 @@ type Assignment = {
   company: Company;
   project: { id: string; name: string; slug: string };
   user?: { id: string; name: string; full_name?: string | null; email: string };
+};
+type Membership = {
+  companyId: string;
+  role?: string | null;
+  allowedProjectIds?: string[];
+  company: Company;
 };
 type Person = {
   id: string;
@@ -41,34 +48,60 @@ type Person = {
   globalRole?: string | null;
   status: string;
   active: boolean;
-  memberships?: Array<{ companyId: string; role?: string | null; company: Company }>;
+  memberships?: Membership[];
   projectTeamAssignments?: Assignment[];
 };
-type SearchMode = "all" | "people" | "companies";
 type ResultItem =
   | { kind: "person"; id: string; person: Person }
   | { kind: "company"; id: string; company: Company };
 type SearchResponse = {
+  mode: SearchMode;
+  modeLabel: string;
+  allowedModes: SearchMode[];
+  operatorRole: string;
+  companyOperator: boolean;
   companies: Company[];
   projects: Project[];
   people: Person[];
   assignments: Assignment[];
-  profiles: Array<{ role: string; count: number }>;
   permissions: { canCreate: boolean; canEdit: boolean; canDelete: boolean };
 };
-type BaseResponse = { companies: Company[]; projects: Project[]; permissions: { canManage: boolean } };
-
-const EMPTY_SEARCH: SearchResponse = {
-  companies: [],
-  projects: [],
-  people: [],
-  assignments: [],
-  profiles: [],
-  permissions: { canCreate: false, canEdit: false, canDelete: false },
+type BaseResponse = {
+  companies: Company[];
+  projects: Project[];
+  permissions: { canManage: boolean };
 };
 
 const PAGE_SIZE = 5;
 const MIN_SEARCH_LENGTH = 3;
+const ALL_MODES: SearchMode[] = ["companies", "leaders", "qa_users", "business_users"];
+const EMPTY_SEARCH: SearchResponse = {
+  mode: "qa_users",
+  modeLabel: "Usuário TC",
+  allowedModes: ALL_MODES,
+  operatorRole: "",
+  companyOperator: false,
+  companies: [],
+  projects: [],
+  people: [],
+  assignments: [],
+  permissions: { canCreate: false, canEdit: false, canDelete: false },
+};
+
+const MODE_LABEL: Record<SearchMode, string> = {
+  companies: "Empresas",
+  leaders: "Líder TC",
+  qa_users: "Usuário TC",
+  business_users: "Usuário empresarial",
+};
+
+const MODE_ICON: Record<SearchMode, ReactNode> = {
+  companies: <FiHome />,
+  leaders: <FiUsers />,
+  qa_users: <FiUser />,
+  business_users: <FiBriefcase />,
+};
+
 const ROLE_LABEL: Record<string, string> = {
   leader_tc: "Líder TC",
   qa_tc: "Usuário TC",
@@ -79,6 +112,7 @@ const ROLE_LABEL: Record<string, string> = {
   empresa: "Empresa",
   company: "Empresa",
   company_user: "Usuário empresarial",
+  business_user: "Usuário empresarial",
   user: "Usuário empresarial",
 };
 
@@ -90,7 +124,6 @@ const normalize = (value?: string | null) => String(value ?? "").normalize("NFD"
 function resultScore(item: ResultItem, query: string) {
   const normalizedQuery = normalize(query);
   if (!normalizedQuery) return 0;
-
   if (item.kind === "company") {
     const fields = [companyName(item.company), item.company.slug].map(normalize);
     if (fields.some((field) => field === normalizedQuery)) return 130;
@@ -98,21 +131,12 @@ function resultScore(item: ResultItem, query: string) {
     if (fields.some((field) => field.includes(normalizedQuery))) return 80;
     return 10;
   }
-
   const emailLocal = normalize(item.person.email.split("@")[0]);
   const names = [personName(item.person), item.person.name, item.person.full_name, item.person.user].map(normalize);
-  const relationFields = [
-    roleLabel(item.person.globalRole ?? item.person.role),
-    ...(item.person.memberships ?? []).map((link) => companyName(link.company)),
-    ...(item.person.projectTeamAssignments ?? []).flatMap((link) => [companyName(link.company), link.project.name, roleLabel(link.role)]),
-  ].map(normalize);
-
   if (names.some((field) => field === normalizedQuery) || emailLocal === normalizedQuery) return 140;
   if (names.some((field) => field.startsWith(normalizedQuery)) || emailLocal.startsWith(normalizedQuery)) return 120;
   if (names.some((field) => field.includes(normalizedQuery)) || emailLocal.includes(normalizedQuery)) return 95;
-  if (relationFields.some((field) => field.startsWith(normalizedQuery))) return 70;
-  if (relationFields.some((field) => field.includes(normalizedQuery))) return 55;
-  return 10;
+  return 20;
 }
 
 function BrainVisual({ busy }: { busy: boolean }) {
@@ -123,10 +147,11 @@ function BrainVisual({ busy }: { busy: boolean }) {
   );
 }
 
-function Row({ icon, title, subtitle, open, onClick, children }: {
+function Row({ icon, title, subtitle, badge, open, onClick, children }: {
   icon: ReactNode;
   title: string;
   subtitle: string;
+  badge: string;
   open: boolean;
   onClick: () => void;
   children?: ReactNode;
@@ -136,7 +161,10 @@ function Row({ icon, title, subtitle, open, onClick, children }: {
       <button type="button" className="relationship-row-trigger" onClick={onClick}>
         <span className="text-cyan-600 dark:text-cyan-300">{icon}</span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-black">{title}</span>
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="truncate font-black">{title}</span>
+            <span className="relationship-role-badge">{badge}</span>
+          </span>
           <span className="mt-1 block truncate text-xs" style={{ color: "var(--rel-muted)" }}>{subtitle}</span>
         </span>
         {open ? <FiChevronUp /> : <FiChevronDown />}
@@ -148,7 +176,7 @@ function Row({ icon, title, subtitle, open, onClick, children }: {
 
 export default function RelationshipManagementClient() {
   const [query, setQuery] = useState("");
-  const [mode, setMode] = useState<SearchMode>("all");
+  const [mode, setMode] = useState<SearchMode>("qa_users");
   const [data, setData] = useState<SearchResponse>(EMPTY_SEARCH);
   const [base, setBase] = useState<BaseResponse>({ companies: [], projects: [], permissions: { canManage: false } });
   const [selected, setSelected] = useState<{ kind: ResultItem["kind"]; id: string } | null>(null);
@@ -158,7 +186,6 @@ export default function RelationshipManagementClient() {
   const [addFormOpen, setAddFormOpen] = useState(false);
   const [companyId, setCompanyId] = useState("");
   const [projectId, setProjectId] = useState("");
-  const [assignmentRole, setAssignmentRole] = useState<"leader_tc" | "qa_tc">("qa_tc");
   const [removeTarget, setRemoveTarget] = useState<Assignment | null>(null);
   const [removeReason, setRemoveReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -167,41 +194,44 @@ export default function RelationshipManagementClient() {
   const searchRequestRef = useRef<AbortController | null>(null);
 
   const results = useMemo<ResultItem[]>(() => {
-    const merged: ResultItem[] = [
-      ...data.people.map((item) => ({ kind: "person" as const, id: item.id, person: item })),
-      ...data.companies.map((item) => ({ kind: "company" as const, id: item.id, company: item })),
-    ];
+    const merged: ResultItem[] = mode === "companies"
+      ? data.companies.map((item) => ({ kind: "company" as const, id: item.id, company: item }))
+      : data.people.map((item) => ({ kind: "person" as const, id: item.id, person: item }));
     return merged.sort((left, right) => resultScore(right, query) - resultScore(left, query));
-  }, [data, query]);
+  }, [data, mode, query]);
 
   const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const visibleResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const availableProjects = useMemo(() => base.projects.filter((item) => !companyId || item.companyId === companyId), [base.projects, companyId]);
   const activeAssignments = person?.projectTeamAssignments?.filter((item) => item.status === "active") ?? [];
+  const visibleAssignments = activeAssignments.filter((assignment) => {
+    if (mode === "leaders") return assignment.role === "leader_tc";
+    if (mode === "qa_users") return assignment.role === "qa_tc";
+    return true;
+  });
   const historyAssignments = person?.projectTeamAssignments?.filter((item) => item.status !== "active") ?? [];
+  const allowedModes = data.allowedModes.length ? data.allowedModes : ALL_MODES;
 
-  useEffect(() => { void loadBase(); }, []);
+  useEffect(() => {
+    void loadBase();
+    void search("", mode);
+  }, []);
+
   useEffect(() => {
     if (!message) return;
     const timer = window.setTimeout(() => setMessage(null), 5000);
     return () => window.clearTimeout(timer);
   }, [message]);
+
   useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
+
   useEffect(() => {
     const trimmed = query.trim();
-    if (trimmed.length < MIN_SEARCH_LENGTH) {
-      searchRequestRef.current?.abort();
-      setData(EMPTY_SEARCH);
-      setSelected(null);
-      setPerson(null);
-      setAddFormOpen(false);
-      setPage(1);
-      setLoading(false);
-      return;
-    }
-    const timer = window.setTimeout(() => { void search(trimmed, mode); }, 420);
+    if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return;
+    const timer = window.setTimeout(() => { void search(trimmed, mode); }, trimmed ? 420 : 80);
     return () => window.clearTimeout(timer);
   }, [query, mode]);
+
   useEffect(() => () => searchRequestRef.current?.abort(), []);
 
   async function loadBase() {
@@ -217,7 +247,7 @@ export default function RelationshipManagementClient() {
   }
 
   async function search(searchQuery = query.trim(), searchMode = mode) {
-    if (searchQuery.length < MIN_SEARCH_LENGTH) return;
+    if (searchQuery.length > 0 && searchQuery.length < MIN_SEARCH_LENGTH) return;
     searchRequestRef.current?.abort();
     const controller = new AbortController();
     searchRequestRef.current = controller;
@@ -227,11 +257,13 @@ export default function RelationshipManagementClient() {
     setAddFormOpen(false);
     setPage(1);
     try {
-      const params = new URLSearchParams({ q: searchQuery, mode: searchMode });
+      const params = new URLSearchParams({ mode: searchMode });
+      if (searchQuery) params.set("q", searchQuery);
       const response = await fetch(`/api/usuarios/vinculos/search?${params.toString()}`, { cache: "no-store", signal: controller.signal });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Falha ao pesquisar vínculos");
       setData(body);
+      if (!body.allowedModes?.includes(searchMode) && body.allowedModes?.[0]) setMode(body.allowedModes[0]);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setMessage({ type: "error", text: error instanceof Error ? error.message : "Falha ao pesquisar vínculos" });
@@ -264,15 +296,15 @@ export default function RelationshipManagementClient() {
     }
   }
 
-  function toggle(kind: ResultItem["kind"], id: string) {
-    setSelected((current) => current?.kind === kind && current.id === id ? null : { kind, id });
+  function toggleCompany(id: string) {
+    setSelected((current) => current?.kind === "company" && current.id === id ? null : { kind: "company", id });
     setPerson(null);
     setAddFormOpen(false);
   }
 
-  async function createAssignment() {
+  async function createQaAssignment() {
     if (!person || !companyId || !projectId) {
-      setMessage({ type: "error", text: "Selecione pessoa, empresa e projeto." });
+      setMessage({ type: "error", text: "Selecione empresa e projeto." });
       return;
     }
     setSaving(true);
@@ -280,14 +312,14 @@ export default function RelationshipManagementClient() {
       const response = await fetch("/api/usuarios/vinculos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: person.id, companyId, projectId, role: assignmentRole }),
+        body: JSON.stringify({ userId: person.id, companyId, projectId, role: "qa_tc" }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Falha ao criar vínculo");
-      setMessage({ type: "success", text: `BRAIN confirmou: vínculo de ${roleLabel(assignmentRole)} criado.` });
+      setMessage({ type: "success", text: "BRAIN confirmou: projeto vinculado ao Usuário TC." });
       setAddFormOpen(false);
       await openPerson(person.id, true);
-      await search();
+      await search(query.trim(), mode);
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "Falha ao criar vínculo" });
     } finally {
@@ -314,7 +346,7 @@ export default function RelationshipManagementClient() {
       setRemoveTarget(null);
       setRemoveReason("");
       if (currentPersonId) await openPerson(currentPersonId, true);
-      await search();
+      await search(query.trim(), mode);
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "Falha ao remover vínculo" });
     } finally {
@@ -322,93 +354,119 @@ export default function RelationshipManagementClient() {
     }
   }
 
-  function renderResult(item: ResultItem) {
-    if (item.kind === "person") {
-      const open = selected?.kind === "person" && selected.id === item.id;
-      const companyLinks = item.person.memberships ?? [];
-      const projectLinks = item.person.projectTeamAssignments ?? [];
-      const subtitleParts = [roleLabel(item.person.globalRole ?? item.person.role), item.person.email];
-      if (companyLinks.length) subtitleParts.push(`${companyLinks.length} empresa${companyLinks.length === 1 ? "" : "s"}`);
-      if (projectLinks.length) subtitleParts.push(`${projectLinks.length} projeto${projectLinks.length === 1 ? "" : "s"}`);
-
-      return (
-        <Row key={`person:${item.id}`} icon={<FiUser />} title={personName(item.person)} subtitle={subtitleParts.join(" · ")} open={open} onClick={() => void openPerson(item.id)}>
-          {person ? (
-            <div className="relationship-person-context">
-              <section className="relationship-inline-section">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Empresas e projetos vinculados</p>
-                {activeAssignments.length === 0 ? (
-                  <p className="mt-3 text-sm" style={{ color: "var(--rel-muted)" }}>Nenhum vínculo de projeto ativo.</p>
-                ) : activeAssignments.map((assignment) => (
-                  <div key={assignment.id} className="relationship-link-line">
-                    <FiBriefcase />
-                    <div className="flex-1">
-                      <p className="font-bold">{companyName(assignment.company)}</p>
-                      <p className="text-xs" style={{ color: "var(--rel-muted)" }}>{assignment.project.name} · {roleLabel(assignment.role)}</p>
-                    </div>
-                    {data.permissions.canDelete && assignment.role !== "leader_tc" ? (
-                      <button type="button" onClick={() => setRemoveTarget(assignment)} className="text-rose-500" title="Remover vínculo"><FiTrash2 /></button>
-                    ) : null}
-                  </div>
-                ))}
-              </section>
-
-              <section className="relationship-inline-section">
-                <button type="button" onClick={() => setAddFormOpen((current) => !current)} className="relationship-add-toggle">
-                  {addFormOpen ? <FiMinus /> : <FiPlus />}
-                  <span>{addFormOpen ? "Fechar inclusão" : "Adicionar vínculo"}</span>
-                </button>
-                {addFormOpen ? (
-                  <div className="relationship-inline-form mt-3">
-                    <select value={companyId} onChange={(event) => { setCompanyId(event.target.value); setProjectId(""); }} className="h-10 rounded-xl px-3 text-xs font-bold">
-                      <option value="">Empresa</option>
-                      {base.companies.map((company) => <option key={company.id} value={company.id}>{companyName(company)}</option>)}
-                    </select>
-                    <select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="h-10 rounded-xl px-3 text-xs font-bold">
-                      <option value="">Projeto</option>
-                      {availableProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-                    </select>
-                    <button type="button" onClick={() => setAssignmentRole("leader_tc")} className={`h-10 rounded-xl text-xs font-black ${assignmentRole === "leader_tc" ? "bg-cyan-500/10" : ""}`}>Líder TC</button>
-                    <button type="button" onClick={() => setAssignmentRole("qa_tc")} className={`h-10 rounded-xl text-xs font-black ${assignmentRole === "qa_tc" ? "bg-cyan-500/10" : ""}`}>Usuário TC</button>
-                    <button type="button" onClick={() => void createAssignment()} disabled={saving || !projectId} className="col-span-full h-10 rounded-xl bg-slate-950 text-xs font-black text-white disabled:opacity-40 dark:bg-cyan-300 dark:text-slate-950">Confirmar vínculo</button>
-                  </div>
-                ) : (
-                  <p className="mt-2 text-xs" style={{ color: "var(--rel-muted)" }}>Abra apenas quando precisar incluir uma nova empresa ou projeto.</p>
-                )}
-              </section>
-            </div>
-          ) : null}
-        </Row>
-      );
-    }
-
-    const assignments = data.assignments.filter((assignment) => assignment.company.id === item.id);
-    const leaders = assignments.filter((assignment) => assignment.role === "leader_tc");
-    const tcUsers = assignments.filter((assignment) => assignment.role === "qa_tc");
-    const projectCount = new Set(assignments.map((assignment) => assignment.project.id)).size;
+  function renderPerson(item: Extract<ResultItem, { kind: "person" }>) {
+    const open = selected?.kind === "person" && selected.id === item.id;
+    const membershipCount = item.person.memberships?.length ?? 0;
+    const projectCount = item.person.projectTeamAssignments?.length ?? 0;
+    const badge = MODE_LABEL[mode];
+    const subtitle = `${item.person.email} · ${membershipCount} empresa${membershipCount === 1 ? "" : "s"} · ${projectCount} projeto${projectCount === 1 ? "" : "s"}`;
 
     return (
+      <Row key={item.id} icon={MODE_ICON[mode]} title={personName(item.person)} subtitle={subtitle} badge={badge} open={open} onClick={() => void openPerson(item.id)}>
+        {person ? (
+          <div className="relationship-person-context">
+            <section className="relationship-inline-section">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                {mode === "leaders" ? "Projetos sob liderança" : mode === "business_users" ? "Empresas e acessos empresariais" : "Projetos autorizados"}
+              </p>
+
+              {mode === "business_users" ? (
+                person.memberships?.length ? person.memberships.map((membership) => {
+                  const allowedIds = membership.allowedProjectIds ?? [];
+                  const allowedProjects = allowedIds.length
+                    ? base.projects.filter((project) => allowedIds.includes(project.id))
+                    : base.projects.filter((project) => project.companyId === membership.companyId);
+                  return (
+                    <div key={membership.companyId} className="relationship-link-line">
+                      <FiHome />
+                      <div className="flex-1">
+                        <p className="font-bold">{companyName(membership.company)}</p>
+                        <p className="text-xs" style={{ color: "var(--rel-muted)" }}>
+                          {allowedIds.length ? `${allowedProjects.length} projetos selecionados` : "Todos os projetos da empresa"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }) : <p className="mt-3 text-sm" style={{ color: "var(--rel-muted)" }}>Nenhuma empresa vinculada.</p>
+              ) : visibleAssignments.length ? visibleAssignments.map((assignment) => (
+                <div key={assignment.id} className="relationship-link-line">
+                  <FiBriefcase />
+                  <div className="flex-1">
+                    <p className="font-bold">{companyName(assignment.company)}</p>
+                    <p className="text-xs" style={{ color: "var(--rel-muted)" }}>{assignment.project.name} · {roleLabel(assignment.role)}</p>
+                  </div>
+                  {mode === "qa_users" && data.permissions.canDelete ? (
+                    <button type="button" onClick={() => setRemoveTarget(assignment)} className="text-rose-500" title="Remover vínculo"><FiTrash2 /></button>
+                  ) : null}
+                </div>
+              )) : <p className="mt-3 text-sm" style={{ color: "var(--rel-muted)" }}>Nenhum vínculo ativo neste contexto.</p>}
+            </section>
+
+            <section className="relationship-inline-section">
+              {mode === "qa_users" && data.permissions.canCreate ? (
+                <>
+                  <button type="button" onClick={() => setAddFormOpen((current) => !current)} className="relationship-add-toggle">
+                    {addFormOpen ? <FiMinus /> : <FiPlus />}
+                    <span>{addFormOpen ? "Fechar inclusão" : "Adicionar projeto"}</span>
+                  </button>
+                  {addFormOpen ? (
+                    <div className="relationship-inline-form mt-3">
+                      <select value={companyId} onChange={(event) => { setCompanyId(event.target.value); setProjectId(""); }} className="h-10 rounded-xl px-3 text-xs font-bold">
+                        <option value="">Empresa</option>
+                        {base.companies.map((company) => <option key={company.id} value={company.id}>{companyName(company)}</option>)}
+                      </select>
+                      <select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="h-10 rounded-xl px-3 text-xs font-bold">
+                        <option value="">Projeto</option>
+                        {availableProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                      </select>
+                      <button type="button" onClick={() => void createQaAssignment()} disabled={saving || !projectId} className="col-span-full h-10 rounded-xl bg-slate-950 text-xs font-black text-white disabled:opacity-40 dark:bg-cyan-300 dark:text-slate-950">Confirmar projeto</button>
+                    </div>
+                  ) : <p className="mt-2 text-xs" style={{ color: "var(--rel-muted)" }}>A empresa mantém a decisão final sobre os projetos autorizados.</p>}
+                </>
+              ) : mode === "leaders" ? (
+                <div className="relationship-context-note">
+                  <p className="font-black">Liderança não é removida diretamente.</p>
+                  <p className="mt-1 text-xs" style={{ color: "var(--rel-muted)" }}>A alteração será feita por substituição de líder, preservando a equipe e o histórico.</p>
+                </div>
+              ) : mode === "business_users" ? (
+                <div className="relationship-context-note">
+                  <p className="font-black">Acesso definido pela empresa.</p>
+                  <p className="mt-1 text-xs" style={{ color: "var(--rel-muted)" }}>A edição de projetos empresariais será ativada com o novo estado explícito de acesso: todos, selecionados ou nenhum.</p>
+                </div>
+              ) : null}
+            </section>
+          </div>
+        ) : null}
+      </Row>
+    );
+  }
+
+  function renderCompany(item: Extract<ResultItem, { kind: "company" }>) {
+    const assignments = data.assignments.filter((assignment) => assignment.company.id === item.id);
+    const leaders = assignments.filter((assignment) => assignment.role === "leader_tc");
+    const qaUsers = assignments.filter((assignment) => assignment.role === "qa_tc");
+    const projectCount = new Set(assignments.map((assignment) => assignment.project.id)).size;
+    return (
       <Row
-        key={`company:${item.id}`}
+        key={item.id}
         icon={<FiHome />}
         title={companyName(item.company)}
-        subtitle={`Empresa · ${projectCount} projetos · ${leaders.length} líderes · ${tcUsers.length} usuários TC`}
+        subtitle={`${projectCount} projetos · ${leaders.length} líderes · ${qaUsers.length} usuários TC`}
+        badge="Empresa"
         open={selected?.kind === "company" && selected.id === item.id}
-        onClick={() => toggle("company", item.id)}
+        onClick={() => toggleCompany(item.id)}
       >
         <div className="relationship-company-context">
-          <section>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Liderança e equipe</p>
-            {assignments.length ? assignments.map((assignment) => (
-              <div key={assignment.id} className="relationship-link-line">
-                <FiUsers />
-                <div className="flex-1">
-                  <p className="font-bold">{assignment.user?.full_name || assignment.user?.name}</p>
-                  <p className="text-xs" style={{ color: "var(--rel-muted)" }}>{assignment.project.name} · {roleLabel(assignment.role)}</p>
-                </div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Liderança e equipe por projeto</p>
+          {assignments.length ? assignments.map((assignment) => (
+            <div key={assignment.id} className="relationship-link-line">
+              <FiUsers />
+              <div className="flex-1">
+                <p className="font-bold">{assignment.user?.full_name || assignment.user?.name}</p>
+                <p className="text-xs" style={{ color: "var(--rel-muted)" }}>{assignment.project.name} · {roleLabel(assignment.role)}</p>
               </div>
-            )) : <p className="mt-3 text-sm" style={{ color: "var(--rel-muted)" }}>Nenhum vínculo localizado para esta empresa.</p>}
-          </section>
+            </div>
+          )) : <p className="mt-3 text-sm" style={{ color: "var(--rel-muted)" }}>Nenhum vínculo ativo encontrado para esta empresa.</p>}
         </div>
       </Row>
     );
@@ -430,35 +488,41 @@ export default function RelationshipManagementClient() {
           <BrainVisual busy={loading || saving} />
           <p className="text-[10px] font-black uppercase tracking-[0.34em] text-cyan-700/70 dark:text-cyan-200/70">BRAIN · Contexto seguro</p>
           <h1 className="mt-1 text-3xl font-black sm:text-4xl">Gestão de Vínculos</h1>
-          <p className="mx-auto mt-1 max-w-2xl text-sm" style={{ color: "var(--rel-muted)" }}>Pesquise por pessoa, empresa, projeto ou perfil. Os resultados são organizados por pessoa ou empresa.</p>
+          <p className="mx-auto mt-1 max-w-2xl text-sm" style={{ color: "var(--rel-muted)" }}>Escolha o tipo de vínculo e pesquise dentro do contexto autorizado.</p>
         </header>
 
-        <form className="relationship-search" onSubmit={(event) => { event.preventDefault(); void search(); }}>
-          <select value={mode} onChange={(event) => setMode(event.target.value as SearchMode)}>
-            <option value="all">Todos</option>
-            <option value="people">Pessoas</option>
-            <option value="companies">Empresas</option>
-          </select>
+        <div className="relationship-mode-tabs" role="tablist" aria-label="Tipos de vínculo">
+          {allowedModes.map((itemMode) => (
+            <button key={itemMode} type="button" role="tab" aria-selected={mode === itemMode} data-active={mode === itemMode} onClick={() => { setMode(itemMode); setSelected(null); setPerson(null); setAddFormOpen(false); }}>
+              {MODE_ICON[itemMode]}
+              <span>{MODE_LABEL[itemMode]}</span>
+            </button>
+          ))}
+        </div>
+
+        <form className="relationship-search relationship-search-simple" onSubmit={(event) => { event.preventDefault(); void search(query.trim(), mode); }}>
           <div className="relationship-search-field">
             <FiSearch className="text-cyan-600 dark:text-cyan-300" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar nome, e-mail, empresa, projeto ou perfil..." />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Buscar em ${MODE_LABEL[mode]}...`} />
           </div>
-          <button type="submit" disabled={loading || query.trim().length < MIN_SEARCH_LENGTH} className="relationship-search-submit">{loading ? "Buscando…" : "Buscar"}</button>
+          <button type="submit" disabled={loading || (query.trim().length > 0 && query.trim().length < MIN_SEARCH_LENGTH)} className="relationship-search-submit">{loading ? "Buscando…" : "Buscar"}</button>
         </form>
 
         <section className="relationship-results">
           <div className="relationship-results-header">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Resultados</p>
-              <h2 className="mt-1 text-lg font-black">{results.length ? `${results.length} encontrados` : "Comece pela busca"}</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{MODE_LABEL[mode]}</p>
+              <h2 className="mt-1 text-lg font-black">{results.length ? `${results.length} encontrados` : "Nenhum registro"}</h2>
             </div>
             <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-black text-cyan-700 dark:text-cyan-200">{results.length}</span>
           </div>
+
           <div className="relationship-results-scroll">
-            {!loading && query.trim().length < MIN_SEARCH_LENGTH ? <div className="flex h-full min-h-[150px] items-center justify-center text-sm font-bold" style={{ color: "var(--rel-muted)" }}>Digite pelo menos três caracteres para pesquisar automaticamente.</div> : null}
-            {!loading && query.trim().length >= MIN_SEARCH_LENGTH && results.length === 0 ? <div className="flex h-full min-h-[150px] items-center justify-center text-sm font-bold" style={{ color: "var(--rel-muted)" }}>Nenhum resultado encontrado.</div> : null}
-            {visibleResults.map(renderResult)}
+            {!loading && query.trim().length > 0 && query.trim().length < MIN_SEARCH_LENGTH ? <div className="flex h-full min-h-[120px] items-center justify-center text-sm font-bold" style={{ color: "var(--rel-muted)" }}>Digite pelo menos três caracteres.</div> : null}
+            {!loading && !(query.trim().length > 0 && query.trim().length < MIN_SEARCH_LENGTH) && results.length === 0 ? <div className="flex h-full min-h-[120px] items-center justify-center text-sm font-bold" style={{ color: "var(--rel-muted)" }}>Nenhum resultado disponível neste contexto.</div> : null}
+            {visibleResults.map((item) => item.kind === "company" ? renderCompany(item) : renderPerson(item))}
           </div>
+
           {results.length > PAGE_SIZE ? (
             <nav className="relationship-pagination" aria-label="Paginação dos resultados">
               <button type="button" className="relationship-page-button" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><FiArrowLeft /></button>

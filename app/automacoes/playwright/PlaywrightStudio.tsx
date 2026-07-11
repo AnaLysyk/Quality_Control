@@ -1217,6 +1217,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies, testCas
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           confirm: true,
+          companySlug: selectedCompany,
+          projectId: selectedTestProjectId || null,
           branch: `automation-ide/${slug.replace(/\//g, "-")}-${Date.now()}`,
           files: [{ path: `tests-ide/${slug}`, content: activeFile.content }],
           commitMessage: `[ide] publish ${activeFile.path}`,
@@ -1232,7 +1234,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies, testCas
     } finally {
       setPublishing(false);
     }
-  }, [activeFile]);
+  }, [activeFile, selectedCompany, selectedTestProjectId]);
 
   const openFloatingAssistant = useCallback(() => {
     if (typeof window === "undefined") return;

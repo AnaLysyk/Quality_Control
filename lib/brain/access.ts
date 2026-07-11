@@ -79,16 +79,43 @@ function resolveAllowedCompanySlugs(user: AuthUser) {
     .filter((slug): slug is string => Boolean(slug));
 }
 
-async function resolveAllowedProjectIds(allowedCompanyIds: Set<string>, hasGlobalVisibility: boolean) {
+async function resolveAllowedProjectIds(
+  user: AuthUser,
+  allowedCompanyIds: Set<string>,
+  hasGlobalVisibility: boolean,
+) {
   const allowedProjectIds = new Set<string>();
   if (hasGlobalVisibility || isE2eJsonMode() || allowedCompanyIds.size === 0) return allowedProjectIds;
 
-  const projects = await prisma.project.findMany({
-    where: { companyId: { in: Array.from(allowedCompanyIds) } },
-    select: { id: true, slug: true },
-  });
+  const companyIds = Array.from(allowedCompanyIds);
+  const [projects, memberships] = await Promise.all([
+    prisma.project.findMany({
+      where: { companyId: { in: companyIds }, archivedAt: null },
+      select: { id: true, slug: true, companyId: true },
+    }),
+    prisma.membership.findMany({
+      where: { userId: user.id, companyId: { in: companyIds } },
+      select: { companyId: true, role: true, allowedProjectIds: true },
+    }),
+  ]);
+
+  const membershipByCompany = new Map(memberships.map((membership) => [membership.companyId, membership]));
+  const projectScopedRoles = new Set(["company_user", "testing_company_user"]);
 
   for (const project of projects) {
+    const membership = membershipByCompany.get(project.companyId);
+    const membershipRole = normalizeKey(membership?.role);
+    const membershipRestriction =
+      membershipRole && projectScopedRoles.has(membershipRole) && membership?.allowedProjectIds.length
+        ? new Set(membership.allowedProjectIds)
+        : null;
+    const authRestriction =
+      project.companyId === user.companyId && user.allowedProjectIds?.length
+        ? new Set(user.allowedProjectIds)
+        : null;
+    const restriction = membershipRestriction ?? authRestriction;
+
+    if (restriction && !restriction.has(project.id) && !restriction.has(project.slug)) continue;
     allowedProjectIds.add(project.id);
     if (project.slug) allowedProjectIds.add(project.slug);
   }
@@ -376,6 +403,11 @@ function isProjectScopeVisible(
   return isE2eJsonMode() && access.allowedProjectIds.size === 0;
 }
 
+function isExcludedFromBrainMap(value: unknown) {
+  const key = normalizeKey(value);
+  return key === "chat" || key === "visao-geral";
+}
+
 function isNonSensitiveSystemNode(node: Pick<BrainNode, "type" | "refType">) {
   return (
     ["ExecutiveContext", "SystemModule", "SystemSubmodule", "SystemRoute", "PermissionModule", "PermissionAction"].includes(
@@ -441,7 +473,7 @@ export async function resolveBrainAccess(req: Request, options?: { requireManage
     return { ok: false, status: 403, error: "Sem escopo de empresa para acessar o Brain" };
   }
 
-  const allowedProjectIds = await resolveAllowedProjectIds(allowedCompanyIds, hasGlobalVisibility);
+  const allowedProjectIds = await resolveAllowedProjectIds(user, allowedCompanyIds, hasGlobalVisibility);
 
   return {
     ok: true,
@@ -483,7 +515,7 @@ export async function buildBrainAccessContextFromAuthUser(user: AuthUser | null 
     }
   }
 
-  const allowedProjectIds = await resolveAllowedProjectIds(allowedCompanyIds, hasGlobalVisibility);
+  const allowedProjectIds = await resolveAllowedProjectIds(user, allowedCompanyIds, hasGlobalVisibility);
 
   return {
     user,
@@ -498,6 +530,7 @@ export async function buildBrainAccessContextFromAuthUser(user: AuthUser | null 
 
 export function isBrainNodeVisible(node: Pick<BrainNode, "type" | "refType" | "refId" | "metadata">, access: BrainAccessContext) {
   const metadata = toRecord(node.metadata);
+  if (isExcludedFromBrainMap(metadata.module) || isExcludedFromBrainMap(metadata.moduleKey)) return false;
   const permissionScope = resolveBrainNodePermissionScope(node, access);
   if (permissionScope === "denied") return false;
 
@@ -531,6 +564,7 @@ export function isBrainDomainNodeVisible(
   node: { module?: string | null; type?: string | null; companyId?: string | null; metadata?: unknown },
   access: BrainAccessContext,
 ) {
+  if (isExcludedFromBrainMap(node.module)) return false;
   if (!canAccessBrainModule(access, node.module ?? node.type)) return false;
   if (access.hasGlobalVisibility) return true;
 

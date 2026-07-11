@@ -1,3 +1,4 @@
+import { Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -48,8 +49,6 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const query = (url.searchParams.get("q") ?? "").trim();
   const mode = (url.searchParams.get("mode") ?? "all").trim();
-  const normalizedQuery = normalize(query);
-
   const global = Boolean(user.isGlobalAdmin);
   const companyIds = new Set<string>();
   if (user.companyId) companyIds.add(user.companyId);
@@ -66,7 +65,9 @@ export async function GET(req: Request) {
   }
 
   const companyScope = global ? undefined : { in: Array.from(companyIds) };
-  const roles = roleMatches(query);
+  const matchedRoles = roleMatches(query);
+  const enumRoleValues = new Set<string>(Object.values(Role));
+  const prismaRoles = matchedRoles.filter((role): role is Role => enumRoleValues.has(role));
   const shouldSearch = query.length >= 2;
 
   const [companies, projects, people, assignments] = await Promise.all([
@@ -125,10 +126,11 @@ export async function GET(req: Request) {
                       { projectTeamAssignments: { some: { companyId: companyScope, status: "active" } } },
                     ],
                   },
-              mode === "profiles" || roles.length
+              mode === "profiles" || matchedRoles.length
                 ? {
                     OR: [
-                      ...(roles.length ? [{ globalRole: { in: roles } }, { role: { in: roles as never[] } }] : []),
+                      ...(matchedRoles.length ? [{ globalRole: { in: matchedRoles } }] : []),
+                      ...(prismaRoles.length ? [{ role: { in: prismaRoles } }] : []),
                       { globalRole: { contains: query, mode: "insensitive" } },
                     ],
                   }

@@ -96,6 +96,76 @@ type CommandResult = {
   error?: string;
 };
 
+type ProviderId = "groq" | "gemini" | "openrouter";
+
+type ProviderConfig = {
+  provider: ProviderId;
+  enabled: boolean;
+  model: string | null;
+  models: string[];
+  priority: number;
+  dailyRequestLimit: number | null;
+  dailyTokenLimit: number | null;
+  strictFreeModels: boolean;
+  timeoutMs: number | null;
+  maxOutputTokens: number | null;
+};
+
+type ProviderPayload = {
+  configs: ProviderConfig[];
+  keyStatus: Record<ProviderId, { configured: boolean }>;
+};
+
+const PROVIDER_IDS: ProviderId[] = ["groq", "gemini", "openrouter"];
+
+const PROVIDER_LABELS: Record<ProviderId, string> = {
+  groq: "Groq",
+  gemini: "Gemini",
+  openrouter: "OpenRouter",
+};
+
+const EMPTY_PROVIDER_KEY_STATUS: ProviderPayload["keyStatus"] = {
+  groq: { configured: false },
+  gemini: { configured: false },
+  openrouter: { configured: false },
+};
+
+const PROVIDER_NODE_PREFIX = "ai-provider:";
+
+function providerNodeId(provider: ProviderId) {
+  return `${PROVIDER_NODE_PREFIX}${provider}`;
+}
+
+function isProviderNodeId(id: string | null): id is string {
+  return typeof id === "string" && id.startsWith(PROVIDER_NODE_PREFIX);
+}
+
+function providerIdFromNodeId(id: string): ProviderId | null {
+  const raw = id.slice(PROVIDER_NODE_PREFIX.length);
+  return (PROVIDER_IDS as string[]).includes(raw) ? (raw as ProviderId) : null;
+}
+
+async function fetchProviderJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, { credentials: "include", cache: "no-store", ...init });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(typeof json.error === "string" ? json.error : "Falha na requisicao");
+  return json as T;
+}
+
+function toOptionalNumber(value: string) {
+  if (!value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.round(parsed) : null;
+}
+
+function splitModels(value: string) {
+  return Array.from(new Set(value.split(",").map((item) => item.trim()).filter(Boolean)));
+}
+
+function numberValue(value: number | null) {
+  return value === null || value === undefined ? "" : String(value);
+}
+
 const fetcher = (url: string) =>
   fetch(url, { credentials: "include" }).then((res) => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -265,6 +335,74 @@ export default function BrainReactFlowView() {
   const [askAiLoading, setAskAiLoading] = useState(false);
   const [askAiError, setAskAiError] = useState<string | null>(null);
 
+  const [providerConfigs, setProviderConfigs] = useState<ProviderConfig[]>([]);
+  const [providerKeyStatus, setProviderKeyStatus] = useState<ProviderPayload["keyStatus"]>(EMPTY_PROVIDER_KEY_STATUS);
+  const [providerLoading, setProviderLoading] = useState(true);
+  const [providerSaving, setProviderSaving] = useState(false);
+  const [providerError, setProviderError] = useState<string | null>(null);
+  const [providerFeedback, setProviderFeedback] = useState<string | null>(null);
+
+  const loadProviderConfigs = useCallback(async () => {
+    setProviderLoading(true);
+    setProviderError(null);
+    try {
+      const payload = await fetchProviderJson<ProviderPayload>("/api/admin/brain/provider-config");
+      setProviderConfigs(payload.configs ?? []);
+      setProviderKeyStatus(payload.keyStatus ?? EMPTY_PROVIDER_KEY_STATUS);
+    } catch (err) {
+      setProviderError(err instanceof Error ? err.message : "Erro ao carregar providers");
+    } finally {
+      setProviderLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadProviderConfigs();
+  }, [loadProviderConfigs]);
+
+  const updateProviderConfig = useCallback((provider: ProviderId, patch: Partial<ProviderConfig>) => {
+    setProviderConfigs((current) =>
+      current.map((config) => (config.provider === provider ? { ...config, ...patch } : config)),
+    );
+  }, []);
+
+  const saveProviderConfigs = useCallback(async () => {
+    setProviderSaving(true);
+    setProviderError(null);
+    setProviderFeedback(null);
+    try {
+      const payload = await fetchProviderJson<ProviderPayload>("/api/admin/brain/provider-config", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ configs: providerConfigs }),
+      });
+      setProviderConfigs(payload.configs ?? []);
+      setProviderKeyStatus(payload.keyStatus ?? EMPTY_PROVIDER_KEY_STATUS);
+      setProviderFeedback("Configuracao salva.");
+    } catch (err) {
+      setProviderError(err instanceof Error ? err.message : "Erro ao salvar configuracao");
+    } finally {
+      setProviderSaving(false);
+    }
+  }, [providerConfigs]);
+
+  const providerNodesApi: BrainNodeApi[] = useMemo(
+    () =>
+      PROVIDER_IDS.map((provider, index) => {
+        const config = providerConfigs.find((item) => item.provider === provider) ?? null;
+        return {
+          id: providerNodeId(provider),
+          label: PROVIDER_LABELS[provider],
+          type: "AiProvider",
+          description: config
+            ? `${config.enabled ? "Ativo" : "Inativo"} • modelo ${config.model ?? "-"}`
+            : "Carregando configuracao...",
+          metadata: { position: { x: -620, y: -240 + index * 180 } },
+        };
+      }),
+    [providerConfigs],
+  );
+
   const { data: graphData, isLoading } = useBrainGraph(rootNodeId, depth);
 
   const nodesApi: BrainNodeApi[] = useMemo(() => graphData?.nodes ?? [], [graphData?.nodes]);
@@ -317,7 +455,10 @@ export default function BrainReactFlowView() {
   const projectOptions = useMemo(() => searchData?.projects ?? [], [searchData?.projects]);
   const statusOptions = useMemo(() => searchData?.statuses ?? [], [searchData?.statuses]);
 
-  const mapped = useMemo(() => mapGraphToFlow(filteredNodes, filteredEdges), [filteredNodes, filteredEdges]);
+  const mapped = useMemo(
+    () => mapGraphToFlow([...filteredNodes, ...providerNodesApi], filteredEdges),
+    [filteredNodes, filteredEdges, providerNodesApi],
+  );
   const [nodes, setNodes, onNodesChangeBase] = useNodesState(mapped.flowNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(mapped.flowEdges);
 
@@ -342,6 +483,7 @@ export default function BrainReactFlowView() {
 
     for (const change of changes) {
       if (change.type !== "position" || !change.position || change.dragging) continue;
+      if (isProviderNodeId(change.id)) continue;
       const timer = positionTimersRef.current.get(change.id);
       if (timer) window.clearTimeout(timer);
       const timeoutId = window.setTimeout(() => {
@@ -358,14 +500,19 @@ export default function BrainReactFlowView() {
     [setEdges],
   );
 
+  const selectedProviderId = useMemo(
+    () => (isProviderNodeId(selectedNodeId) ? providerIdFromNodeId(selectedNodeId) : null),
+    [selectedNodeId],
+  );
+
   const { data: nodeDetails } = useSWR<BrainNodeDetails>(
-    selectedNodeId ? `/api/brain/graph/node/${selectedNodeId}?depth=1` : null,
+    selectedNodeId && !selectedProviderId ? `/api/brain/graph/node/${selectedNodeId}?depth=1` : null,
     fetcher,
     { revalidateOnFocus: false },
   );
 
   const { data: neighborhood } = useSWR<BrainNeighborhood>(
-    selectedNodeId ? `/api/brain/graph/node/${selectedNodeId}/neighborhood?depth=2` : null,
+    selectedNodeId && !selectedProviderId ? `/api/brain/graph/node/${selectedNodeId}/neighborhood?depth=2` : null,
     fetcher,
     { revalidateOnFocus: false },
   );
@@ -964,7 +1111,25 @@ export default function BrainReactFlowView() {
           </div>
         ) : null}
 
-        {selectedNodeId && viewMode === "graph" ? (
+        {selectedNodeId && viewMode === "graph" && selectedProviderId ? (
+          <div className={styles.detailPanel}>
+            <ProviderNodePanel
+              providerId={selectedProviderId}
+              config={providerConfigs.find((item) => item.provider === selectedProviderId) ?? null}
+              configured={providerKeyStatus[selectedProviderId]?.configured ?? false}
+              loading={providerLoading}
+              saving={providerSaving}
+              error={providerError}
+              feedback={providerFeedback}
+              onChange={(patch) => updateProviderConfig(selectedProviderId, patch)}
+              onSave={() => void saveProviderConfigs()}
+              onReload={() => void loadProviderConfigs()}
+              onClose={() => setSelectedNodeId(null)}
+            />
+          </div>
+        ) : null}
+
+        {selectedNodeId && viewMode === "graph" && !selectedProviderId ? (
           <div className={styles.detailPanel}>
             <div className="mb-2 flex items-start justify-between gap-3">
               <div>
@@ -1080,6 +1245,163 @@ function StatPill({ label, value }: { label: string; value: number }) {
     <div className={styles.statPill}>
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
       <p className="mt-1 text-lg font-bold text-[#011848]">{value}</p>
+    </div>
+  );
+}
+
+type ProviderNodePanelProps = {
+  providerId: ProviderId;
+  config: ProviderConfig | null;
+  configured: boolean;
+  loading: boolean;
+  saving: boolean;
+  error: string | null;
+  feedback: string | null;
+  onChange: (patch: Partial<ProviderConfig>) => void;
+  onSave: () => void;
+  onReload: () => void;
+  onClose: () => void;
+};
+
+function ProviderNodePanel({
+  providerId,
+  config,
+  configured,
+  loading,
+  saving,
+  error,
+  feedback,
+  onChange,
+  onSave,
+  onReload,
+  onClose,
+}: ProviderNodePanelProps) {
+  return (
+    <div>
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">Provider de IA</p>
+          <p className="text-sm font-bold text-slate-900">{PROVIDER_LABELS[providerId]}</p>
+          <p className="text-xs text-slate-600">Chave: {configured ? "configurada" : "não configurada"}</p>
+        </div>
+        <button type="button" onClick={onClose} className={styles.panelAction}>
+          Fechar
+        </button>
+      </div>
+
+      {error ? (
+        <p className="mb-2 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-xs font-semibold text-rose-700">
+          {error}
+        </p>
+      ) : null}
+      {feedback ? (
+        <p className="mb-2 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-xs font-semibold text-emerald-700">
+          {feedback}
+        </p>
+      ) : null}
+
+      {!config ? (
+        <p className="text-xs text-slate-500">{loading ? "Carregando configuracao..." : "Configuracao indisponivel."}</p>
+      ) : (
+        <div className="grid gap-2">
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={config.enabled}
+              onChange={(event) => onChange({ enabled: event.target.checked })}
+            />
+            Ativo
+          </label>
+
+          <label className="grid gap-1 text-[11px] font-semibold text-slate-600">
+            Modelo principal
+            <input
+              value={config.model ?? ""}
+              onChange={(event) => onChange({ model: event.target.value || null })}
+              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none"
+            />
+          </label>
+
+          <label className="grid gap-1 text-[11px] font-semibold text-slate-600">
+            Modelos fallback, separados por vírgula
+            <input
+              value={config.models.join(", ")}
+              onChange={(event) => onChange({ models: splitModels(event.target.value) })}
+              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none"
+            />
+          </label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <label className="grid gap-1 text-[11px] font-semibold text-slate-600">
+              Prioridade
+              <input
+                type="number"
+                value={numberValue(config.priority)}
+                onChange={(event) => onChange({ priority: toOptionalNumber(event.target.value) ?? 100 })}
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none"
+              />
+            </label>
+            <label className="grid gap-1 text-[11px] font-semibold text-slate-600">
+              Timeout
+              <input
+                type="number"
+                value={numberValue(config.timeoutMs)}
+                onChange={(event) => onChange({ timeoutMs: toOptionalNumber(event.target.value) })}
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none"
+              />
+            </label>
+            <label className="grid gap-1 text-[11px] font-semibold text-slate-600">
+              Limite diário de requests
+              <input
+                type="number"
+                value={numberValue(config.dailyRequestLimit)}
+                onChange={(event) => onChange({ dailyRequestLimit: toOptionalNumber(event.target.value) })}
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none"
+              />
+            </label>
+            <label className="grid gap-1 text-[11px] font-semibold text-slate-600">
+              Limite diário de tokens
+              <input
+                type="number"
+                value={numberValue(config.dailyTokenLimit)}
+                onChange={(event) => onChange({ dailyTokenLimit: toOptionalNumber(event.target.value) })}
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none"
+              />
+            </label>
+            <label className="grid gap-1 text-[11px] font-semibold text-slate-600">
+              Max output tokens
+              <input
+                type="number"
+                value={numberValue(config.maxOutputTokens)}
+                onChange={(event) => onChange({ maxOutputTokens: toOptionalNumber(event.target.value) })}
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none"
+              />
+            </label>
+            <label className="flex items-center gap-2 pt-5 text-[11px] font-semibold text-slate-600">
+              <input
+                type="checkbox"
+                checked={config.strictFreeModels}
+                onChange={(event) => onChange({ strictFreeModels: event.target.checked })}
+              />
+              Strict free models
+            </label>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving || loading || !config}
+          className={styles.primaryPanelAction}
+        >
+          {saving ? "Salvando..." : "Salvar configuração"}
+        </button>
+        <button type="button" onClick={onReload} disabled={loading || saving} className={styles.panelAction}>
+          Recarregar
+        </button>
+      </div>
     </div>
   );
 }

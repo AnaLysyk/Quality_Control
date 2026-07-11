@@ -90,6 +90,7 @@ export const BRAIN_GRAPH_NODE_TYPES: BrainGraphNodeDefinition[] = [
   { type: "Workflow", label: "Workflow", group: "business", color: "#d97706", description: "Fluxo de negocio, status ou automacao de decisao.", aliases: ["workflow", "fluxo", "status"] },
   { type: "Module", label: "Modulo", group: "system", color: "#1d4ed8", description: "Modulo funcional da plataforma.", aliases: ["modulo", "area"] },
   { type: "Submodule", label: "Submodulo", group: "system", color: "#3b82f6", description: "Recorte funcional dentro de um modulo.", aliases: ["submodulo"] },
+  { type: "AiProvider", label: "Provider de IA", group: "system", color: "#06b6d4", description: "Provider de IA do Brain (Groq, Gemini, OpenRouter) com configuracao editavel.", aliases: ["provider", "ia", "groq", "gemini", "openrouter"] },
 ];
 
 export const BRAIN_GRAPH_EDGE_TYPES: BrainGraphEdgeDefinition[] = [

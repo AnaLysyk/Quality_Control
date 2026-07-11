@@ -16,7 +16,12 @@ type BrainNeuronNodeData = {
 
 function labelize(value: unknown) {
   const safeValue = typeof value === "string" && value.trim() ? value : "contexto";
-  return safeValue.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const spaced = safeValue
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .toLowerCase();
+  return spaced.replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function statusLabel(node: BrainNode, connectedCount: number) {
@@ -131,9 +136,6 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
   const size = isCore ? "h-[136px] w-[190px]" : isBig ? "h-[124px] w-[176px]" : isSmall ? "h-[96px] w-[150px]" : "h-[110px] w-[164px]";
   const chromeClass = darkMode ? "bg-black/42 text-white" : "bg-[#011848]/8 text-[#011848]";
   const metaChipClass = darkMode ? "bg-black/46 text-white" : "bg-[#011848]/8 text-[#011848]";
-  const contextChipClass = darkMode
-    ? "border border-cyan-100/14 bg-slate-950/58 text-cyan-50 shadow-[inset_0_0_12px_rgba(34,211,238,.10)]"
-    : "border border-[#011848]/10 bg-white/88 text-[#011848] shadow-[inset_0_0_10px_rgba(1,24,72,.05)]";
   const flowChipClass = darkMode ? "border-white/18 bg-black/54 text-white/86" : "border-[#011848]/10 bg-white/90 text-[#011848]/76";
   const ringClass = darkMode ? "border-white/12" : "border-[#011848]/8";
   const glowClass = darkMode ? "bg-cyan-300/18" : "bg-cyan-200/14";
@@ -156,10 +158,10 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
       {hasOperationalFlow ? <span className={`pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full border px-2.5 py-0.5 text-[8px] font-black uppercase tracking-[0.12em] ${flowChipClass}`}>fluxo</span> : null}
       <span className={`relative z-10 mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${chromeClass}`}><IconForNode node={node} /></span>
       <span className="relative z-10 w-full break-words text-[13px] font-black leading-[1.08] tracking-[-0.02em]">{node.label}</span>
-      <span className="relative z-10 mt-1 w-full truncate text-[8px] font-black uppercase tracking-[0.12em] opacity-75">{labelize(nodeKicker(node))}</span>
-      <span className={`relative z-10 mt-1 max-w-full rounded-full ${metaChipClass} px-2.5 py-1 text-[8.5px] font-black uppercase tracking-[0.08em] opacity-95`}>{statusLabel(node, nodeData.connectedCount)}</span>
-      <span className={`relative z-10 mt-1 max-w-full rounded-full px-2.5 py-1 text-[8.5px] font-black uppercase tracking-[0.07em] ${contextChipClass}`}>{nodeInstruction(node)}</span>
-      {isBig ? <span className="relative z-10 mt-1 max-w-full truncate text-[9px] font-black uppercase opacity-80">{count} nós{pendingCount ? ` · ${pendingCount} pend.` : ""}</span> : null}
+      <span className="relative z-10 mt-1 w-full truncate text-[8px] font-black uppercase tracking-[0.1em] opacity-70">{labelize(nodeKicker(node))}</span>
+      <span className={`relative z-10 mt-1 max-w-full rounded-full ${metaChipClass} px-2.5 py-1 text-[8.5px] font-black uppercase tracking-[0.08em] opacity-95`}>
+        {isBig ? `${count} nós${pendingCount ? ` · ${pendingCount} pend.` : ""}` : statusLabel(node, nodeData.connectedCount)}
+      </span>
       <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !border-cyan-100 !bg-cyan-300" />
     </div>
   );

@@ -262,6 +262,22 @@ function normalizeNodeStatus(value: unknown): BrainNodeStatus {
   return "ok";
 }
 
+// Automacao/caso de teste so pode aparecer como "ok" (finalizado) quando de fato
+// estiver publicada/estavel. Antes disso (fila, rodando, rascunho) tem que mostrar
+// um status intermediario, nunca "pronto" antes da hora.
+function resolveTestCaseNodeStatus(metadata: Record<string, unknown>, fallbackStatus: unknown): BrainNodeStatus {
+  const automationStatus = normalizeBrainText(String(metadata.automationStatus ?? ""));
+  if (["stable", "published"].includes(automationStatus)) return "ok";
+  if (["broken", "disabled"].includes(automationStatus)) return "error";
+  if (["running", "review", "approved", "linked"].includes(automationStatus)) return "warning";
+  if (["planned", "ai_generated", "pending"].includes(automationStatus)) return "pending";
+
+  const rawStatus = normalizeBrainText(String(fallbackStatus ?? ""));
+  if (rawStatus === "draft") return "pending";
+  if (rawStatus === "obsolete" || rawStatus === "archived") return "warning";
+  return "ok";
+}
+
 function mapGraphApiNode(node: BrainGraphApiNode): BrainNode {
   const metadata = asRecord(node.metadata);
   const moduleName =
@@ -282,7 +298,9 @@ function mapGraphApiNode(node: BrainGraphApiNode): BrainNode {
     projectName: readText(node.projectName) ?? readFirst(metadata, ["projectName"]) ?? undefined,
     label: node.label,
     description: node.description ?? undefined,
-    status: normalizeNodeStatus(node.status ?? metadata.status),
+    status: /testcase/i.test(String(node.refType ?? node.type ?? ""))
+      ? resolveTestCaseNodeStatus(metadata, node.status ?? metadata.status)
+      : normalizeNodeStatus(node.status ?? metadata.status),
     accessLevel: node.accessLevel,
     size: node.type === "Company" || node.type === "Project" ? "lg" : "md",
     information: node.description ?? readFirst(metadata, ["screenSummary", "information", "summary"]) ?? undefined,

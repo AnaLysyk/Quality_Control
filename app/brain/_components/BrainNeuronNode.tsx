@@ -2,8 +2,9 @@
 
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { FiAlertTriangle, FiBox, FiCheckCircle, FiCpu, FiFileText, FiGitBranch, FiLink2, FiMonitor, FiUser, FiZap } from "react-icons/fi";
+import { FiGitBranch, FiZap } from "react-icons/fi";
 import type { BrainNode } from "../_types/brain.types";
+import { nodeCategoryAccent, nodeCategoryIcon } from "../_utils/brainNodeVisuals";
 
 type BrainNeuronNodeData = {
   brainNode: BrainNode;
@@ -43,16 +44,10 @@ function statusLabel(node: BrainNode, connectedCount: number) {
 }
 
 function IconForNode({ node }: { node: BrainNode }) {
-  if (node.type === "company" || node.type === "project" || node.type === "module" || node.metadata?.isProfileRoot || node.metadata?.isUserTypeHub) return <FiGitBranch className="h-4 w-4" />;
-  if (node.type === "screen") return <FiMonitor className="h-4 w-4" />;
-  if (node.type === "integration") return <FiLink2 className="h-4 w-4" />;
-  if (node.type === "person" || node.type === "requester" || node.metadata?.isUserHub) return <FiUser className="h-4 w-4" />;
-  if (node.type === "document" || node.type === "pdf" || node.type === "email") return <FiFileText className="h-4 w-4" />;
-  if (node.type === "automation" || node.type === "execution") return <FiCpu className="h-4 w-4" />;
+  if (node.metadata?.isProfileRoot || node.metadata?.isUserTypeHub) return <FiGitBranch className="h-4 w-4" />;
   if (node.generatedBy === "brain") return <FiZap className="h-4 w-4" />;
-  if (node.status === "ok") return <FiCheckCircle className="h-4 w-4" />;
-  if (["missing", "error", "orphan", "warning"].includes(String(node.status ?? ""))) return <FiAlertTriangle className="h-4 w-4" />;
-  return <FiBox className="h-4 w-4" />;
+  const CategoryIcon = nodeCategoryIcon(node);
+  return <CategoryIcon className="h-4 w-4" />;
 }
 
 function theme(node: BrainNode, selected: boolean, orphan: boolean, darkMode: boolean) {
@@ -132,9 +127,10 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
   const isBig = isCore || node.type === "company" || node.type === "project" || node.type === "module" || node.size === "lg";
   const isSmall = ["status", "log", "event", "email", "pdf", "comment"].includes(String(node.type ?? ""));
   const color = companyColor(node);
+  const categoryAccent = nodeCategoryAccent(node);
 
   const size = isCore ? "h-[136px] w-[190px]" : isBig ? "h-[124px] w-[176px]" : isSmall ? "h-[96px] w-[150px]" : "h-[110px] w-[164px]";
-  const chromeClass = darkMode ? "bg-black/42 text-white" : "bg-[#011848]/8 text-[#011848]";
+  const chromeStyle = { backgroundColor: `rgba(${categoryAccent},${darkMode ? 0.28 : 0.14})`, color: darkMode ? "#fff" : `rgb(${categoryAccent})` };
   const metaChipClass = darkMode ? "bg-black/46 text-white" : "bg-[#011848]/8 text-[#011848]";
   const flowChipClass = darkMode ? "border-white/18 bg-black/54 text-white/86" : "border-[#011848]/10 bg-white/90 text-[#011848]/76";
   const ringClass = darkMode ? "border-white/12" : "border-[#011848]/8";
@@ -156,7 +152,7 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
       <span className={`pointer-events-none absolute inset-[-28px] rounded-[48px] ${glowClass} blur-3xl`} />
       <span className={`pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full ${glareClass} blur-2xl`} />
       {hasOperationalFlow ? <span className={`pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full border px-2.5 py-0.5 text-[8px] font-black uppercase tracking-[0.12em] ${flowChipClass}`}>fluxo</span> : null}
-      <span className={`relative z-10 mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${chromeClass}`}><IconForNode node={node} /></span>
+      <span className="relative z-10 mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={chromeStyle}><IconForNode node={node} /></span>
       <span className="relative z-10 w-full break-words text-[13px] font-black leading-[1.08] tracking-[-0.02em]">{node.label}</span>
       <span className="relative z-10 mt-1 w-full truncate text-[8px] font-black uppercase tracking-[0.1em] opacity-70">{labelize(nodeKicker(node))}</span>
       <span className={`relative z-10 mt-1 max-w-full rounded-full ${metaChipClass} px-2.5 py-1 text-[8.5px] font-black uppercase tracking-[0.08em] opacity-95`}>

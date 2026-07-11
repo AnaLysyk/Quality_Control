@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { FiMove, FiRefreshCw, FiSearch, FiX, FiZap } from "react-icons/fi";
+import { FiRefreshCw, FiX, FiZap } from "react-icons/fi";
 import type { BrainEdge, BrainNode } from "../_types/brain.types";
 import { nodeStatusLabel, nodeTypeLabel } from "../_utils/brainGraphFormatters";
+import { nodeCategoryAccent, nodeCategoryIcon } from "../_utils/brainNodeVisuals";
 
 type BrainRagContext = {
   source?: string;
@@ -27,14 +28,34 @@ type BrainNodeOverlayProps = {
   edges: BrainEdge[];
   onClose: () => void;
   onResetFocus: () => void;
-  onSelectRelatedNode: (node: BrainNode) => void;
   debugMode?: boolean;
   onBackNode?: () => void;
   canBackNode?: boolean;
 };
 
+const TYPE_EXPLANATIONS: Record<string, string> = {
+  company: "Uma empresa cliente cadastrada na plataforma.",
+  project: "Um projeto de testes dentro de uma empresa.",
+  person: "Uma pessoa que usa o sistema.",
+  requester: "Quem pediu ou solicitou algo.",
+  access_request: "Um pedido de acesso ou de mudança de perfil feito por alguém.",
+  test_case: "Um caso de teste, manual ou automatizado.",
+  execution: "Uma rodada de execução de testes.",
+  defect: "Um defeito (bug) registrado.",
+  document: "Um documento ou evidência anexada.",
+  automation: "Um script de automação de testes.",
+  integration: "Uma conexão com um sistema externo, como Jira ou GitHub.",
+  screen: "Uma tela do sistema.",
+  module: "Uma área do sistema, com varios itens dentro.",
+  log: "Um registro do que aconteceu e quando.",
+  permission: "Uma regra de permissão de acesso.",
+  email: "Um e-mail relacionado a este contexto.",
+  comment: "Um comentário deixado por alguém.",
+  status: "Um estado dentro de um fluxo (ex.: aberto, aprovado).",
+};
+
 function memoryText(node: BrainNode) {
-  return node.information || node.description || "Este nó representa uma memória do Brain dentro do contexto selecionado.";
+  return node.information || node.description || TYPE_EXPLANATIONS[node.type] || "Ainda sem resumo para este item.";
 }
 
 function readable(value: unknown): string | null {
@@ -93,22 +114,27 @@ function formatDate(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? null : date.toLocaleString("pt-BR");
 }
 
-function groupCounts(nodes: BrainNode[]) {
+function groupByType(nodes: BrainNode[]) {
   const groups = new Map<string, number>();
-  for (const item of nodes) groups.set(item.module, (groups.get(item.module) ?? 0) + 1);
-  return Array.from(groups.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  for (const item of nodes) {
+    const label = nodeTypeLabel(item.type);
+    groups.set(label, (groups.get(label) ?? 0) + 1);
+  }
+  return Array.from(groups.entries()).sort((a, b) => b[1] - a[1]);
 }
 
 function formatKey(key: string) {
   return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, onSelectRelatedNode, debugMode = false, onBackNode, canBackNode = false }: BrainNodeOverlayProps) {
+export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, debugMode = false, onBackNode, canBackNode = false }: BrainNodeOverlayProps) {
+  const CategoryIcon = nodeCategoryIcon(node);
+  const categoryAccent = nodeCategoryAccent(node);
   const relations = relationRows(node, nodes, edges);
   const relatedNodes = relations.map((item) => item.related);
   const metadata = compactMetadata(node);
   const pendingItems = [...(node.missingKnowledge ?? []), ...relatedNodes.flatMap((item) => item.missingKnowledge ?? []).slice(0, 8)];
-  const areaCounts = groupCounts([node, ...relatedNodes]);
+  const typeCounts = groupByType(relatedNodes);
   const responsible = responsibleFromRelations(relations);
   const whoWhen = [
     { label: "Criado por", value: node.createdByName ?? node.createdByEmail ?? node.createdBy ?? null },
@@ -273,19 +299,24 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full border border-cyan-100/20 bg-cyan-100/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-50">
-                  <FiMove className="h-3 w-3" /> arraste o contexto
+              <div className="flex items-start gap-3">
+                <span
+                  className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${categoryAccent},0.22)`, color: `rgb(${categoryAccent})` }}
+                >
+                  <CategoryIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-full border border-cyan-100/20 bg-cyan-100/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-50">{nodeStatusLabel(node.status)}</span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{nodeTypeLabel(node.type)}</span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{node.module}</span>
-                {node.companyName ? <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{node.companyName}</span> : null}
-                {node.projectName ? <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{node.projectName}</span> : null}
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100/55">{nodeTypeLabel(node.type)} · {node.module}</p>
+                  <h2 className="mt-0.5 text-2xl font-black leading-tight text-white">{node.label}</h2>
+                </div>
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100/55">Modal de contexto do nó</p>
-              <h2 className="mt-1 text-2xl font-black leading-tight text-white">{node.label}</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-slate-200/82">{memoryText(node)}</p>
+              <div className="mb-2 mt-2.5 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-cyan-100/20 bg-cyan-100/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-50">{nodeStatusLabel(node.status)}</span>
+                {node.companyName && node.companyName !== node.label ? <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{node.companyName}</span> : null}
+                {node.projectName && node.projectName !== node.label ? <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{node.projectName}</span> : null}
+              </div>
+              <p className="text-sm font-semibold leading-6 text-slate-200/82">{memoryText(node)}</p>
             </div>
             <button type="button" onClick={onClose} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 hover:border-rose-200/40 hover:text-white" aria-label="Fechar memória">
               <FiX className="h-4 w-4" />
@@ -295,9 +326,24 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Conexões</p><p className="mt-1 text-2xl font-black text-white">{relations.length}</p></div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Pendências</p><p className="mt-1 text-2xl font-black text-white">{pendingItems.length}</p></div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Áreas</p><p className="mt-1 text-2xl font-black text-white">{areaCounts.length}</p></div>
+            <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3 sm:col-span-2">
+              <p className="text-[11px] font-semibold text-slate-400">O que tem aqui</p>
+              {typeCounts.length ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {typeCounts.map(([label, count]) => (
+                    <span key={label} className="rounded-full bg-white/8 px-2.5 py-1 text-xs font-bold text-white">
+                      {count} {label.toLowerCase()}{count > 1 ? "s" : ""}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-sm font-bold text-slate-500">Nada ligado a este item ainda.</p>
+              )}
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3">
+              <p className="text-2xl font-black text-white">{pendingItems.length}</p>
+              <p className="mt-0.5 text-[11px] font-semibold text-slate-400">informação faltando</p>
+            </div>
           </div>
 
           {whoWhen.length ? <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Quem e quando</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{whoWhen.map((item) => <div key={item.label} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{item.label}</p><p className="mt-1 break-words text-xs font-bold text-slate-100">{item.value}</p></div>)}</div></section> : null}
@@ -307,19 +353,6 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
               <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/55">Memórias e contexto recuperado</p><h3 className="mt-1 text-sm font-black text-white">O que o Brain encontrou para este nó</h3></div>
               <span className="rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100">{ragLoading ? "buscando" : "contexto encontrado"}</span>
             </div>
-
-            <label className="mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-              <FiSearch className="h-4 w-4 shrink-0 text-cyan-100/70" aria-hidden />
-              <input
-                value={ragQuery}
-                onChange={(event) => setRagQuery(event.target.value)}
-                placeholder="Buscar memória, log, documento, regra ou relação deste nó..."
-                className="w-full bg-transparent text-xs font-bold text-white outline-none placeholder:text-slate-500"
-              />
-              <button type="button" onClick={() => setRagQuery(node.label)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white/70">
-                Reset
-              </button>
-            </label>
 
             {ragLoading ? <p className="mt-3 text-xs font-bold text-slate-200/78">Consultando cérebro, permissões, eventos, notas e documentos vinculados...</p> : ragContext ? (
               <div className="mt-3 grid gap-3">
@@ -359,7 +392,6 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
 
           {debugMode ? <section className="mt-3 rounded-2xl border border-sky-200/18 bg-sky-200/[0.07] p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-100/70">Debug QA</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{[["nodeId", node.id], ["type", node.type], ["moduleId", node.module], ["requiredPermissions", readable(node.requiredPermissions ?? node.metadata?.requiredPermissions ?? node.metadata?.requiredPermission) ?? "nao informado"], ["visibleByPermission", String(node.visibleByPermission ?? true)], ["source", readable(node.source ?? node.metadata?.source ?? node.generatedBy ?? "initial") ?? "initial"], ["edges count", String(relations.length)]].map(([key, value]) => <div key={key} className="rounded-xl border border-sky-100/10 bg-black/18 px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-sky-100/45">{key}</p><p className="mt-1 break-words text-xs font-bold text-sky-50/90">{value}</p></div>)}</div></section> : null}
 
-          <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Relações principais</p><div className="mt-2 grid gap-2">{relations.slice(0, 12).map(({ edge, related, direction }) => <button key={edge.id} type="button" onClick={() => onSelectRelatedNode(related)} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-cyan-100/32"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-black text-white">{related.label}</p><p className="mt-1 text-xs font-semibold text-slate-400">{edge.label} · {direction} · {nodeTypeLabel(related.type)} · {related.module}</p></div><span className="shrink-0 rounded-full border border-white/10 px-2 py-1 text-[10px] font-black uppercase text-slate-300">{nodeStatusLabel(related.status)}</span></div></button>)}{!relations.length ? <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">Nenhuma relação disponível neste recorte.</p> : null}</div></section>
 
           {pendingItems.length ? <section className="mt-3 rounded-2xl border border-amber-200/16 bg-amber-200/[0.06] p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-100/70">Contexto que o Brain deve completar</p><ul className="mt-2 grid gap-2">{Array.from(new Set(pendingItems)).slice(0, 8).map((item) => <li key={item} className="rounded-xl border border-amber-200/12 bg-black/16 px-3 py-2 text-xs font-bold leading-5 text-amber-50/88">{item}</li>)}</ul></section> : null}
         </div>

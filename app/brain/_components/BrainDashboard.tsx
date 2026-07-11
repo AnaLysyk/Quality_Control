@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-import { FiBriefcase, FiChevronDown, FiChevronUp, FiFolder, FiHelpCircle, FiRefreshCw, FiSearch, FiSliders, FiTag } from "react-icons/fi";
+import { FiBriefcase, FiChevronDown, FiChevronUp, FiFolder, FiHelpCircle, FiRefreshCw, FiSearch, FiSliders, FiTag, FiX } from "react-icons/fi";
 import { fetchBrainDashboardData } from "../_api/brain.client";
 import { buildMockBrainGraph } from "../_data/brainMockGraph";
 import type { BrainContextCompany, BrainContextProject, BrainContextResponse, BrainEdge, BrainGraphSummary, BrainNode, BrainNodeStatus, BrainNodeType, BuiltBrainGraph } from "../_types/brain.types";
@@ -814,18 +814,6 @@ export function BrainNeuralDashboard() {
               </div>
             </div>
 
-            <div className="py-3">
-              <label className="flex items-center gap-2 rounded-lg bg-white/6 px-3 py-2 focus-within:bg-white/10">
-                <FiSearch className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-                <input
-                  value={searchText}
-                  onChange={(event) => setSearchText(event.target.value)}
-                  placeholder="Buscar no Brain real: acesso, empresa, run, documentação..."
-                  className="w-full bg-transparent text-sm font-medium text-white outline-none placeholder:text-slate-500"
-                />
-              </label>
-            </div>
-
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 py-3">
               <label className="flex items-center gap-2">
                 <FiBriefcase className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden />
@@ -945,6 +933,23 @@ export function BrainNeuralDashboard() {
           onBackNode={handleBackNode}
           canBackNode={Boolean(selectedNode || nodeHistory.length)}
         />
+      </div>
+
+      <div className="pointer-events-none absolute inset-x-0 top-5 z-[2147482999] flex justify-center">
+        <label className="pointer-events-auto flex w-[min(480px,calc(100vw-32px))] items-center gap-2.5 rounded-full border border-white/10 bg-slate-950/92 px-4 py-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl focus-within:border-cyan-200/50">
+          <FiSearch className="h-4 w-4 shrink-0 text-cyan-100/60" aria-hidden />
+          <input
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Buscar empresa, projeto, usuário, caso de teste..."
+            className="w-full bg-transparent text-sm font-semibold text-white outline-none placeholder:text-slate-500"
+          />
+          {searchText ? (
+            <button type="button" onClick={() => setSearchText("")} className="shrink-0 text-slate-500 hover:text-white">
+              <FiX className="h-4 w-4" />
+            </button>
+          ) : null}
+        </label>
       </div>
 
       {filterHud}

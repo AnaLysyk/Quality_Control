@@ -408,11 +408,29 @@ export async function syncBrain() {
         ...companyIds.map((companyId) => companiesById.get(companyId)?.slug),
         user.default_company_slug,
       ].filter((companySlug): companySlug is string => Boolean(companySlug))))
+      const userRoleLabels: Record<string, string> = {
+        leader_tc: 'Líder TC',
+        technical_support: 'Suporte técnico',
+        company: 'Empresa',
+        company_admin: 'Administrador da empresa',
+        user: 'Usuário',
+        viewer: 'Visualizador',
+        admin: 'Administrador',
+        it_dev: 'TI/Dev',
+        dev: 'Desenvolvedor(a)',
+        support: 'Suporte',
+      }
+      const userRoleLabel = userRoleLabels[String(user.role ?? '')] ?? 'Usuário'
+      const userStatusLabel = user.active === false || user.status === 'blocked' ? 'inativo' : 'ativo'
+      const userCompanyCount = companySlugs.length
+      const userDescription = `${userRoleLabel} · ${userStatusLabel}${userCompanyCount ? ` · vinculado a ${userCompanyCount} empresa${userCompanyCount > 1 ? 's' : ''}` : ''}.`
+
       await addNode({
         type: 'User',
         label: user.name,
         refType: 'User',
         refId: user.id,
+        description: userDescription,
         metadata: metadata({
           email: null,
           emailMasked: maskEmail(user.email),

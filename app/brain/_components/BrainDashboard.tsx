@@ -568,17 +568,7 @@ export function BrainNeuralDashboard() {
   }
 
 
-  function applySmartContextSearch/(value: string) {
-    setSelectedCompanyId(null);
-    setSelectedProjectId(null);
-    setNodeType("all");
-    setNodeStatus("all");
-    setShowPendingOnly(false);
-    setShowOrphansOnly(false);
-    setLocalGraphOnly(false);
-    setSearchText(value);
-    setFilterCollapsed(false);
-  }
+
 
   const nodeTypeOptions = useMemo(
     () => Array.from(
@@ -700,18 +690,7 @@ export function BrainNeuralDashboard() {
             </header>
 
             <div className="flex-1 overflow-y-auto px-5">
-              <section className="border-b border-white/[0.07] py-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">Atalhos de contexto</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" onClick={clearSmartFilters} className="rounded-full bg-cyan-300/20 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-300/28">Todos</button>
-                  <button type="button" onClick={() => applySmartContextSearch("login acesso auth usuario usuário perfil permissao permissão solicitacao solicitação token session")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Acesso/Login</button>
-                  <button type="button" onClick={() => applySmartContextSearch("empresa company projeto project application aplicacao aplicação cliente usuario usuário vinculo vínculo")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Empresas/Projetos</button>
-                  <button type="button" onClick={() => applySmartContextSearch("brain rag memoria memória contexto log audit auditoria historico histórico")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Brain</button>
-                  <button type="button" onClick={() => applySmartContextSearch("test teste run plano case caso execucao execução resultado smoke regressao regressão")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">QA/Testes</button>
-                  <button type="button" onClick={() => applySmartContextSearch("wiki documento documentacao documentação evidencia evidência manual regra conhecimento")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Docs/Wiki</button>
-                  <button type="button" onClick={() => applySmartContextSearch("log logs auditoria audit historico histórico evento event")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Logs</button>
-                </div>
-              </section>
+
 
               <section className="border-b border-white/[0.07] py-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">Refinar busca</p>

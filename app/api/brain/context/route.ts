@@ -10,7 +10,7 @@ export async function GET(req: Request) {
       user: null,
       companies: [],
       projects: [],
-      modules: ["Solicitacoes", "Defeitos", "Automacao", "Documentos", "Usuarios", "Permissoes"],
+      modules: ["Solicitacoes", "Suporte", "Defeitos", "Casos de Teste", "Planos de Teste", "Execucoes", "Automacao", "Documentos", "Usuarios", "Logs", "Historico"],
       permissions: {
         canViewGlobalBrain: false,
         canViewLogs: false,
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 
   const { context } = accessResult;
   const user = context.user;
-  const baseModules = ["Solicitacoes", "Defeitos", "Automacao", "Documentos", "Usuarios", "Permissoes", "Logs"];
+  const baseModules = ["Solicitacoes", "Suporte", "Defeitos", "Controle de Qualidade", "Casos de Teste", "Testes Manuais", "Planos de Teste", "Execucoes", "Fila de Execucao", "Automacao", "Fluxos de Automacao", "Documentos", "Usuarios", "Permissoes", "Logs", "Historico"];
   const modules = baseModules.filter((moduleName) => canAccessBrainModule(context, moduleName));
   const canViewLogs = modules.includes("Logs");
   const allowedCompanyIds = Array.from(context.allowedCompanyIds);
@@ -44,11 +44,13 @@ export async function GET(req: Request) {
     orderBy: { name: "asc" },
   });
   const scopedCompanyIds = companies.map((company) => company.id);
+  const allowedProjectIds = Array.from(context.allowedProjectIds);
   const projects = scopedCompanyIds.length
     ? await prisma.project.findMany({
         where: {
           companyId: { in: scopedCompanyIds },
           archivedAt: null,
+          ...(context.hasGlobalVisibility ? {} : { id: { in: allowedProjectIds } }),
         },
         select: { id: true, name: true, companyId: true },
         orderBy: { name: "asc" },
@@ -77,6 +79,8 @@ export async function GET(req: Request) {
       canViewLogs,
       canViewAudit: canViewLogs,
       canExecuteActions: context.canManage,
+      canChangeCompany: companies.length > 1,
+      canChangeProject: projects.length > 1,
     },
     defaultContext: {
       companyId: defaultCompanyId,

@@ -90,7 +90,52 @@ export default function NewHomeContent() {
   function showVoiceToast(text: string, options: Omit<VoiceToast, "id" | "text"> = {}) { setVoiceStatus(text); setVoiceToast({ id: Date.now(), text, ...options }); }
   function speakBrain(text: string) { if (typeof window === "undefined" || !window.speechSynthesis || !text.trim()) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang = "pt-BR"; utterance.rate = 0.92; utterance.pitch = 1.02; utterance.volume = volume; const voice = resolveVoice(window.speechSynthesis.getVoices(), selectedVoice); if (voice) utterance.voice = voice; utterance.onstart = () => setSpeaking(true); utterance.onend = () => setSpeaking(false); utterance.onerror = () => setSpeaking(false); window.speechSynthesis.speak(utterance); }
   function openAssistant(prompt: string, action?: BrainHomeAction | null) { window.dispatchEvent(new CustomEvent("assistant:open", { detail: { source: "admin-home", route: "/admin/home", panelMode: "side", agentMode: "qa", focusInput: true, initialMessage: prompt, context: { module: "home", screenLabel: "Brain Home", metadata: { roleLabel, action, weather: weatherContext, availableActions: suggestions.map((item) => item.label) } } } })); }
-  async function askBrain(prompt: string, action?: BrainHomeAction | null) { const localReply = localHomeReply(prompt, roleLabel, action, weatherContext); if (localReply) return localReply; const controller = new AbortController(); const timeout = window.setTimeout(() => controller.abort(), 7000); try { const response = await fetch("/api/brain/ask", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", signal: controller.signal, body: JSON.stringify({ message: prompt, activeContext: { module: "home" }, visibleFilters: { route: "/admin/home", responseStyle: "short-home-summary", weather: weatherContext, selectedAction: action ? { id: action.id, label: action.label, href: action.href, moduleLabel: action.moduleLabel } : null, availableActions: suggestions.map((item) => ({ label: item.label, description: item.description })).slice(0, 20) } }) }); const payload = (await response.json().catch(() => null)) as BrainAskPayload | null; return formatHomeReply(prompt, roleLabel, payload); } catch { return "Não consegui concluir a consulta agora, mas a Home continua ativa. Me diga o módulo, empresa, usuário, ticket ou erro que eu tento pelo caminho seguro."; } finally { window.clearTimeout(timeout); } }
+  async function askBrain(prompt: string, action?: BrainHomeAction | null) {
+    const localReply = localHomeReply(prompt, roleLabel, action, weatherContext);
+    if (localReply) return localReply;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 45000);
+    try {
+      const response = await fetch("/api/brain/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        signal: controller.signal,
+        body: JSON.stringify({
+          messages: [{ role: "user", content: prompt }],
+          agentMode: "qa",
+          route: "/admin/home",
+          screenLabel: "Brain Home",
+        }),
+      });
+      if (!response.ok || !response.body) return formatHomeReply(prompt, roleLabel, null);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let reply = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const part = JSON.parse(line) as { type?: string; text?: string; error?: string };
+            if (part.type === "text-delta" && typeof part.text === "string") reply += part.text;
+          } catch {
+            // ignore malformed NDJSON lines
+          }
+        }
+      }
+      return formatHomeReply(prompt, roleLabel, reply ? { reply } : null);
+    } catch {
+      return "Não consegui concluir a consulta agora, mas a Home continua ativa. Me diga o módulo, empresa, usuário, ticket ou erro que eu tento pelo caminho seguro.";
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
   async function sendPrompt(prompt: string, action?: BrainHomeAction | null) { const cleanPrompt = prompt.trim(); if (!cleanPrompt || !currentSessionId) return; const now = Date.now(); const assistantId = `assistant-${now}`; updateCurrentSession((session) => ({ ...session, title: titleFromMessages([...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }]), updatedAt: new Date().toISOString(), messages: [...session.messages, { id: `user-${now}`, role: "user", text: cleanPrompt }, { id: assistantId, role: "assistant", text: LOADING_TEXT }] })); openAssistant(cleanPrompt, action); setCommand(""); setVoiceStatus(""); setVoiceToast(null); const assistantText = await askBrain(cleanPrompt, action); updateCurrentSession((session) => ({ ...session, updatedAt: new Date().toISOString(), messages: session.messages.map((message) => message.id === assistantId ? { ...message, text: assistantText } : message) })); }
   function handleSubmit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); void sendPrompt(command); }
   function handleSuggestion(item: BrainSuggestion | BrainHomeAction) { void sendPrompt(item.prompt, "id" in item ? item as BrainHomeAction : null); }

@@ -16,6 +16,8 @@ export async function GET(req: Request) {
         canViewLogs: false,
         canViewAudit: false,
         canExecuteActions: false,
+        canChangeCompany: false,
+        canChangeProject: false,
       },
       defaultContext: {
         companyId: null,

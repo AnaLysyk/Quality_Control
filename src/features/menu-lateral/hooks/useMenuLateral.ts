@@ -19,7 +19,7 @@ const RELATIONSHIP_ITEM: NavItemDef = {
   iconKey: "link",
   module: "management",
   href: "/admin/users/vinculos",
-  requiredPermission: { moduleId: "users", action: "view" },
+  requiredPermission: { moduleId: "relationships", action: "view" },
   favoriteEnabled: true,
   group: "Gestão de usuários",
   testId: "nav-management-relationships",
@@ -34,7 +34,7 @@ export function useMenuLateral() {
   const modules = useMemo<NavModuleDef[]>(() => {
     if (!navigation.effectiveRole) return navigation.modules;
     if (!RELATIONSHIP_MANAGEMENT_ROLES.has(navigation.effectiveRole)) return navigation.modules;
-    if (!can("users", "view")) return navigation.modules;
+    if (!can("relationships", "view")) return navigation.modules;
 
     const managementIndex = navigation.modules.findIndex((module) => module.id === "management");
     if (managementIndex < 0) return navigation.modules;

@@ -198,6 +198,8 @@ export type BrainContextResponse = {
     canViewLogs: boolean;
     canViewAudit: boolean;
     canExecuteActions: boolean;
+    canChangeCompany?: boolean;
+    canChangeProject?: boolean;
   };
   defaultContext: {
     companyId: string | null;

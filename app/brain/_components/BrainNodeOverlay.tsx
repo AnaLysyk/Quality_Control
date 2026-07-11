@@ -99,6 +99,19 @@ function relationRows(node: BrainNode, nodes: BrainNode[], edges: BrainEdge[]) {
     .filter((item): item is { edge: BrainEdge; related: BrainNode; direction: string } => Boolean(item));
 }
 
+function responsibleFromRelations(relations: ReturnType<typeof relationRows>) {
+  const match = relations.find(
+    (item) => item.direction === "entrada" && /respons/i.test(item.edge.label ?? ""),
+  );
+  return match?.related.label ?? null;
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toLocaleString("pt-BR");
+}
+
 function groupCounts(nodes: BrainNode[]) {
   const groups = new Map<string, number>();
   for (const item of nodes) groups.set(item.module, (groups.get(item.module) ?? 0) + 1);
@@ -130,6 +143,20 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
   const actions = inferActions(node, relations);
   const pendingItems = [...(node.missingKnowledge ?? []), ...relatedNodes.flatMap((item) => item.missingKnowledge ?? []).slice(0, 8)];
   const areaCounts = groupCounts([node, ...relatedNodes]);
+  const responsible = responsibleFromRelations(relations);
+  const whoWhen = [
+    { label: "Criado por", value: node.createdByName ?? node.createdByEmail ?? node.createdBy ?? null },
+    { label: "Criado em", value: formatDate(node.createdAt) },
+    { label: "Atualizado por", value: node.updatedBy ?? null },
+    { label: "Atualizado em", value: formatDate(node.updatedAt) },
+    { label: "Responsável", value: responsible },
+  ].filter((item) => Boolean(item.value));
+  const origin = [
+    { label: "Banco", value: node.source?.table ?? null },
+    { label: "API/rota", value: node.source?.route ?? null },
+    { label: "Integração", value: node.source?.provider ?? null },
+    { label: "Origem", value: node.source?.type ?? node.sourceType ?? node.generatedBy ?? null },
+  ].filter((item) => Boolean(item.value));
   const [ragContext, setRagContext] = useState<BrainRagContext | null>(null);
   const [ragQuery, setRagQuery] = useState(node.label);
   const [ragLoading, setRagLoading] = useState(false);
@@ -139,11 +166,60 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
   const [savingMemory, setSavingMemory] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ pointerId: number; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
+  const canSendToGithub = node.type === "defect" || node.type === "execution";
+  const [githubSources, setGithubSources] = useState<Array<{ id: string; name: string }>>([]);
+  const [githubSourceId, setGithubSourceId] = useState("");
+  const [githubSending, setGithubSending] = useState(false);
+  const [githubFeedback, setGithubFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     setPosition({ x: 0, y: 0 });
     setRagQuery(node.label);
   }, [node.id, node.label]);
+
+  useEffect(() => {
+    if (!canSendToGithub) return;
+    fetch("/api/brain/settings/sources", { credentials: "include", cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { sources?: Array<{ id: string; name: string; provider?: string | null; sourceType?: string; status?: string }> } | null) => {
+        const options = (data?.sources ?? []).filter(
+          (item) => item.sourceType === "external_api" && (item.provider ?? "").toLowerCase() === "github" && item.status === "active",
+        );
+        setGithubSources(options.map((item) => ({ id: item.id, name: item.name })));
+        setGithubSourceId((current) => current || options[0]?.id || "");
+      })
+      .catch(() => setGithubSources([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canSendToGithub]);
+
+  async function sendToGithub() {
+    if (!githubSourceId) {
+      setGithubFeedback("Selecione uma fonte GitHub configurada.");
+      return;
+    }
+    setGithubSending(true);
+    setGithubFeedback(null);
+    try {
+      const response = await fetch("/api/brain/integrations/github/issues", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceId: githubSourceId,
+          title: `[${nodeTypeLabel(node.type)}] ${node.label}`,
+          body: [memoryText(node), "", `Enviado pelo Brain (Quality Control) · nó ${node.id}`].join("\n"),
+          labels: [node.type],
+        }),
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(typeof json.error === "string" ? json.error : "Falha ao enviar ao GitHub");
+      setGithubFeedback(`Issue criada: ${json.issue?.url ?? ""}`);
+    } catch (error) {
+      setGithubFeedback(error instanceof Error ? error.message : "Erro ao enviar ao GitHub");
+    } finally {
+      setGithubSending(false);
+    }
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -278,6 +354,8 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
                 <span className="rounded-full border border-cyan-100/20 bg-cyan-100/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-50">{nodeStatusLabel(node.status)}</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{nodeTypeLabel(node.type)}</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{node.module}</span>
+                {node.companyName ? <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{node.companyName}</span> : null}
+                {node.projectName ? <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/72">{node.projectName}</span> : null}
               </div>
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100/55">Modal de contexto do nó</p>
               <h2 className="mt-1 text-2xl font-black leading-tight text-white">{node.label}</h2>
@@ -295,6 +373,8 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
             <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Pendências</p><p className="mt-1 text-2xl font-black text-white">{pendingItems.length}</p></div>
             <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Áreas</p><p className="mt-1 text-2xl font-black text-white">{areaCounts.length}</p></div>
           </div>
+
+          {whoWhen.length ? <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Quem e quando</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{whoWhen.map((item) => <div key={item.label} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{item.label}</p><p className="mt-1 break-words text-xs font-bold text-slate-100">{item.value}</p></div>)}</div></section> : null}
 
           <section className="qc-brain-rag-context-card mt-3 rounded-2xl border border-cyan-100/14 bg-cyan-100/[0.055] p-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -335,7 +415,28 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
             <div className="mt-2 flex items-center justify-between gap-2"><p className="text-[10px] font-bold text-slate-400">{memoryFeedback ?? "Salva uma memória manual ligada a este nó."}</p><button type="button" onClick={saveNodeMemory} disabled={savingMemory} className="inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60 disabled:opacity-60"><FiSave className="h-3.5 w-3.5" />{savingMemory ? "Salvando" : "Salvar"}</button></div>
           </section>
 
-          {metadata.length ? <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Dados úteis do nó</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{metadata.map((item) => <div key={item.key} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{formatKey(item.key)}</p><p className="mt-1 break-words text-xs font-bold text-slate-100">{item.value}</p></div>)}</div></section> : null}
+          {origin.length ? <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Origem</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{origin.map((item) => <div key={item.label} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{item.label}</p><p className="mt-1 break-words text-xs font-bold text-slate-100">{item.value}</p></div>)}</div></section> : null}
+
+          {canSendToGithub ? (
+            <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Enviar ao GitHub</p>
+              {githubSources.length ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <select value={githubSourceId} onChange={(event) => setGithubSourceId(event.target.value)} className="rounded-lg border border-white/10 bg-black/20 px-2 py-2 text-xs font-bold text-white outline-none">
+                    {githubSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}
+                  </select>
+                  <button type="button" onClick={sendToGithub} disabled={githubSending} className="rounded-lg border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60 disabled:opacity-60">
+                    {githubSending ? "Enviando..." : "Criar issue no GitHub"}
+                  </button>
+                </div>
+              ) : (
+                <p className="mt-2 text-xs font-bold text-slate-400">Nenhuma fonte GitHub ativa configurada. Configure em Configurações do Brain (provider &quot;github&quot;).</p>
+              )}
+              {githubFeedback ? <p className="mt-2 break-words text-xs font-bold text-emerald-200">{githubFeedback}</p> : null}
+            </section>
+          ) : null}
+
+          {debugMode && metadata.length ? <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Dados úteis do nó (debug)</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{metadata.map((item) => <div key={item.key} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{formatKey(item.key)}</p><p className="mt-1 break-words text-xs font-bold text-slate-100">{item.value}</p></div>)}</div></section> : null}
 
           {debugMode ? <section className="mt-3 rounded-2xl border border-sky-200/18 bg-sky-200/[0.07] p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-100/70">Debug QA</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{[["nodeId", node.id], ["type", node.type], ["moduleId", node.module], ["requiredPermissions", readable(node.requiredPermissions ?? node.metadata?.requiredPermissions ?? node.metadata?.requiredPermission) ?? "nao informado"], ["visibleByPermission", String(node.visibleByPermission ?? true)], ["source", readable(node.source ?? node.metadata?.source ?? node.generatedBy ?? "initial") ?? "initial"], ["edges count", String(relations.length)], ["actions count", String(actions.length)]].map(([key, value]) => <div key={key} className="rounded-xl border border-sky-100/10 bg-black/18 px-3 py-2"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-sky-100/45">{key}</p><p className="mt-1 break-words text-xs font-bold text-sky-50/90">{value}</p></div>)}</div></section> : null}
 
@@ -343,7 +444,7 @@ export function BrainNodeOverlay({ node, nodes, edges, onClose, onResetFocus, on
 
           {areaCounts.length ? <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Áreas relacionadas</p><div className="mt-2 flex flex-wrap gap-2">{areaCounts.map(([module, count]) => <button key={module} type="button" onClick={() => onOpenRelatedModule(module)} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/78 hover:border-cyan-100/40 hover:text-cyan-50">{module} · {count}</button>)}</div></section> : null}
 
-          <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Relações principais</p><div className="mt-2 grid gap-2">{relations.slice(0, 12).map(({ edge, related, direction }) => <button key={edge.id} type="button" onClick={() => onOpenRelatedModule(related.module)} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-cyan-100/32"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-black text-white">{related.label}</p><p className="mt-1 text-xs font-semibold text-slate-400">{edge.label} · {direction} · {related.module}</p></div><span className="shrink-0 rounded-full border border-white/10 px-2 py-1 text-[10px] font-black uppercase text-slate-300">{nodeStatusLabel(related.status)}</span></div></button>)}{!relations.length ? <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">Nenhuma relação disponível neste recorte.</p> : null}</div></section>
+          <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Relações principais</p><div className="mt-2 grid gap-2">{relations.slice(0, 12).map(({ edge, related, direction }) => <button key={edge.id} type="button" onClick={() => onOpenRelatedModule(related.module)} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-cyan-100/32"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-black text-white">{related.label}</p><p className="mt-1 text-xs font-semibold text-slate-400">{edge.label} · {direction} · {nodeTypeLabel(related.type)} · {related.module}</p></div><span className="shrink-0 rounded-full border border-white/10 px-2 py-1 text-[10px] font-black uppercase text-slate-300">{nodeStatusLabel(related.status)}</span></div></button>)}{!relations.length ? <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">Nenhuma relação disponível neste recorte.</p> : null}</div></section>
 
           {pendingItems.length ? <section className="mt-3 rounded-2xl border border-amber-200/16 bg-amber-200/[0.06] p-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-100/70">Contexto que o Brain deve completar</p><ul className="mt-2 grid gap-2">{Array.from(new Set(pendingItems)).slice(0, 8).map((item) => <li key={item} className="rounded-xl border border-amber-200/12 bg-black/16 px-3 py-2 text-xs font-bold leading-5 text-amber-50/88">{item}</li>)}</ul></section> : null}
         </div>

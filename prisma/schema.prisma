@@ -366,6 +366,54 @@ model BrainSourceSyncLog {
   @@map("brain_source_sync_logs")
 }
 
+model BrainBehaviorProfile {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  instructions   String
+  tone           String?
+  formality      String?
+  responseLength String?
+  rules          Json?
+  scopeType      String   @default("user")
+  companyId      String?
+  projectId      String?
+  ownerUserId    String?
+  isSystem       Boolean  @default(false)
+  status         String   @default("active")
+  version        Int      @default(1)
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  assignments    BrainBehaviorProfileAssignment[]
+
+  @@index([scopeType])
+  @@index([companyId])
+  @@index([projectId])
+  @@index([ownerUserId])
+  @@index([status])
+  @@map("brain_behavior_profiles")
+}
+
+model BrainBehaviorProfileAssignment {
+  id        String   @id @default(cuid())
+  scopeType String
+  scopeId   String
+  surface   String
+  profileId String
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   BrainBehaviorProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([scopeType, scopeId, surface])
+  @@index([profileId])
+  @@map("brain_behavior_profile_assignments")
+}
+
 // Prisma Schema — Quality Control
 // Provider: PostgreSQL (Render)
 // Gerado automaticamente com base nos tipos do projeto

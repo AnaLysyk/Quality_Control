@@ -1,24 +1,16 @@
-﻿"use client";
+import { redirect } from "next/navigation";
 
-import { useRouter, useSearchParams } from "next/navigation";
+export const dynamic = "force-dynamic";
 
-import AutomationStudio from "../AutomationStudio";
-import { useAutomationModuleContext } from "../_components/AutomationModuleContext";
+type Props = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
 
-export default function AutomacoesScriptsPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { access, clients, activeClient } = useAutomationModuleContext();
-
-  return (
-    <AutomationStudio
-      access={access}
-      activeCompanySlug={activeClient?.slug ?? null}
-      companies={clients.map((company) => ({ name: company.name, slug: company.slug }))}
-      initialFlowId={searchParams.get("flow")}
-      onOpenRealRunner={() => router.push("/automacoes/execucoes")}
-      mode="scripts"
-    />
-  );
+// Fluxos e Scripts sao os dois modos do mesmo estudio visual (AutomationStudio.tsx).
+// A tela canonica com a alternancia entre os dois modos e /automacoes/ui-studio.
+export default function AutomacoesScriptsAliasPage({ searchParams }: Props) {
+  const flowValue = searchParams?.flow;
+  const flow = Array.isArray(flowValue) ? flowValue[0] : flowValue;
+  const qs = flow ? `?view=scripts&flow=${encodeURIComponent(flow)}` : "?view=scripts";
+  redirect(`/automacoes/ui-studio${qs}`);
 }
-

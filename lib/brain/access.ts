@@ -8,6 +8,7 @@ import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { canAccess, canAccessRoute } from "@/lib/permissions/can-access";
 import { getUserAccessContext, type UserAccessContext } from "@/lib/permissions/get-user-access-context";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
+import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 
 export type BrainAccessContext = {
   user: AuthUser;
@@ -95,12 +96,22 @@ async function resolveAllowedProjectIds(allowedCompanyIds: Set<string>, hasGloba
   return allowedProjectIds;
 }
 
-function hasGlobalBrainVisibility(user: AuthUser) {
-  if (user.isGlobalAdmin) return true;
-  const roles = [user.role, user.companyRole, user.permissionRole]
-    .map((value) => normalizeString(value)?.toLowerCase())
-    .filter((value): value is string => Boolean(value));
-  return roles.includes("leader_tc") || roles.includes("technical_support");
+/**
+ * Aplica a matriz efetiva oficial (defaults do perfil + override de perfil + allow/deny
+ * individual do usuario, resolvidos por lib/serverPermissionAccess.ts) sobre o contexto
+ * de acesso do Brain, para nao depender de uma segunda logica de permissao.
+ */
+async function withOfficialPermissions(user: AuthUser, userAccess: UserAccessContext): Promise<UserAccessContext> {
+  const resolved = await resolvePermissionAccessForUser(user.id);
+  return { ...userAccess, permissions: resolved.permissions };
+}
+
+function hasGlobalBrainVisibility(user: AuthUser, userAccess: UserAccessContext) {
+  if (user.isGlobalAdmin || userAccess.isGlobalAdmin) return true;
+  return (
+    canAccess(userAccess, { moduleId: "context", action: "view_all_companies" }) ||
+    canAccess(userAccess, { moduleId: "context", action: "global_overview" })
+  );
 }
 
 function isE2eJsonMode() {
@@ -236,7 +247,10 @@ const MODULE_PERMISSION_REQUIREMENTS: Record<string, SystemPermission[]> = {
 
 function hasAnyRequirement(access: BrainAccessContext, requirements: SystemPermission[]) {
   if (requirements.length === 0) return true;
-  if (access.hasGlobalVisibility || access.user.isGlobalAdmin) return true;
+  // isGlobalAdmin e um bypass total legitimo. hasGlobalVisibility NAO bypassa permissao de
+  // modulo aqui: empresa/projeto global e permissao por modulo sao regras independentes
+  // (ex.: ve todas as empresas mas nao tem audit:view -> continua sem ver logs).
+  if (access.user.isGlobalAdmin) return true;
   if (isE2eJsonMode() && !hasAnyPermissionAction(access.userAccess.permissions)) return true;
   return requirements.some((permission) => canAccess(access.userAccess, permission));
 }
@@ -304,7 +318,7 @@ function resolveBrainNodePermissionScope(
   node: Pick<BrainNode, "type" | "refType" | "refId" | "metadata">,
   access: BrainAccessContext,
 ): PermissionScope {
-  if (access.hasGlobalVisibility) return "allowed";
+  if (access.user.isGlobalAdmin) return "allowed";
 
   const metadata = toRecord(node.metadata);
   const explicitRequirements = requirementsForPermissionNode(node, metadata);
@@ -372,7 +386,9 @@ function isNonSensitiveSystemNode(node: Pick<BrainNode, "type" | "refType">) {
 }
 
 export function canAccessBrainModule(access: BrainAccessContext, moduleName: unknown) {
-  if (access.hasGlobalVisibility) return true;
+  // Empresa/projeto global (hasGlobalVisibility) nao bypassa permissao de modulo: ver todas
+  // as empresas e ter audit:view sao permissoes independentes na matriz efetiva.
+  if (access.user.isGlobalAdmin) return true;
 
   const requirements = requirementsForModuleKey(moduleName);
   if (!requirements) return true;
@@ -383,10 +399,11 @@ export async function resolveBrainAccess(req: Request, options?: { requireManage
   const user = await authenticateRequest(req);
   if (!user) return { ok: false, status: 401, error: "Nao autorizado" };
 
-  const userAccess = getUserAccessContext(user);
-  if (!userAccess) return { ok: false, status: 403, error: "Sem contexto de permissao" };
+  const baseUserAccess = getUserAccessContext(user);
+  if (!baseUserAccess) return { ok: false, status: 403, error: "Sem contexto de permissao" };
+  const userAccess = await withOfficialPermissions(user, baseUserAccess);
 
-  const hasGlobalVisibility = hasGlobalBrainVisibility(user);
+  const hasGlobalVisibility = hasGlobalBrainVisibility(user, userAccess);
   const canReadBrain =
     hasGlobalVisibility ||
     canAccess(userAccess, { moduleId: "brain", action: "view" }) ||
@@ -443,10 +460,11 @@ export async function resolveBrainAccess(req: Request, options?: { requireManage
 export async function buildBrainAccessContextFromAuthUser(user: AuthUser | null | undefined): Promise<BrainAccessContext | null> {
   if (!user) return null;
 
-  const userAccess = getUserAccessContext(user);
-  if (!userAccess) return null;
+  const baseUserAccess = getUserAccessContext(user);
+  if (!baseUserAccess) return null;
+  const userAccess = await withOfficialPermissions(user, baseUserAccess);
 
-  const hasGlobalVisibility = hasGlobalBrainVisibility(user);
+  const hasGlobalVisibility = hasGlobalBrainVisibility(user, userAccess);
   const canManage = hasGlobalVisibility;
   const allowedCompanySlugs = new Set(resolveAllowedCompanySlugs(user));
   const allowedCompanyIds = new Set<string>();

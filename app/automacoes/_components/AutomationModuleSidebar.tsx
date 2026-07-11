@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
-import { FiActivity, FiClipboard, FiCode, FiFolder, FiSend } from "react-icons/fi";
+import { FiActivity, FiClipboard, FiCode, FiFileText, FiFolder, FiSend } from "react-icons/fi";
 
 type NavItem = {
   href: string;
@@ -12,8 +12,9 @@ type NavItem = {
 };
 
 // Operação do dia a dia fica só com Postman + IDE. As demais telas continuam
-// existindo (links diretos, deep links de Casos etc.) mas saíram do menu
-// principal para reduzir a quantidade de cards.
+// existindo (links diretos, deep links de Casos etc., incluindo o UI Studio
+// legado com abas Fluxo/Script/API Lab/Base64) mas saíram do menu principal
+// para reduzir a quantidade de cards.
 const NAV_ITEMS: NavItem[] = [
   { href: "/automacoes/api-lab", icon: FiSend, label: "Postman" },
   { href: "/automacoes/playwright", icon: FiCode, label: "IDE" },
@@ -23,6 +24,7 @@ const UTILITY_ITEMS: NavItem[] = [
   { href: "/automacoes/base64?tab=library", icon: FiFolder, label: "Biblioteca Base64" },
   { href: "/casos-de-teste", icon: FiClipboard, label: "Casos" },
   { href: "/automacoes/execucoes", icon: FiActivity, label: "Runs" },
+  { href: "/automacoes/logs", icon: FiFileText, label: "Logs" },
 ];
 
 export default function AutomationModuleSidebar() {

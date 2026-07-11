@@ -18,6 +18,43 @@ function uniqueById<T extends { id: string }>(items: T[]) {
   return Array.from(new Map(items.map((item) => [item.id, item])).values());
 }
 
+function completenessScore(value: Record<string, unknown>) {
+  return Object.values(value).reduce<number>((score, field) => {
+    if (field === undefined || field === null) return score;
+    if (typeof field === "string" && field.trim() === "") return score;
+    if (Array.isArray(field) && field.length === 0) return score;
+    if (typeof field === "object" && !Array.isArray(field) && Object.keys(field as Record<string, unknown>).length === 0) return score;
+    return score + 1;
+  }, 0);
+}
+
+function mergeByIdPreferComplete<T extends { id: string }>(...sources: T[][]) {
+  const byId = new Map<string, T>();
+  for (const item of sources.flat()) {
+    const existing = byId.get(item.id);
+    if (!existing || completenessScore(item as unknown as Record<string, unknown>) > completenessScore(existing as unknown as Record<string, unknown>)) {
+      byId.set(item.id, item);
+    }
+  }
+  return Array.from(byId.values());
+}
+
+/**
+ * Une grafos de fontes diferentes (graph, domainGraph, grafo operacional de solicitacoes)
+ * preservando o no/edge mais completo em caso de ID duplicado e eliminando arestas
+ * cujo source ou target nao exista no conjunto final de nos.
+ */
+export function mergeBrainGraphs(
+  ...sources: Array<{ nodes: BrainNode[]; edges: BrainEdge[] }>
+): { nodes: BrainNode[]; edges: BrainEdge[] } {
+  const nodes = mergeByIdPreferComplete(...sources.map((source) => source.nodes));
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const edges = mergeByIdPreferComplete(...sources.map((source) => source.edges)).filter(
+    (edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target),
+  );
+  return { nodes, edges };
+}
+
 function metadataRecord(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return value as Record<string, unknown>;

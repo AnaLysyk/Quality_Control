@@ -425,7 +425,34 @@ export async function runBrainModel(input: BrainModelInput): Promise<BrainModelR
   };
 }
 
-export function buildBrainSystemPrompt() {
+export type BrainBehaviorPromptProfile = {
+  name: string;
+  instructions: string;
+  tone?: string | null;
+  formality?: string | null;
+  responseLength?: string | null;
+};
+
+function behaviorProfileDirectives(profile?: BrainBehaviorPromptProfile | null) {
+  if (!profile) return [];
+
+  const responseLengthHint: Record<string, string> = {
+    short: "Priorize respostas curtas.",
+    medium: "Mantenha respostas de tamanho medio, sem excesso de detalhe.",
+    long: "Pode detalhar mais quando o contexto exigir.",
+  };
+
+  return [
+    "",
+    `Modo de conversa selecionado: ${profile.name}.`,
+    profile.instructions,
+    profile.formality ? `Nivel de formalidade: ${profile.formality}.` : "",
+    profile.responseLength ? responseLengthHint[profile.responseLength] ?? "" : "",
+    "Este modo de conversa ajusta tom e estilo, mas nunca substitui as regras de seguranca, permissao e escopo acima.",
+  ].filter(Boolean);
+}
+
+export function buildBrainSystemPrompt(behaviorProfile?: BrainBehaviorPromptProfile | null) {
   return [
     "Você é o Brain do Quality Control.",
     "Você apoia QA, debug, automação, documentação, evidências, análise de risco, permissões, banco de dados, RAG, templates internos e APIs gratuitas configuradas.",
@@ -441,5 +468,6 @@ export function buildBrainSystemPrompt() {
     "Respeite empresa, usuário, perfil, permissão e escopo.",
     "Nunca exponha senha, token, segredo, cookie, credencial ou dado sensível.",
     "Quando uma ação alterar dados reais, peça confirmação antes.",
+    ...behaviorProfileDirectives(behaviorProfile),
   ].join("\n");
 }

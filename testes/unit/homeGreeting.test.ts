@@ -10,7 +10,7 @@ let resolveGreeting: () => string;
 let resolveFirstName: (u: unknown) => string;
 
 beforeAll(async () => {
-  const mod = await import("../../app/home/HomeContent");
+  const mod = await import("../../app/admin/home/NewHomeContent");
   resolveGreeting = mod.resolveGreeting;
   resolveFirstName = mod.resolveFirstName;
 });

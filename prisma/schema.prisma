@@ -1596,3 +1596,18 @@ model TestDataAssetAudit {
   @@index([createdAt])
   @@map("test_data_asset_audit")
 }
+
+// ─── GitHub Account Link (per-user OAuth for automation publish) ──────────
+
+model GithubAccountLink {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  githubUserId String
+  githubLogin  String
+  accessToken  String
+  scope        String?
+  connectedAt  DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("github_account_links")
+}

@@ -3,20 +3,25 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
-import { FiActivity, FiClipboard, FiCode, FiFolder, FiServer, FiTool } from "react-icons/fi";
+import { FiActivity, FiClipboard, FiCode, FiFolder, FiSend } from "react-icons/fi";
 
 type NavItem = {
   href: string;
-  icon: typeof FiTool;
+  icon: typeof FiSend;
   label: string;
 };
 
+// Operação do dia a dia fica só com Postman + IDE. As demais telas continuam
+// existindo (links diretos, deep links de Casos etc.) mas saíram do menu
+// principal para reduzir a quantidade de cards.
 const NAV_ITEMS: NavItem[] = [
-  { href: "/automacoes/tools", icon: FiTool, label: "Tools" },
-  { href: "/automacoes/api-lab", icon: FiServer, label: "API Lab" },
-  { href: "/automacoes/ui-studio", icon: FiCode, label: "UI Studio" },
+  { href: "/automacoes/api-lab", icon: FiSend, label: "Postman" },
+  { href: "/automacoes/playwright", icon: FiCode, label: "IDE" },
+];
+
+const UTILITY_ITEMS: NavItem[] = [
+  { href: "/automacoes/base64?tab=library", icon: FiFolder, label: "Biblioteca Base64" },
   { href: "/casos-de-teste", icon: FiClipboard, label: "Casos" },
-  { href: "/automacoes/base64?tab=library", icon: FiFolder, label: "Biblioteca" },
   { href: "/automacoes/execucoes", icon: FiActivity, label: "Runs" },
 ];
 
@@ -84,6 +89,32 @@ export default function AutomationModuleSidebar() {
             </Link>
           );
         })}
+      </div>
+
+      <div className="mt-4 border-t border-[var(--tc-border,#d7deea)] pt-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Outras ferramentas</p>
+        <div className="mt-2 flex flex-wrap gap-2 2xl:flex-col">
+          {UTILITY_ITEMS.map((item) => {
+            const [itemPath] = item.href.split("?");
+            const isActive = pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                scroll={false}
+                className={`inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                  isActive
+                    ? "border-[var(--tc-accent,#ef0001)] text-[var(--tc-accent,#ef0001)]"
+                    : "border-[var(--tc-border,#d7deea)] text-[var(--tc-text-secondary,#4b5563)] hover:border-[var(--tc-accent,#ef0001)]"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="whitespace-nowrap">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

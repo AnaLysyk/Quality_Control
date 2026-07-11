@@ -413,3 +413,130 @@ async function executeRun(
   }
 }
 
+// ── Arbitrary Node script execution ─────────────────────────────────────
+// Reuses the same run record table (so the existing SSE endpoint and its
+// access checks work unchanged), workspace helpers, and emitter bus as
+// Playwright runs, but spawns a plain `node script.js` instead of the
+// Playwright test runner and skips result-file/spec parsing.
+
+export interface StartScriptRunOptions {
+  companySlug: string;
+  title: string;
+  scriptContent: string;
+  createdBy?: string;
+  /** Hard kill timeout in ms. Defaults to 60s. */
+  timeoutMs?: number;
+}
+
+const SCRIPT_CONFIG: PlaywrightConfigOptions = {
+  baseURL: "",
+  browser: "chromium",
+  headless: true,
+  timeoutMs: 30000,
+  workers: 1,
+  retries: 0,
+  screenshotOn: "off",
+  videoOn: "off",
+  traceOn: "off",
+};
+
+export async function startScriptRun(opts: StartScriptRunOptions): Promise<string> {
+  await ensureAutomationTables();
+
+  const runId = await createRunRecord({
+    companySlug: opts.companySlug,
+    title: opts.title,
+    runMode: "all",
+    selectedSpecs: [],
+    config: SCRIPT_CONFIG,
+    createdBy: opts.createdBy,
+  });
+  await automationPool.query(`UPDATE playwright_runs SET browser='script' WHERE id=$1`, [runId]);
+
+  const emitter = new EventEmitter() as RunEmitter;
+  emitter.setMaxListeners(50);
+  emitter.finished = false;
+  runBus.set(runId, emitter);
+
+  void executeScriptRun(runId, opts, emitter);
+
+  return runId;
+}
+
+async function executeScriptRun(
+  runId: string,
+  opts: StartScriptRunOptions,
+  emitter: RunEmitter,
+) {
+  const emit = (line: string) => emitter.emit("line", line);
+  const timeoutMs = opts.timeoutMs ?? 60_000;
+
+  try {
+    emit(`[system] Preparando workspace para ${opts.companySlug}…`);
+    const workDir = await prepareWorkspace(
+      opts.companySlug,
+      runId,
+      [{ path: "script.js", content: opts.scriptContent }],
+      SCRIPT_CONFIG,
+    );
+    emit(`[system] Workspace: ${workDir}`);
+    emit(`[system] Executando script Node (timeout ${Math.round(timeoutMs / 1000)}s)…`);
+
+    await updateRunStatus(runId, "running");
+
+    const child = spawn("node", ["script.js"], {
+      cwd: workDir,
+      env: { ...process.env },
+      shell: process.platform === "win32",
+    });
+
+    let exitCode = 0;
+    let timedOut = false;
+    const killTimer = setTimeout(() => {
+      timedOut = true;
+      emit(`[system] Tempo limite atingido — encerrando processo.`);
+      child.kill();
+    }, timeoutMs);
+
+    child.stdout.on("data", (chunk: Buffer) => {
+      for (const line of chunk.toString().split(/\r?\n/)) {
+        if (!line.trim()) continue;
+        emit(`[stdout] ${line}`);
+      }
+    });
+
+    child.stderr.on("data", (chunk: Buffer) => {
+      for (const line of chunk.toString().split(/\r?\n/)) {
+        if (!line.trim()) continue;
+        emit(`[stderr] ${line}`);
+      }
+    });
+
+    await new Promise<void>((resolve) => {
+      child.on("close", (code) => {
+        exitCode = timedOut ? 1 : code ?? 1;
+        resolve();
+      });
+      child.on("error", (err) => {
+        emit(`[error] Falha ao iniciar processo: ${err.message}`);
+        exitCode = 1;
+        resolve();
+      });
+    });
+    clearTimeout(killTimer);
+
+    const finalStatus = exitCode === 0 ? "passed" : "failed";
+    emit(`[system] Execução concluída — status=${finalStatus} (exit code ${exitCode})`);
+    await updateRunStatus(runId, finalStatus, exitCode);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    emit(`[error] ${msg}`);
+    await updateRunStatus(runId, "error", 1).catch(() => {});
+  } finally {
+    emitter.finished = true;
+    emitter.emit("done");
+    setTimeout(() => runBus.delete(runId), 60_000);
+    await cleanupWorkspace(opts.companySlug, runId).catch(() => {});
+  }
+}
+

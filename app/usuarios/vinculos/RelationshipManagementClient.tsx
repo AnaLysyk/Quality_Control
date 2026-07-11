@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   FiArrowLeft,
   FiArrowRight,
@@ -9,7 +9,6 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiClock,
-  FiFolder,
   FiHome,
   FiSearch,
   FiTrash2,
@@ -43,12 +42,10 @@ type Person = {
   memberships?: Array<{ companyId: string; role?: string | null; company: Company }>;
   projectTeamAssignments?: Assignment[];
 };
-type SearchMode = "all" | "people" | "companies" | "projects" | "profiles";
+type SearchMode = "all" | "people" | "companies";
 type ResultItem =
   | { kind: "person"; id: string; person: Person }
-  | { kind: "company"; id: string; company: Company }
-  | { kind: "project"; id: string; project: Project }
-  | { kind: "profile"; id: string; profile: { role: string; count: number } };
+  | { kind: "company"; id: string; company: Company };
 type SearchResponse = {
   companies: Company[];
   projects: Project[];
@@ -117,12 +114,11 @@ export default function RelationshipManagementClient() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const searchRequestRef = useRef<AbortController | null>(null);
 
   const results = useMemo<ResultItem[]>(() => [
     ...data.people.map((item) => ({ kind: "person" as const, id: item.id, person: item })),
     ...data.companies.map((item) => ({ kind: "company" as const, id: item.id, company: item })),
-    ...data.projects.map((item) => ({ kind: "project" as const, id: item.id, project: item })),
-    ...data.profiles.map((item) => ({ kind: "profile" as const, id: item.role, profile: item })),
   ], [data]);
   const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const visibleResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -133,6 +129,21 @@ export default function RelationshipManagementClient() {
   useEffect(() => { void loadBase(); }, []);
   useEffect(() => { if (!message) return; const timer = window.setTimeout(() => setMessage(null), 5000); return () => window.clearTimeout(timer); }, [message]);
   useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      searchRequestRef.current?.abort();
+      setData(EMPTY_SEARCH);
+      setSelected(null);
+      setPerson(null);
+      setPage(1);
+      setLoading(false);
+      return;
+    }
+    const timer = window.setTimeout(() => { void search(trimmed, mode); }, 420);
+    return () => window.clearTimeout(timer);
+  }, [query, mode]);
+  useEffect(() => () => searchRequestRef.current?.abort(), []);
 
   async function loadBase() {
     try {
@@ -146,18 +157,24 @@ export default function RelationshipManagementClient() {
     }
   }
 
-  async function search() {
-    if (query.trim().length < 2) { setMessage({ type: "error", text: "Digite pelo menos dois caracteres." }); return; }
+  async function search(searchQuery = query.trim(), searchMode = mode) {
+    if (searchQuery.length < 2) return;
+    searchRequestRef.current?.abort();
+    const controller = new AbortController();
+    searchRequestRef.current = controller;
     setLoading(true); setSelected(null); setPerson(null); setPage(1);
     try {
-      const params = new URLSearchParams({ q: query.trim(), mode });
-      const response = await fetch(`/api/usuarios/vinculos/search?${params.toString()}`, { cache: "no-store" });
+      const params = new URLSearchParams({ q: searchQuery, mode: searchMode });
+      const response = await fetch(`/api/usuarios/vinculos/search?${params.toString()}`, { cache: "no-store", signal: controller.signal });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Falha ao pesquisar vínculos");
       setData(body);
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
       setMessage({ type: "error", text: error instanceof Error ? error.message : "Falha ao pesquisar vínculos" });
-    } finally { setLoading(false); }
+    } finally {
+      if (searchRequestRef.current === controller) setLoading(false);
+    }
   }
 
   async function openPerson(id: string) {
@@ -211,19 +228,19 @@ export default function RelationshipManagementClient() {
   function renderResult(item: ResultItem) {
     if (item.kind === "person") {
       const open = selected?.kind === "person" && selected.id === item.id;
-      return <Row key={`person:${item.id}`} icon={<FiUser />} title={personName(item.person)} subtitle={`${roleLabel(item.person.globalRole ?? item.person.role)} · ${item.person.email}`} open={open} onClick={() => void openPerson(item.id)}>{person ? <div className="grid gap-5 lg:grid-cols-2"><section className="relationship-inline-section"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Vínculos atuais</p>{activeAssignments.length === 0 ? <p className="mt-3 text-sm" style={{ color: "var(--rel-muted)" }}>Nenhum vínculo ativo.</p> : activeAssignments.map((assignment) => <div key={assignment.id} className="mt-3 flex items-center gap-3 border-b pb-3" style={{ borderColor: "var(--rel-line)" }}><FiBriefcase /><div className="flex-1"><p className="font-bold">{assignment.project.name}</p><p className="text-xs" style={{ color: "var(--rel-muted)" }}>{companyName(assignment.company)} · {roleLabel(assignment.role)}</p></div>{data.permissions.canDelete && assignment.role !== "leader_tc" ? <button type="button" onClick={() => setRemoveTarget(assignment)} className="text-rose-500"><FiTrash2 /></button> : null}</div>)}</section><section className="relationship-inline-section"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Criar vínculo</p><div className="relationship-inline-form mt-3"><select value={companyId} onChange={(event) => setCompanyId(event.target.value)} className="h-10 rounded-xl px-3 text-xs font-bold"><option value="">Empresa</option>{base.companies.map((company) => <option key={company.id} value={company.id}>{companyName(company)}</option>)}</select><select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="h-10 rounded-xl px-3 text-xs font-bold"><option value="">Projeto</option>{availableProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select><button type="button" onClick={() => setAssignmentRole("leader_tc")} className={`h-10 rounded-xl text-xs font-black ${assignmentRole === "leader_tc" ? "bg-cyan-500/10" : ""}`}>Líder TC</button><button type="button" onClick={() => setAssignmentRole("qa_tc")} className={`h-10 rounded-xl text-xs font-black ${assignmentRole === "qa_tc" ? "bg-cyan-500/10" : ""}`}>Usuário TC</button><button type="button" onClick={() => void createAssignment()} disabled={saving || !projectId} className="col-span-full h-10 rounded-xl bg-slate-950 text-xs font-black text-white disabled:opacity-40 dark:bg-cyan-300 dark:text-slate-950">Confirmar vínculo</button></div></section></div> : null}</Row>;
+      const companyLinks = item.person.memberships ?? [];
+      const projectLinks = item.person.projectTeamAssignments ?? [];
+      const subtitleParts = [roleLabel(item.person.globalRole ?? item.person.role), item.person.email];
+      if (companyLinks.length) subtitleParts.push(`${companyLinks.length} empresa${companyLinks.length === 1 ? "" : "s"}`);
+      if (projectLinks.length) subtitleParts.push(`${projectLinks.length} projeto${projectLinks.length === 1 ? "" : "s"}`);
+      return <Row key={`person:${item.id}`} icon={<FiUser />} title={personName(item.person)} subtitle={subtitleParts.join(" · ")} open={open} onClick={() => void openPerson(item.id)}>{person ? <div className="relationship-person-context"><section className="relationship-inline-section"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Empresas e projetos vinculados</p>{activeAssignments.length === 0 ? <p className="mt-3 text-sm" style={{ color: "var(--rel-muted)" }}>Nenhum vínculo de projeto ativo.</p> : activeAssignments.map((assignment) => <div key={assignment.id} className="relationship-link-line"><FiBriefcase /><div className="flex-1"><p className="font-bold">{companyName(assignment.company)}</p><p className="text-xs" style={{ color: "var(--rel-muted)" }}>{assignment.project.name} · {roleLabel(assignment.role)}</p></div>{data.permissions.canDelete && assignment.role !== "leader_tc" ? <button type="button" onClick={() => setRemoveTarget(assignment)} className="text-rose-500" title="Remover vínculo"><FiTrash2 /></button> : null}</div>)}</section><section className="relationship-inline-section"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Adicionar vínculo</p><div className="relationship-inline-form mt-3"><select value={companyId} onChange={(event) => setCompanyId(event.target.value)} className="h-10 rounded-xl px-3 text-xs font-bold"><option value="">Empresa</option>{base.companies.map((company) => <option key={company.id} value={company.id}>{companyName(company)}</option>)}</select><select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="h-10 rounded-xl px-3 text-xs font-bold"><option value="">Projeto</option>{availableProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select><button type="button" onClick={() => setAssignmentRole("leader_tc")} className={`h-10 rounded-xl text-xs font-black ${assignmentRole === "leader_tc" ? "bg-cyan-500/10" : ""}`}>Líder TC</button><button type="button" onClick={() => setAssignmentRole("qa_tc")} className={`h-10 rounded-xl text-xs font-black ${assignmentRole === "qa_tc" ? "bg-cyan-500/10" : ""}`}>Usuário TC</button><button type="button" onClick={() => void createAssignment()} disabled={saving || !projectId} className="col-span-full h-10 rounded-xl bg-slate-950 text-xs font-black text-white disabled:opacity-40 dark:bg-cyan-300 dark:text-slate-950">Confirmar vínculo</button></div></section></div> : null}</Row>;
     }
-    if (item.kind === "company") {
-      const assignments = data.assignments.filter((assignment) => assignment.company.id === item.id);
-      return <Row key={`company:${item.id}`} icon={<FiHome />} title={companyName(item.company)} subtitle={`Empresa · ${assignments.length} vínculos encontrados`} open={selected?.kind === "company" && selected.id === item.id} onClick={() => toggle("company", item.id)}>{assignments.length ? assignments.map((assignment) => <p key={assignment.id} className="py-1 text-sm font-bold">{assignment.user?.full_name || assignment.user?.name} · {assignment.project.name} · {roleLabel(assignment.role)}</p>) : <p className="text-sm" style={{ color: "var(--rel-muted)" }}>Nenhum vínculo localizado nesta busca.</p>}</Row>;
-    }
-    if (item.kind === "project") {
-      const assignments = data.assignments.filter((assignment) => assignment.project.id === item.id);
-      const leader = assignments.find((assignment) => assignment.role === "leader_tc");
-      return <Row key={`project:${item.id}`} icon={<FiFolder />} title={item.project.name} subtitle={`${companyName(item.project.company)} · Projeto`} open={selected?.kind === "project" && selected.id === item.id} onClick={() => toggle("project", item.id)}><div className="grid gap-2 md:grid-cols-2"><p className="text-sm font-bold">Líder: {leader?.user?.full_name || leader?.user?.name || "Não localizado"}</p><p className="text-sm font-bold">Usuários TC: {assignments.filter((assignment) => assignment.role === "qa_tc").length}</p></div></Row>;
-    }
-    const people = data.people.filter((personItem) => String(personItem.globalRole ?? personItem.role ?? "user") === item.profile.role);
-    return <Row key={`profile:${item.id}`} icon={<FiUsers />} title={roleLabel(item.profile.role)} subtitle={`Perfil · ${item.profile.count} pessoas`} open={selected?.kind === "profile" && selected.id === item.id} onClick={() => toggle("profile", item.id)}>{people.map((personItem) => <button key={personItem.id} type="button" onClick={() => void openPerson(personItem.id)} className="relationship-profile-chip mr-2 mt-2 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold">{personName(personItem)} <FiArrowRight /></button>)}</Row>;
+
+    const assignments = data.assignments.filter((assignment) => assignment.company.id === item.id);
+    const leaders = assignments.filter((assignment) => assignment.role === "leader_tc");
+    const tcUsers = assignments.filter((assignment) => assignment.role === "qa_tc");
+    const projectCount = new Set(assignments.map((assignment) => assignment.project.id)).size;
+    return <Row key={`company:${item.id}`} icon={<FiHome />} title={companyName(item.company)} subtitle={`Empresa · ${projectCount} projetos · ${leaders.length} líderes · ${tcUsers.length} usuários TC`} open={selected?.kind === "company" && selected.id === item.id} onClick={() => toggle("company", item.id)}><div className="relationship-company-context"><section><p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Liderança e equipe</p>{assignments.length ? assignments.map((assignment) => <div key={assignment.id} className="relationship-link-line"><FiUsers /><div className="flex-1"><p className="font-bold">{assignment.user?.full_name || assignment.user?.name}</p><p className="text-xs" style={{ color: "var(--rel-muted)" }}>{assignment.project.name} · {roleLabel(assignment.role)}</p></div></div>) : <p className="mt-3 text-sm" style={{ color: "var(--rel-muted)" }}>Nenhum vínculo localizado para esta empresa.</p>}</section></div></Row>;
   }
 
   return (
@@ -235,19 +252,19 @@ export default function RelationshipManagementClient() {
           <BrainVisual busy={loading || saving} />
           <p className="text-[10px] font-black uppercase tracking-[0.34em] text-cyan-700/70 dark:text-cyan-200/70">BRAIN · Contexto seguro</p>
           <h1 className="mt-1 text-3xl font-black sm:text-4xl">Gestão de Vínculos</h1>
-          <p className="mx-auto mt-1 max-w-2xl text-sm" style={{ color: "var(--rel-muted)" }}>Pesquise pessoas, empresas, projetos ou perfis e gerencie somente os vínculos permitidos.</p>
+          <p className="mx-auto mt-1 max-w-2xl text-sm" style={{ color: "var(--rel-muted)" }}>Pesquise por pessoa, empresa, projeto ou perfil. Os resultados são organizados por pessoa ou empresa.</p>
         </header>
 
         <form className="relationship-search" onSubmit={(event) => { event.preventDefault(); void search(); }}>
-          <select value={mode} onChange={(event) => setMode(event.target.value as SearchMode)}><option value="all">Todos</option><option value="people">Pessoas</option><option value="companies">Empresas</option><option value="projects">Projetos</option><option value="profiles">Perfis</option></select>
+          <select value={mode} onChange={(event) => setMode(event.target.value as SearchMode)}><option value="all">Todos</option><option value="people">Pessoas</option><option value="companies">Empresas</option></select>
           <div className="relationship-search-field"><FiSearch className="text-cyan-600 dark:text-cyan-300" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar nome, e-mail, empresa, projeto ou perfil..." /></div>
-          <button type="submit" disabled={loading} className="relationship-search-submit">{loading ? "Buscando…" : "Buscar"}</button>
+          <button type="submit" disabled={loading || query.trim().length < 2} className="relationship-search-submit">{loading ? "Buscando…" : "Buscar"}</button>
         </form>
 
         <section className="relationship-results">
           <div className="relationship-results-header"><div><p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Resultados</p><h2 className="mt-1 text-lg font-black">{results.length ? `${results.length} encontrados` : "Comece pela busca"}</h2></div><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-black text-cyan-700 dark:text-cyan-200">{results.length}</span></div>
           <div className="relationship-results-scroll">
-            {!loading && query.trim().length < 2 ? <div className="flex h-full min-h-[150px] items-center justify-center text-sm font-bold" style={{ color: "var(--rel-muted)" }}>Digite pelo menos dois caracteres.</div> : null}
+            {!loading && query.trim().length < 2 ? <div className="flex h-full min-h-[150px] items-center justify-center text-sm font-bold" style={{ color: "var(--rel-muted)" }}>Digite para pesquisar automaticamente.</div> : null}
             {!loading && query.trim().length >= 2 && results.length === 0 ? <div className="flex h-full min-h-[150px] items-center justify-center text-sm font-bold" style={{ color: "var(--rel-muted)" }}>Nenhum resultado encontrado.</div> : null}
             {visibleResults.map(renderResult)}
           </div>

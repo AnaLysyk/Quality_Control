@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiBriefcase, FiFolder, FiHelpCircle, FiRefreshCw, FiRotateCcw, FiSearch, FiSliders, FiTag, FiX } from "react-icons/fi";
+import { FiBriefcase, FiFilter, FiFolder, FiHelpCircle, FiRefreshCw, FiRotateCcw, FiSearch, FiTag, FiX } from "react-icons/fi";
 import { fetchBrainDashboardData } from "../_api/brain.client";
 import { buildMockBrainGraph } from "../_data/brainMockGraph";
 import type { BrainContextCompany, BrainContextProject, BrainContextResponse, BrainEdge, BrainGraphSummary, BrainNode, BrainNodeStatus, BrainNodeType, BuiltBrainGraph } from "../_types/brain.types";
@@ -567,73 +567,8 @@ export function BrainNeuralDashboard() {
     setSelectedNode(null);
   }
 
-  const smartFilterResults = useMemo(() => {
-    const query = searchText
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\\u0300-\\u036f]/g, "")
-      .trim();
 
-    const degreeByNode = new Map<string, number>();
-    for (const node of graph.nodes) degreeByNode.set(node.id, 0);
-    for (const edge of graph.edges) {
-      degreeByNode.set(edge.source, (degreeByNode.get(edge.source) ?? 0) + 1);
-      degreeByNode.set(edge.target, (degreeByNode.get(edge.target) ?? 0) + 1);
-    }
-
-    const matches = graph.nodes.filter((node) => {
-      if (!query) return true;
-
-      const metadata = node.metadata ?? {};
-      const haystack = [
-        node.label,
-        node.type,
-        node.module,
-        node.status,
-        node.description,
-        node.information,
-        node.companyName,
-        node.projectName,
-        node.refType,
-        node.refId,
-        typeof metadata.route === "string" ? metadata.route : "",
-        typeof metadata.source === "string" ? metadata.source : "",
-        typeof metadata.entityType === "string" ? metadata.entityType : "",
-        ...(node.missingKnowledge ?? []),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\\u0300-\\u036f]/g, "");
-
-      return haystack.includes(query);
-    });
-
-    return matches
-      .sort((left, right) => {
-        const rightDegree = degreeByNode.get(right.id) ?? 0;
-        const leftDegree = degreeByNode.get(left.id) ?? 0;
-        if (rightDegree !== leftDegree) return rightDegree - leftDegree;
-        return left.label.localeCompare(right.label, "pt-BR");
-      })
-      .slice(0, 10);
-  }, [graph.edges, graph.nodes, searchText]);
-
-  function openNodeFromSmartFilter(node: BrainNode) {
-    setSelectedCompanyId(null);
-    setSelectedProjectId(null);
-    setNodeType("all");
-    setNodeStatus("all");
-    setShowPendingOnly(false);
-    setShowOrphansOnly(false);
-    setSelectedNode(node);
-    setLocalGraphOnly(true);
-    setFilterCollapsed(true);
-    setSearchText(node.label);
-  }
-
-  function applySmartContextSearch(value: string) {
+  function applySmartContextSearch/(value: string) {
     setSelectedCompanyId(null);
     setSelectedProjectId(null);
     setNodeType("all");
@@ -726,7 +661,7 @@ export function BrainNeuralDashboard() {
         aria-expanded={!filterCollapsed}
         title="Filtros inteligentes do Brain"
       >
-        <FiSliders className="h-5 w-5" />
+        <FiFilter className="h-5 w-5" />
         {activeFilterCount > 0 ? (
           <span className="absolute -right-1.5 -top-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-cyan-300 px-1 text-[10px] font-black text-slate-950">
             {activeFilterCount}
@@ -817,28 +752,7 @@ export function BrainNeuralDashboard() {
                 </div>
               </section>
 
-              <section className="py-4">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">Nós encontrados</p>
-                  <span className="text-[10px] font-medium text-slate-500">clique para abrir</span>
-                </div>
-                <div className="mt-2 flex flex-col gap-1">
-                  {smartFilterResults.map((node) => {
-                    const accent = node.status === "ok" ? "bg-emerald-300" : node.status === "error" || node.status === "missing" ? "bg-rose-300" : "bg-amber-300";
-                    return (
-                      <button key={node.id} type="button" onClick={() => openNodeFromSmartFilter(node)} className="group flex items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition hover:bg-white/[0.06]">
-                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent}`} aria-hidden />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-bold text-white">{node.label}</p>
-                          <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-400">{nodeTypeLabel(node.type)} · {node.module || "Brain"} · {nodeStatusLabel(node.status)}</p>
-                        </div>
-                        <span className="shrink-0 text-cyan-100/40 transition group-hover:text-cyan-100">→</span>
-                      </button>
-                    );
-                  })}
-                  {!smartFilterResults.length ? <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">Nenhum nó encontrado neste contexto.</p> : null}
-                </div>
-              </section>
+
             </div>
 
             <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-white/[0.025] px-5 py-3">

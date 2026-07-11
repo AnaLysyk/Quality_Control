@@ -144,7 +144,7 @@ async function resolveScopedCompanies(access: BrainAccessContext) {
   if (access.hasGlobalVisibility) {
     return prisma.company.findMany({
       where: { active: true },
-      select: { id: true, slug: true, name: true, company_name: true, status: true, active: true, notes: true, internal_notes: true, createdAt: true, updatedAt: true },
+      select: { id: true, slug: true, name: true, company_name: true, tax_id: true, status: true, active: true, notes: true, internal_notes: true, createdAt: true, updatedAt: true },
       orderBy: { name: "asc" },
       take: 250,
     });
@@ -176,7 +176,7 @@ async function resolveScopedCompanies(access: BrainAccessContext) {
         slugs.size ? { slug: { in: Array.from(slugs) } } : {},
       ].filter((item) => Object.keys(item).length > 0),
     },
-    select: { id: true, slug: true, name: true, company_name: true, status: true, active: true, notes: true, internal_notes: true, createdAt: true, updatedAt: true },
+    select: { id: true, slug: true, name: true, company_name: true, tax_id: true, status: true, active: true, notes: true, internal_notes: true, createdAt: true, updatedAt: true },
     orderBy: { name: "asc" },
     take: 120,
   });
@@ -798,3 +798,4 @@ export async function GET(req: Request) {
     },
   });
 }
+

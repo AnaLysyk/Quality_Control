@@ -1207,7 +1207,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies, testCas
   }, [isRunning, selectedCompany, activeFile, addTerminalLine]);
 
   const publishToGithub = useCallback(async () => {
-    if (!activeFile) return;
+    if (!activeFile || !selectedCompany) return;
     setPublishing(true);
     setPublishMessage(null);
     try {

@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-import { FiBriefcase, FiChevronDown, FiChevronUp, FiFolder, FiHelpCircle, FiRefreshCw, FiSearch, FiSliders, FiTag, FiX } from "react-icons/fi";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FiBriefcase, FiFolder, FiHelpCircle, FiRefreshCw, FiRotateCcw, FiSearch, FiSliders, FiTag, FiX } from "react-icons/fi";
 import { fetchBrainDashboardData } from "../_api/brain.client";
 import { buildMockBrainGraph } from "../_data/brainMockGraph";
 import type { BrainContextCompany, BrainContextProject, BrainContextResponse, BrainEdge, BrainGraphSummary, BrainNode, BrainNodeStatus, BrainNodeType, BuiltBrainGraph } from "../_types/brain.types";
@@ -136,11 +136,6 @@ function mergeContextProjects(context: BrainContextResponse | null, nodes: Brain
     .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
-function isInteractiveTarget(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) return false;
-  return Boolean(target.closest("button,input,select,textarea,a,[role='button']"));
-}
-
 const ASSISTANT_CONTEXT_NODE_LIMIT = 80;
 const ASSISTANT_CONTEXT_EDGE_LIMIT = 120;
 const ASSISTANT_CONTEXT_STATUS_LIMIT = 40;
@@ -186,10 +181,9 @@ export function BrainNeuralDashboard() {
   const [nodeHistory, setNodeHistory] = useState<BrainNode[]>([]);
   const [graphSource, setGraphSource] = useState<"database" | "fallback" | "partial">("fallback");
   const [debugMode, setDebugMode] = useState(false);
-  const [filterOffset, setFilterOffset] = useState({ x: 0, y: 0 });
-  const [filterCollapsed, setFilterCollapsed] = useState(false);
+  const [filterCollapsed, setFilterCollapsed] = useState(true);
   const [filterHelpVisible, setFilterHelpVisible] = useState(true);
-  const dragRef = useRef<{ pointerId: number; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
+  const filterPanelRef = useRef<HTMLElement | null>(null);
   const appliedQueryFocusRef = useRef(false);
 
   useEffect(() => {
@@ -573,31 +567,6 @@ export function BrainNeuralDashboard() {
     setSelectedNode(null);
   }
 
-  function handleFilterPointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (isInteractiveTarget(event.target)) return;
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      baseX: filterOffset.x,
-      baseY: filterOffset.y,
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }
-
-  function handleFilterPointerMove(event: PointerEvent<HTMLDivElement>) {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    setFilterOffset({
-      x: drag.baseX + event.clientX - drag.startX,
-      y: drag.baseY + event.clientY - drag.startY,
-    });
-  }
-
-  function handleFilterPointerUp(event: PointerEvent<HTMLDivElement>) {
-    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
-  }
-
   const smartFilterResults = useMemo(() => {
     const query = searchText
       .toLowerCase()
@@ -651,34 +620,6 @@ export function BrainNeuralDashboard() {
       .slice(0, 10);
   }, [graph.edges, graph.nodes, searchText]);
 
-  function handleSmartFilterDragStart(event: PointerEvent<HTMLElement>) {
-    if (isInteractiveTarget(event.target)) return;
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      baseX: filterOffset.x,
-      baseY: filterOffset.y,
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }
-
-  function handleSmartFilterDragMove(event: PointerEvent<HTMLElement>) {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    setFilterOffset({
-      x: drag.baseX + event.clientX - drag.startX,
-      y: drag.baseY + event.clientY - drag.startY,
-    });
-  }
-
-  function handleSmartFilterDragEnd(event: PointerEvent<HTMLElement>) {
-    if (dragRef.current?.pointerId === event.pointerId) {
-      dragRef.current = null;
-    }
-  }
-
   function openNodeFromSmartFilter(node: BrainNode) {
     setSelectedCompanyId(null);
     setSelectedProjectId(null);
@@ -718,203 +659,200 @@ export function BrainNeuralDashboard() {
     [graph.nodes],
   );
 
+  const activeFilterCount = [
+    selectedCompanyId,
+    selectedProjectId,
+    selectedProfileType,
+    activeModule,
+    searchText.trim() || null,
+    nodeType !== "all" ? nodeType : null,
+    nodeStatus !== "all" ? nodeStatus : null,
+    period !== "all" ? period : null,
+    localGraphOnly ? "local" : null,
+    showPendingOnly ? "pending" : null,
+    showOrphansOnly ? "orphan" : null,
+  ].filter(Boolean).length;
+
+  useEffect(() => {
+    if (filterCollapsed) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setFilterCollapsed(true);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [filterCollapsed]);
+
+  function clearSmartFilters() {
+    setSelectedCompanyId(defaultCompanyForBrain(brainContext));
+    setSelectedProjectId(defaultProjectForBrain(brainContext));
+    setSelectedProfileType(null);
+    setActiveModule(null);
+    setSearchText("");
+    setNodeType("all");
+    setNodeStatus("all");
+    setPeriod("all");
+    setLocalGraphOnly(false);
+    setShowPendingOnly(false);
+    setShowOrphansOnly(false);
+    setSelectedNode(null);
+  }
+
   const filterHud = (
-    <aside
-      className="pointer-events-auto fixed z-[2147483000] text-white"
-      style={{
-        left: 252 + filterOffset.x,
-        top: 96 + filterOffset.y,
-        width: filterCollapsed ? 210 : "min(470px, calc(100vw - 286px))",
-      }}
-    >
-      {filterHelpVisible ? (
-        <div className="pointer-events-none absolute -right-3 top-2 z-[-1] hidden w-56 translate-x-full rounded-2xl border border-cyan-100/20 bg-slate-950/90 p-3 text-xs font-bold leading-5 text-cyan-50 shadow-[0_18px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl xl:block">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/60">Dica rápida</p>
-          <p className="mt-1">Arraste o filtro, escolha um fluxo real do sistema e abra o nó no contexto.</p>
+    <>
+      {filterHelpVisible && filterCollapsed ? (
+        <div className="pointer-events-auto fixed right-6 top-[164px] z-[2147482999] hidden w-72 rounded-2xl border border-cyan-100/20 bg-slate-950/94 p-4 text-sm leading-5 text-cyan-50 shadow-[0_18px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl lg:block">
+          <button
+            type="button"
+            onClick={() => setFilterHelpVisible(false)}
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
+            aria-label="Fechar dica"
+          >
+            <FiX className="h-3.5 w-3.5" />
+          </button>
+          <p className="pr-7 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/60">Encontre qualquer nó</p>
+          <p className="mt-1 pr-4 font-semibold text-white/85">
+            Use a busca, abra os filtros inteligentes ou peça ajuda ao Brian.
+          </p>
         </div>
       ) : null}
 
-      <div
-        className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-[0_18px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl"
-        onPointerDown={handleSmartFilterDragStart}
-        onPointerMove={handleSmartFilterDragMove}
-        onPointerUp={handleSmartFilterDragEnd}
-        onPointerCancel={handleSmartFilterDragEnd}
+      <button
+        type="button"
+        onClick={() => setFilterCollapsed((current) => !current)}
+        className="fixed right-6 top-24 z-[2147483001] flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-100/20 bg-slate-950/94 text-cyan-100 shadow-[0_18px_60px_rgba(0,0,0,0.48)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-cyan-100/40 hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200/70"
+        aria-label={filterCollapsed ? "Abrir filtros inteligentes do Brain" : "Fechar filtros inteligentes do Brain"}
+        aria-expanded={!filterCollapsed}
+        title="Filtros inteligentes do Brain"
       >
-        <header className="cursor-move border-b border-white/10 px-3.5 py-3">
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => setFilterCollapsed((current) => !current)}
-              className="flex items-center gap-2 text-left"
-              title="Recolher ou expandir filtro do Brain"
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-300/12 text-cyan-200">
-                <FiSliders className="h-3.5 w-3.5" />
-              </span>
-              <span>
-                <p className="text-sm font-bold text-white">Filtro do Brain</p>
-                <p className="text-[11px] font-medium text-slate-400">
-                  {graph.nodes.length} nós · {graph.edges.length} conexões
-                </p>
-              </span>
-            </button>
-
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setFilterHelpVisible((current) => !current)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 hover:bg-white/8 hover:text-white/85"
-                title="Mostrar dicas de uso"
-              >
-                <FiHelpCircle className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterCollapsed((current) => !current)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 hover:bg-white/8 hover:text-white/85"
-                title={filterCollapsed ? "Expandir filtro" : "Recolher filtro"}
-              >
-                {filterCollapsed ? <FiChevronDown className="h-4 w-4" /> : <FiChevronUp className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {!filterCollapsed ? (
-          <div className="flex flex-col divide-y divide-white/[0.06] px-3.5">
-            <div className="py-3">
-              <p className="text-[11px] font-semibold text-slate-400">Fluxo real do sistema</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchText("");
-                    setSelectedCompanyId(null);
-                    setSelectedProjectId(null);
-                    setSelectedProfileType(null);
-                    setActiveModule(null);
-                    setNodeType("all");
-                    setNodeStatus("all");
-                    setShowPendingOnly(false);
-                    setShowOrphansOnly(false);
-                    setLocalGraphOnly(false);
-                    setSelectedNode(null);
-                  }}
-                  className="rounded-full bg-cyan-300/20 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-300/28"
-                >
-                  Todos
-                </button>
-                <button type="button" onClick={() => applySmartContextSearch("login acesso auth usuario usuário perfil permissao permissão solicitacao solicitação token session")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Acesso/Login</button>
-                <button type="button" onClick={() => applySmartContextSearch("empresa company projeto project application aplicacao aplicação cliente usuario usuário vinculo vínculo")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Empresas/Projetos</button>
-                <button type="button" onClick={() => applySmartContextSearch("brain rag memoria memória contexto log audit auditoria historico histórico")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Brain</button>
-                <button type="button" onClick={() => applySmartContextSearch("test teste run plano case caso execucao execução resultado smoke regressao regressão")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">QA/Testes</button>
-                <button type="button" onClick={() => applySmartContextSearch("wiki documento documentacao documentação evidencia evidência manual regra conhecimento")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Docs/Wiki</button>
-                <button type="button" onClick={() => applySmartContextSearch("log logs auditoria audit historico histórico evento event")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Logs</button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3 py-3">
-              <label className="flex items-center gap-2">
-                <FiBriefcase className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden />
-                <span className="flex-1">
-                  <span className="block text-[10px] font-medium text-slate-500">Empresa</span>
-                  <select value={selectedCompanyId ?? "all"} onChange={(event) => handleSelectCompany(event.target.value === "all" ? null : event.target.value)} className="w-full bg-transparent text-[13px] font-semibold text-white outline-none">
-                    <option value="all">Todas</option>
-                    {contextCompanies.map((company) => <option key={`${company.id}:${company.name}`} value={company.id}>{company.name}</option>)}
-                  </select>
-                </span>
-              </label>
-
-              <label className="flex items-center gap-2">
-                <FiFolder className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden />
-                <span className="flex-1">
-                  <span className="block text-[10px] font-medium text-slate-500">Projeto</span>
-                  <select value={selectedProjectId ?? "all"} onChange={(event) => handleSelectProject(event.target.value === "all" ? null : event.target.value)} className="w-full bg-transparent text-[13px] font-semibold text-white outline-none">
-                    <option value="all">Todos</option>
-                    {contextProjects.map((project) => <option key={`${project.id}:${project.name}`} value={project.id}>{project.name}</option>)}
-                  </select>
-                </span>
-              </label>
-
-              <label className="flex items-center gap-2">
-                <FiTag className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden />
-                <span className="flex-1">
-                  <span className="block text-[10px] font-medium text-slate-500">Tipo</span>
-                  <select value={nodeType} onChange={(event) => setNodeType(event.target.value as BrainNodeType | "all")} className="w-full bg-transparent text-[13px] font-semibold text-white outline-none">
-                    <option value="all">Todos</option>
-                    {nodeTypeOptions.map((type) => <option key={type} value={type}>{nodeTypeLabel(type)}</option>)}
-                  </select>
-                </span>
-              </label>
-
-              <label className="flex items-center gap-2">
-                <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
-                  <span className="h-2 w-2 rounded-full bg-slate-500" aria-hidden />
-                </span>
-                <span className="flex-1">
-                  <span className="block text-[10px] font-medium text-slate-500">Status</span>
-                  <select value={nodeStatus} onChange={(event) => setNodeStatus(event.target.value as BrainNodeStatus | "all")} className="w-full bg-transparent text-[13px] font-semibold text-white outline-none">
-                    <option value="all">Todos</option>
-                    {nodeStatusOptions.map((status) => <option key={status} value={status}>{nodeStatusLabel(status)}</option>)}
-                  </select>
-                </span>
-              </label>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 py-3">
-              <button type="button" onClick={() => setLocalGraphOnly((current) => !current)} data-active={localGraphOnly ? "true" : "false"} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 data-[active=true]:bg-cyan-300/25 data-[active=true]:text-cyan-100">Grafo local</button>
-              <button type="button" onClick={() => setShowPendingOnly((current) => !current)} data-active={showPendingOnly ? "true" : "false"} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 data-[active=true]:bg-amber-300/25 data-[active=true]:text-amber-100">Pendências</button>
-              <button type="button" onClick={() => setShowOrphansOnly((current) => !current)} data-active={showOrphansOnly ? "true" : "false"} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 data-[active=true]:bg-rose-300/25 data-[active=true]:text-rose-100">Órfãos</button>
-              <button type="button" onClick={loadBrainData} className="ml-auto flex items-center gap-1.5 rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12">
-                <FiRefreshCw className="h-3 w-3" aria-hidden /> Atualizar
-              </button>
-            </div>
-
-            <section className="py-3">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[11px] font-semibold text-slate-400">Nós encontrados</p>
-                <span className="text-[10px] font-medium text-slate-500">clique para abrir</span>
-              </div>
-
-              <div className="mt-1.5 flex max-h-56 flex-col gap-0.5 overflow-y-auto pr-1">
-                {smartFilterResults.map((node) => {
-                  const accent =
-                    node.status === "ok"
-                      ? "bg-emerald-300"
-                      : node.status === "error" || node.status === "missing"
-                        ? "bg-rose-300"
-                        : "bg-amber-300";
-                  return (
-                    <button
-                      key={node.id}
-                      type="button"
-                      onClick={() => openNodeFromSmartFilter(node)}
-                      className="group flex items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-white/[0.06]"
-                    >
-                      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent}`} aria-hidden />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-bold text-white">{node.label}</p>
-                        <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-400">
-                          {nodeTypeLabel(node.type)} · {node.module || "Brain"} · {nodeStatusLabel(node.status)}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-cyan-100/40 transition group-hover:text-cyan-100">→</span>
-                    </button>
-                  );
-                })}
-
-                {!smartFilterResults.length ? (
-                  <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">
-                    Nenhum nó encontrado neste contexto.
-                  </p>
-                ) : null}
-              </div>
-            </section>
-          </div>
+        <FiSliders className="h-5 w-5" />
+        {activeFilterCount > 0 ? (
+          <span className="absolute -right-1.5 -top-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-cyan-300 px-1 text-[10px] font-black text-slate-950">
+            {activeFilterCount}
+          </span>
         ) : null}
-      </div>
-    </aside>
+      </button>
+
+      {!filterCollapsed ? (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[2147482999] cursor-default bg-slate-950/20 backdrop-blur-[1px]"
+            onClick={() => setFilterCollapsed(true)}
+            aria-label="Fechar filtros"
+          />
+          <aside
+            ref={filterPanelRef}
+            className="fixed bottom-6 right-6 top-[164px] z-[2147483000] flex w-[min(430px,calc(100vw-32px))] flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950/96 text-white shadow-[0_24px_90px_rgba(0,0,0,0.62)] backdrop-blur-2xl"
+            aria-label="Filtros inteligentes do Brain"
+          >
+            <header className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-base font-black text-white">Filtros inteligentes</p>
+                <p className="mt-0.5 text-xs font-medium text-slate-400">
+                  {visibleGraph.nodes.length} nós encontrados · {visibleGraph.edges.length} conexões
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFilterCollapsed(true)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/55 transition hover:bg-white/10 hover:text-white"
+                aria-label="Fechar filtros"
+              >
+                <FiX className="h-4 w-4" />
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto px-5">
+              <section className="border-b border-white/[0.07] py-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">Atalhos de contexto</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={clearSmartFilters} className="rounded-full bg-cyan-300/20 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-300/28">Todos</button>
+                  <button type="button" onClick={() => applySmartContextSearch("login acesso auth usuario usuário perfil permissao permissão solicitacao solicitação token session")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Acesso/Login</button>
+                  <button type="button" onClick={() => applySmartContextSearch("empresa company projeto project application aplicacao aplicação cliente usuario usuário vinculo vínculo")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Empresas/Projetos</button>
+                  <button type="button" onClick={() => applySmartContextSearch("brain rag memoria memória contexto log audit auditoria historico histórico")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Brain</button>
+                  <button type="button" onClick={() => applySmartContextSearch("test teste run plano case caso execucao execução resultado smoke regressao regressão")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">QA/Testes</button>
+                  <button type="button" onClick={() => applySmartContextSearch("wiki documento documentacao documentação evidencia evidência manual regra conhecimento")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Docs/Wiki</button>
+                  <button type="button" onClick={() => applySmartContextSearch("log logs auditoria audit historico histórico evento event")} className="rounded-full bg-white/6 px-3 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/12 hover:text-white">Logs</button>
+                </div>
+              </section>
+
+              <section className="border-b border-white/[0.07] py-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">Refinar busca</p>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="rounded-2xl border border-white/8 bg-white/[0.035] px-3 py-2.5">
+                    <span className="flex items-center gap-2 text-[10px] font-semibold text-slate-400"><FiBriefcase /> Empresa</span>
+                    <select value={selectedCompanyId ?? "all"} onChange={(event) => handleSelectCompany(event.target.value === "all" ? null : event.target.value)} className="mt-1 w-full bg-transparent text-sm font-semibold text-white outline-none">
+                      <option value="all">Todas</option>
+                      {contextCompanies.map((company) => <option key={`${company.id}:${company.name}`} value={company.id}>{company.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="rounded-2xl border border-white/8 bg-white/[0.035] px-3 py-2.5">
+                    <span className="flex items-center gap-2 text-[10px] font-semibold text-slate-400"><FiFolder /> Projeto</span>
+                    <select value={selectedProjectId ?? "all"} onChange={(event) => handleSelectProject(event.target.value === "all" ? null : event.target.value)} className="mt-1 w-full bg-transparent text-sm font-semibold text-white outline-none">
+                      <option value="all">Todos</option>
+                      {contextProjects.map((project) => <option key={`${project.id}:${project.name}`} value={project.id}>{project.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="rounded-2xl border border-white/8 bg-white/[0.035] px-3 py-2.5">
+                    <span className="flex items-center gap-2 text-[10px] font-semibold text-slate-400"><FiTag /> Tipo de nó</span>
+                    <select value={nodeType} onChange={(event) => setNodeType(event.target.value as BrainNodeType | "all")} className="mt-1 w-full bg-transparent text-sm font-semibold text-white outline-none">
+                      <option value="all">Todos</option>
+                      {nodeTypeOptions.map((type) => <option key={type} value={type}>{nodeTypeLabel(type)}</option>)}
+                    </select>
+                  </label>
+                  <label className="rounded-2xl border border-white/8 bg-white/[0.035] px-3 py-2.5">
+                    <span className="flex items-center gap-2 text-[10px] font-semibold text-slate-400"><span className="h-2 w-2 rounded-full bg-slate-500" /> Status</span>
+                    <select value={nodeStatus} onChange={(event) => setNodeStatus(event.target.value as BrainNodeStatus | "all")} className="mt-1 w-full bg-transparent text-sm font-semibold text-white outline-none">
+                      <option value="all">Todos</option>
+                      {nodeStatusOptions.map((status) => <option key={status} value={status}>{nodeStatusLabel(status)}</option>)}
+                    </select>
+                  </label>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setLocalGraphOnly((current) => !current)} data-active={localGraphOnly ? "true" : "false"} className="rounded-full bg-white/6 px-3 py-2 text-[11px] font-semibold text-white/70 hover:bg-white/12 data-[active=true]:bg-cyan-300/25 data-[active=true]:text-cyan-100">Grafo local</button>
+                  <button type="button" onClick={() => setShowPendingOnly((current) => !current)} data-active={showPendingOnly ? "true" : "false"} className="rounded-full bg-white/6 px-3 py-2 text-[11px] font-semibold text-white/70 hover:bg-white/12 data-[active=true]:bg-amber-300/25 data-[active=true]:text-amber-100">Pendências</button>
+                  <button type="button" onClick={() => setShowOrphansOnly((current) => !current)} data-active={showOrphansOnly ? "true" : "false"} className="rounded-full bg-white/6 px-3 py-2 text-[11px] font-semibold text-white/70 hover:bg-white/12 data-[active=true]:bg-rose-300/25 data-[active=true]:text-rose-100">Órfãos</button>
+                </div>
+              </section>
+
+              <section className="py-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/55">Nós encontrados</p>
+                  <span className="text-[10px] font-medium text-slate-500">clique para abrir</span>
+                </div>
+                <div className="mt-2 flex flex-col gap-1">
+                  {smartFilterResults.map((node) => {
+                    const accent = node.status === "ok" ? "bg-emerald-300" : node.status === "error" || node.status === "missing" ? "bg-rose-300" : "bg-amber-300";
+                    return (
+                      <button key={node.id} type="button" onClick={() => openNodeFromSmartFilter(node)} className="group flex items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition hover:bg-white/[0.06]">
+                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent}`} aria-hidden />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-bold text-white">{node.label}</p>
+                          <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-400">{nodeTypeLabel(node.type)} · {node.module || "Brain"} · {nodeStatusLabel(node.status)}</p>
+                        </div>
+                        <span className="shrink-0 text-cyan-100/40 transition group-hover:text-cyan-100">→</span>
+                      </button>
+                    );
+                  })}
+                  {!smartFilterResults.length ? <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">Nenhum nó encontrado neste contexto.</p> : null}
+                </div>
+              </section>
+            </div>
+
+            <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-white/[0.025] px-5 py-3">
+              <button type="button" onClick={clearSmartFilters} className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold text-white/60 hover:bg-white/8 hover:text-white">
+                <FiRotateCcw className="h-3.5 w-3.5" /> Limpar
+              </button>
+              <button type="button" onClick={loadBrainData} className="flex items-center gap-2 rounded-full bg-cyan-300/15 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-300/25">
+                <FiRefreshCw className="h-3.5 w-3.5" /> Atualizar
+              </button>
+            </footer>
+          </aside>
+        </>
+      ) : null}
+    </>
   );
 
   return (

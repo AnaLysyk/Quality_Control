@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -38,6 +38,14 @@ function roleMatches(query: string) {
     .flatMap(([, roles]) => roles);
 }
 
+function assignmentRoleMatches(query: string) {
+  const normalized = normalize(query);
+  const roles: string[] = [];
+  if (normalized.includes("lider") || normalized.includes("lideranca")) roles.push("leader_tc");
+  if (normalized.includes("usuario tc") || normalized.includes("qa tc")) roles.push("qa_tc");
+  return roles;
+}
+
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -48,7 +56,8 @@ export async function GET(req: Request) {
   const db = await getDb();
   const url = new URL(req.url);
   const query = (url.searchParams.get("q") ?? "").trim();
-  const mode = (url.searchParams.get("mode") ?? "all").trim();
+  const requestedMode = (url.searchParams.get("mode") ?? "all").trim();
+  const mode = ["people", "companies"].includes(requestedMode) ? requestedMode : "all";
   const global = Boolean(user.isGlobalAdmin);
   const companyIds = new Set<string>();
   if (user.companyId) companyIds.add(user.companyId);
@@ -66,11 +75,37 @@ export async function GET(req: Request) {
 
   const companyScope = global ? undefined : { in: Array.from(companyIds) };
   const matchedRoles = roleMatches(query);
+  const matchedAssignmentRoles = assignmentRoleMatches(query);
   const enumRoleValues = new Set<string>(Object.values(Role));
   const prismaRoles = matchedRoles.filter((role): role is Role => enumRoleValues.has(role));
   const shouldSearch = query.length >= 2;
 
-  const [companies, projects, people, assignments] = await Promise.all([
+  const peopleSearchFilters: Prisma.UserWhereInput[] = [
+    { name: { contains: query, mode: "insensitive" } },
+    { full_name: { contains: query, mode: "insensitive" } },
+    { email: { contains: query, mode: "insensitive" } },
+    { user: { contains: query, mode: "insensitive" } },
+    { globalRole: { contains: query, mode: "insensitive" } },
+    { memberships: { some: { company: { name: { contains: query, mode: "insensitive" } } } } },
+    { memberships: { some: { company: { company_name: { contains: query, mode: "insensitive" } } } } },
+    {
+      projectTeamAssignments: {
+        some: {
+          status: "active",
+          OR: [
+            { project: { name: { contains: query, mode: "insensitive" } } },
+            { project: { slug: { contains: query, mode: "insensitive" } } },
+            { company: { name: { contains: query, mode: "insensitive" } } },
+            { company: { company_name: { contains: query, mode: "insensitive" } } },
+          ],
+        },
+      },
+    },
+    ...(matchedRoles.length ? [{ globalRole: { in: matchedRoles } } satisfies Prisma.UserWhereInput] : []),
+    ...(prismaRoles.length ? [{ role: { in: prismaRoles } } satisfies Prisma.UserWhereInput] : []),
+  ];
+
+  const [companies, people, assignments] = await Promise.all([
     shouldSearch && ["all", "companies"].includes(mode)
       ? db.company.findMany({
           where: {
@@ -80,6 +115,17 @@ export async function GET(req: Request) {
               { name: { contains: query, mode: "insensitive" } },
               { company_name: { contains: query, mode: "insensitive" } },
               { slug: { contains: query, mode: "insensitive" } },
+              {
+                projects: {
+                  some: {
+                    archivedAt: null,
+                    OR: [
+                      { name: { contains: query, mode: "insensitive" } },
+                      { slug: { contains: query, mode: "insensitive" } },
+                    ],
+                  },
+                },
+              },
             ],
           },
           select: { id: true, name: true, company_name: true, slug: true, status: true },
@@ -87,31 +133,7 @@ export async function GET(req: Request) {
           orderBy: { name: "asc" },
         })
       : [],
-    shouldSearch && ["all", "projects"].includes(mode)
-      ? db.project.findMany({
-          where: {
-            archivedAt: null,
-            ...(companyScope ? { companyId: companyScope } : {}),
-            OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { slug: { contains: query, mode: "insensitive" } },
-              { company: { name: { contains: query, mode: "insensitive" } } },
-              { company: { company_name: { contains: query, mode: "insensitive" } } },
-            ],
-          },
-          select: {
-            id: true,
-            companyId: true,
-            name: true,
-            slug: true,
-            status: true,
-            company: { select: { id: true, name: true, company_name: true, slug: true } },
-          },
-          take: 30,
-          orderBy: { name: "asc" },
-        })
-      : [],
-    shouldSearch && ["all", "people", "profiles"].includes(mode)
+    shouldSearch && ["all", "people"].includes(mode)
       ? db.user.findMany({
           where: {
             active: true,
@@ -126,25 +148,7 @@ export async function GET(req: Request) {
                       { projectTeamAssignments: { some: { companyId: companyScope, status: "active" } } },
                     ],
                   },
-              mode === "profiles" || matchedRoles.length
-                ? {
-                    OR: [
-                      ...(matchedRoles.length ? [{ globalRole: { in: matchedRoles } }] : []),
-                      ...(prismaRoles.length ? [{ role: { in: prismaRoles } }] : []),
-                      { globalRole: { contains: query, mode: "insensitive" } },
-                    ],
-                  }
-                : {
-                    OR: [
-                      { name: { contains: query, mode: "insensitive" } },
-                      { full_name: { contains: query, mode: "insensitive" } },
-                      { email: { contains: query, mode: "insensitive" } },
-                      { user: { contains: query, mode: "insensitive" } },
-                      { globalRole: { contains: query, mode: "insensitive" } },
-                      { memberships: { some: { company: { name: { contains: query, mode: "insensitive" } } } } },
-                      { memberships: { some: { company: { company_name: { contains: query, mode: "insensitive" } } } } },
-                    ],
-                  },
+              { OR: peopleSearchFilters },
             ],
           },
           select: {
@@ -188,6 +192,7 @@ export async function GET(req: Request) {
               { company: { name: { contains: query, mode: "insensitive" } } },
               { company: { company_name: { contains: query, mode: "insensitive" } } },
               { project: { name: { contains: query, mode: "insensitive" } } },
+              ...(matchedAssignmentRoles.length ? [{ role: { in: matchedAssignmentRoles } }] : []),
             ],
           },
           select: {
@@ -199,26 +204,20 @@ export async function GET(req: Request) {
             company: { select: { id: true, name: true, company_name: true, slug: true } },
             project: { select: { id: true, name: true, slug: true } },
           },
-          take: 50,
+          take: 80,
           orderBy: { createdAt: "desc" },
         })
       : [],
   ]);
 
-  const profileCounts = people.reduce<Record<string, number>>((acc, person) => {
-    const key = String(person.globalRole ?? person.role ?? "user");
-    acc[key] = (acc[key] ?? 0) + 1;
-    return acc;
-  }, {});
-
   return NextResponse.json({
     query,
     mode,
     companies,
-    projects,
     people,
     assignments,
-    profiles: Object.entries(profileCounts).map(([role, count]) => ({ role, count })),
+    projects: [],
+    profiles: [],
     permissions: {
       canCreate: checkPermission(user, "relationships:create"),
       canEdit: checkPermission(user, "relationships:edit"),

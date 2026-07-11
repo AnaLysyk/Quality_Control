@@ -64,6 +64,23 @@ export async function listAutomationDrafts(testCaseId: string) {
     .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime());
 }
 
+/**
+ * Returns the most recently updated draft per testCaseId, for every test case
+ * that has at least one draft. Used to build the automation queue without
+ * doing an N+1 lookup per test case.
+ */
+export async function listLatestAutomationDraftsByTestCase(): Promise<Map<string, AutomationDraft>> {
+  const store = await readStore();
+  const latestByTestCase = new Map<string, AutomationDraft>();
+  for (const draft of store.drafts) {
+    const current = latestByTestCase.get(draft.testCaseId);
+    if (!current || new Date(draft.updatedAt).getTime() > new Date(current.updatedAt).getTime()) {
+      latestByTestCase.set(draft.testCaseId, draft);
+    }
+  }
+  return latestByTestCase;
+}
+
 export async function listAutomationAgentRuns(testCaseId: string) {
   const store = await readStore();
   return store.runs

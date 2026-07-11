@@ -4,6 +4,26 @@ import { canAccessTestCaseRecord } from "@/lib/test-cases/testCasePermissions";
 import { getTestCaseRecord, saveTestCaseAutomationLink } from "@/lib/test-cases/testCaseRepository";
 import { getAutomationDraft, updateAutomationDraft, updateAutomationDraftStatus } from "@/lib/test-cases/automationDraftsStore";
 
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string; draftId: string }> },
+) {
+  const user = await authenticateRequest(req);
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+
+  const { id, draftId } = await params;
+  const record = await getTestCaseRecord(id);
+  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
+  if (!canAccessTestCaseRecord(user, record)) {
+    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+  }
+
+  const draft = await getAutomationDraft(record.testCase.id, draftId);
+  if (!draft) return NextResponse.json({ message: "Draft não encontrado" }, { status: 404 });
+
+  return NextResponse.json(draft);
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string; draftId: string }> },

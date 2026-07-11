@@ -392,6 +392,19 @@ export async function GET(req: Request) {
 
     const companyNodeId = `company:${company.id}`;
     const name = company.company_name || company.name;
+    const companyProjectsCount = projects.filter((project) => project.companyId === company.id).length;
+    const companyDefectsCount = defects.filter((defect) => defect.companyId === company.id).length;
+    const companyUserIds = new Set([
+      ...links.filter((link) => link.companyId === company.id).map((link) => link.userId),
+      ...memberships.filter((membership) => membership.companyId === company.id).map((membership) => membership.userId),
+    ]);
+    const companyTicketsCount = tickets.filter((ticket) => ticket.companyId === company.id).length;
+    const companyBreakdown = [
+      `${companyUserIds.size} usuário${companyUserIds.size === 1 ? "" : "s"}`,
+      `${companyProjectsCount} projeto${companyProjectsCount === 1 ? "" : "s"}`,
+      `${companyDefectsCount} defeito${companyDefectsCount === 1 ? "" : "s"}`,
+      `${companyTicketsCount} chamado${companyTicketsCount === 1 ? "" : "s"}`,
+    ].join(", ");
     addNode({
       id: companyNodeId,
       type: "company",
@@ -399,10 +412,10 @@ export async function GET(req: Request) {
       companyId: company.id,
       companyName: name,
       label: name,
-      description: company.notes || company.internal_notes || `Empresa ${name} no escopo do Brain.`,
+      description: company.notes || company.internal_notes || `Empresa ${name}${company.tax_id ? ` · CNPJ ${company.tax_id}` : ""}.`,
       status: company.active === false || company.status === "inactive" ? "warning" : "ok",
       size: "lg",
-      information: `${name} conecta projetos, usuários, chamados, defeitos, notas e documentos visíveis neste perfil.`,
+      information: `Tem hoje: ${companyBreakdown}.`,
       createdAt: date(company.createdAt),
       updatedAt: date(company.updatedAt),
       metadata: { slug: company.slug, status: company.status, profileType: "company", subjectKind: "company", subjectId: company.id },

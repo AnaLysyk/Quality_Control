@@ -3,5 +3,10 @@ import RelationshipManagementClient from "@/usuarios/vinculos/RelationshipManage
 export const dynamic = "force-dynamic";
 
 export default function RelationshipManagementAdminPage() {
-  return <RelationshipManagementClient />;
+  return (
+    <>
+      <link rel="stylesheet" href="/brain-home-orb-reference.css" />
+      <RelationshipManagementClient />
+    </>
+  );
 }

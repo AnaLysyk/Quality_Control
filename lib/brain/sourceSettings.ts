@@ -234,6 +234,13 @@ function collectConfig(input: JsonRecord) {
       owner: input.githubOwner,
       repo: input.githubRepo,
     },
+    file: {
+      originalName: input.fileOriginalName,
+      mimeType: input.fileMimeType,
+      sizeBytes: intValue(input.fileSizeBytes, 0),
+      extractedChars: intValue(input.fileExtractedChars, 0),
+      truncated: boolValue(input.fileTruncated, false),
+    },
   }) as JsonRecord;
 }
 

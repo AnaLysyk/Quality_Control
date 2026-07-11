@@ -100,15 +100,15 @@ async function resolveAllowedProjectIds(
   ]);
 
   const membershipByCompany = new Map(memberships.map((membership) => [membership.companyId, membership]));
-  const projectScopedRoles = new Set(["company_user", "testing_company_user"]);
 
   for (const project of projects) {
     const membership = membershipByCompany.get(project.companyId);
-    const membershipRole = normalizeKey(membership?.role);
-    const membershipRestriction =
-      membershipRole && projectScopedRoles.has(membershipRole) && membership?.allowedProjectIds.length
-        ? new Set(membership.allowedProjectIds)
-        : null;
+    // allowedProjectIds vazio preserva o acesso a todos os projetos da empresa.
+    // Quando preenchido, o vínculo é a fonte oficial do recorte, independentemente
+    // do nome legado usado para representar o papel na coluna role.
+    const membershipRestriction = membership?.allowedProjectIds.length
+      ? new Set(membership.allowedProjectIds)
+      : null;
     const authRestriction =
       project.companyId === user.companyId && user.allowedProjectIds?.length
         ? new Set(user.allowedProjectIds)

@@ -248,6 +248,8 @@ const NODE_TYPE_MAP: Record<string, BrainNodeType> = {
   memory: "memory",
   brainsource: "source",
   integration: "integration",
+  automation: "automation",
+  automationscript: "automation",
 };
 
 function normalizeNodeType(value: string): BrainNodeType {

@@ -3,6 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 const root = process.cwd();
+require("dotenv").config({ path: path.join(root, ".env") });
+require("dotenv").config({ path: path.join(root, ".env.local"), override: true });
 const nextJsBin = path.join(root, "node_modules", "next", "dist", "bin", "next");
 const nextBin = path.join(root, "node_modules", ".bin", "next");
 const isWin = process.platform === "win32";
@@ -108,7 +110,7 @@ function run() {
     cwd: root,
     env: {
       ...process.env,
-      REDIS_FALLBACK: process.env.REDIS_FALLBACK || "memory",
+      REDIS_FALLBACK: process.env.REDIS_FALLBACK || (process.env.AUTH_STORE === "postgres" ? "postgres" : "memory"),
     },
     stdio: "inherit",
     shell: false,

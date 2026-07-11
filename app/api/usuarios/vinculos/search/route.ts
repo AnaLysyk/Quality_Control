@@ -75,6 +75,12 @@ export async function GET(req: Request) {
   const hasQuery = query.length >= 3;
   const invalidShortQuery = query.length > 0 && query.length < 3;
 
+  const permissions = {
+    canCreate: checkPermission(user, "relationships:create"),
+    canEdit: checkPermission(user, "relationships:edit"),
+    canDelete: checkPermission(user, "relationships:delete"),
+  };
+
   if (invalidShortQuery) {
     return NextResponse.json({
       query,
@@ -88,11 +94,7 @@ export async function GET(req: Request) {
       assignments: [],
       projects: [],
       profiles: [],
-      permissions: {
-        canCreate: checkPermission(user, "relationships:create"),
-        canEdit: checkPermission(user, "relationships:edit"),
-        canDelete: checkPermission(user, "relationships:delete"),
-      },
+      permissions,
     });
   }
 
@@ -211,13 +213,22 @@ export async function GET(req: Request) {
   ]);
 
   const personIds = people.map((person) => person.id);
-  const assignments = personIds.length
-    ? await db.projectTeamAssignment.findMany({
-        where: {
+  const companyResultIds = companies.map((company) => company.id);
+  const assignmentWhere: Prisma.ProjectTeamAssignmentWhereInput | null = mode === "companies"
+    ? companyResultIds.length
+      ? { companyId: { in: companyResultIds }, status: "active" }
+      : null
+    : personIds.length
+      ? {
           userId: { in: personIds },
           status: "active",
           ...(companyScope ? { companyId: companyScope } : {}),
-        },
+        }
+      : null;
+
+  const assignments = assignmentWhere
+    ? await db.projectTeamAssignment.findMany({
+        where: assignmentWhere,
         select: {
           id: true,
           role: true,
@@ -227,8 +238,8 @@ export async function GET(req: Request) {
           company: { select: { id: true, name: true, company_name: true, slug: true } },
           project: { select: { id: true, name: true, slug: true } },
         },
-        orderBy: { createdAt: "desc" },
-        take: 200,
+        orderBy: [{ companyId: "asc" }, { projectId: "asc" }, { role: "asc" }],
+        take: 300,
       })
     : [];
 
@@ -244,10 +255,6 @@ export async function GET(req: Request) {
     assignments,
     projects: [],
     profiles: [],
-    permissions: {
-      canCreate: checkPermission(user, "relationships:create"),
-      canEdit: checkPermission(user, "relationships:edit"),
-      canDelete: checkPermission(user, "relationships:delete"),
-    },
+    permissions,
   });
 }

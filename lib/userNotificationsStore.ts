@@ -39,7 +39,9 @@ export type NotificationType =
   | "DEFECT_ASSIGNED"
   | "DOC_PUBLISHED"
   | "USER_ACCESS_UPDATED"
-  | "USER_ACCESS_RESTORED";
+  | "USER_ACCESS_RESTORED"
+  | "RELATIONSHIP_ASSIGNED"
+  | "RELATIONSHIP_REMOVED";
 
 export type UserNotification = {
   id: string;
@@ -133,6 +135,7 @@ function notificationWorkflowId(type: NotificationType) {
   if (type === "ACCESS_REQUEST_COMMENT" || type === "ACCESS_REQUEST_ADJUSTMENT_REQUESTED") return "access-request-updated";
   if (type === "ACCESS_REQUEST_ACCEPTED" || type === "ACCESS_REQUEST_REJECTED") return "access-request-decision";
   if (type === "USER_ACCESS_UPDATED" || type === "USER_ACCESS_RESTORED") return "access-updated";
+  if (type === "RELATIONSHIP_ASSIGNED" || type === "RELATIONSHIP_REMOVED") return "relationship-updated";
   if (type.startsWith("PASSWORD_RESET")) return "password-reset";
   if (type === "PROFILE_DELETION_REQUEST" || type === "PROFILE_DELETION_PENDING") return "profile-deletion-request";
   if (type === "PROFILE_DELETION_APPROVED" || type === "PROFILE_DELETION_REJECTED") return "profile-deletion-decision";

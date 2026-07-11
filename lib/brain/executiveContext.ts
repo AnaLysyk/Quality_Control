@@ -35,21 +35,7 @@ type ExecutiveNodeInput = {
 };
 
 const EXECUTIVE_NODE_DEFS: ExecutiveNodeInput[] = [
-  {
-    id: "exec-root",
-    label: "Visão Geral TC",
-    type: "ExecutiveControlTower",
-    description: "Nó raiz da gestão consultiva da Testing Company: carteira de empresas, saúde da qualidade, risco e prioridade de atuação.",
-    route: "/dashboard",
-    profiles: ["leader_tc", "technical_support"],
-    action: "Abrir painel executivo da carteira",
-    layer: "executive",
-    prompts: [
-      "Quais empresas estão críticas agora?",
-      "Qual é a prioridade consultiva da semana?",
-      "Resuma a saúde da carteira para uma reunião executiva.",
-    ],
-  },
+
   {
     id: "exec-companies",
     label: "Empresas atendidas",
@@ -138,17 +124,7 @@ const EXECUTIVE_NODE_DEFS: ExecutiveNodeInput[] = [
     layer: "governance",
     prompts: ["Explique o que cada perfil pode acessar", "Valide se empresa vê só seu contexto", "Qual perfil deve resolver esse caso?"],
   },
-  {
-    id: "exec-chat-profiles",
-    label: "Chat por perfil",
-    type: "AssistantProfileContext",
-    description: "Assistente contextual para todos os perfis, respeitando RBAC e ajudando conforme tela, empresa, projeto e papel do usuário.",
-    route: "global-assistant",
-    profiles: ["leader_tc", "technical_support", "empresa", "company_user", "testing_company_user"],
-    action: "Abrir assistente contextual",
-    layer: "assistant",
-    prompts: ["O que eu posso fazer aqui?", "Me ajuda com meu perfil", "Explique a tela e próximos passos."],
-  },
+
   {
     id: "exec-brain",
     label: "Brain contextual",
@@ -201,7 +177,7 @@ export function getExecutiveBrainContextGraph(access: BrainAccessContext) {
     refType: "ExecutiveContext",
     refId: node.id,
     description: node.description,
-    isRoot: node.id === "exec-root",
+    isRoot: false,
     metadata: {
       virtual: true,
       layer: node.layer,

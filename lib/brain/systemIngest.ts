@@ -71,6 +71,8 @@ function normalizeAuditAction(value: unknown) {
 
 const NODE_TYPE_BY_ENTITY: Record<string, string> = {
   Application: "Application",
+  AutomationScript: "Automation",
+  automation_script: "Automation",
   AuditLog: "AuditEvent",
   AccessRequest: "AccessRequest",
   Company: "Company",

@@ -333,7 +333,7 @@ function mapGraphApiEdge(edge: BrainGraphApiEdge): BrainEdge {
   };
 }
 
-async function fetchJson<T>(url: string, timeoutMs = 8500): Promise<T> {
+async function fetchJson<T>(url: string, timeoutMs = 45000): Promise<T> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -366,7 +366,7 @@ export async function fetchBrainGraphForDashboard() {
 }
 
 export async function fetchBrainDomainGraphForDashboard() {
-  const graph = await fetchJson<BrainDomainApiResponse>("/api/brain/domain", 12000);
+  const graph = await fetchJson<BrainDomainApiResponse>("/api/brain/domain", 45000);
   return {
     nodes: Array.isArray(graph.nodes) ? graph.nodes : [],
     edges: Array.isArray(graph.edges) ? graph.edges : [],

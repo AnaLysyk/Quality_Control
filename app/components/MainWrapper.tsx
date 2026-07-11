@@ -23,6 +23,8 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
     pathname.startsWith("/admin/brain/memories/") ||
     pathname === "/admin/brain/settings" ||
     pathname.startsWith("/admin/brain/settings/") ||
+    pathname === "/admin/brain/behavior-profiles" ||
+    pathname.startsWith("/admin/brain/behavior-profiles/") ||
     pathname === "/brain/settings" ||
     pathname.startsWith("/brain/settings/");
   const isBrainFullscreenRoute = isBrainRoute && !isBrainScrollRoute;

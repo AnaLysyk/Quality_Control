@@ -176,7 +176,12 @@ export async function listBehaviorProfiles(access: BrainAccessContext) {
     take: 200,
   }) ?? []) as BehaviorProfileRow[];
 
-  return [...SYSTEM_PRESETS, ...rows].map(serializeProfile);
+  // Presets do sistema podem ter sido semeados no banco (setBehaviorAssignment faz isso
+  // por causa da FK da atribuicao). Evita listar o mesmo preset duas vezes.
+  const presetIds = new Set(SYSTEM_PRESETS.map((preset) => preset.id));
+  const customRows = rows.filter((row) => !presetIds.has(row.id));
+
+  return [...SYSTEM_PRESETS, ...customRows].map(serializeProfile);
 }
 
 async function getProfileById(id: string) {
@@ -305,8 +310,37 @@ export async function setBehaviorAssignment(
   const scopeId = scopeIdFor(access, scopeType, asString(input.scopeId));
   if (!scopeId) throw new Error("Sem escopo valido para aplicar o perfil de comportamento");
 
-  const { assignment } = getDelegates();
+  const { profile: profileDelegate, assignment } = getDelegates();
   if (!assignment?.upsert) throw new BrainBehaviorProfileStorageUnavailableError();
+
+  // Presets do sistema so existem em memoria (SYSTEM_PRESETS); a tabela real exige a
+  // linha existir por causa da foreign key da atribuicao. Semeia o preset no banco na
+  // primeira vez que ele for de fato usado numa atribuicao. Duas requisicoes concorrentes
+  // (ex.: aplicar em "home" e "chat" ao mesmo tempo) podem colidir no insert; a segunda
+  // so precisa saber que a linha ja existe, entao P2002 e ignorado aqui.
+  if (profile.isSystem) {
+    try {
+      await profileDelegate.upsert?.({
+        where: { id: profile.id },
+        update: {},
+        create: {
+          id: profile.id,
+          name: profile.name,
+          description: profile.description,
+          instructions: profile.instructions,
+          tone: profile.tone,
+          formality: profile.formality,
+          responseLength: profile.responseLength,
+          scopeType: "global",
+          isSystem: true,
+          status: "active",
+        },
+      });
+    } catch (error) {
+      const code = (error as { code?: string } | null)?.code;
+      if (code !== "P2002") throw error;
+    }
+  }
 
   const saved = await assignment.upsert({
     where: { scopeType_scopeId_surface: { scopeType, scopeId, surface } },

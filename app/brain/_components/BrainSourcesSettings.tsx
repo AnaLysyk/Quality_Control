@@ -120,6 +120,11 @@ export function BrainSourcesSettings() {
     useForLiveQuery: false,
   });
 
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importName, setImportName] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importFeedback, setImportFeedback] = useState<string | null>(null);
+
   async function load() {
     setLoading(true);
     setError(null);
@@ -267,6 +272,32 @@ export function BrainSourcesSettings() {
     }
   }
 
+  async function importContextFile() {
+    if (!importFile) {
+      setImportFeedback("Selecione um arquivo (.txt, .md, .json, .csv, .xlsx).");
+      return;
+    }
+    setImporting(true);
+    setImportFeedback(null);
+    try {
+      const body = new FormData();
+      body.append("file", importFile);
+      body.append("name", importName || importFile.name);
+      body.append("scopeType", "user");
+      const response = await fetch("/api/brain/settings/sources/import", { method: "POST", credentials: "include", body });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(typeof json.error === "string" ? json.error : "Falha ao importar arquivo");
+      setImportFeedback(`Importado: ${json.source?.name ?? importFile.name} (memoria criada).`);
+      setImportFile(null);
+      setImportName("");
+      await load();
+    } catch (err) {
+      setImportFeedback(err instanceof Error ? err.message : "Erro ao importar arquivo");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-6 text-slate-100">
       <section className="mx-auto grid max-w-7xl gap-5">
@@ -290,6 +321,31 @@ export function BrainSourcesSettings() {
         ) : null}
         {error ? <p className="rounded-lg border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</p> : null}
         {feedback ? <p className="rounded-lg border border-emerald-300/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{feedback}</p> : null}
+
+        <section className="rounded-lg border border-cyan-200/20 bg-cyan-200/[0.04] p-4">
+          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-cyan-100">Importar contexto (arquivo)</h2>
+          <p className="mt-1 text-xs text-slate-400">
+            Aceita .txt, .md, .json, .csv, .xlsx/.xls. Cria uma fonte do tipo &quot;Arquivo/documento&quot; e gera uma memoria com o conteudo extraido. PDF e DOCX ainda nao sao suportados.
+          </p>
+          <div className="mt-3 grid gap-2 md:grid-cols-[1fr_1fr_auto]">
+            <input
+              type="file"
+              accept=".txt,.md,.json,.csv,.xlsx,.xls"
+              onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
+              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-300 outline-none"
+            />
+            <input
+              value={importName}
+              onChange={(event) => setImportName(event.target.value)}
+              placeholder="Nome do contexto (opcional)"
+              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none"
+            />
+            <button type="button" onClick={importContextFile} disabled={importing} className="rounded-lg bg-cyan-300 px-4 py-2 text-sm font-black text-slate-950 disabled:opacity-60">
+              {importing ? "Importando..." : "Importar"}
+            </button>
+          </div>
+          {importFeedback ? <p className="mt-2 text-xs font-bold text-cyan-100">{importFeedback}</p> : null}
+        </section>
 
         <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
           <section className="grid gap-3">

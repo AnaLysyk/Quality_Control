@@ -1,4 +1,4 @@
-import { BrainSourcesSettings } from "@/brain/_components/BrainSourcesSettings";
+import { BrainOrbitalConsole } from "@/brain/_components/BrainOrbitalConsole";
 import { BrainProviderConfigPanel } from "../BrainProviderConfigPanel";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export default function BrainSettingsPage() {
       <section className="mx-auto max-w-7xl px-6 pt-6">
         <BrainProviderConfigPanel embedded />
       </section>
-      <BrainSourcesSettings />
+      <BrainOrbitalConsole />
     </div>
   );
 }

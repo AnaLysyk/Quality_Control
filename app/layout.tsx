@@ -22,6 +22,7 @@ import "./agenda-global-theme.css";
 import "./brain-home-polish.css";
 import "./user-details-modal-polish.css";
 import { ClientBootScripts } from "./_components/ClientBootScripts";
+import { RelationshipContextSync } from "./_components/RelationshipContextSync";
 
 export const metadata: Metadata = {
   title: "Quality Control",
@@ -126,6 +127,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <ClientProvider>
                 <ProjectProvider>
                   <ClientBootScripts migrateStorageScript={migrateStorageScript} themeInitScript={themeInitScript} />
+                  <RelationshipContextSync />
                   <AppShell>{children}</AppShell>
                   <ToasterProvider />
                 </ProjectProvider>

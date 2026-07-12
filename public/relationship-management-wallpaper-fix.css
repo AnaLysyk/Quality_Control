@@ -4,24 +4,33 @@
 
 .relationship-workspace::after {
   /*
-   * Mantém a proporção original do símbolo.
-   * A caixa ultrapassa o topo e o final da área útil.
-   * O tamanho usa altura proporcional, sem deformar largura e altura separadamente.
+   * Papel de parede fixo da área de conteúdo.
+   * Mantém a proporção original do símbolo e não acompanha a rolagem.
    */
-  top: -88px;
-  bottom: -88px;
-  left: 54%;
+  position: fixed;
+  top: -10dvh;
+  bottom: auto;
+  left: calc(262px + (100vw - 262px) * 0.54);
+  z-index: 0;
   width: clamp(420px, 38vw, 540px);
+  height: 120dvh;
   transform: translateX(-50%);
+  pointer-events: none;
+  background: #ef0001;
   opacity: 0.09;
+  -webkit-mask-image: url("/images/tc.png");
+  mask-image: url("/images/tc.png");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   -webkit-mask-position: center center;
   mask-position: center center;
-  -webkit-mask-size: auto 122%;
-  mask-size: auto 122%;
+  -webkit-mask-size: auto 100%;
+  mask-size: auto 100%;
 }
 
 .dark .relationship-workspace::after,
 [data-theme="dark"] .relationship-workspace::after {
+  background: #ff2028;
   opacity: 0.14;
 }
 
@@ -62,12 +71,10 @@
 
 @media (max-width: 900px) {
   .relationship-workspace::after {
-    top: -76px;
-    bottom: -76px;
-    left: 55%;
+    left: calc(220px + (100vw - 220px) * 0.55);
     width: clamp(340px, 50vw, 460px);
-    -webkit-mask-size: auto 118%;
-    mask-size: auto 118%;
+    height: 118dvh;
+    top: -9dvh;
   }
 
   .relationship-profile-history-launcher {
@@ -78,13 +85,11 @@
 
 @media (max-width: 680px) {
   .relationship-workspace::after {
-    top: -64px;
-    bottom: -64px;
-    left: 58%;
+    left: 58vw;
     width: clamp(280px, 72vw, 360px);
+    height: 114dvh;
+    top: -7dvh;
     opacity: 0.07;
-    -webkit-mask-size: auto 114%;
-    mask-size: auto 114%;
   }
 
   .dark .relationship-workspace::after,

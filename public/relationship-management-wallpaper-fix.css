@@ -1,0 +1,24 @@
+.relationship-workspace::after {
+  top: -20%;
+  bottom: -20%;
+  left: 50%;
+  width: min(88vw, 1180px);
+  transform: translateX(-50%);
+  opacity: 0.09;
+  -webkit-mask-position: center 57%;
+  mask-position: center 57%;
+  -webkit-mask-size: auto 128%;
+  mask-size: auto 128%;
+}
+
+.dark .relationship-workspace::after,
+[data-theme="dark"] .relationship-workspace::after {
+  opacity: 0.14;
+}
+
+@media (max-width: 900px) {
+  .relationship-workspace::after {
+    top: -16%;
+    bottom: -16%;
+    width: 112vw;
+    -webkit-mask

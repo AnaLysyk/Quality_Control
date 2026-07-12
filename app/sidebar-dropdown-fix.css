@@ -38,6 +38,17 @@
   opacity: 1;
 }
 
+/* O slug é uma informação técnica e não deve aparecer como segunda linha. */
+.sidebar-operational-shell .sidebar-company-slug,
+.sidebar-operational-shell .sidebar-project-slug {
+  display: none !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option,
+.sidebar-operational-shell .sidebar-project-option {
+  min-height: 40px;
+}
+
 :root.theme-light .sidebar-operational-shell .sidebar-dropdown,
 :root[data-theme="light"] .sidebar-operational-shell .sidebar-dropdown {
   color: #0b1a3c !important;

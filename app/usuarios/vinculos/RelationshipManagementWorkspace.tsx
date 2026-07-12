@@ -1,7 +1,7 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { useState } from "react";
-import { FiClock } from "react-icons/fi";
 
 import RelationshipHistoryByCompanyPanel from "./RelationshipHistoryByCompanyPanel";
 import RelationshipManagementClientV4 from "./RelationshipManagementClientV4";
@@ -9,18 +9,18 @@ import RelationshipManagementClientV4 from "./RelationshipManagementClientV4";
 export default function RelationshipManagementWorkspace() {
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  return (
-    <div className="relationship-workspace">
-      <button
-        type="button"
-        className="relationship-profile-history-launcher"
-        onClick={() => setHistoryOpen(true)}
-        aria-label="Abrir histórico por perfil"
-        title="Histórico por perfil"
-      >
-        <FiClock aria-hidden="true" />
-      </button>
+  function handleWorkspaceClickCapture(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    const historyTrigger = target.closest(".relationship-history-trigger");
+    if (!historyTrigger) return;
 
+    event.preventDefault();
+    event.stopPropagation();
+    setHistoryOpen(true);
+  }
+
+  return (
+    <div className="relationship-workspace" onClickCapture={handleWorkspaceClickCapture}>
       <RelationshipManagementClientV4 />
       <RelationshipHistoryByCompanyPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </div>

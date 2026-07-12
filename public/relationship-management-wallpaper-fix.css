@@ -3,18 +3,18 @@
 }
 
 .relationship-workspace::after {
-  top: 0;
-  bottom: 0;
+  /* A marca ultrapassa deliberadamente o topo e o final da área útil.
+     A largura permanece fixa; somente o comprimento vertical aumenta. */
+  top: -12dvh;
+  bottom: -12dvh;
   left: 54%;
   width: clamp(360px, 34vw, 520px);
   transform: translateX(-50%);
   opacity: 0.09;
   -webkit-mask-position: center center;
   mask-position: center center;
-  /* O PNG possui margem transparente. A altura maior recorta somente
-     essa margem e faz o símbolo encostar no topo e no final sem alargar. */
-  -webkit-mask-size: 100% 164%;
-  mask-size: 100% 164%;
+  -webkit-mask-size: 100% 156%;
+  mask-size: 100% 156%;
 }
 
 .dark .relationship-workspace::after,
@@ -22,26 +22,82 @@
   opacity: 0.14;
 }
 
+/* O histórico volta a ser uma ação lateral discreta, sem texto no cabeçalho. */
+.relationship-company-history-launcher {
+  display: none !important;
+}
+
+.relationship-profile-history-launcher {
+  position: fixed;
+  top: 50%;
+  right: 24px;
+  z-index: 40;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 1px solid rgba(15, 43, 82, 0.16);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.86);
+  color: #0f2b52;
+  box-shadow: 0 14px 34px rgba(8, 26, 52, 0.14);
+  backdrop-filter: blur(14px);
+  transition: transform 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.relationship-profile-history-launcher:hover {
+  transform: translateY(-50%) scale(1.05);
+  border-color: rgba(217, 31, 38, 0.38);
+  color: #d91f26;
+}
+
+.dark .relationship-profile-history-launcher,
+[data-theme="dark"] .relationship-profile-history-launcher {
+  border-color: rgba(220, 233, 255, 0.18);
+  background: rgba(5, 13, 27, 0.84);
+  color: #dce9ff;
+}
+
 @media (max-width: 900px) {
   .relationship-workspace::after {
+    top: -10dvh;
+    bottom: -10dvh;
     left: 55%;
     width: clamp(320px, 52vw, 440px);
-    -webkit-mask-size: 100% 158%;
-    mask-size: 100% 158%;
+    -webkit-mask-size: 100% 152%;
+    mask-size: 100% 152%;
+  }
+
+  .relationship-profile-history-launcher {
+    right: 16px;
   }
 }
 
 @media (max-width: 680px) {
   .relationship-workspace::after {
+    top: -8dvh;
+    bottom: -8dvh;
     left: 58%;
     width: clamp(260px, 72vw, 360px);
     opacity: 0.07;
-    -webkit-mask-size: 100% 150%;
-    mask-size: 100% 150%;
+    -webkit-mask-size: 100% 148%;
+    mask-size: 100% 148%;
   }
 
   .dark .relationship-workspace::after,
   [data-theme="dark"] .relationship-workspace::after {
     opacity: 0.1;
+  }
+
+  .relationship-profile-history-launcher {
+    top: auto;
+    right: 16px;
+    bottom: 82px;
+    transform: none;
+  }
+
+  .relationship-profile-history-launcher:hover {
+    transform: scale(1.05);
   }
 }

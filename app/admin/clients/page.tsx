@@ -22,37 +22,11 @@ import {
   resolveFixedProfileKind,
   type FixedProfileKind,
 } from "@/lib/fixedProfilePresentation";
+import { mapClient, hasQaseTokenConfigured, hasJiraTokenConfigured, type Client } from "./companyMapper";
 
 // ============================================================================
 // TYPES
 // ============================================================================
-
-type Client = {
-  id: string;
-  name: string;
-  slug?: string | null;
-  taxId?: string | null;
-  address?: string | null;
-  description?: string | null;
-  website?: string | null;
-  phone?: string | null;
-  logoUrl?: string | null;
-  docsLink?: string | null;
-  linkedinUrl?: string | null;
-  notes?: string | null;
-  integrationMode?: "qase" | "manual" | null;
-  qaseProjectCode?: string | null;
-  qaseProjectCodes?: string[] | null;
-  qaseToken?: string | null;
-  hasQaseToken?: boolean;
-  jiraBaseUrl?: string | null;
-  jiraEmail?: string | null;
-  jiraApiToken?: string | null;
-  notificationsFanoutEnabled?: boolean;
-  active: boolean;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-};
 
 type CompanyOption = {
   id: string;
@@ -159,12 +133,6 @@ function getInitials(value: string | null | undefined, defaultValue = "?") {
   return (parts[0].slice(0, 1) + parts[parts.length - 1].slice(0, 1)).toUpperCase();
 }
 
-function hasQaseTokenConfigured(client?: Partial<Client> | null) {
-  if (!client) return false;
-  if (typeof client.qaseToken === "string") return client.qaseToken.trim().length > 0;
-  return client.hasQaseToken === true;
-}
-
 function normalize(text?: string | null) {
   return (text ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -174,94 +142,6 @@ function normalizeProfileKind(user?: Pick<UserItem, "profile_kind" | "permission
     profileKind: user?.profile_kind,
     permissionRole: user?.permission_role,
   });
-}
-
-function mapClient(row: Record<string, unknown>): Client {
-  const name =
-    typeof row.name === "string"
-      ? row.name
-      : typeof row.company_name === "string"
-        ? row.company_name
-        : "";
-
-  const id = typeof row.id === "string" ? row.id : String(row.id ?? "");
-
-  const readNullableString = (value: unknown) => (typeof value === "string" && value.trim() ? value : null);
-  const readBoolean = (value: unknown) => (typeof value === "boolean" ? value : false);
-  const readProjectCodes = (value: unknown): string[] | null => {
-    if (Array.isArray(value) && value.every((item) => typeof item === "string")) return value as string[];
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-      if (!trimmed) return null;
-      const arr = trimmed
-        .split(/[\s,;|]+/g)
-        .map((code) => code.trim().toUpperCase())
-        .filter(Boolean);
-      return arr.length ? Array.from(new Set(arr)) : null;
-    }
-    return null;
-  };
-
-  return {
-    id,
-    name,
-    slug: readNullableString(row.slug),
-    taxId: readNullableString(row.tax_id),
-    address: readNullableString(row.address),
-    description: readNullableString(row.description),
-    website: readNullableString(row.website),
-    phone: readNullableString(row.phone),
-    logoUrl: readNullableString(row.logo_url),
-    docsLink: readNullableString(row.docs_link),
-    linkedinUrl: readNullableString(row.linkedin_url) ?? readNullableString(row.docs_link),
-    notes: readNullableString(row.notes),
-    integrationMode: readNullableString(row.integration_mode) as "qase" | "manual" | null,
-    qaseProjectCode: readNullableString(row.qase_project_code),
-    qaseProjectCodes: readProjectCodes(row.qase_project_codes),
-    qaseToken: null,
-    hasQaseToken: !!readNullableString(row.qase_token),
-    jiraBaseUrl: readNullableString(row.jira_base_url),
-    jiraEmail: readNullableString(row.jira_email),
-    jiraApiToken: null,
-    notificationsFanoutEnabled: typeof row.notifications_fanout_enabled === "boolean" ? row.notifications_fanout_enabled : true,
-    ...(() => {
-      const integrations = (row as any).integrations;
-      if (!Array.isArray(integrations)) return {};
-      const out: Partial<Client> = {};
-      for (const it of integrations) {
-        if (!it || typeof it !== "object") continue;
-        const type = String(it.type || "").toUpperCase();
-        const cfg = it.config ?? {};
-        if (type === "QASE") {
-          if (typeof cfg.token === "string" && cfg.token.trim()) {
-            out.hasQaseToken = true;
-            out.qaseToken = cfg.token;
-          }
-          if (Array.isArray(cfg.projects) && cfg.projects.length) {
-            out.qaseProjectCodes = Array.from(
-              new Set([
-                ...(out.qaseProjectCodes ?? []),
-                ...cfg.projects.map((p: any) =>
-                  typeof p === "string" ? p.trim().toUpperCase() : String(p).trim().toUpperCase()
-                ),
-              ])
-            );
-            if (!out.qaseProjectCode && out.qaseProjectCodes && out.qaseProjectCodes.length)
-              out.qaseProjectCode = out.qaseProjectCodes[0];
-          }
-        }
-        if (type === "JIRA") {
-          if (typeof cfg.baseUrl === "string" && cfg.baseUrl.trim()) out.jiraBaseUrl = cfg.baseUrl;
-          if (typeof cfg.email === "string" && cfg.email.trim()) out.jiraEmail = cfg.email;
-          if (typeof cfg.apiToken === "string" && cfg.apiToken.trim()) out.jiraApiToken = cfg.apiToken;
-        }
-      }
-      return out;
-    })(),
-    active: readBoolean(row.active),
-    createdAt: readNullableString(row.created_at),
-    updatedAt: readNullableString(row.updated_at),
-  };
 }
 
 function resolveUserTabParam(value: string | null): UserTab | null {
@@ -579,7 +459,7 @@ function getCompanyIntegrationBadges(company: Client): CompanyIntegrationBadge[]
     ? company.qaseProjectCodes.map((code) => String(code).trim()).filter(Boolean)
     : [];
   const hasQase = hasQaseTokenConfigured(company) || qaseCodes.length > 0 || Boolean(company.qaseProjectCode?.trim());
-  const hasJira = Boolean(company.jiraBaseUrl?.trim() || company.jiraEmail?.trim() || company.jiraApiToken?.trim());
+  const hasJira = hasJiraTokenConfigured(company) || Boolean(company.jiraBaseUrl?.trim() || company.jiraEmail?.trim());
 
   if (hasQase) {
     badges.push({

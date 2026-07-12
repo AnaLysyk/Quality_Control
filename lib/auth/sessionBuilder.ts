@@ -49,6 +49,11 @@ export type BuiltSession = {
 type LocalSessionUser = NonNullable<Awaited<ReturnType<typeof getLocalUserById>>>;
 type LocalCompany = Awaited<ReturnType<typeof listLocalCompanies>>[number];
 type LocalCompanyLink = Awaited<ReturnType<typeof listLocalLinksForUser>>[number];
+type ActiveAssignment = {
+  companyId: string;
+  projectId: string;
+  role: string;
+};
 
 function userHasRole(
   user: LocalSessionUser,
@@ -70,14 +75,41 @@ function canAccessCompanyDirectly(user: LocalSessionUser, company: LocalCompany)
   return Boolean(user.default_company_slug && company.slug === user.default_company_slug);
 }
 
+async function listActiveAssignments(userId: string): Promise<ActiveAssignment[]> {
+  if (process.env.E2E_USE_JSON === "1") return [];
+
+  try {
+    const { prisma } = await import("@/lib/prismaClient");
+    return await prisma.projectTeamAssignment.findMany({
+      where: { userId, status: "active" },
+      select: { companyId: true, projectId: true, role: true },
+    });
+  } catch {
+    return [];
+  }
+}
+
 function resolveAllowedSessionCompanies(input: {
   companies: LocalCompany[];
-  hasFullCompanyAccess: boolean;
+  hasUnrestrictedCompanyAccess: boolean;
   isDirectCompanyUser: boolean;
   links: LocalCompanyLink[];
+  assignments: ActiveAssignment[];
   user: LocalSessionUser;
+  isLeaderTc: boolean;
+  hasQaAssignments: boolean;
 }) {
-  if (input.hasFullCompanyAccess) return input.companies;
+  if (input.hasUnrestrictedCompanyAccess) return input.companies;
+
+  if (input.isLeaderTc || input.hasQaAssignments) {
+    const expectedRole = input.isLeaderTc ? "leader_tc" : "qa_tc";
+    const companyIds = new Set(
+      input.assignments
+        .filter((assignment) => assignment.role === expectedRole)
+        .map((assignment) => assignment.companyId),
+    );
+    return input.companies.filter((company) => companyIds.has(company.id));
+  }
 
   return input.companies.filter((company) => {
     if (input.links.some((link) => link.companyId === company.id)) return true;
@@ -124,22 +156,32 @@ export async function buildLocalSessionForUser(
   const user = await getLocalUserById(userId);
   if (!user || user.active === false || user.status === "blocked") return null;
 
-  const [links, companies] = await Promise.all([
+  const [links, companies, assignments] = await Promise.all([
     listLocalLinksForUser(user.id),
     listLocalCompanies(),
+    listActiveAssignments(user.id),
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
   const hasTechnicalSupportRole = userHasRole(user, links, "technical_support");
-  const hasLeaderTcRole = userHasRole(user, links, "leader_tc");
-  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
-  const shouldBindCompanyContext = !hasFullCompanyAccess;
+  const hasLeaderTcRole =
+    userHasRole(user, links, "leader_tc") ||
+    assignments.some((assignment) => assignment.role === "leader_tc");
+  const hasQaAssignments = assignments.some((assignment) => assignment.role === "qa_tc");
+
+  // Apenas administrador global e suporte técnico têm visibilidade irrestrita.
+  // Líder TC e Usuário TC são escopados pelos vínculos ativos no banco.
+  const hasUnrestrictedCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole;
+  const shouldBindCompanyContext = !hasUnrestrictedCompanyAccess;
   const allowedCompanies = resolveAllowedSessionCompanies({
     companies,
-    hasFullCompanyAccess,
+    hasUnrestrictedCompanyAccess,
     isDirectCompanyUser: hasDirectCompanyRole(user),
     links,
+    assignments,
     user,
+    isLeaderTc: hasLeaderTcRole,
+    hasQaAssignments,
   });
 
   const requestedSlug = typeof opts?.requestedSlug === "string" ? opts.requestedSlug.trim() : "";
@@ -155,7 +197,9 @@ export async function buildLocalSessionForUser(
     user,
   });
 
-  const activeLink = activeCompany ? links.find((link) => link.companyId === activeCompany.id) ?? null : null;
+  const activeLink = activeCompany
+    ? links.find((link) => link.companyId === activeCompany.id) ?? null
+    : null;
   const companyRole = normalizeLocalRole(activeLink?.role ?? user.role ?? null);
 
   const capabilities = resolveCapabilities({
@@ -166,7 +210,7 @@ export async function buildLocalSessionForUser(
 
   const permissionAccess = await resolvePermissionAccessForUser(user.id);
   const permissionRole = permissionAccess.roleKey;
-  const effectiveRole = isGlobalAdmin ? "leader_tc" : permissionRole;
+  const effectiveRole = permissionRole;
 
   const session: BuiltSessionPayload = {
     userId: user.id,

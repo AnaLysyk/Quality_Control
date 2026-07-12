@@ -1,0 +1,178 @@
+.relationship-mode-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 960px;
+  width: 100%;
+  margin: 12px auto 0;
+}
+
+.relationship-shell {
+  --rel-brand-navy: #071a3d;
+  --rel-brand-red: #d71920;
+  --rel-brand-blue: #174ea6;
+  --rel-bg: linear-gradient(145deg, #eef4fb 0%, #e7eff9 58%, #e2ebf7 100%) !important;
+  background: var(--rel-bg) !important;
+}
+
+.dark .relationship-shell,
+[data-theme="dark"] .relationship-shell {
+  --rel-bg: linear-gradient(145deg, #030914 0%, #07152b 58%, #0a1b36 100%) !important;
+  background: var(--rel-bg) !important;
+}
+
+.relationship-mode-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  border: 1px solid rgba(7, 26, 61, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: #52647f;
+  padding: 0 15px;
+  font-size: 12px;
+  font-weight: 850;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.relationship-mode-tabs button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(23, 78, 166, 0.42);
+  color: var(--rel-brand-navy);
+}
+
+.relationship-mode-tabs button[data-active="true"] {
+  border-color: rgba(215, 25, 32, 0.5);
+  background: linear-gradient(90deg, rgba(7, 26, 61, 0.1), rgba(215, 25, 32, 0.08));
+  color: var(--rel-brand-navy);
+  box-shadow: 0 8px 24px rgba(7, 26, 61, 0.1);
+}
+
+.dark .relationship-mode-tabs button,
+[data-theme="dark"] .relationship-mode-tabs button {
+  border-color: rgba(148, 163, 184, 0.2);
+  color: #aebdd2;
+}
+
+.dark .relationship-mode-tabs button:hover,
+[data-theme="dark"] .relationship-mode-tabs button:hover,
+.dark .relationship-mode-tabs button[data-active="true"],
+[data-theme="dark"] .relationship-mode-tabs button[data-active="true"] {
+  border-color: rgba(239, 68, 68, 0.48);
+  background: linear-gradient(90deg, rgba(23, 78, 166, 0.2), rgba(215, 25, 32, 0.14));
+  color: #f8fafc;
+}
+
+.relationship-search-simple {
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-top: 9px;
+}
+
+.relationship-search-field {
+  background: rgba(255, 255, 255, 0.34) !important;
+}
+
+.dark .relationship-search-field,
+[data-theme="dark"] .relationship-search-field {
+  background: rgba(7, 26, 61, 0.42) !important;
+}
+
+.relationship-search-submit {
+  background: var(--rel-brand-navy) !important;
+}
+
+.relationship-search-submit:hover:not(:disabled) {
+  box-shadow: 0 8px 20px rgba(215, 25, 32, 0.18);
+}
+
+.dark .relationship-search-submit,
+[data-theme="dark"] .relationship-search-submit {
+  background: linear-gradient(90deg, #174ea6, #d71920) !important;
+  color: #ffffff !important;
+}
+
+.relationship-role-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  border: 1px solid rgba(23, 78, 166, 0.3);
+  border-radius: 999px;
+  background: rgba(23, 78, 166, 0.08);
+  color: #071a3d;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.dark .relationship-role-badge,
+[data-theme="dark"] .relationship-role-badge {
+  color: #ffffff;
+  border-color: rgba(239, 68, 68, 0.34);
+  background: linear-gradient(90deg, rgba(23, 78, 166, 0.22), rgba(215, 25, 32, 0.16));
+}
+
+.relationship-context-note {
+  border-left: 2px solid rgba(215, 25, 32, 0.42);
+  padding: 2px 0 2px 14px;
+}
+
+.relationship-add-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--rel-brand-navy);
+  padding: 7px 0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.dark .relationship-add-toggle,
+[data-theme="dark"] .relationship-add-toggle {
+  color: #f8fafc;
+}
+
+.relationship-add-toggle:hover {
+  color: var(--rel-brand-red);
+}
+
+.relationship-row[data-open="true"] .relationship-row-trigger {
+  border-left-color: rgba(215, 25, 32, 0.62) !important;
+}
+
+@media (max-height: 760px) and (min-width: 901px) {
+  .relationship-mode-tabs {
+    margin-top: 7px;
+  }
+
+  .relationship-mode-tabs button {
+    min-height: 34px;
+  }
+
+  .relationship-search-simple {
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 900px) {
+  .relationship-mode-tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .relationship-mode-tabs button {
+    flex: 0 0 auto;
+  }
+
+  .relationship-search-simple {
+    grid-template-columns: 1fr;
+  }
+}

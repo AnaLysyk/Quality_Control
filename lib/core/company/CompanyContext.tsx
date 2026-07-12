@@ -7,7 +7,7 @@ import {
   useEffect,
   useMemo,
   useState,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -24,10 +24,8 @@ const ALL_LINKED_COMPANIES_STORAGE_VALUE = "__all_linked_companies__";
 
 function normalizeClientThemeEntry(key: string, value: unknown): [string, ClientTheme] | null {
   if (!key || !value || typeof value !== "object") return null;
-
   const slug = key.trim().toLowerCase();
   if (!slug) return null;
-
   const record = value as Record<string, unknown>;
   return [
     slug,
@@ -47,10 +45,9 @@ function parseClientThemeMap(raw: string): Record<string, ClientTheme> {
   try {
     const parsed = JSON.parse(trimmed) as unknown;
     if (!parsed || typeof parsed !== "object") return {};
-    const rec = parsed as Record<string, unknown>;
     const out: Record<string, ClientTheme> = {};
-    for (const [k, v] of Object.entries(rec)) {
-      const entry = normalizeClientThemeEntry(k, v);
+    for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+      const entry = normalizeClientThemeEntry(key, value);
       if (entry) out[entry[0]] = entry[1];
     }
     return out;
@@ -60,17 +57,16 @@ function parseClientThemeMap(raw: string): Record<string, ClientTheme> {
 }
 
 const CLIENT_THEME_MAP = parseClientThemeMap(CLIENT_THEME_MAP_RAW);
-
-function normalizeSlug(value?: string | null): string {
-  return (value ?? "").trim().toLowerCase();
-}
-
-const DEFAULT_THEME: Required<Pick<ClientTheme, "accent" | "accentHover" | "accentActive" | "accentSoft">> = {
+const DEFAULT_THEME = {
   accent: "#ef0001",
   accentHover: "#c80001",
   accentActive: "#a80001",
   accentSoft: "rgba(239, 0, 1, 0.12)",
 };
+
+function normalizeSlug(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
 
 export type ClientAccess = {
   id: string;
@@ -96,7 +92,6 @@ type ClientContextValue = {
 };
 
 const ClientContext = createContext<ClientContextValue | undefined>(undefined);
-
 const storageKey = (userId: string) => `activeClient:${userId}`;
 const getSessionStorage = () => (typeof window === "undefined" ? null : window.sessionStorage);
 
@@ -104,27 +99,27 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   const { user, companies, normalizedUser, loading: authLoading, refreshUser } = useAuth();
   const { primaryCompanySlug, defaultCompanySlug, companySlugs } =
     normalizedUser ?? { primaryCompanySlug: null, defaultCompanySlug: null, companySlugs: [] };
+
   const [activeClientSlug, setActiveClientSlugState] = useState<string | null>(null);
   const [loading, setLoading] = useState(authLoading);
   const [error, setError] = useState<string | null>(null);
-  const globalContextRoles = [
-    user?.role,
-    user?.permissionRole,
-    user?.companyRole,
-    user?.globalRole,
-  ]
+
+  const roles = [user?.role, user?.permissionRole, user?.companyRole, user?.globalRole]
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim().toLowerCase());
 
-  const isGlobalAdmin =
+  // Líder TC não é contexto global. Somente administrador global e suporte técnico
+  // podem operar sem uma empresa vinculada ativa.
+  const hasGlobalCompanyContext =
     user?.isGlobalAdmin === true ||
-    globalContextRoles.some((role) => role === "admin" || role === "leader_tc" || role === "technical_support");
+    roles.some((role) => role === "admin" || role === "global_admin" || role === "technical_support");
+
   const canUseAllLinkedCompanies =
-    !isGlobalAdmin &&
+    !hasGlobalCompanyContext &&
     normalizedUser?.roles.includes("testing_company_user") === true &&
     companies.length > 1;
 
-  const normalizedClients = useMemo(
+  const clients = useMemo<ClientAccess[]>(
     () =>
       companies.map((company) => ({
         id: company.id,
@@ -137,13 +132,13 @@ export function ClientProvider({ children }: { children: ReactNode }) {
             : null,
         role: ((company.role ?? "").toUpperCase() === "ADMIN" ? "ADMIN" : "USER") as ClientAccess["role"],
         linkActive: true,
-        createdAt: typeof (company as { createdAt?: string | null }).createdAt === "string"
-          ? (company as { createdAt?: string | null }).createdAt
-          : null,
+        createdAt:
+          typeof (company as { createdAt?: string | null }).createdAt === "string"
+            ? (company as { createdAt?: string | null }).createdAt
+            : null,
       })),
-    [companies]
+    [companies],
   );
-  const clients = normalizedClients;
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -152,16 +147,9 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!user) {
+      if (!user || clients.length === 0) {
         setActiveClientSlugState(null);
-        setLoading(false);
-        setError(null);
-        return;
-      }
-
-      if (normalizedClients.length === 0) {
-        setActiveClientSlugState(null);
-        getSessionStorage()?.removeItem(storageKey(user.id));
+        if (user) getSessionStorage()?.removeItem(storageKey(user.id));
         setLoading(false);
         setError(null);
         return;
@@ -169,62 +157,66 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
       const storage = getSessionStorage();
       const stored = storage?.getItem(storageKey(user.id)) ?? null;
-      const wantsAllLinkedCompanies = canUseAllLinkedCompanies && stored === ALL_LINKED_COMPANIES_STORAGE_VALUE;
-      const storedSlug = stored && !wantsAllLinkedCompanies
-        ? normalizedClients.find((client) => normalizeSlug(client.slug) === normalizeSlug(stored) || normalizeSlug(client.id) === normalizeSlug(stored))?.slug ?? null
+      const wantsAll = canUseAllLinkedCompanies && stored === ALL_LINKED_COMPANIES_STORAGE_VALUE;
+      const storedSlug = stored && !wantsAll
+        ? clients.find(
+            (client) =>
+              normalizeSlug(client.slug) === normalizeSlug(stored) ||
+              normalizeSlug(client.id) === normalizeSlug(stored),
+          )?.slug ?? null
         : null;
 
-      const cookieMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )active_company_slug=([^;]+)/) : null;
-      const cookieActiveSlug = normalizeSlug(cookieMatch?.[1] ?? null) || null;
+      const cookieMatch = document.cookie.match(/(?:^|; )active_company_slug=([^;]+)/);
+      const cookieSlug = normalizeSlug(cookieMatch?.[1] ?? null) || null;
 
-      // Order of preference for resolving active client slug:
-      // 1) explicit cookie set by login (represents user choosing a company)
-      // 2) explicit "all linked companies" mode for testing company users
-      // 3) for non-global-admin users: normalized primary/default company plus the stored company choice
-      // For global admins we intentionally avoid inheriting a company from storage or implicit defaults
-      // so the admin sees the global admin nav unless they explicitly requested a company via cookie.
-      const preferredSlugs = wantsAllLinkedCompanies
+      const preferred = wantsAll
         ? []
         : [
-            ...(cookieActiveSlug ? [cookieActiveSlug] : []),
-            ...(!isGlobalAdmin
-              ? [
-                  ...(primaryCompanySlug ? [primaryCompanySlug] : []),
-                  storedSlug,
-                  ...(defaultCompanySlug ? [defaultCompanySlug] : []),
-                  ...companySlugs,
-                ]
-              : []),
+            ...(cookieSlug ? [cookieSlug] : []),
+            ...(primaryCompanySlug ? [primaryCompanySlug] : []),
+            storedSlug,
+            ...(defaultCompanySlug ? [defaultCompanySlug] : []),
+            ...companySlugs,
           ].filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index);
 
-      const resolvedSlug = wantsAllLinkedCompanies
+      const resolved = wantsAll
         ? null
-        : preferredSlugs.find((candidate) => normalizedClients.some((client) => normalizeSlug(client.slug) === candidate || normalizeSlug(client.id) === candidate)) ??
-          (isGlobalAdmin ? null : normalizedClients[0].slug);
+        : preferred.find((candidate) =>
+            clients.some(
+              (client) =>
+                normalizeSlug(client.slug) === normalizeSlug(candidate) ||
+                normalizeSlug(client.id) === normalizeSlug(candidate),
+            ),
+          ) ?? (hasGlobalCompanyContext ? null : clients[0]?.slug ?? null);
 
-      setActiveClientSlugState(resolvedSlug ?? null);
-      if (resolvedSlug) {
-        storage?.setItem(storageKey(user.id), resolvedSlug);
-      } else if (wantsAllLinkedCompanies) {
-        storage?.setItem(storageKey(user.id), ALL_LINKED_COMPANIES_STORAGE_VALUE);
-      } else {
-        storage?.removeItem(storageKey(user.id));
-      }
+      setActiveClientSlugState(resolved ?? null);
+      if (resolved) storage?.setItem(storageKey(user.id), resolved);
+      else if (wantsAll) storage?.setItem(storageKey(user.id), ALL_LINKED_COMPANIES_STORAGE_VALUE);
+      else storage?.removeItem(storageKey(user.id));
 
       setLoading(false);
       setError(null);
     }, 0);
+
     return () => window.clearTimeout(timeoutId);
-  }, [authLoading, normalizedClients, user, isGlobalAdmin, primaryCompanySlug, defaultCompanySlug, companySlugs, canUseAllLinkedCompanies]);
+  }, [
+    authLoading,
+    clients,
+    user,
+    hasGlobalCompanyContext,
+    primaryCompanySlug,
+    defaultCompanySlug,
+    companySlugs,
+    canUseAllLinkedCompanies,
+  ]);
 
   const refreshClients = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      await refreshUser();
+      await refreshUser(false);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar empresas";
-      setError(msg);
+      setError(err instanceof Error ? err.message : "Erro ao carregar empresas");
     } finally {
       setLoading(false);
     }
@@ -238,44 +230,34 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       }
 
       const storage = getSessionStorage();
-
       if (!slug) {
         setActiveClientSlugState(null);
-        if (canUseAllLinkedCompanies) {
-          storage?.setItem(storageKey(user.id), ALL_LINKED_COMPANIES_STORAGE_VALUE);
-        } else {
-          storage?.removeItem(storageKey(user.id));
-        }
+        if (canUseAllLinkedCompanies) storage?.setItem(storageKey(user.id), ALL_LINKED_COMPANIES_STORAGE_VALUE);
+        else storage?.removeItem(storageKey(user.id));
         return;
       }
 
-      const normalizedSlug = normalizeSlug(slug);
-      const exists = clients.find((client) => normalizeSlug(client.slug) === normalizedSlug || normalizeSlug(client.id) === normalizedSlug);
-      if (!exists) {
-        return;
-      }
-
-      if (normalizedSlug && normalizeSlug(activeClientSlug) === normalizedSlug) {
-        storage?.setItem(storageKey(user.id), exists.slug);
-        return;
-      }
+      const normalized = normalizeSlug(slug);
+      const exists = clients.find(
+        (client) => normalizeSlug(client.slug) === normalized || normalizeSlug(client.id) === normalized,
+      );
+      if (!exists) return;
 
       setActiveClientSlugState(exists.slug);
       storage?.setItem(storageKey(user.id), exists.slug);
     },
-    [clients, user, activeClientSlug, canUseAllLinkedCompanies]
+    [clients, user, canUseAllLinkedCompanies],
   );
 
   const activeClient = useMemo(
     () => (activeClientSlug ? clients.find((client) => client.slug === activeClientSlug) ?? null : null),
-    [clients, activeClientSlug]
+    [clients, activeClientSlug],
   );
-
   const activeClientId = activeClient?.id ?? null;
 
   useEffect(() => {
     const root = document.documentElement;
-    const slug = (activeClientSlug ?? "").trim().toLowerCase();
+    const slug = normalizeSlug(activeClientSlug);
     if (slug) root.dataset.client = slug;
     else delete root.dataset.client;
 
@@ -289,7 +271,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     }
   }, [activeClientSlug]);
 
-  const value = useMemo(
+  const value = useMemo<ClientContextValue>(
     () => ({
       clients,
       activeClientId,
@@ -301,27 +283,14 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       setActiveClientId: setActiveClientSlug,
       refreshClients,
     }),
-    [
-      clients,
-      activeClientId,
-      activeClientSlug,
-      activeClient,
-      loading,
-      error,
-      setActiveClientSlug,
-      refreshClients,
-    ],
+    [clients, activeClientId, activeClientSlug, activeClient, loading, error, setActiveClientSlug, refreshClients],
   );
 
-  return (
-    <ClientContext.Provider value={value}>
-      {children}
-    </ClientContext.Provider>
-  );
+  return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>;
 }
 
 export function useClientContext() {
-  const ctx = useContext(ClientContext);
-  if (!ctx) throw new Error("useClientContext deve ser usado dentro de ClientProvider");
-  return ctx;
+  const context = useContext(ClientContext);
+  if (!context) throw new Error("useClientContext deve ser usado dentro de ClientProvider");
+  return context;
 }

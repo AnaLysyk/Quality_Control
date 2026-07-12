@@ -1,0 +1,364 @@
+.relationship-shell {
+  --rel-bg: linear-gradient(150deg, #ffffff 0%, #f8fbff 58%, #f3f7fc 100%);
+  --rel-text: #07152d;
+  --rel-muted: #5b6b82;
+  --rel-line: rgba(15, 23, 42, 0.11);
+  --rel-hover: rgba(14, 165, 233, 0.035);
+  height: calc(100dvh - 1px);
+  min-height: 620px;
+  overflow: hidden;
+  background: var(--rel-bg);
+  color: var(--rel-text);
+}
+
+.dark .relationship-shell,
+[data-theme="dark"] .relationship-shell {
+  --rel-bg: linear-gradient(150deg, #020713 0%, #06101f 58%, #0a1526 100%);
+  --rel-text: #f8fafc;
+  --rel-muted: #9fb0c8;
+  --rel-line: rgba(148, 163, 184, 0.16);
+  --rel-hover: rgba(34, 211, 238, 0.04);
+  background: var(--rel-bg);
+}
+
+.relationship-stage {
+  position: relative;
+  display: flex;
+  height: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  flex-direction: column;
+  padding: clamp(12px, 1.8vh, 20px) clamp(18px, 2.4vw, 34px) 14px;
+}
+
+.relationship-hero,
+.relationship-search,
+.relationship-results {
+  position: relative;
+  z-index: 1;
+}
+
+.relationship-hero {
+  flex: 0 0 auto;
+  text-align: center;
+}
+
+.relationship-brain {
+  position: relative;
+  width: clamp(98px, 9vw, 126px);
+  height: clamp(98px, 9vw, 126px);
+  margin: 0 auto;
+  animation: relationshipBrainHover 5.2s ease-in-out infinite;
+  filter: drop-shadow(0 15px 26px rgba(15, 23, 42, 0.18));
+}
+
+.relationship-brain img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: transparent !important;
+  border: 0;
+}
+
+.relationship-brain[data-busy="true"] {
+  animation-duration: 2.4s;
+}
+
+.relationship-search {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  max-width: 960px;
+  width: 100%;
+  margin: 13px auto 0;
+  padding: 5px;
+  border: 1px solid var(--rel-line);
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.055);
+}
+
+.relationship-search select,
+.relationship-search input,
+.relationship-search button {
+  color: var(--rel-text);
+}
+
+.relationship-search select {
+  height: 42px;
+  border: 0;
+  background: transparent;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
+.relationship-search-field {
+  display: flex;
+  min-width: 0;
+  height: 42px;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(148, 163, 184, 0.07);
+  padding: 0 16px;
+}
+
+.relationship-search-field:focus-within {
+  border-color: rgba(14, 165, 233, 0.28);
+  background: rgba(14, 165, 233, 0.045);
+}
+
+.relationship-search-field input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 650;
+  outline: none;
+}
+
+.relationship-search-field input::placeholder {
+  color: var(--rel-muted);
+}
+
+.relationship-search-submit {
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: #061225;
+  padding: 0 22px;
+  color: #fff !important;
+  font-size: 13px;
+  font-weight: 900;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.dark .relationship-search-submit,
+[data-theme="dark"] .relationship-search-submit {
+  background: linear-gradient(90deg, #67e8f9, #93c5fd);
+  color: #061225 !important;
+}
+
+.relationship-search-submit:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.relationship-search-submit:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.relationship-results {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin-top: 12px;
+  border-top: 1px solid var(--rel-line);
+}
+
+.relationship-results-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: end;
+  justify-content: space-between;
+  padding: 11px 0 8px;
+}
+
+.relationship-results-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(14, 165, 233, 0.3) transparent;
+}
+
+.relationship-row {
+  border-bottom: 1px solid var(--rel-line);
+}
+
+.relationship-row-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--rel-text);
+  text-align: left;
+  transition: background 160ms ease;
+}
+
+.relationship-row-trigger:hover {
+  background: linear-gradient(90deg, var(--rel-hover), transparent 72%);
+}
+
+.relationship-row[data-open="true"] .relationship-row-trigger {
+  border-left: 2px solid rgba(14, 165, 233, 0.48);
+  padding-left: 10px;
+}
+
+.relationship-row-detail {
+  padding: 2px 8px 15px 34px;
+  background: transparent;
+  animation: relationshipDetailIn 180ms ease both;
+}
+
+.relationship-person-context {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+  gap: 28px;
+}
+
+.relationship-company-context {
+  padding-right: 12px;
+}
+
+.relationship-inline-section {
+  border-left: 1px solid rgba(14, 165, 233, 0.2);
+  padding-left: 16px;
+}
+
+.relationship-link-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rel-line);
+}
+
+.relationship-add-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--rel-text);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.relationship-add-toggle:hover {
+  color: #0891b2;
+  border-bottom-color: rgba(8, 145, 178, 0.35);
+  transform: translateY(-1px);
+}
+
+.relationship-inline-form {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr);
+  gap: 8px;
+  animation: relationshipDetailIn 180ms ease both;
+}
+
+.relationship-inline-form select,
+.relationship-inline-form button,
+.relationship-profile-chip {
+  border: 1px solid var(--rel-line);
+  background: transparent;
+  color: var(--rel-text);
+}
+
+.relationship-pagination {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-top: 7px;
+}
+
+.relationship-page-button {
+  min-width: 36px;
+  height: 32px;
+  border: 1px solid var(--rel-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rel-text);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.relationship-page-button:hover:not(:disabled),
+.relationship-page-button[data-active="true"] {
+  border-color: rgba(14, 165, 233, 0.42);
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.relationship-page-button:disabled {
+  opacity: 0.3;
+}
+
+@keyframes relationshipBrainHover {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.35deg); }
+  48% { transform: translate3d(0, -5px, 0) rotate(0.35deg); }
+  72% { transform: translate3d(1px, -2px, 0) rotate(-0.1deg); }
+}
+
+@keyframes relationshipDetailIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-height: 760px) and (min-width: 901px) {
+  .relationship-stage { padding-top: 7px; padding-bottom: 7px; }
+  .relationship-brain { width: 88px; height: 88px; }
+  .relationship-hero h1 { margin-top: 0 !important; font-size: 28px !important; }
+  .relationship-hero > p:last-child { margin-top: 1px !important; }
+  .relationship-search { margin-top: 8px; }
+  .relationship-results { margin-top: 9px; }
+  .relationship-row-trigger { padding-top: 10px; padding-bottom: 10px; }
+}
+
+@media (max-width: 900px) {
+  .relationship-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .relationship-stage {
+    min-height: 100dvh;
+  }
+
+  .relationship-search {
+    grid-template-columns: 1fr;
+    border-radius: 24px;
+  }
+
+  .relationship-search select,
+  .relationship-search-submit {
+    width: 100%;
+  }
+
+  .relationship-results-scroll {
+    overflow: visible;
+  }
+
+  .relationship-person-context,
+  .relationship-inline-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .relationship-brain,
+  .relationship-row-detail,
+  .relationship-inline-form {
+    animation: none !important;
+  }
+}

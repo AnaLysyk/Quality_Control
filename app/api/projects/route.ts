@@ -49,8 +49,15 @@ export async function GET(request: Request) {
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ projects: [] });
 
+  const allowedProjectIds = contextResult.context.access.allowedProjectIds;
+  const projectWhere = {
+    companyId: company.id,
+    status: "active",
+    ...(Array.isArray(allowedProjectIds) ? { id: { in: allowedProjectIds } } : {}),
+  };
+
   const projects = await db.project.findMany({
-    where: { companyId: company.id, status: "active" },
+    where: projectWhere,
     orderBy: { name: "asc" },
     select: {
       id: true,

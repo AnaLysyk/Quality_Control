@@ -1,0 +1,105 @@
+.relationship-business-panel {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.relationship-business-panel .relationship-inline-section {
+  min-width: 0;
+}
+
+.relationship-danger-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(190, 24, 93, 0.28);
+  border-radius: 999px;
+  padding: 0.65rem 0.9rem;
+  background: transparent;
+  color: #be123c;
+  font-size: 0.75rem;
+  font-weight: 900;
+  transition: 160ms ease;
+}
+
+.relationship-danger-link:hover {
+  background: rgba(190, 24, 93, 0.08);
+  transform: translateY(-1px);
+}
+
+.relationship-project-picker {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.relationship-project-picker > button:not(.relationship-primary-action) {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  border: 1px solid var(--rel-line);
+  border-radius: 1rem;
+  padding: 0.8rem 0.9rem;
+  background: transparent;
+  color: var(--rel-text);
+  transition: 160ms ease;
+}
+
+.relationship-project-picker > button:not(.relationship-primary-action):hover,
+.relationship-project-picker > button[data-selected="true"] {
+  border-color: rgba(14, 165, 233, 0.45);
+  background: rgba(14, 165, 233, 0.07);
+}
+
+.relationship-project-check {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--rel-line);
+  border-radius: 0.45rem;
+  color: #0369a1;
+}
+
+.relationship-project-picker button[data-selected="true"] .relationship-project-check {
+  border-color: rgba(14, 165, 233, 0.6);
+  background: rgba(14, 165, 233, 0.14);
+}
+
+.relationship-project-picker small {
+  margin-top: 0.15rem;
+  color: var(--rel-muted);
+}
+
+.relationship-inline-danger-zone {
+  border-top: 1px solid var(--rel-line);
+  padding-top: 1rem;
+}
+
+.relationship-inline-danger-zone textarea {
+  width: 100%;
+  min-height: 6rem;
+  margin-top: 0.9rem;
+  border: 1px solid var(--rel-line);
+  border-radius: 1rem;
+  padding: 0.85rem;
+  background: transparent;
+  color: var(--rel-text);
+  resize: vertical;
+  outline: none;
+}
+
+.relationship-inline-danger-zone textarea:focus {
+  border-color: rgba(190, 24, 93, 0.45);
+}
+
+.relationship-inline-danger-zone .relationship-danger-action {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .relationship-business-panel .relationship-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

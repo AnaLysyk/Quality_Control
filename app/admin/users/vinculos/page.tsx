@@ -1,4 +1,4 @@
-import RelationshipManagementClient from "@/usuarios/vinculos/RelationshipManagementClient";
+import RelationshipManagementClientV2 from "@/usuarios/vinculos/RelationshipManagementClientV2";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +7,8 @@ export default function RelationshipManagementAdminPage() {
     <>
       <link rel="stylesheet" href="/relationship-management.css" />
       <link rel="stylesheet" href="/relationship-management-context.css" />
-      <RelationshipManagementClient />
+      <link rel="stylesheet" href="/relationship-management-leadership.css" />
+      <RelationshipManagementClientV2 />
     </>
   );
 }

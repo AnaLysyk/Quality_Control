@@ -4,20 +4,20 @@
 
 .relationship-workspace::after {
   /*
-   * Mantém a proporção original do PNG.
-   * A área ultrapassa o topo e o final; a imagem não é esticada
-   * separadamente na largura e na altura.
+   * Mantém a proporção original do símbolo.
+   * A caixa ultrapassa o topo e o final da área útil.
+   * O tamanho usa altura proporcional, sem deformar largura e altura separadamente.
    */
-  top: -72px;
-  bottom: -72px;
+  top: -88px;
+  bottom: -88px;
   left: 54%;
-  width: clamp(500px, 46vw, 620px);
+  width: clamp(420px, 38vw, 540px);
   transform: translateX(-50%);
   opacity: 0.09;
   -webkit-mask-position: center center;
   mask-position: center center;
-  -webkit-mask-size: auto 100%;
-  mask-size: auto 100%;
+  -webkit-mask-size: auto 122%;
+  mask-size: auto 122%;
 }
 
 .dark .relationship-workspace::after,
@@ -25,6 +25,77 @@
   opacity: 0.14;
 }
 
-/* O botão antigo com texto não participa mais desta tela. */
 .relationship-company-history-launcher {
-  display: none
+  display: none !important;
+}
+
+.relationship-profile-history-launcher {
+  position: absolute;
+  top: 126px;
+  right: 154px;
+  z-index: 40;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(15, 43, 82, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #0f2b52;
+  box-shadow: 0 10px 26px rgba(8, 26, 52, 0.12);
+  backdrop-filter: blur(12px);
+  transition: transform 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.relationship-profile-history-launcher:hover {
+  transform: scale(1.04);
+  border-color: rgba(217, 31, 38, 0.36);
+  color: #d91f26;
+}
+
+.dark .relationship-profile-history-launcher,
+[data-theme="dark"] .relationship-profile-history-launcher {
+  border-color: rgba(220, 233, 255, 0.18);
+  background: rgba(5, 13, 27, 0.86);
+  color: #dce9ff;
+}
+
+@media (max-width: 900px) {
+  .relationship-workspace::after {
+    top: -76px;
+    bottom: -76px;
+    left: 55%;
+    width: clamp(340px, 50vw, 460px);
+    -webkit-mask-size: auto 118%;
+    mask-size: auto 118%;
+  }
+
+  .relationship-profile-history-launcher {
+    top: 122px;
+    right: 138px;
+  }
+}
+
+@media (max-width: 680px) {
+  .relationship-workspace::after {
+    top: -64px;
+    bottom: -64px;
+    left: 58%;
+    width: clamp(280px, 72vw, 360px);
+    opacity: 0.07;
+    -webkit-mask-size: auto 114%;
+    mask-size: auto 114%;
+  }
+
+  .dark .relationship-workspace::after,
+  [data-theme="dark"] .relationship-workspace::after {
+    opacity: 0.1;
+  }
+
+  .relationship-profile-history-launcher {
+    top: 120px;
+    right: 84px;
+    width: 40px;
+    height: 40px;
+  }
+}

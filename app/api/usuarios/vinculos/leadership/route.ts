@@ -94,7 +94,11 @@ async function ensureCompanyMembership(
   });
 }
 
-function isStrictLeader(target: { role: Role | null; globalRole: string | null; memberships?: Array<{ role: Role }> }) {
+function isStrictLeader(target: {
+  role: Role | null;
+  globalRole: string | null;
+  memberships?: Array<{ role: Role | null }>;
+}) {
   return Boolean(
     target.role === Role.leader_tc ||
       target.globalRole === "leader_tc" ||

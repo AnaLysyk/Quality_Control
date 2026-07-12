@@ -115,7 +115,8 @@ export async function GET(req: Request) {
       return {
         OR: [
           { role: Role.leader_tc },
-          { globalRole: { in: ["leader_tc"] } },
+          { globalRole: { in: ["leader_tc", "global_admin"] } },
+          { is_global_admin: true },
           { projectTeamAssignments: { some: { role: "leader_tc", status: "active" } } },
         ],
       };
@@ -125,14 +126,23 @@ export async function GET(req: Request) {
         OR: [
           { globalRole: { in: ["testing_company_user", "qa_tc"] } },
           { projectTeamAssignments: { some: { role: "qa_tc", status: "active" } } },
+          {
+            AND: [
+              { user_origin: "testing_company" },
+              { user_scope: "shared" },
+              { role: Role.user },
+              { is_global_admin: false },
+            ],
+          },
         ],
       };
     }
     return {
       OR: [
         { globalRole: { in: ["company_user", "business_user"] } },
-        { memberships: { some: { role: Role.user } } },
-        { links: { some: { role: Role.user, active: true } } },
+        { user_origin: "client_company" },
+        { user_scope: "company_only" },
+        { allow_multi_company_link: false },
       ],
     };
   })();

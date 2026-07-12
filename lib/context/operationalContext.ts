@@ -61,17 +61,13 @@ function readRole(access: AccessContext): SystemRole | null {
   );
 }
 
-function isGlobalRole(access: AccessContext, role: SystemRole | null) {
-  return (
-    access.isGlobalAdmin === true ||
-    role === SYSTEM_ROLES.LEADER_TC ||
-    role === SYSTEM_ROLES.TECHNICAL_SUPPORT
-  );
+function hasGlobalVisibility(access: AccessContext, role: SystemRole | null) {
+  return access.isGlobalAdmin === true || role === SYSTEM_ROLES.TECHNICAL_SUPPORT;
 }
 
 function readScope(access: AccessContext, role: SystemRole | null): OperationalScope {
-  if (isGlobalRole(access, role)) return "global";
-  if (role === SYSTEM_ROLES.EMPRESA) return "company";
+  if (hasGlobalVisibility(access, role)) return "global";
+  if (role === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.LEADER_TC) return "company";
   return "own";
 }
 
@@ -97,7 +93,7 @@ function unique(values: Array<string | null | undefined>) {
 
 function companyAllowed(access: AccessContext, companyId?: string | null, companySlug?: string | null) {
   const role = readRole(access);
-  if (isGlobalRole(access, role)) return true;
+  if (hasGlobalVisibility(access, role)) return true;
 
   const requestedId = normalize(companyId);
   const requestedSlug = normalize(companySlug);
@@ -108,6 +104,15 @@ function companyAllowed(access: AccessContext, companyId?: string | null, compan
 
   const slugs = new Set((access.companySlugs ?? []).map(normalize).filter(Boolean));
   return Boolean(requestedSlug && slugs.has(requestedSlug));
+}
+
+function projectAllowed(access: AccessContext, projectId?: string | null) {
+  const allowed = access.allowedProjectIds;
+  if (!Array.isArray(allowed)) return true;
+
+  const requestedId = (projectId ?? "").trim();
+  if (!requestedId) return true;
+  return allowed.includes(requestedId);
 }
 
 function actionAliases(action: string) {
@@ -205,6 +210,16 @@ export async function resolveOperationalContext(
     return { ok: false, response: NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 }) };
   }
 
+  if (!projectAllowed(access, projectId)) {
+    return { ok: false, response: NextResponse.json({ error: "Projeto fora do escopo permitido" }, { status: 403 }) };
+  }
+
+  const allowedProjectIds = Array.isArray(access.allowedProjectIds)
+    ? access.allowedProjectIds
+    : projectId
+      ? [projectId]
+      : [];
+
   return {
     ok: true,
     context: {
@@ -221,7 +236,7 @@ export async function resolveOperationalContext(
       selectedCompanySlug: companySlug,
       projectId,
       projectSlug,
-      allowedProjectIds: projectId ? [projectId] : [],
+      allowedProjectIds,
       allowedProjectSlugs: projectSlug ? [projectSlug] : [],
       selectedProjectId: projectId,
       selectedProjectSlug: projectSlug,

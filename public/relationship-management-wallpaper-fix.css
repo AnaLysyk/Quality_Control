@@ -5,14 +5,15 @@
 .relationship-workspace::after {
   /*
    * Papel de parede fixo da área de conteúdo.
-   * Mantém a proporção original do símbolo e não acompanha a rolagem.
+   * O PNG original mede 694 x 860. A largura é calculada a partir
+   * da altura para preservar exatamente a proporção e evitar cortes.
    */
   position: fixed;
   top: -10dvh;
   bottom: auto;
   left: calc(262px + (100vw - 262px) * 0.54);
   z-index: 0;
-  width: clamp(420px, 38vw, 540px);
+  width: calc(120dvh * 0.80698);
   height: 120dvh;
   transform: translateX(-50%);
   pointer-events: none;
@@ -24,8 +25,8 @@
   mask-repeat: no-repeat;
   -webkit-mask-position: center center;
   mask-position: center center;
-  -webkit-mask-size: auto 100%;
-  mask-size: auto 100%;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .dark .relationship-workspace::after,
@@ -41,54 +42,55 @@
 .relationship-profile-history-launcher {
   position: absolute;
   top: 126px;
-  right: 154px;
+  right: 18px;
   z-index: 40;
   display: grid;
   width: 42px;
   height: 42px;
   place-items: center;
-  border: 1px solid rgba(15, 43, 82, 0.16);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(15, 43, 82, 0.18);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
   color: #0f2b52;
-  box-shadow: 0 10px 26px rgba(8, 26, 52, 0.12);
+  box-shadow: 0 8px 22px rgba(8, 26, 52, 0.12);
   backdrop-filter: blur(12px);
-  transition: transform 160ms ease, border-color 160ms ease, color 160ms ease;
+  transition: transform 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease;
 }
 
 .relationship-profile-history-launcher:hover {
-  transform: scale(1.04);
-  border-color: rgba(217, 31, 38, 0.36);
+  transform: translateY(-1px) scale(1.04);
+  border-color: rgba(217, 31, 38, 0.4);
+  background: rgba(255, 255, 255, 0.98);
   color: #d91f26;
 }
 
 .dark .relationship-profile-history-launcher,
 [data-theme="dark"] .relationship-profile-history-launcher {
-  border-color: rgba(220, 233, 255, 0.18);
-  background: rgba(5, 13, 27, 0.86);
+  border-color: rgba(220, 233, 255, 0.2);
+  background: rgba(5, 13, 27, 0.88);
   color: #dce9ff;
 }
 
 @media (max-width: 900px) {
   .relationship-workspace::after {
-    left: calc(220px + (100vw - 220px) * 0.55);
-    width: clamp(340px, 50vw, 460px);
-    height: 118dvh;
     top: -9dvh;
+    left: calc(220px + (100vw - 220px) * 0.55);
+    width: calc(118dvh * 0.80698);
+    height: 118dvh;
   }
 
   .relationship-profile-history-launcher {
     top: 122px;
-    right: 138px;
+    right: 12px;
   }
 }
 
 @media (max-width: 680px) {
   .relationship-workspace::after {
-    left: 58vw;
-    width: clamp(280px, 72vw, 360px);
-    height: 114dvh;
     top: -7dvh;
+    left: 58vw;
+    width: calc(114dvh * 0.80698);
+    height: 114dvh;
     opacity: 0.07;
   }
 
@@ -99,7 +101,7 @@
 
   .relationship-profile-history-launcher {
     top: 120px;
-    right: 84px;
+    right: 8px;
     width: 40px;
     height: 40px;
   }

@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -11,6 +11,22 @@ export const dynamic = "force-dynamic";
 
 type AuthUser = NonNullable<Awaited<ReturnType<typeof authenticateRequest>>>;
 type LeadershipAction = "assign_leader" | "transfer_leader" | "add_qa" | "remove_qa";
+type OperationTarget = { id: string; name: string; full_name?: string | null; email: string };
+type OperationProject = {
+  id: string;
+  name: string;
+  slug: string;
+  companyId: string;
+  company: { id: string; name: string; company_name: string | null; slug: string };
+};
+type OperationResult = {
+  action: LeadershipAction;
+  project: OperationProject;
+  target: OperationTarget;
+  assignment: { id: string };
+  notifyIds: string[];
+  previousLeaderId?: string;
+};
 
 async function getDb() {
   const { prisma } = await import("@/lib/prismaClient");
@@ -63,17 +79,20 @@ async function assertCompanyScope(user: AuthUser, companyId: string) {
   }
 }
 
-async function ensureCompanyMembership(
-  tx: Awaited<ReturnType<typeof getDb>>,
-  userId: string,
-  companyId: string,
-  role: Role,
-) {
+async function ensureCompanyMembership(tx: Prisma.TransactionClient, userId: string, companyId: string, role: Role) {
   await tx.membership.upsert({
     where: { userId_companyId: { userId, companyId } },
     update: { role },
     create: { userId, companyId, role, capabilities: [] },
   });
+}
+
+function isLeaderProfile(target: { role: Role | null; globalRole: string | null; is_global_admin: boolean }) {
+  return Boolean(
+    target.role === Role.leader_tc ||
+      ["leader_tc", "global_admin"].includes(String(target.globalRole ?? "")) ||
+      target.is_global_admin,
+  );
 }
 
 export async function GET(req: Request) {
@@ -178,30 +197,28 @@ export async function POST(req: Request) {
   if (!body?.action || !["assign_leader", "transfer_leader", "add_qa", "remove_qa"].includes(body.action)) {
     return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
   }
+  if (!body.projectId) return NextResponse.json({ error: "Informe o projeto" }, { status: 400 });
 
   const db = await getDb();
+  const project = await db.project.findUnique({
+    where: { id: body.projectId },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      companyId: true,
+      company: { select: { id: true, name: true, company_name: true, slug: true } },
+    },
+  });
+  if (!project) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
 
   try {
-    const result = await db.$transaction(async (tx) => {
-      const project = body.projectId
-        ? await tx.project.findUnique({
-            where: { id: body.projectId },
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              companyId: true,
-              company: { select: { id: true, name: true, company_name: true, slug: true } },
-            },
-          })
-        : null;
+    await assertCompanyScope(user, project.companyId);
+    if (body.companyId && body.companyId !== project.companyId) {
+      throw new Error("O projeto não pertence à empresa informada");
+    }
 
-      if (!project) throw new Error("Projeto não encontrado");
-      await assertCompanyScope(user, project.companyId);
-      if (body.companyId && body.companyId !== project.companyId) {
-        throw new Error("O projeto não pertence à empresa informada");
-      }
-
+    const result = await db.$transaction<OperationResult>(async (tx) => {
       if (body.action === "assign_leader") {
         if (!body.userId) throw new Error("Selecione o Líder TC");
         const target = await tx.user.findUnique({
@@ -209,28 +226,17 @@ export async function POST(req: Request) {
           select: { id: true, name: true, full_name: true, email: true, role: true, globalRole: true, is_global_admin: true },
         });
         if (!target) throw new Error("Líder não encontrado");
-
-        const isLeader = Boolean(
-          target.role === Role.leader_tc ||
-            ["leader_tc", "global_admin"].includes(String(target.globalRole ?? "")) ||
-            target.is_global_admin,
-        );
-        if (!isLeader) throw new Error("A pessoa selecionada não possui perfil de Líder TC");
+        if (!isLeaderProfile(target)) throw new Error("A pessoa selecionada não possui perfil de Líder TC");
 
         const current = await tx.projectTeamAssignment.findFirst({
           where: { projectId: project.id, role: "leader_tc", status: "active" },
         });
         if (current) throw new Error("O projeto já possui liderança. Use a transferência");
 
-        await ensureCompanyMembership(tx as Awaited<ReturnType<typeof getDb>>, target.id, project.companyId, Role.leader_tc);
+        await ensureCompanyMembership(tx, target.id, project.companyId, Role.leader_tc);
         const assignment = await tx.projectTeamAssignment.create({
-          data: {
-            userId: target.id,
-            companyId: project.companyId,
-            projectId: project.id,
-            role: "leader_tc",
-            createdBy: user.id,
-          },
+          data: { userId: target.id, companyId: project.companyId, projectId: project.id, role: "leader_tc", createdBy: user.id },
+          select: { id: true },
         });
         return { action: body.action, project, target, assignment, notifyIds: [target.id] };
       }
@@ -253,48 +259,28 @@ export async function POST(req: Request) {
         if (!current) throw new Error("O projeto não possui um Líder TC ativo");
         if (!target) throw new Error("Novo líder não encontrado");
         if (current.userId === target.id) throw new Error("Selecione outro líder para a transferência");
+        if (!isLeaderProfile(target)) throw new Error("A pessoa selecionada não possui perfil de Líder TC");
 
-        const isLeader = Boolean(
-          target.role === Role.leader_tc ||
-            ["leader_tc", "global_admin"].includes(String(target.globalRole ?? "")) ||
-            target.is_global_admin,
-        );
-        if (!isLeader) throw new Error("A pessoa selecionada não possui perfil de Líder TC");
-
-        await ensureCompanyMembership(tx as Awaited<ReturnType<typeof getDb>>, target.id, project.companyId, Role.leader_tc);
-
+        await ensureCompanyMembership(tx, target.id, project.companyId, Role.leader_tc);
         await tx.projectTeamAssignment.update({
           where: { id: current.id },
-          data: {
-            status: "removed",
-            removedBy: user.id,
-            removedAt: new Date(),
-            removalReason: body.reason.trim(),
-          },
+          data: { status: "removed", removedBy: user.id, removedAt: new Date(), removalReason: body.reason.trim() },
         });
-
         const assignment = await tx.projectTeamAssignment.create({
-          data: {
-            userId: target.id,
-            companyId: project.companyId,
-            projectId: project.id,
-            role: "leader_tc",
-            createdBy: user.id,
-          },
+          data: { userId: target.id, companyId: project.companyId, projectId: project.id, role: "leader_tc", createdBy: user.id },
+          select: { id: true },
         });
-
         const qaUsers = await tx.projectTeamAssignment.findMany({
           where: { projectId: project.id, role: "qa_tc", status: "active" },
           select: { userId: true },
         });
-
         return {
           action: body.action,
           project,
           target,
-          previousLeader: current.user,
           assignment,
           notifyIds: [current.userId, target.id, ...qaUsers.map((item) => item.userId)],
+          previousLeaderId: current.userId,
         };
       }
 
@@ -317,15 +303,10 @@ export async function POST(req: Request) {
         });
         if (duplicate) throw new Error("Este Usuário TC já está vinculado ao projeto");
 
-        await ensureCompanyMembership(tx as Awaited<ReturnType<typeof getDb>>, target.id, project.companyId, Role.user);
+        await ensureCompanyMembership(tx, target.id, project.companyId, Role.user);
         const assignment = await tx.projectTeamAssignment.create({
-          data: {
-            userId: target.id,
-            companyId: project.companyId,
-            projectId: project.id,
-            role: "qa_tc",
-            createdBy: user.id,
-          },
+          data: { userId: target.id, companyId: project.companyId, projectId: project.id, role: "qa_tc", createdBy: user.id },
+          select: { id: true },
         });
         return { action: body.action, project, target, assignment, notifyIds: [target.id, leader.userId] };
       }
@@ -333,11 +314,11 @@ export async function POST(req: Request) {
       if (!body.assignmentId) throw new Error("Informe o vínculo do Usuário TC");
       if (!body.reason?.trim()) throw new Error("Informe a justificativa da remoção");
 
-      const assignment = await tx.projectTeamAssignment.findUnique({
+      const current = await tx.projectTeamAssignment.findUnique({
         where: { id: body.assignmentId },
         include: { user: { select: { id: true, name: true, full_name: true, email: true } } },
       });
-      if (!assignment || assignment.projectId !== project.id || assignment.role !== "qa_tc" || assignment.status !== "active") {
+      if (!current || current.projectId !== project.id || current.role !== "qa_tc" || current.status !== "active") {
         throw new Error("Vínculo de Usuário TC não encontrado");
       }
 
@@ -345,23 +326,17 @@ export async function POST(req: Request) {
         where: { projectId: project.id, role: "leader_tc", status: "active" },
         select: { userId: true },
       });
-
-      const updated = await tx.projectTeamAssignment.update({
-        where: { id: assignment.id },
-        data: {
-          status: "removed",
-          removedBy: user.id,
-          removedAt: new Date(),
-          removalReason: body.reason.trim(),
-        },
+      const assignment = await tx.projectTeamAssignment.update({
+        where: { id: current.id },
+        data: { status: "removed", removedBy: user.id, removedAt: new Date(), removalReason: body.reason.trim() },
+        select: { id: true },
       });
-
       return {
         action: body.action,
         project,
-        target: assignment.user,
-        assignment: updated,
-        notifyIds: [assignment.userId, leader?.userId ?? ""].filter(Boolean),
+        target: current.user,
+        assignment,
+        notifyIds: [current.userId, leader?.userId ?? ""].filter(Boolean),
       };
     });
 
@@ -382,7 +357,7 @@ export async function POST(req: Request) {
           : `${result.target.full_name || result.target.name} foi removido do projeto ${result.project.name}.`;
 
     await createNotificationsForUsers(Array.from(new Set(result.notifyIds.filter(Boolean))), {
-      type: result.action === "transfer_leader" ? "RELATIONSHIP_LEADERSHIP_TRANSFERRED" : "RELATIONSHIP_UPDATED",
+      type: result.action === "remove_qa" ? "RELATIONSHIP_REMOVED" : "RELATIONSHIP_ASSIGNED",
       title,
       description,
       companySlug: result.project.company.slug,
@@ -404,7 +379,7 @@ export async function POST(req: Request) {
         companyId: result.project.companyId,
         projectId: result.project.id,
         targetUserId: result.target.id,
-        previousLeaderId: "previousLeader" in result ? result.previousLeader?.id : undefined,
+        previousLeaderId: result.previousLeaderId,
         reason: body.reason?.trim() || null,
       },
     });

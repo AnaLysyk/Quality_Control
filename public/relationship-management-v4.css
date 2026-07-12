@@ -1,112 +1,11 @@
 .relationship-shell-v4 {
-  --rel-bg: #f7f9fc;
+  --rel-bg: #f6f8fc;
+  --rel-surface: rgba(255, 255, 255, 0.72);
+  --rel-surface-strong: rgba(255, 255, 255, 0.94);
+  --rel-accent: #0f2b52;
+  --rel-accent-soft: rgba(15, 43, 82, 0.08);
+  --rel-danger: #d91f26;
   background: var(--rel-bg) !important;
 }
 
 .dark .relationship-shell-v4,
-[data-theme="dark"] .relationship-shell-v4 {
-  --rel-bg: #06101f;
-  background: var(--rel-bg) !important;
-}
-
-.relationship-stage-v4 {
-  max-width: none;
-  padding: 18px 28px 14px;
-}
-
-.relationship-toolbar-v4 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-}
-
-.relationship-stage-v4 .relationship-search {
-  max-width: none;
-  margin: 0;
-}
-
-.relationship-history-trigger {
-  display: grid;
-  width: 46px;
-  height: 46px;
-  place-items: center;
-  border: 1px solid var(--rel-line);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--rel-text);
-}
-
-.relationship-mode-tabs-v4 {
-  justify-content: flex-start;
-  margin: 12px 0 0;
-  padding: 0;
-}
-
-.relationship-results-v4 {
-  margin-top: 12px;
-}
-
-.relationship-row-avatar {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-}
-
-.relationship-company-avatar {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border: 1px solid var(--rel-line);
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.04);
-  color: #0f2747;
-}
-
-.dark .relationship-company-avatar,
-[data-theme="dark"] .relationship-company-avatar {
-  background: rgba(255, 255, 255, 0.04);
-  color: #e2e8f0;
-}
-
-.relationship-stage-v4 .relationship-results-scroll {
-  padding-right: 6px;
-}
-
-.relationship-stage-v4 .relationship-row-trigger {
-  padding-top: 11px;
-  padding-bottom: 11px;
-}
-
-.relationship-stage-v4 .relationship-row-detail {
-  padding-left: 54px;
-}
-
-@media (max-width: 760px) {
-  .relationship-stage-v4 {
-    padding: 14px 14px 10px;
-  }
-
-  .relationship-toolbar-v4 {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .relationship-history-trigger {
-    position: absolute;
-    right: 14px;
-    top: 74px;
-    z-index: 2;
-  }
-
-  .relationship-mode-tabs-v4 {
-    padding-right: 56px;
-    overflow-x: auto;
-    justify-content: flex-start;
-  }
-
-  .relationship-stage-v4 .relationship-row-detail {
-    padding-left: 10px;
-  }
-}

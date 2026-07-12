@@ -2,6 +2,7 @@
 
 import { getAccessContext } from "@/lib/auth/session";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { isE2eMockAllowed } from "@/lib/auth/e2eMockGate";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 
 export type AuthUser = {
@@ -69,7 +70,7 @@ function buildPlaywrightAuthUser(decoded: PlaywrightDecodedAuth): AuthUser {
 }
 
 function parsePlaywrightAuthUser(req: Request): AuthUser | null {
-  if (process.env.PLAYWRIGHT_MOCK !== "true") return null;
+  if (!isE2eMockAllowed()) return null;
 
   const rawCookie = readE2eAuthCookie(req);
   if (!rawCookie) return null;

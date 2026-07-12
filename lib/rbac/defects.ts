@@ -1,6 +1,7 @@
 ﻿import { cookies } from "next/headers";
 import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
 import { SYSTEM_ROLES } from "@/lib/auth/roles";
+import { isE2eMockAllowed } from "@/lib/auth/e2eMockGate";
 
 export type Role = "leader_tc" | "empresa" | "testing_company_user";
 
@@ -40,6 +41,7 @@ export const canLinkRun = (role: Role) => role === "leader_tc" || role === "empr
 export const canDeleteManualDefect = (role: Role) => role === "leader_tc" || role === "empresa";
 
 export async function getMockRole(): Promise<Role | null> {
+  if (!isE2eMockAllowed()) return null;
   const store = await cookies();
   const raw = store.get("mock_role")?.value?.toLowerCase();
   if (raw === "leader_tc" || raw === "empresa" || raw === "testing_company_user") return raw as Role;

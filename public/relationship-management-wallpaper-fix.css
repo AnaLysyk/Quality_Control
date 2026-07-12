@@ -1,9 +1,9 @@
 .relationship-workspace {
   position: relative;
   width: 100%;
-  height: calc(100dvh - 72px);
-  min-height: 0;
-  overflow: hidden;
+  min-height: calc(100dvh - 72px);
+  overflow: visible;
+  padding-bottom: 96px;
 }
 
 .relationship-workspace::after {
@@ -41,14 +41,14 @@
 
 .relationship-workspace .relationship-shell-v4,
 .relationship-workspace .relationship-stage-v4 {
-  height: 100%;
-  min-height: 0;
+  height: auto;
+  min-height: calc(100dvh - 72px);
+  overflow: visible;
 }
 
 .relationship-workspace .relationship-stage-v4 {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  display: block;
+  padding-bottom: 72px;
 }
 
 .relationship-workspace .relationship-stage-v4::after {
@@ -63,66 +63,72 @@
   max-width: none;
 }
 
-.relationship-workspace .relationship-toolbar-v4,
-.relationship-workspace .relationship-mode-tabs-v4 {
-  flex: 0 0 auto;
+.relationship-workspace .relationship-toolbar-v4 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px;
+  align-items: center;
+  gap: 10px;
 }
 
 .relationship-workspace .relationship-results-v4 {
   min-height: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-}
-
-.relationship-workspace .relationship-results-v4 .relationship-results-header,
-.relationship-workspace .relationship-pagination {
-  flex: 0 0 auto;
+  height: auto;
+  overflow: visible;
 }
 
 .relationship-workspace .relationship-stage-v4 .relationship-results-scroll {
   min-height: 0;
-  flex: 1 1 auto;
-  overflow-y: auto !important;
-  overflow-x: hidden;
-  padding-bottom: 18px;
-  scrollbar-gutter: stable;
-  overscroll-behavior: contain;
+  height: auto;
+  overflow: visible !important;
+  padding-bottom: 28px;
+}
+
+.relationship-workspace .relationship-pagination {
+  position: static;
+  margin-top: 12px;
 }
 
 .relationship-company-history-launcher,
-.relationship-workspace .relationship-history-trigger {
+.relationship-profile-history-launcher {
   display: none !important;
 }
 
-.relationship-profile-history-launcher {
-  position: absolute;
-  top: 126px;
-  right: 8px;
-  z-index: 40;
-  display: grid;
-  width: 42px;
-  height: 42px;
+.relationship-workspace .relationship-history-trigger {
+  position: static;
+  display: grid !important;
+  width: 46px;
+  height: 46px;
   place-items: center;
+  align-self: center;
   border: 1px solid rgba(15, 43, 82, 0.18);
-  border-radius: 50%;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.92);
   color: #0f2b52;
-  box-shadow: 0 8px 22px rgba(8, 26, 52, 0.12);
+  box-shadow: 0 8px 22px rgba(8, 26, 52, 0.1);
   backdrop-filter: blur(12px);
-  transition: transform 160ms ease, border-color 160ms ease, color 160ms ease;
+  transition: transform 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease;
 }
 
-.relationship-profile-history-launcher:hover {
-  transform: translateY(-1px) scale(1.04);
+.relationship-workspace .relationship-history-trigger:hover {
+  transform: translateY(-1px);
   border-color: rgba(217, 31, 38, 0.4);
+  background: rgba(255, 255, 255, 0.98);
   color: #d91f26;
 }
 
-.dark .relationship-profile-history-launcher,
-[data-theme="dark"] .relationship-profile-history-launcher {
+.dark .relationship-workspace .relationship-history-trigger,
+[data-theme="dark"] .relationship-workspace .relationship-history-trigger {
   border-color: rgba(220, 233, 255, 0.2);
   background: rgba(5, 13, 27, 0.9);
   color: #dce9ff;
+}
+
+.relationship-workspace .relationship-row[data-open="true"] {
+  overflow: visible;
+}
+
+.relationship-workspace .relationship-row-detail {
+  overflow: visible;
 }
 
 @media (max-width: 900px) {
@@ -132,18 +138,12 @@
     width: calc(118dvh * 0.80698);
     height: 118dvh;
   }
-
-  .relationship-profile-history-launcher {
-    top: 122px;
-    right: 6px;
-  }
 }
 
 @media (max-width: 680px) {
   .relationship-workspace {
-    height: auto;
     min-height: calc(100dvh - 72px);
-    overflow: visible;
+    padding-bottom: 72px;
   }
 
   .relationship-workspace::after {
@@ -159,25 +159,24 @@
     opacity: 0.1;
   }
 
+  .relationship-workspace .relationship-toolbar-v4 {
+    grid-template-columns: minmax(0, 1fr) 42px;
+    gap: 8px;
+  }
+
+  .relationship-workspace .relationship-history-trigger {
+    display: grid !important;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
   .relationship-workspace .relationship-shell-v4,
-  .relationship-workspace .relationship-stage-v4 {
-    height: auto;
-    min-height: calc(100dvh - 72px);
-    overflow: visible;
-  }
-
-  .relationship-workspace .relationship-results-v4 {
-    overflow: visible;
-  }
-
+  .relationship-workspace .relationship-stage-v4,
+  .relationship-workspace .relationship-results-v4,
   .relationship-workspace .relationship-stage-v4 .relationship-results-scroll {
+    height: auto;
+    min-height: 0;
     overflow: visible !important;
-  }
-
-  .relationship-profile-history-launcher {
-    top: 120px;
-    right: 4px;
-    width: 40px;
-    height: 40px;
   }
 }

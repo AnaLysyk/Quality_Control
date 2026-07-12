@@ -1,6 +1,7 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
+import { buildCurrentUserResponse } from "@/lib/core/session/currentUserResponse";
 import { getLocalUserById, findLocalCompanyById, findLocalCompanyBySlug } from "@/lib/auth/localStore";
 import { isAvatarKey } from "@/lib/avatarCatalog";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
@@ -25,11 +26,6 @@ export async function GET(req: Request) {
     return errorResponse(401, "USER_NOT_FOUND", "Usuário não encontrado");
   }
 
-  const displayName =
-    (typeof user.full_name === "string" ? user.full_name.trim() : "") ||
-    (typeof user.name === "string" ? user.name.trim() : "") ||
-    user.email;
-
   let companyLogoUrl: string | null = null;
   try {
     if (access.companyId) {
@@ -44,31 +40,16 @@ export async function GET(req: Request) {
   }
 
   const permissionAccess = await resolvePermissionAccessForUser(access.userId);
-
-  return NextResponse.json({
+  const canonical = buildCurrentUserResponse({
+    access,
+    permissions: permissionAccess.permissions,
+    permissionRole: permissionAccess.roleKey,
     user: {
-      id: user.id,
-      email: user.email,
-      name: displayName,
-      user: user.user ?? user.email,
-      username: user.user ?? user.email,
-      fullName: typeof user.full_name === "string" ? user.full_name : null,
-      avatarKey: isAvatarKey(user.avatar_key) ? user.avatar_key : null,
-      avatarUrl: user.avatar_url ?? null,
-      role: access.role ?? null,
-      permissionRole: permissionAccess.roleKey,
-      globalRole: access.globalRole ?? null,
-      companyRole: access.companyRole ?? null,
-      capabilities: access.capabilities ?? [],
-      permissions: permissionAccess.permissions,
-      companyId: access.companyId ?? null,
-      clientId: access.companyId ?? null,
-      companySlug: access.companySlug ?? null,
-      clientSlug: access.companySlug ?? null,
-      companySlugs: access.companySlugs ?? [],
-      clientSlugs: access.companySlugs ?? [],
-      isGlobalAdmin: access.isGlobalAdmin === true,
-      companyLogoUrl,
+      ...user,
+      avatar_key: isAvatarKey(user.avatar_key) ? user.avatar_key : null,
     },
-  }, { headers: NO_STORE_HEADERS });
+    companyLogoUrl,
+  });
+
+  return NextResponse.json(canonical, { headers: NO_STORE_HEADERS });
 }

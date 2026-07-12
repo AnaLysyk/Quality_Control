@@ -23,12 +23,35 @@ async function main() {
   });
   if (!company) throw new Error("Empresa Acme Seguros não encontrada");
 
-  const projects = await prisma.project.findMany({
+  let projects = await prisma.project.findMany({
     where: { companyId: company.id, archivedAt: null },
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });
-  if (!projects.length) throw new Error("A Acme Seguros precisa ter ao menos um projeto ativo");
+
+  if (!projects.length) {
+    const created = await prisma.project.upsert({
+      where: {
+        companyId_slug: {
+          companyId: company.id,
+          slug: "portal-empresarial",
+        },
+      },
+      update: {
+        name: "Portal Empresarial",
+        status: "active",
+        archivedAt: null,
+      },
+      create: {
+        companyId: company.id,
+        slug: "portal-empresarial",
+        name: "Portal Empresarial",
+        status: "active",
+      },
+      select: { id: true, name: true },
+    });
+    projects = [created];
+  }
 
   const projectIds = projects.map((project) => project.id);
 

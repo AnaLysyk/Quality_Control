@@ -1,14 +1,20 @@
+.relationship-workspace {
+  min-height: calc(100dvh - 72px);
+}
+
 .relationship-workspace::after {
-  top: -18%;
-  bottom: -18%;
+  top: 0;
+  bottom: 0;
   left: 54%;
   width: clamp(360px, 34vw, 520px);
   transform: translateX(-50%);
   opacity: 0.09;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
+  -webkit-mask-position: center center;
+  mask-position: center center;
+  /* O PNG possui margem transparente. A altura maior recorta somente
+     essa margem e faz o símbolo encostar no topo e no final sem alargar. */
+  -webkit-mask-size: 100% 164%;
+  mask-size: 100% 164%;
 }
 
 .dark .relationship-workspace::after,
@@ -18,7 +24,24 @@
 
 @media (max-width: 900px) {
   .relationship-workspace::after {
-    top: -14%;
-    bottom: -14%;
-    left: 56%;
-    width: clamp(
+    left: 55%;
+    width: clamp(320px, 52vw, 440px);
+    -webkit-mask-size: 100% 158%;
+    mask-size: 100% 158%;
+  }
+}
+
+@media (max-width: 680px) {
+  .relationship-workspace::after {
+    left: 58%;
+    width: clamp(260px, 72vw, 360px);
+    opacity: 0.07;
+    -webkit-mask-size: 100% 150%;
+    mask-size: 100% 150%;
+  }
+
+  .dark .relationship-workspace::after,
+  [data-theme="dark"] .relationship-workspace::after {
+    opacity: 0.1;
+  }
+}

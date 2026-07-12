@@ -1,0 +1,252 @@
+.relationship-workspace {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  background: transparent;
+}
+
+.relationship-workspace .relationship-shell-v4 {
+  min-height: calc(100vh - 72px);
+  background: transparent !important;
+}
+
+.relationship-workspace .relationship-stage-v4 {
+  width: 100%;
+  max-width: none;
+  min-height: calc(100vh - 72px);
+  padding: 82px 34px 20px;
+}
+
+.relationship-workspace .relationship-toolbar-v4,
+.relationship-workspace .relationship-mode-tabs-v4,
+.relationship-workspace .relationship-results-v4 {
+  width: 100%;
+  max-width: none;
+}
+
+.relationship-workspace .relationship-results-v4 {
+  min-height: calc(100vh - 300px);
+  margin-top: 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.relationship-workspace .relationship-results-v4 .relationship-results-header {
+  padding: 16px 0 12px;
+  border-bottom: 1px solid var(--rel-line);
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-results-scroll {
+  padding: 0;
+  overflow: visible;
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-row {
+  border-bottom: 1px solid var(--rel-line);
+  background: transparent;
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-row[data-open="true"] {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--rel-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-row[data-open="true"] .relationship-row-trigger {
+  border-bottom: 1px solid var(--rel-line);
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-row-trigger {
+  padding: 15px 6px;
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-row-trigger:hover {
+  background: rgba(15, 43, 82, 0.045);
+}
+
+.dark .relationship-workspace .relationship-stage-v4 .relationship-row-trigger:hover,
+[data-theme="dark"] .relationship-workspace .relationship-stage-v4 .relationship-row-trigger:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-row-detail {
+  padding: 20px 8px 24px 58px;
+  background: transparent;
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-search {
+  border: 1px solid var(--rel-line);
+  background: transparent;
+  box-shadow: none;
+}
+
+.relationship-workspace .relationship-stage-v4 .relationship-search-field {
+  background: rgba(15, 43, 82, 0.045);
+}
+
+.dark .relationship-workspace .relationship-stage-v4 .relationship-search-field,
+[data-theme="dark"] .relationship-workspace .relationship-stage-v4 .relationship-search-field {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.relationship-workspace .relationship-history-trigger {
+  display: none !important;
+}
+
+.relationship-company-history-launcher {
+  position: absolute;
+  top: 92px;
+  right: 34px;
+  z-index: 8;
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--rel-line, rgba(15, 43, 82, 0.14));
+  border-radius: 12px;
+  background: transparent;
+  padding: 0 14px;
+  color: var(--rel-text, #081a34);
+  font-size: 12px;
+  font-weight: 900;
+  transition: 160ms ease;
+}
+
+.relationship-company-history-launcher:hover {
+  border-color: rgba(217, 31, 38, 0.32);
+  color: #d91f26;
+}
+
+.dark .relationship-company-history-launcher,
+[data-theme="dark"] .relationship-company-history-launcher {
+  color: #f7f9fc;
+}
+
+.relationship-history-by-company {
+  width: min(560px, 94vw);
+  padding: 0;
+}
+
+.relationship-history-heading {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--rel-line);
+  background: var(--rel-surface-strong);
+  padding: 24px;
+}
+
+.relationship-history-heading button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--rel-line);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+}
+
+.relationship-history-content {
+  padding: 10px 24px 28px;
+}
+
+.relationship-history-empty {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--rel-muted);
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
+}
+
+.relationship-history-company {
+  border-bottom: 1px solid var(--rel-line);
+}
+
+.relationship-history-company-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  padding: 15px 0;
+  color: inherit;
+}
+
+.relationship-history-company-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--rel-line);
+  border-radius: 11px;
+  color: #0f2b52;
+}
+
+.dark .relationship-history-company-icon,
+[data-theme="dark"] .relationship-history-company-icon {
+  color: #dce9ff;
+}
+
+.relationship-history-company-entries {
+  padding: 0 0 10px 50px;
+}
+
+.relationship-history-entry {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid var(--rel-line);
+  padding: 15px 0;
+}
+
+@media (max-width: 900px) {
+  .relationship-workspace .relationship-stage-v4 {
+    padding: 78px 18px 16px;
+  }
+
+  .relationship-company-history-launcher {
+    top: 86px;
+    right: 18px;
+  }
+}
+
+@media (max-width: 680px) {
+  .relationship-workspace .relationship-stage-v4 {
+    padding: 76px 12px 12px;
+  }
+
+  .relationship-company-history-launcher {
+    position: static;
+    width: calc(100% - 24px);
+    justify-content: center;
+    margin: 12px 12px 0;
+  }
+
+  .relationship-workspace .relationship-stage-v4 {
+    padding-top: 18px;
+  }
+
+  .relationship-workspace .relationship-stage-v4 .relationship-row-detail {
+    padding-left: 8px;
+  }
+
+  .relationship-history-company-entries {
+    padding-left: 0;
+  }
+}

@@ -81,7 +81,7 @@ export async function resolveOperationalProject(input: {
     const { prisma } = await import("@/lib/prismaClient");
     const requestedCompanyId = normalize(input.companyId);
     const requestedCompanySlug = normalize(input.companySlug);
-    const project = await prisma.project.findFirst({
+    const projects = await prisma.project.findMany({
       where: {
         ...(projectId ? { id: projectId } : {}),
         ...(projectSlug ? { slug: projectSlug } : {}),
@@ -89,6 +89,7 @@ export async function resolveOperationalProject(input: {
         ...(requestedCompanySlug ? { company: { slug: requestedCompanySlug } } : {}),
         status: "active",
       },
+      take: 2,
       select: {
         id: true,
         slug: true,
@@ -97,7 +98,10 @@ export async function resolveOperationalProject(input: {
       },
     });
 
-    if (!project) return { kind: "not_found" };
+    // Slug sem empresa pode existir em mais de uma empresa. Nesse caso não
+    // escolhemos arbitrariamente: a resolução falha de forma fechada.
+    if (projects.length !== 1) return { kind: "not_found" };
+    const project = projects[0];
     return {
       kind: "resolved",
       project: {

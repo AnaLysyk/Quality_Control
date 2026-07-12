@@ -8,6 +8,7 @@ import {
   shortenCompanyPathname,
   shouldUseShortCompanyRoutes,
 } from "@/lib/companyRoutes";
+import { isE2eMockAllowed } from "@/lib/auth/e2eMockGate";
 
 const COMPANY_ROUTE_REWRITE_HEADER = "x-company-route-rewrite";
 
@@ -203,7 +204,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const mockRole = request.cookies.get("mock_role")?.value;
+  const mockRole = isE2eMockAllowed() ? request.cookies.get("mock_role")?.value : undefined;
   const reqWithUser = request as NextRequest & { user?: { role: string; email: string } };
   const globalScope = globalThis as { user?: { role: string; email: string } };
   if (mockRole === "admin" || mockRole === "company" || mockRole === "client") {

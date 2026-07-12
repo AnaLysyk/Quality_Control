@@ -7,6 +7,7 @@ import { getAccessContext } from "@/lib/auth/session";
 import { getRedis } from "@/lib/redis";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { isE2eMockAllowed } from "@/lib/auth/e2eMockGate";
 
 const DEBUG_AUTH_HEADERS = process.env.DEBUG_AUTH_HEADERS === "true";
 const SENSITIVE_HEADER_NAMES = new Set(["authorization", "cookie", "set-cookie", "x-api-key"]);
@@ -70,10 +71,11 @@ export async function readSessionUser(req: Request): Promise<SessionUser | null>
     }
   }
 
-  // Allows fake auth in E2E runs via test headers.
+  // Allows fake auth in E2E runs via test headers, somente com o mock E2E habilitado
+  // (PLAYWRIGHT_MOCK=true e fora de produção — ver lib/auth/e2eMockGate.ts).
   let testAdmin = false;
   let testRole = "admin";
-  if (req.headers) {
+  if (isE2eMockAllowed() && req.headers) {
     if (typeof req.headers.get === "function") {
       testAdmin = req.headers.get("x-test-admin") === "true";
       testRole = req.headers.get("x-test-role") || "admin";

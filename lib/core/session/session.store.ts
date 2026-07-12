@@ -13,7 +13,6 @@ import { hasForcedGlobalAccessForUser } from "@/lib/auth/specialAccess";
 import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { resolveCapabilities } from "@/lib/permissions";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
-import { resolveVisibleCompanies, resolveCompanyVisibilityMode } from "@/lib/companyVisibility";
 
 export type SessionPayload = {
   userId?: string;
@@ -43,9 +42,14 @@ export type AccessContext = {
   companyId: string | null;
   companySlug: string | null;
   companySlugs: string[];
-  // null = sem restrição de projeto; array = restrito a esses projectIds (só aplicado
-  // para company_user/testing_company_user via Membership.allowedProjectIds).
+  // null = sem restrição de projeto; array = restrito aos projectIds informados.
   allowedProjectIds: string[] | null;
+};
+
+type ActiveProjectAssignment = {
+  companyId: string;
+  projectId: string;
+  role: string;
 };
 
 const SESSION_COOKIE = "session_id";
@@ -128,28 +132,40 @@ function parseJwtSession(token: string, secret: string): SessionPayload | null {
   }
 }
 
+async function listActiveProjectAssignments(userId: string): Promise<ActiveProjectAssignment[]> {
+  if (process.env.E2E_USE_JSON === "1") return [];
+
+  try {
+    const { prisma } = await import("@/lib/prismaClient");
+    return await prisma.projectTeamAssignment.findMany({
+      where: { userId, status: "active" },
+      select: { companyId: true, projectId: true, role: true },
+    });
+  } catch {
+    // A autenticação não deve cair quando o banco estiver temporariamente indisponível.
+    return [];
+  }
+}
+
+function unique(values: string[]) {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
 export async function getSessionPayload(req: Request): Promise<SessionPayload | null> {
   const cookieHeader = req.headers.get("cookie") ?? "";
 
-  // 1) Preferimos um access token explicito (Bearer / cookie access_token).
-  // Importante: se o token existir mas for invalido/expirado, NAO fazemos fallback para session_id
-  // (isso evita burlar expiracao/refresh).
+  // Preferimos um access token explícito (Bearer / cookie access_token).
+  // Se existir, mas estiver inválido/expirado, não fazemos fallback para session_id.
   const bearer = extractBearerToken(req);
   const accessCookie = readCookieValue(cookieHeader, ACCESS_COOKIE);
   const legacyCookie = readCookieValue(cookieHeader, LEGACY_AUTH_COOKIE);
   const token = bearer || accessCookie || legacyCookie;
   if (token) {
-    // 2) Se JWT_SECRET nao existir, tratamos o token como session_id (fallback local).
     const secret = getJwtSecret();
-    if (!secret) {
-      return await readSessionFromRedis(token);
-    }
-
-    // 3) Se tiver JWT_SECRET, decodifica o JWT e normaliza o payload.
+    if (!secret) return await readSessionFromRedis(token);
     return parseJwtSession(token, secret);
   }
 
-  // 4) Fallback para clientes legados: session_id no Redis.
   const sessionId = readCookieValue(cookieHeader, SESSION_COOKIE);
   if (sessionId) {
     const fromRedis = await readSessionFromRedis(sessionId);
@@ -160,102 +176,133 @@ export async function getSessionPayload(req: Request): Promise<SessionPayload | 
 }
 
 export async function getAccessContext(req: Request): Promise<AccessContext | null> {
-  // 1) Resgata o payload da sessao.
   const session = await getSessionPayload(req);
   if (!session) return null;
 
-  // 2) Resolve o userId (pode vir em userId ou sub).
   const userId = session.userId ?? session.id;
   if (!userId) return null;
 
-  // 3) Carrega usuario, vinculos e empresas locais em paralelo.
-  const [user, links, companies] = await Promise.all([
+  const [user, links, companies, projectAssignments] = await Promise.all([
     getLocalUserById(userId),
     listLocalLinksForUser(userId),
     listLocalCompanies(),
+    listActiveProjectAssignments(userId),
   ]);
 
-  // 4) Regras de bloqueio basicas.
   if (!user || user.active === false || user.status === "blocked") return null;
 
-  const hasForcedGlobalAccess = hasForcedGlobalAccessForUser({
+  const hasForcedLeaderAccess = hasForcedGlobalAccessForUser({
     id: user.id,
     email: user.email,
     user: user.user,
   });
 
-  // 5) Resolve papel global e se e admin global.
-  const resolvedGlobalRole = hasForcedGlobalAccess
-    ? "global_admin"
-    : normalizeGlobalRole(user.globalRole ?? session.globalRole ?? null);
-  const sessionRole = (session.role ?? "").toLowerCase();
-  const isGlobalAdmin =
-    hasForcedGlobalAccess ||
-    resolvedGlobalRole === "global_admin" ||
-    user.is_global_admin === true ||
-    session.isGlobalAdmin === true ||
-    sessionRole === "leader_tc";
+  const resolvedGlobalRole = normalizeGlobalRole(user.globalRole ?? session.globalRole ?? null);
+  const sessionRole = (session.role ?? "").trim().toLowerCase();
+  const userRole = normalizeLocalRole(user.role ?? null);
 
-  // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
+  // A lista especial preserva o perfil/permissões de Líder TC, mas não concede
+  // visibilidade global de empresas e projetos.
+  const isGlobalAdmin =
+    !hasForcedLeaderAccess &&
+    (resolvedGlobalRole === "global_admin" ||
+      user.is_global_admin === true ||
+      session.isGlobalAdmin === true);
+
   const hasTechnicalSupportRole =
     sessionRole === "technical_support" ||
-    normalizeLocalRole(user.role ?? null) === "technical_support" ||
+    userRole === "technical_support" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+
   const hasLeaderTcRole =
+    hasForcedLeaderAccess ||
     sessionRole === "leader_tc" ||
-    normalizeLocalRole(user.role ?? null) === "leader_tc" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
-  const hasFullCompanyAccess = hasForcedGlobalAccess || isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
-  const shouldBindCompanyContext = !hasFullCompanyAccess;
-  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
-  const allowedCompanies = hasFullCompanyAccess
+    userRole === "leader_tc" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc") ||
+    projectAssignments.some((assignment) => assignment.role === "leader_tc");
+
+  const hasQaTcAssignments = projectAssignments.some((assignment) => assignment.role === "qa_tc");
+  const hasUnrestrictedCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole;
+  const shouldBindCompanyContext = !hasUnrestrictedCompanyAccess;
+
+  const roleAssignments = hasLeaderTcRole
+    ? projectAssignments.filter((assignment) => assignment.role === "leader_tc")
+    : hasQaTcAssignments
+      ? projectAssignments.filter((assignment) => assignment.role === "qa_tc")
+      : [];
+  const assignedCompanyIds = new Set(roleAssignments.map((assignment) => assignment.companyId));
+
+  const isDirectCompanyUser =
+    userRole === "empresa" ||
+    userRole === "company_user" ||
+    user.user_origin === "client_company";
+
+  const allowedCompanies = hasUnrestrictedCompanyAccess
     ? companies
-    : companies.filter((company) => {
-        if (links.some((link) => link.companyId === company.id)) return true;
-        if (!isDirectCompanyUser) return false;
-        if (session.companyId && company.id === session.companyId) return true;
-        if (session.companySlug && company.slug === session.companySlug) return true;
-        if (user.default_company_slug && company.slug === user.default_company_slug) return true;
-        return false;
-      });
-  // Importante: usuarios sem empresa ainda podem entrar para solicitar acesso.
+    : hasLeaderTcRole || hasQaTcAssignments
+      ? companies.filter((company) => assignedCompanyIds.has(company.id))
+      : companies.filter((company) => {
+          if (links.some((link) => link.companyId === company.id)) return true;
+          if (!isDirectCompanyUser) return false;
+          if (session.companyId && company.id === session.companyId) return true;
+          if (session.companySlug && company.slug === session.companySlug) return true;
+          if (user.default_company_slug && company.slug === user.default_company_slug) return true;
+          return false;
+        });
 
-  const companySlugs = allowedCompanies
-    .map((company) => company.slug)
-    .filter((slug): slug is string => typeof slug === "string" && slug.length > 0);
+  const companySlugs = unique(
+    allowedCompanies
+      .map((company) => company.slug)
+      .filter((slug): slug is string => typeof slug === "string" && slug.length > 0),
+  );
 
-  // 7) Define empresa primaria com fallback inteligente.
-  const primaryCompany =
-    shouldBindCompanyContext
-      ? allowedCompanies.find((company) => company.id === session.companyId) ??
-        allowedCompanies.find((company) => company.slug === session.companySlug) ??
-        allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
-        allowedCompanies[0] ??
-        null
-      : null;
+  const primaryCompany = shouldBindCompanyContext
+    ? allowedCompanies.find((company) => company.id === session.companyId) ??
+      allowedCompanies.find((company) => company.slug === session.companySlug) ??
+      allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
+      allowedCompanies[0] ??
+      null
+    : null;
 
-  const primaryLink = primaryCompany ? links.find((link) => link.companyId === primaryCompany.id) ?? null : null;
+  const primaryLink = primaryCompany
+    ? links.find((link) => link.companyId === primaryCompany.id) ?? null
+    : null;
 
-  // 8) Resolve papel de empresa e capacidades efetivas.
   const rawRole = session.companyRole ?? primaryLink?.role ?? user.role ?? null;
   const companyRole = normalizeLocalRole(rawRole);
-  const permissionRole = hasForcedGlobalAccess ? "leader_tc" : resolvePermissionRoleForUser(user, links);
+  const permissionRole = hasForcedLeaderAccess
+    ? "leader_tc"
+    : resolvePermissionRoleForUser(user, links);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     membershipCapabilities: primaryLink?.capabilities ?? session.capabilities ?? null,
   });
-  const effectiveRole = hasForcedGlobalAccess ? "leader_tc" : permissionRole;
+  const effectiveRole = hasForcedLeaderAccess ? "leader_tc" : permissionRole;
 
-  // Só company_user e testing_company_user podem ser restritos por projeto; empresa (admin
-  // da empresa), leader_tc e technical_support sempre enxergam todos os projetos.
-  const isProjectScopedRole = companyRole === "company_user" || companyRole === "testing_company_user";
-  const allowedProjectIds =
-    shouldBindCompanyContext && isProjectScopedRole && primaryLink?.allowedProjectIds?.length
-      ? primaryLink.allowedProjectIds
-      : null;
+  const leaderProjectIds = unique(
+    projectAssignments
+      .filter((assignment) => assignment.role === "leader_tc")
+      .map((assignment) => assignment.projectId),
+  );
+  const qaProjectIds = unique(
+    projectAssignments
+      .filter((assignment) => assignment.role === "qa_tc")
+      .map((assignment) => assignment.projectId),
+  );
+  const isProjectScopedRole =
+    companyRole === "company_user" || companyRole === "testing_company_user";
 
-  // 9) Retorna o contexto final consumido pelo restante do app.
+  const allowedProjectIds = hasUnrestrictedCompanyAccess
+    ? null
+    : hasLeaderTcRole
+      ? leaderProjectIds
+      : hasQaTcAssignments
+        ? qaProjectIds
+        : isProjectScopedRole && primaryLink?.allowedProjectIds?.length
+          ? unique(primaryLink.allowedProjectIds)
+          : null;
+
   return {
     userId: user.id,
     email: user.email,
@@ -267,8 +314,8 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
     capabilities,
-    companyId: shouldBindCompanyContext ? session.companyId ?? primaryCompany?.id ?? null : null,
-    companySlug: shouldBindCompanyContext ? session.companySlug ?? primaryCompany?.slug ?? user.default_company_slug ?? null : null,
+    companyId: shouldBindCompanyContext ? primaryCompany?.id ?? null : null,
+    companySlug: shouldBindCompanyContext ? primaryCompany?.slug ?? null : null,
     companySlugs,
     allowedProjectIds,
   };

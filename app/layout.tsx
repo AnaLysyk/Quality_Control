@@ -16,6 +16,7 @@ import {
 } from "@/lib/appSettingsCookies";
 import "./globals.css";
 import "./operational-theme.css";
+import "./sidebar-dropdown-fix.css";
 import "./admin-permissions-theme.css";
 import "./agenda-global-theme.css";
 import "./brain-home-polish.css";
@@ -87,7 +88,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       }
     })();
   `;
-
   const migrateStorageScript = `
     (() => {
       try {

@@ -13,6 +13,7 @@ import { hasForcedGlobalAccessForUser } from "@/lib/auth/specialAccess";
 import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { resolveCapabilities } from "@/lib/permissions";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { deriveProjectScope, type AccessAssignment, type ProjectScope } from "./accessAssignment";
 
 export type SessionPayload = {
   userId?: string;
@@ -41,14 +42,40 @@ export type AccessContext = {
   capabilities?: string[];
   companyId: string | null;
   companySlug: string | null;
+  // Campo legado: calculado exatamente como antes da Etapa 2.3A (a partir
+  // de allowedCompanies), sem depender de `assignments`. Não usar para
+  // validar pares empresa+projeto — usar
+  // isCompanyProjectPairAllowed(assignments/projectScope, ...) de
+  // lib/core/session/accessAssignment.ts.
   companySlugs: string[];
-  // null = sem restrição de projeto; array = restrito aos projectIds informados.
+  // Campo legado: DELIBERADAMENTE ainda com a semântica antiga (inclusive a
+  // ambiguidade de Membership.allowedProjectIds=[] == "sem restrição
+  // dentro da empresa", conforme o comentário do schema Prisma) — não foi
+  // migrado para o novo contrato nesta etapa para não alterar
+  // silenciosamente o comportamento vivo de rotas que já consomem este
+  // campo hoje. O novo contrato (assignments/projectScope) já representa
+  // essa mesma situação corretamente como projectAccess="all_company_projects".
+  // deriveLegacyAllowedProjectIds (accessAssignment.ts) calcula a versão
+  // correta a partir de `assignments`, mas só passa a alimentar este campo
+  // quando operationalContext, /api/me, /api/auth/me e /api/projects
+  // migrarem. Nenhum helper novo (isCompanyAllowed/isCompanyProjectPairAllowed)
+  // usa este campo nem interpreta ausência de assignments como unrestricted.
   allowedProjectIds: string[] | null;
+  // Contrato relacional oficial (Etapa 2.3A): pares empresa+projeto
+  // preservados, sem achatamento, com projectAccess explícito
+  // (company_only | selected_projects | all_company_projects). Representa
+  // só vínculos reais — sem entradas sintéticas mesmo para acesso global
+  // (nesse caso o escopo vem de projectScope="unrestricted"). Ainda não
+  // consumido por operationalContext/rotas nesta etapa.
+  assignments: AccessAssignment[];
+  projectScope: ProjectScope;
 };
 
 type ActiveProjectAssignment = {
   companyId: string;
   projectId: string;
+  projectSlug: string | null;
+  projectName: string | null;
   role: string;
 };
 
@@ -137,10 +164,22 @@ async function listActiveProjectAssignments(userId: string): Promise<ActiveProje
 
   try {
     const { prisma } = await import("@/lib/prismaClient");
-    return await prisma.projectTeamAssignment.findMany({
+    const rows = await prisma.projectTeamAssignment.findMany({
       where: { userId, status: "active" },
-      select: { companyId: true, projectId: true, role: true },
+      select: {
+        companyId: true,
+        projectId: true,
+        role: true,
+        project: { select: { slug: true, name: true } },
+      },
     });
+    return rows.map((row) => ({
+      companyId: row.companyId,
+      projectId: row.projectId,
+      role: row.role,
+      projectSlug: row.project?.slug ?? null,
+      projectName: row.project?.name ?? null,
+    }));
   } catch {
     // A autenticação não deve cair quando o banco estiver temporariamente indisponível.
     return [];
@@ -149,6 +188,39 @@ async function listActiveProjectAssignments(userId: string): Promise<ActiveProje
 
 function unique(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)));
+}
+
+type ResolvedMembershipProject = {
+  id: string;
+  companyId: string;
+  slug: string | null;
+  name: string | null;
+};
+
+// Consulta em lote (uma query, não uma por projeto) dos projetos referidos
+// por Membership.allowedProjectIds em qualquer vínculo do usuário. Usada
+// para resolver slug/name e, principalmente, para confirmar a empresa REAL
+// de cada projectId antes de virar um assignment (Correção 4): um
+// Membership.allowedProjectIds corrompido apontando pra projeto de outra
+// empresa nunca deve virar acesso.
+async function resolveMembershipProjectsByIds(projectIds: string[]): Promise<Map<string, ResolvedMembershipProject>> {
+  const uniqueIds = unique(projectIds);
+  if (uniqueIds.length === 0) return new Map();
+  if (process.env.E2E_USE_JSON === "1") return new Map();
+
+  try {
+    const { prisma } = await import("@/lib/prismaClient");
+    const rows = await prisma.project.findMany({
+      where: { id: { in: uniqueIds } },
+      select: { id: true, companyId: true, slug: true, name: true },
+    });
+    return new Map(rows.map((row) => [row.id, row]));
+  } catch {
+    // Mesma política de listActiveProjectAssignments: banco indisponível
+    // não derruba a autenticação. Sem resolução, esses IDs simplesmente não
+    // viram assignment (fail-closed, não fail-open).
+    return new Map();
+  }
 }
 
 export async function getSessionPayload(req: Request): Promise<SessionPayload | null> {
@@ -237,6 +309,9 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     userRole === "company_user" ||
     user.user_origin === "client_company";
 
+  // Mesmo conjunto de empresas permitidas de sempre (inalterado nesta etapa,
+  // para não regredir companySlugs) — só a representação como `assignments`
+  // é nova.
   const allowedCompanies = hasUnrestrictedCompanyAccess
     ? companies
     : hasLeaderTcRole || hasQaTcAssignments
@@ -249,12 +324,6 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
           if (user.default_company_slug && company.slug === user.default_company_slug) return true;
           return false;
         });
-
-  const companySlugs = unique(
-    allowedCompanies
-      .map((company) => company.slug)
-      .filter((slug): slug is string => typeof slug === "string" && slug.length > 0),
-  );
 
   const primaryCompany = shouldBindCompanyContext
     ? allowedCompanies.find((company) => company.id === session.companyId) ??
@@ -280,19 +349,30 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   });
   const effectiveRole = hasForcedLeaderAccess ? "leader_tc" : permissionRole;
 
-  const leaderProjectIds = unique(
-    projectAssignments
-      .filter((assignment) => assignment.role === "leader_tc")
-      .map((assignment) => assignment.projectId),
-  );
-  const qaProjectIds = unique(
-    projectAssignments
-      .filter((assignment) => assignment.role === "qa_tc")
-      .map((assignment) => assignment.projectId),
-  );
   const isProjectScopedRole =
     companyRole === "company_user" || companyRole === "testing_company_user";
 
+  // ── Campos legados: calculados exatamente como antes da Etapa 2.3A ────
+  // (Correção 5: não alterar a semântica viva antes da migração dos
+  // consumidores.) companySlugs vem de allowedCompanies, não de
+  // `assignments`. allowedProjectIds usa a mesma fórmula de sempre,
+  // inclusive a ambiguidade de Membership.allowedProjectIds=[] == "sem
+  // restrição dentro da empresa" (documentada no schema Prisma) — o
+  // contrato novo abaixo já resolve essa ambiguidade corretamente como
+  // projectAccess="all_company_projects", mas isso só passa a alimentar
+  // este campo quando os consumidores migrarem.
+  const companySlugs = unique(
+    allowedCompanies
+      .map((company) => company.slug)
+      .filter((slug): slug is string => typeof slug === "string" && slug.length > 0),
+  );
+
+  const leaderProjectIds = unique(
+    projectAssignments.filter((assignment) => assignment.role === "leader_tc").map((assignment) => assignment.projectId),
+  );
+  const qaProjectIds = unique(
+    projectAssignments.filter((assignment) => assignment.role === "qa_tc").map((assignment) => assignment.projectId),
+  );
   const allowedProjectIds = hasUnrestrictedCompanyAccess
     ? null
     : hasLeaderTcRole
@@ -302,6 +382,103 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
         : isProjectScopedRole && primaryLink?.allowedProjectIds?.length
           ? unique(primaryLink.allowedProjectIds)
           : null;
+
+  // ── Contrato relacional (Etapa 2.3A/2.3B) ──────────────────────────────
+  // Monta `assignments` preservando o par empresa+projeto, com
+  // projectAccess explícito. Fonte por perfil, sem misturar: Líder
+  // TC/Usuário TC usam só ProjectTeamAssignment ativo (nunca Membership
+  // para completar escopo); todo mundo mais (inclusive admin global e
+  // Suporte Técnico) usa só Membership/link real — sem nenhuma entrada
+  // sintética. Para acesso global o escopo real vem de
+  // projectScope="unrestricted" (decidido pela flag
+  // `hasUnrestrictedCompanyAccess`), nunca do conteúdo de `assignments`.
+  const companyById = new Map(companies.map((company) => [company.id, company] as const));
+  let assignments: AccessAssignment[];
+
+  if (hasLeaderTcRole || hasQaTcAssignments) {
+    // Só ProjectTeamAssignment ativo — nunca Membership/link antigo para
+    // completar artificialmente o escopo de Líder TC/Usuário TC.
+    assignments = roleAssignments.map((assignment) => {
+      const company = companyById.get(assignment.companyId);
+      return {
+        companyId: assignment.companyId,
+        companySlug: company?.slug ?? "",
+        companyName: company?.name ?? null,
+        projectId: assignment.projectId,
+        projectSlug: assignment.projectSlug,
+        projectName: assignment.projectName,
+        projectAccess: "selected_projects",
+        role: assignment.role,
+        status: "active",
+        source: "project_assignment",
+      };
+    });
+  } else {
+    // Empresa / usuário empresarial / company_user sem papel líder /
+    // admin global / Suporte Técnico: processa TODOS os Memberships/links
+    // reais do usuário (Correção 3 — não só o primário). Para cada
+    // vínculo:
+    //   - papel não escopado por projeto (ex.: "empresa") -> company_only;
+    //   - papel escopado por projeto com allowedProjectIds=[] -> essa
+    //     empresa libera todos os projetos dela (é a semântica que o
+    //     schema já documenta para esse campo vazio) -> all_company_projects;
+    //   - papel escopado por projeto com IDs explícitos -> um assignment
+    //     por projeto, resolvido em lote (Correção 4) e validado contra a
+    //     empresa real do projeto (nunca confia no companyId do Membership
+    //     sozinho: um ID corrompido apontando pra outra empresa é
+    //     descartado, não gera assignment nem acesso).
+    const allMembershipProjectIds = links.flatMap((link) =>
+      Array.isArray(link.allowedProjectIds) ? link.allowedProjectIds : [],
+    );
+    const resolvedProjects = await resolveMembershipProjectsByIds(allMembershipProjectIds);
+
+    const built: AccessAssignment[] = [];
+    for (const link of links) {
+      const company = companyById.get(link.companyId);
+      if (!company) continue; // vínculo para empresa inexistente/removida -- ignora (fail-closed)
+
+      const roleForCompany = normalizeLocalRole(link.role ?? user.role ?? null) ?? effectiveRole;
+      const isProjectScopedForLink = roleForCompany === "company_user" || roleForCompany === "testing_company_user";
+      const explicitProjectIds = isProjectScopedForLink && Array.isArray(link.allowedProjectIds) ? unique(link.allowedProjectIds) : [];
+
+      if (!isProjectScopedForLink || explicitProjectIds.length === 0) {
+        built.push({
+          companyId: company.id,
+          companySlug: company.slug,
+          companyName: company.name ?? null,
+          projectId: null,
+          projectSlug: null,
+          projectName: null,
+          projectAccess: isProjectScopedForLink ? "all_company_projects" : "company_only",
+          role: roleForCompany,
+          status: "active",
+          source: "membership",
+        });
+        continue;
+      }
+
+      for (const projectId of explicitProjectIds) {
+        const project = resolvedProjects.get(projectId);
+        if (!project) continue; // ID inexistente/corrompido -- ignora, nunca concede
+        if (project.companyId !== company.id) continue; // aponta pra outra empresa -- nega (Correção 4)
+        built.push({
+          companyId: company.id,
+          companySlug: company.slug,
+          companyName: company.name ?? null,
+          projectId: project.id,
+          projectSlug: project.slug,
+          projectName: project.name,
+          projectAccess: "selected_projects",
+          role: roleForCompany,
+          status: "active",
+          source: "membership",
+        });
+      }
+    }
+    assignments = built;
+  }
+
+  const projectScope = deriveProjectScope(hasUnrestrictedCompanyAccess, assignments);
 
   return {
     userId: user.id,
@@ -318,5 +495,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     companySlug: shouldBindCompanyContext ? primaryCompany?.slug ?? null : null,
     companySlugs,
     allowedProjectIds,
+    assignments,
+    projectScope,
   };
 }

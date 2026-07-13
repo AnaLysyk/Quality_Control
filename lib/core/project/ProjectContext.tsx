@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   ReactNode,
 } from "react";
@@ -42,48 +43,7 @@ type ProjectContextValue = {
 const ProjectContext = createContext<ProjectContextValue | undefined>(undefined);
 
 const storageKey = (userId: string, companyId: string) => `activeProject:${userId}:${companyId}`;
-const projectCacheKey = (userId: string, companySlug: string) => `projects:${userId}:${companySlug}`;
-const PROJECT_CACHE_TTL_MS = 60_000;
 const getSessionStorage = () => (typeof window === "undefined" ? null : window.sessionStorage);
-
-type ProjectCacheEntry = {
-  projects: ProjectRecord[];
-  cachedAt: number;
-};
-
-const projectMemoryCache = new Map<string, ProjectCacheEntry>();
-
-function isFreshProjectCache(entry: ProjectCacheEntry | null) {
-  return Boolean(entry && Date.now() - entry.cachedAt <= PROJECT_CACHE_TTL_MS);
-}
-
-function readProjectCache(userId: string, companySlug: string): ProjectRecord[] | null {
-  const key = projectCacheKey(userId, companySlug);
-  const memoryEntry = projectMemoryCache.get(key) ?? null;
-  if (isFreshProjectCache(memoryEntry)) return memoryEntry?.projects ?? null;
-
-  try {
-    const raw = getSessionStorage()?.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as ProjectCacheEntry;
-    if (!isFreshProjectCache(parsed) || !Array.isArray(parsed.projects)) return null;
-    projectMemoryCache.set(key, parsed);
-    return parsed.projects;
-  } catch {
-    return null;
-  }
-}
-
-function writeProjectCache(userId: string, companySlug: string, projects: ProjectRecord[]) {
-  const key = projectCacheKey(userId, companySlug);
-  const entry: ProjectCacheEntry = { projects, cachedAt: Date.now() };
-  projectMemoryCache.set(key, entry);
-  try {
-    getSessionStorage()?.setItem(key, JSON.stringify(entry));
-  } catch {
-    /* ignore */
-  }
-}
 
 function normalizeSlug(value: string) {
   return value
@@ -137,6 +97,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [activeProjectSlug, setActiveProjectSlugState] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestSequence = useRef(0);
 
   const resolveActiveProjectSlug = useCallback(
     (list: ProjectRecord[], companySlug: string) => {
@@ -166,68 +127,63 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   );
 
   const fetchProjects = useCallback(
-    async (companySlug: string, options?: { force?: boolean }) => {
-      const cached = options?.force ? null : readProjectCache(userId, companySlug);
-      if (cached) {
-        applyProjectList(cached, companySlug);
-      }
-
+    async (companySlug: string) => {
+      const sequence = ++requestSequence.current;
       setLoading(true);
       setError(null);
+
       try {
         const projectRes = await fetch(`/api/projects?companySlug=${encodeURIComponent(companySlug)}`, {
           cache: "no-store",
           credentials: "include",
         });
 
-        if (!projectRes.ok) throw new Error("Falha ao carregar projetos");
+        const projectJson = (await projectRes.json().catch(() => null)) as
+          | { projects?: Partial<ProjectRecord>[]; error?: string }
+          | null;
 
-        const projectJson = (await projectRes.json().catch(() => null)) as { projects?: Partial<ProjectRecord>[] } | null;
+        if (!projectRes.ok) {
+          throw new Error(projectJson?.error || "Falha ao carregar projetos");
+        }
+
         const list = mergeProjects(
           (projectJson?.projects ?? [])
             .map((item) => toProjectRecord(item, companySlug))
             .filter(Boolean) as ProjectRecord[],
         );
 
-        writeProjectCache(userId, companySlug, list);
-        applyProjectList(list, companySlug);
+        if (sequence === requestSequence.current) {
+          applyProjectList(list, companySlug);
+        }
         return list;
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erro ao carregar projetos";
-        setError(msg);
-        if (!cached) setProjects([]);
-        return cached ?? [];
+        if (sequence === requestSequence.current) {
+          setError(msg);
+          setProjects([]);
+          setActiveProjectSlugState(null);
+        }
+        return [];
       } finally {
-        setLoading(false);
+        if (sequence === requestSequence.current) setLoading(false);
       }
     },
-    [applyProjectList, userId],
+    [applyProjectList],
   );
 
   useEffect(() => {
+    requestSequence.current += 1;
+    setProjects([]);
+    setActiveProjectSlugState(null);
+    setError(null);
+
     if (!activeClientSlug) {
-      const timeoutId = window.setTimeout(() => {
-        setProjects([]);
-        setActiveProjectSlugState(null);
-      }, 0);
-      return () => window.clearTimeout(timeoutId);
+      setLoading(false);
+      return;
     }
 
-    let cancelled = false;
-    const timeoutId = window.setTimeout(() => {
-      const cached = readProjectCache(userId, activeClientSlug);
-      if (cached) applyProjectList(cached, activeClientSlug);
-
-      void fetchProjects(activeClientSlug, { force: true }).then((list) => {
-        if (cancelled) return;
-        applyProjectList(list, activeClientSlug);
-      });
-    }, 0);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeoutId);
-    };
-  }, [activeClientSlug, applyProjectList, fetchProjects, userId]);
+    void fetchProjects(activeClientSlug);
+  }, [activeClientSlug, fetchProjects]);
 
   const setActiveProject = useCallback(
     (slugOrId: string | null) => {
@@ -237,19 +193,23 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         if (companyId) getSessionStorage()?.removeItem(storageKey(userId, companyId));
         return;
       }
+
       const found = projects.find((p) => p.slug === slugOrId || p.id === slugOrId || p.qaseProjectCode === slugOrId);
       if (!found) return;
+
       setActiveProjectSlugState(found.slug);
-      if (companyId) {
-        getSessionStorage()?.setItem(storageKey(userId, companyId), found.slug);
-      }
+      if (companyId) getSessionStorage()?.setItem(storageKey(userId, companyId), found.slug);
     },
-    [projects, activeClient, userId],
+    [projects, activeClient?.id, userId],
   );
 
   const refreshProjects = useCallback(async () => {
-    if (!activeClientSlug) return;
-    await fetchProjects(activeClientSlug, { force: true });
+    if (!activeClientSlug) {
+      setProjects([]);
+      setActiveProjectSlugState(null);
+      return;
+    }
+    await fetchProjects(activeClientSlug);
   }, [activeClientSlug, fetchProjects]);
 
   const activeProject = useMemo(
@@ -259,7 +219,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-
     if (activeProjectSlug) root.dataset.project = activeProjectSlug;
     else delete root.dataset.project;
 

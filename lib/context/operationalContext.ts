@@ -154,6 +154,24 @@ function readRequestValue(url: URL, explicit: string | null | undefined, ...keys
   return null;
 }
 
+function requestedCompanyConflictsWithResolvedProject(input: {
+  requestedCompanyId: string | null;
+  requestedCompanySlug: string | null;
+  resolvedCompanyId: string;
+  resolvedCompanySlug: string | null;
+}) {
+  if (input.requestedCompanyId && input.requestedCompanyId !== input.resolvedCompanyId) {
+    return true;
+  }
+  if (
+    input.requestedCompanySlug &&
+    normalize(input.requestedCompanySlug) !== normalize(input.resolvedCompanySlug)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export async function resolveOperationalContext(
   request: Request,
   options: OperationalContextOptions = {},
@@ -194,6 +212,22 @@ export async function resolveOperationalContext(
   }
 
   const resolvedProject = projectResolution.kind === "resolved" ? projectResolution.project : null;
+
+  if (
+    resolvedProject &&
+    requestedCompanyConflictsWithResolvedProject({
+      requestedCompanyId,
+      requestedCompanySlug,
+      resolvedCompanyId: resolvedProject.companyId,
+      resolvedCompanySlug: resolvedProject.companySlug,
+    })
+  ) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Empresa e projeto não pertencem ao mesmo contexto" }, { status: 403 }),
+    };
+  }
+
   const companyId = requestedCompanyId ?? resolvedProject?.companyId ?? access.companyId ?? null;
   const companySlug = requestedCompanySlug ?? resolvedProject?.companySlug ?? access.companySlug ?? null;
   const projectId = resolvedProject?.id ?? requestedProjectId ?? null;

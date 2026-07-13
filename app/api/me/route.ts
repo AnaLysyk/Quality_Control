@@ -1,10 +1,11 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { AuthCompany } from "@/../packages/contracts/src/auth";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
+import { buildCurrentUserResponse } from "@/lib/core/session/currentUserResponse";
 import {
   findLocalUserByEmailOrId,
   getLocalUserById,
@@ -24,6 +25,7 @@ export const runtime = "nodejs";
 export const revalidate = 0;
 
 const AVATAR_BASE_DIR = path.join(process.cwd(), "data", "s3");
+const PLATFORM_COMPANY_SLUG = process.env.PLATFORM_COMPANY_SLUG || "testing-company";
 
 function errorResponse(status: number, code: string, message: string) {
   return NextResponse.json(
@@ -43,11 +45,12 @@ export async function GET(req: Request) {
     return errorResponse(401, "USER_NOT_FOUND", "Usuário não encontrado");
   }
 
-  const [links, companies] = await Promise.all([
+  const [links, companies, permissionAccess] = await Promise.all([
     listLocalLinksForUser(user.id),
     listLocalCompanies(),
+    resolvePermissionAccessForUser(user.id),
   ]);
-  const permissionAccess = await resolvePermissionAccessForUser(user.id);
+
   const isGlobalAdmin = access.isGlobalAdmin === true;
   const normalizedRole = normalizeLegacyRole(access.role);
   const normalizedCompanyRole = normalizeLegacyRole(access.companyRole);
@@ -95,68 +98,53 @@ export async function GET(req: Request) {
     };
   });
 
-  const displayName =
-    (typeof (user as { full_name?: string | null }).full_name === "string"
-      ? (user as { full_name?: string | null }).full_name?.trim()
-      : "") ||
-    (typeof user.name === "string" ? user.name.trim() : "") ||
-    user.email;
+  const logoCompany =
+    (access.companyId ? companies.find((company) => company.id === access.companyId) : null) ??
+    companies.find((company) => company.slug === PLATFORM_COMPANY_SLUG) ??
+    null;
+  const companyLogoUrl =
+    logoCompany && typeof (logoCompany as { logo_url?: string | null }).logo_url === "string"
+      ? (logoCompany as { logo_url?: string | null }).logo_url ?? null
+      : null;
 
-  const response = NextResponse.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      name: displayName,
-      user: user.user ?? user.email,
-      username: user.user ?? user.email,
-      phone: user.phone ?? null,
-      avatarKey: isAvatarKey(user.avatar_key) ? user.avatar_key : null,
-      avatarUrl: user.avatar_url ?? null,
-      active: user.active !== false,
-      status: user.active === false ? "inactive" : user.status ?? "active",
-      jobTitle: user.job_title ?? null,
-      job_title: user.job_title ?? null,
-      linkedinUrl: user.linkedin_url ?? null,
-      linkedin_url: user.linkedin_url ?? null,
-      fullName:
-        (typeof (user as { full_name?: string | null }).full_name === "string"
-          ? (user as { full_name?: string | null }).full_name
-          : null) ?? null,
-      role: access.role ?? null,
-      globalRole: access.globalRole ?? null,
-      companyRole: access.companyRole ?? null,
-      capabilities: access.capabilities ?? [],
-      permissions: permissionAccess.permissions,
-      permissionRole: permissionAccess.roleKey,
-      userOrigin: user.user_origin ?? null,
-      user_origin: user.user_origin ?? null,
-      companyId: access.companyId ?? null,
-      companySlug: access.companySlug ?? null,
-      companySlugs: access.companySlugs ?? [],
-      clientId: access.companyId ?? null,
-      clientSlug: access.companySlug ?? null,
-      defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
-      clientSlugs: access.companySlugs ?? [],
-      isGlobalAdmin: access.isGlobalAdmin === true,
-    },
-    companies: companiesResponse,
-  }, { headers: NO_STORE_HEADERS });
-
-  response.cookies.set(COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode({
-    isGlobalAdmin: access.isGlobalAdmin === true,
+  const canonical = buildCurrentUserResponse({
+    access,
+    permissions: permissionAccess.permissions,
     permissionRole: permissionAccess.roleKey,
-    role: access.role ?? null,
-    companyRole: access.companyRole ?? null,
-    userOrigin: user.user_origin ?? null,
-    companyCount: access.companySlugs?.length ?? companiesResponse.length,
-    clientSlug: access.companySlug ?? null,
-  }), {
-    httpOnly: false,
-    sameSite: "lax",
-    secure: new URL(req.url).protocol === "https:",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+    user: {
+      ...user,
+      avatar_key: isAvatarKey(user.avatar_key) ? user.avatar_key : null,
+    },
+    companyLogoUrl,
   });
+
+  const response = NextResponse.json(
+    {
+      ...canonical,
+      companies: companiesResponse,
+    },
+    { headers: NO_STORE_HEADERS },
+  );
+
+  response.cookies.set(
+    COMPANY_ROUTE_MODE_COOKIE,
+    resolveCompanyRouteMode({
+      isGlobalAdmin: access.isGlobalAdmin === true,
+      permissionRole: permissionAccess.roleKey,
+      role: access.role ?? null,
+      companyRole: access.companyRole ?? null,
+      userOrigin: user.user_origin ?? null,
+      companyCount: access.companySlugs?.length ?? companiesResponse.length,
+      clientSlug: access.companySlug ?? null,
+    }),
+    {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: new URL(req.url).protocol === "https:",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    },
+  );
 
   return response;
 }

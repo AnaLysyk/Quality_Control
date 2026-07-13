@@ -14,6 +14,14 @@ export const SYSTEM_PAGE_MAP_EXCLUSIONS = new Set([
   "app/login/page.tsx",
   "app/login/reset-password/page.tsx",
   "app/page.tsx",
+
+  // As duas entradas abrem o mesmo workspace de Gestão de Vínculos. Elas não
+  // recebem permissões de tela independentes para evitar dois toggles capazes
+  // de divergir. A autoridade única é o módulo `relationships`: o menu exige
+  // relationships:view, /admin/users/vinculos é validado no AdminLayout e as
+  // APIs de vínculos aplicam relationships:view/create/edit/delete no servidor.
+  "app/admin/users/vinculos/page.tsx",
+  "app/usuarios/vinculos/page.tsx",
 ]);
 
 function collectPageFiles(dir: string, output: string[]) {

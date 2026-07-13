@@ -4,7 +4,13 @@ import { NextResponse } from "next/server";
 
 import { getAccessContext, type AccessContext } from "@/lib/auth/session";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+import {
+  isCompanyAllowed,
+  isCompanyProjectPairAllowed,
+} from "@/lib/core/session/accessAssignment";
+import type { PermissionMatrix } from "@/lib/permissionMatrix";
+import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { resolveOperationalProject } from "./operationalProjectResolver";
 
 export type OperationalScope = "global" | "company" | "own";
 export type TicketScope = "all_companies" | "own_company" | "own_tickets";
@@ -21,6 +27,7 @@ export type OperationalCapabilities = {
 
 export type OperationalContext = {
   access: AccessContext;
+  permissions: PermissionMatrix;
   role: SystemRole | null;
   scope: OperationalScope;
   ticketScope: TicketScope;
@@ -61,12 +68,12 @@ function readRole(access: AccessContext): SystemRole | null {
   );
 }
 
-function hasGlobalVisibility(access: AccessContext, role: SystemRole | null) {
-  return access.isGlobalAdmin === true || role === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+function hasGlobalVisibility(access: AccessContext) {
+  return access.projectScope === "unrestricted" || access.isGlobalAdmin === true;
 }
 
 function readScope(access: AccessContext, role: SystemRole | null): OperationalScope {
-  if (hasGlobalVisibility(access, role)) return "global";
+  if (hasGlobalVisibility(access)) return "global";
   if (role === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.LEADER_TC) return "company";
   return "own";
 }
@@ -91,28 +98,8 @@ function unique(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.map(normalize).filter(Boolean)));
 }
 
-function companyAllowed(access: AccessContext, companyId?: string | null, companySlug?: string | null) {
-  const role = readRole(access);
-  if (hasGlobalVisibility(access, role)) return true;
-
-  const requestedId = normalize(companyId);
-  const requestedSlug = normalize(companySlug);
-  if (!requestedId && !requestedSlug) return true;
-
-  if (requestedId && normalize(access.companyId) === requestedId) return true;
-  if (requestedSlug && normalize(access.companySlug) === requestedSlug) return true;
-
-  const slugs = new Set((access.companySlugs ?? []).map(normalize).filter(Boolean));
-  return Boolean(requestedSlug && slugs.has(requestedSlug));
-}
-
-function projectAllowed(access: AccessContext, projectId?: string | null) {
-  const allowed = access.allowedProjectIds;
-  if (!Array.isArray(allowed)) return true;
-
-  const requestedId = (projectId ?? "").trim();
-  if (!requestedId) return true;
-  return allowed.includes(requestedId);
+function uniqueExact(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.map((value) => (value ?? "").trim()).filter(Boolean)));
 }
 
 function actionAliases(action: string) {
@@ -130,36 +117,32 @@ function actionAliases(action: string) {
   return [action];
 }
 
-function hasDefaultPermission(role: SystemRole | null, moduleId: string, action: string) {
-  if (!role) return false;
-  const defaults = resolveRoleDefaults(role);
-  const actions = defaults[moduleId] ?? [];
+function hasOperationalPermission(permissions: PermissionMatrix, moduleId: string, action: string) {
+  const actions = permissions[moduleId] ?? [];
   return actionAliases(action).some((candidate) => actions.includes(candidate));
 }
 
-function hasCapability(access: AccessContext, moduleId: string, action: string) {
-  const capabilities = Array.isArray(access.capabilities) ? access.capabilities : [];
-  return actionAliases(action).some(
-    (candidate) =>
-      capabilities.includes(`${moduleId}.${candidate}`) ||
-      capabilities.includes(`${moduleId}:${candidate}`),
-  );
-}
-
-function hasOperationalPermission(access: AccessContext, role: SystemRole | null, moduleId: string, action: string) {
-  return hasCapability(access, moduleId, action) || hasDefaultPermission(role, moduleId, action);
-}
-
-function buildCapabilities(access: AccessContext, role: SystemRole | null, moduleId?: string): OperationalCapabilities {
+function buildCapabilities(permissions: PermissionMatrix, moduleId?: string): OperationalCapabilities {
   if (!moduleId) {
     return { canViewScreen: true, canRead: true, canCreate: false, canEdit: false, canDelete: false, canUse: true };
   }
-  const canRead = hasOperationalPermission(access, role, moduleId, "read") || hasOperationalPermission(access, role, moduleId, "view");
-  const canCreate = hasOperationalPermission(access, role, moduleId, "create");
-  const canEdit = hasOperationalPermission(access, role, moduleId, "edit") || hasOperationalPermission(access, role, moduleId, "update");
-  const canDelete = hasOperationalPermission(access, role, moduleId, "delete");
-  const canUse = hasOperationalPermission(access, role, moduleId, "use") || canRead;
-  return { canViewScreen: canRead || canUse || canCreate || canEdit || canDelete, canRead, canCreate, canEdit, canDelete, canUse };
+  const canRead =
+    hasOperationalPermission(permissions, moduleId, "read") ||
+    hasOperationalPermission(permissions, moduleId, "view");
+  const canCreate = hasOperationalPermission(permissions, moduleId, "create");
+  const canEdit =
+    hasOperationalPermission(permissions, moduleId, "edit") ||
+    hasOperationalPermission(permissions, moduleId, "update");
+  const canDelete = hasOperationalPermission(permissions, moduleId, "delete");
+  const canUse = hasOperationalPermission(permissions, moduleId, "use") || canRead;
+  return {
+    canViewScreen: canRead || canUse || canCreate || canEdit || canDelete,
+    canRead,
+    canCreate,
+    canEdit,
+    canDelete,
+    canUse,
+  };
 }
 
 function readRequestValue(url: URL, explicit: string | null | undefined, ...keys: string[]) {
@@ -171,6 +154,24 @@ function readRequestValue(url: URL, explicit: string | null | undefined, ...keys
   return null;
 }
 
+function requestedCompanyConflictsWithResolvedProject(input: {
+  requestedCompanyId: string | null;
+  requestedCompanySlug: string | null;
+  resolvedCompanyId: string;
+  resolvedCompanySlug: string | null;
+}) {
+  if (input.requestedCompanyId && input.requestedCompanyId !== input.resolvedCompanyId) {
+    return true;
+  }
+  if (
+    input.requestedCompanySlug &&
+    normalize(input.requestedCompanySlug) !== normalize(input.resolvedCompanySlug)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export async function resolveOperationalContext(
   request: Request,
   options: OperationalContextOptions = {},
@@ -180,23 +181,57 @@ export async function resolveOperationalContext(
     return { ok: false, response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }) };
   }
 
+  const permissionAccess = await resolvePermissionAccessForUser(access.userId);
+  const permissions = permissionAccess.permissions;
   const role = readRole(access);
   const scope = readScope(access, role);
   const moduleId = options.moduleId;
   const action = options.action;
   const url = new URL(request.url);
 
-  if (moduleId && action) {
-    const allowed = hasOperationalPermission(access, role, moduleId, action);
-    if (!allowed) {
-      return { ok: false, response: NextResponse.json({ error: "Sem permissão" }, { status: 403 }) };
-    }
+  if (moduleId && action && !hasOperationalPermission(permissions, moduleId, action)) {
+    return { ok: false, response: NextResponse.json({ error: "Sem permissão" }, { status: 403 }) };
   }
 
-  const companyId = readRequestValue(url, options.companyId, "companyId", "clientId", "client_id") ?? access.companyId ?? null;
-  const companySlug = readRequestValue(url, options.companySlug, "companySlug", "clientSlug", "company") ?? access.companySlug ?? null;
-  const projectId = readRequestValue(url, options.projectId, "projectId") ?? null;
-  const projectSlug = readRequestValue(url, options.projectSlug, "projectSlug", "project") ?? null;
+  const requestedCompanyId = readRequestValue(url, options.companyId, "companyId", "clientId", "client_id");
+  const requestedCompanySlug = readRequestValue(url, options.companySlug, "companySlug", "clientSlug", "company");
+  const requestedProjectId = readRequestValue(url, options.projectId, "projectId");
+  const requestedProjectSlug = readRequestValue(url, options.projectSlug, "projectSlug", "project");
+  const wantsProject = Boolean(requestedProjectId || requestedProjectSlug);
+
+  const projectResolution = await resolveOperationalProject({
+    access,
+    companyId: requestedCompanyId,
+    companySlug: requestedCompanySlug,
+    projectId: requestedProjectId,
+    projectSlug: requestedProjectSlug,
+  });
+
+  if (wantsProject && projectResolution.kind !== "resolved") {
+    return { ok: false, response: NextResponse.json({ error: "Projeto fora do escopo permitido" }, { status: 403 }) };
+  }
+
+  const resolvedProject = projectResolution.kind === "resolved" ? projectResolution.project : null;
+
+  if (
+    resolvedProject &&
+    requestedCompanyConflictsWithResolvedProject({
+      requestedCompanyId,
+      requestedCompanySlug,
+      resolvedCompanyId: resolvedProject.companyId,
+      resolvedCompanySlug: resolvedProject.companySlug,
+    })
+  ) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Empresa e projeto não pertencem ao mesmo contexto" }, { status: 403 }),
+    };
+  }
+
+  const companyId = requestedCompanyId ?? resolvedProject?.companyId ?? access.companyId ?? null;
+  const companySlug = requestedCompanySlug ?? resolvedProject?.companySlug ?? access.companySlug ?? null;
+  const projectId = resolvedProject?.id ?? requestedProjectId ?? null;
+  const projectSlug = resolvedProject?.slug ?? requestedProjectSlug ?? null;
 
   if (options.requireCompany && !companyId && !companySlug) {
     return { ok: false, response: NextResponse.json({ error: "Empresa obrigatória" }, { status: 400 }) };
@@ -206,49 +241,70 @@ export async function resolveOperationalContext(
     return { ok: false, response: NextResponse.json({ error: "Projeto obrigatório" }, { status: 400 }) };
   }
 
-  if (!companyAllowed(access, companyId, companySlug)) {
+  if (!wantsProject && !isCompanyAllowed(access, { companyId, companySlug })) {
     return { ok: false, response: NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 }) };
   }
 
-  if (!projectAllowed(access, projectId)) {
+  if (
+    wantsProject &&
+    !isCompanyProjectPairAllowed(access, {
+      companyId,
+      companySlug,
+      projectId,
+      projectSlug,
+      projectCompanyId: resolvedProject?.companyId ?? null,
+    })
+  ) {
     return { ok: false, response: NextResponse.json({ error: "Projeto fora do escopo permitido" }, { status: 403 }) };
   }
 
-  const allowedProjectIds = Array.isArray(access.allowedProjectIds)
-    ? access.allowedProjectIds
-    : projectId
-      ? [projectId]
-      : [];
+  const assignmentCompanyIds = access.assignments.map((assignment) => assignment.companyId);
+  const assignmentCompanySlugs = access.assignments.map((assignment) => assignment.companySlug);
+  const selectedAssignments = access.assignments.filter(
+    (assignment) => assignment.status === "active" && assignment.projectAccess === "selected_projects",
+  );
+  const allowedProjectIds = uniqueExact([
+    ...selectedAssignments.map((assignment) => assignment.projectId),
+    resolvedProject?.id,
+  ]);
+  const allowedProjectSlugs = unique([
+    ...selectedAssignments.map((assignment) => assignment.projectSlug),
+    resolvedProject?.slug,
+  ]);
 
   return {
     ok: true,
     context: {
       access,
+      permissions,
       role,
       scope,
       ticketScope: readTicketScope(scope),
       userScope: readUserScope(scope),
       companyId,
       companySlug,
-      allowedCompanyIds: unique([access.companyId, companyId]),
-      allowedCompanySlugs: unique([access.companySlug, ...(access.companySlugs ?? []), companySlug]),
+      allowedCompanyIds: uniqueExact([...assignmentCompanyIds, companyId]),
+      allowedCompanySlugs: unique([...assignmentCompanySlugs, companySlug]),
       selectedCompanyId: companyId,
       selectedCompanySlug: companySlug,
       projectId,
       projectSlug,
       allowedProjectIds,
-      allowedProjectSlugs: projectSlug ? [projectSlug] : [],
+      allowedProjectSlugs,
       selectedProjectId: projectId,
       selectedProjectSlug: projectSlug,
       moduleId: moduleId ?? null,
       action: action ?? null,
-      screenCapabilities: buildCapabilities(access, role, moduleId),
+      screenCapabilities: buildCapabilities(permissions, moduleId),
     },
   };
 }
 
-export function assertOperationalAccess(context: OperationalContext, requirement: { moduleId: string; action: string }) {
-  return hasOperationalPermission(context.access, context.role, requirement.moduleId, requirement.action);
+export function assertOperationalAccess(
+  context: OperationalContext,
+  requirement: { moduleId: string; action: string },
+) {
+  return hasOperationalPermission(context.permissions, requirement.moduleId, requirement.action);
 }
 
 export async function withOperationalContext<TResponse extends Response | NextResponse>(

@@ -4,8 +4,15 @@ import path from "node:path";
 import { SYSTEM_MODULES } from "@/lib/navigation/module-map";
 import { NAV_CATALOG } from "@/lib/navigation/navigationCatalog";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
-import { getUnmappedSystemPageFiles } from "@/lib/navigation/systemPageAudit";
+import {
+  getUnmappedSystemPageFiles,
+  SYSTEM_PAGE_MAP_EXCLUSIONS,
+} from "@/lib/navigation/systemPageAudit";
 import { PERMISSION_MODULES } from "@/lib/permissionCatalog";
+import {
+  getPermissionModulesWithScreens,
+  RELATIONSHIP_PERMISSION_MODULE_ID,
+} from "@/lib/navigation/screenPermissions";
 
 function flattenMenuRouteIds() {
   return NAV_CATALOG.flatMap((moduleDefinition) => [
@@ -40,6 +47,25 @@ describe("mapa do sistema", () => {
 
   it("mantem toda page.tsx autenticada mapeada ou explicitamente excluida da matriz", () => {
     expect(getUnmappedSystemPageFiles(SYSTEM_ROUTES)).toEqual([]);
+  });
+
+  it("mantem a Gestão de Vínculos sob uma única permissão explícita", () => {
+    const relationshipPages = [
+      "app/admin/users/vinculos/page.tsx",
+      "app/usuarios/vinculos/page.tsx",
+    ];
+
+    for (const page of relationshipPages) {
+      expect(SYSTEM_PAGE_MAP_EXCLUSIONS.has(page)).toBe(true);
+      expect(fs.existsSync(path.join(process.cwd(), page))).toBe(true);
+    }
+
+    const relationshipModule = getPermissionModulesWithScreens().find(
+      (moduleDefinition) => moduleDefinition.id === RELATIONSHIP_PERMISSION_MODULE_ID,
+    );
+
+    expect(relationshipModule).toBeDefined();
+    expect(relationshipModule?.actions).toEqual(["view", "create", "edit", "delete"]);
   });
 
   it("mantem todos os itens do menu ligados a rotas mapeadas", () => {

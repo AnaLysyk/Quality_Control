@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveOperationalContext } from "@/lib/context/operationalContext";
+import { resolveCompanyProjectVisibility } from "@/lib/core/project/projectAccess";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -27,33 +28,43 @@ export async function GET(request: Request) {
   });
   if (!contextResult.ok) return contextResult.response;
 
-  if (process.env.E2E_USE_JSON === "1") {
-    return NextResponse.json({
-      projects: [
-        {
-          id: "e2e-project-testing-company",
-          slug: "quality-control",
-          name: "Quality Control",
-          description: "Projeto mockado para execucao E2E sem banco.",
-          status: "active",
-          color: "#2563eb",
-          iconKey: "folder",
-          companyId: companySlug,
-          createdAt: new Date(0).toISOString(),
-        },
-      ],
-    });
+  const db = await getDb();
+  const company = await db.company.findUnique({
+    where: { slug: companySlug },
+    select: { id: true, slug: true },
+  });
+  if (!company) return NextResponse.json({ projects: [], access: { mode: "none" } });
+
+  const visibility = resolveCompanyProjectVisibility(contextResult.context.access, {
+    companyId: company.id,
+    companySlug: company.slug,
+  });
+
+  if (visibility.mode === "none") {
+    return NextResponse.json({ projects: [], access: visibility });
   }
 
-  const db = await getDb();
-  const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
-  if (!company) return NextResponse.json({ projects: [] });
+  if (process.env.E2E_USE_JSON === "1") {
+    const mockProject = {
+      id: "e2e-project-testing-company",
+      slug: "quality-control",
+      name: "Quality Control",
+      description: "Projeto mockado para execucao E2E sem banco.",
+      status: "active",
+      color: "#2563eb",
+      iconKey: "folder",
+      companyId: company.id,
+      createdAt: new Date(0).toISOString(),
+    };
+    const projects =
+      visibility.mode === "all" || visibility.projectIds.includes(mockProject.id) ? [mockProject] : [];
+    return NextResponse.json({ projects, access: visibility });
+  }
 
-  const allowedProjectIds = contextResult.context.access.allowedProjectIds;
   const projectWhere = {
     companyId: company.id,
     status: "active",
-    ...(Array.isArray(allowedProjectIds) ? { id: { in: allowedProjectIds } } : {}),
+    ...(visibility.mode === "selected" ? { id: { in: visibility.projectIds } } : {}),
   };
 
   const projects = await db.project.findMany({
@@ -77,6 +88,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     projects: projects.map((p: typeof projects[number]) => ({ ...p, createdAt: p.createdAt.toISOString() })),
+    access: visibility,
   });
 }
 

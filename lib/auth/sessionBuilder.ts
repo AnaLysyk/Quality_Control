@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import {
   getLocalUserById,
@@ -55,11 +55,7 @@ type ActiveAssignment = {
   role: string;
 };
 
-function userHasRole(
-  user: LocalSessionUser,
-  links: LocalCompanyLink[],
-  expectedRole: string,
-) {
+function userHasRole(user: LocalSessionUser, links: LocalCompanyLink[], expectedRole: string) {
   return (
     normalizeLocalRole(user.role ?? null) === expectedRole ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === expectedRole)
@@ -163,14 +159,18 @@ export async function buildLocalSessionForUser(
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-  const hasTechnicalSupportRole = userHasRole(user, links, "technical_support");
   const hasLeaderTcRole =
     userHasRole(user, links, "leader_tc") ||
     assignments.some((assignment) => assignment.role === "leader_tc");
   const hasQaAssignments = assignments.some((assignment) => assignment.role === "qa_tc");
 
-  // Apenas administrador global e suporte técnico têm visibilidade irrestrita.
-  // Líder TC e Usuário TC são escopados pelos vínculos ativos no banco.
+  // Assignments operacionais ativos são a fonte canônica para Líder/Usuário TC.
+  // Um Membership antigo de suporte não pode transformar esses perfis em globais.
+  const hasTechnicalSupportRole =
+    !hasLeaderTcRole &&
+    !hasQaAssignments &&
+    userHasRole(user, links, "technical_support");
+
   const hasUnrestrictedCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole;
   const shouldBindCompanyContext = !hasUnrestrictedCompanyAccess;
   const allowedCompanies = resolveAllowedSessionCompanies({
@@ -200,7 +200,13 @@ export async function buildLocalSessionForUser(
   const activeLink = activeCompany
     ? links.find((link) => link.companyId === activeCompany.id) ?? null
     : null;
-  const companyRole = normalizeLocalRole(activeLink?.role ?? user.role ?? null);
+
+  const canonicalCompanyRole = hasLeaderTcRole
+    ? "leader_tc"
+    : hasQaAssignments
+      ? "qa_tc"
+      : normalizeLocalRole(activeLink?.role ?? user.role ?? null);
+  const companyRole = canonicalCompanyRole ?? "company_user";
 
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
@@ -209,7 +215,8 @@ export async function buildLocalSessionForUser(
   });
 
   const permissionAccess = await resolvePermissionAccessForUser(user.id);
-  const permissionRole = permissionAccess.roleKey;
+  const assignmentRole = hasLeaderTcRole ? "leader_tc" : hasQaAssignments ? "qa_tc" : null;
+  const permissionRole = assignmentRole ?? permissionAccess.roleKey;
   const effectiveRole = permissionRole;
 
   const session: BuiltSessionPayload = {

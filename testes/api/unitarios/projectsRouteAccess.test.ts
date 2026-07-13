@@ -1,28 +1,25 @@
 jest.mock("@/lib/context/operationalContext", () => ({ resolveOperationalContext: jest.fn() }));
 jest.mock("@/lib/audit/writeAuditLog", () => ({ writeAuditLog: jest.fn() }));
-
-const companyFindUnique = jest.fn();
-const projectFindMany = jest.fn();
-const projectFindUnique = jest.fn();
-const projectCreate = jest.fn();
-
 jest.mock("@/lib/prismaClient", () => ({
   prisma: {
-    company: { findUnique: companyFindUnique },
+    company: { findUnique: jest.fn() },
     project: {
-      findMany: projectFindMany,
-      findUnique: projectFindUnique,
-      create: projectCreate,
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
     },
   },
 }));
 
 import { GET } from "@/api/projects/route";
 import { resolveOperationalContext } from "@/lib/context/operationalContext";
+import { prisma } from "@/lib/prismaClient";
 
 const mockedResolveOperationalContext = resolveOperationalContext as jest.MockedFunction<
   typeof resolveOperationalContext
 >;
+const companyFindUnique = prisma.company.findUnique as jest.MockedFunction<typeof prisma.company.findUnique>;
+const projectFindMany = prisma.project.findMany as jest.MockedFunction<typeof prisma.project.findMany>;
 
 function assignment(input: {
   companyId?: string;
@@ -40,9 +37,10 @@ function assignment(input: {
     projectAccess: input.projectAccess ?? "selected_projects",
     role: "leader_tc",
     status: "active" as const,
-    source: input.projectAccess === "selected_projects" || input.projectAccess === undefined
-      ? ("project_assignment" as const)
-      : ("membership" as const),
+    source:
+      input.projectAccess === "selected_projects" || input.projectAccess === undefined
+        ? ("project_assignment" as const)
+        : ("membership" as const),
   };
 }
 
@@ -75,7 +73,7 @@ describe("GET /api/projects - escopo relacional", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     delete process.env.E2E_USE_JSON;
-    companyFindUnique.mockResolvedValue({ id: "A", slug: "empresa-a" });
+    companyFindUnique.mockResolvedValue({ id: "A", slug: "empresa-a" } as any);
     projectFindMany.mockResolvedValue([
       {
         id: "A1",
@@ -91,7 +89,7 @@ describe("GET /api/projects - escopo relacional", () => {
         jiraProjectKey: null,
         manualCreationDisabled: false,
       },
-    ]);
+    ] as any);
     mockContext();
   });
 

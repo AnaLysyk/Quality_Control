@@ -1,4 +1,4 @@
-﻿import { devices, type Project } from "@playwright/test";
+import { devices, type Project } from "@playwright/test";
 
 export const QUALITY_PROJECT_MATCHES = {
   "quality-smoke": ["**/smoke.spec.ts", "**/prod-smoke.spec.ts", "**/happy-path.spec.ts"],
@@ -12,6 +12,7 @@ export const QUALITY_PROJECT_MATCHES = {
     "**/clients-access.spec.ts",
     "**/password-recovery-by-profile.spec.ts",
     "**/persist-active-company.spec.ts",
+    "**/relational-company-project-context.spec.ts",
     "**/requests-flow.spec.ts",
     "**/switch-company.spec.ts",
     "**/user-creation-by-profile.spec.ts",
@@ -88,4 +89,3 @@ export function createQualityProjects(browserChannel?: string): Project[] {
     },
   ];
 }
-

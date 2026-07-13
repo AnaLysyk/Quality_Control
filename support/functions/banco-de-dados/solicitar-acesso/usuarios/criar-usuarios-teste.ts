@@ -1,4 +1,4 @@
-﻿import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { hashPasswordSha256 } from "../../../../../lib/passwordHash";
@@ -77,6 +77,22 @@ const users = [
     user_origin: "testing_company",
   },
   {
+    id: "usr_e2e_relational_user",
+    full_name: "E2E Usuario Relacional",
+    name: "E2E Usuario Relacional",
+    email: "e2e-relational-user@testingcompany.local",
+    user: "e2e.usuario.relacional",
+    password_hash: passwordHash,
+    active: true,
+    status: "active",
+    role: "testing_company_user",
+    default_company_slug: "testing-company",
+    home_company_id: "cmp_e2e_testing_company",
+    user_origin: "testing_company",
+    user_scope: "shared",
+    allow_multi_company_link: true,
+  },
+  {
     id: "usr_e2e_qa_quality_user",
     full_name: "E2E QA Quality Control",
     name: "E2E QA Quality Control",
@@ -143,6 +159,18 @@ const memberships = [
     id: "mem_e2e_testing_company_user",
     userId: "usr_e2e_testing_company_user",
     companyId: "cmp_e2e_testing_company",
+    role: "testing_company_user",
+  },
+  {
+    id: "mem_e2e_relational_testing_company",
+    userId: "usr_e2e_relational_user",
+    companyId: "cmp_e2e_testing_company",
+    role: "testing_company_user",
+  },
+  {
+    id: "mem_e2e_relational_client",
+    userId: "usr_e2e_relational_user",
+    companyId: "cmp_e2e_client",
     role: "testing_company_user",
   },
   {

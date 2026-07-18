@@ -232,15 +232,65 @@ independente desta lista. Vale registrar aqui pra não perder de vista:
 - Páginas: `app/docs` vs `app/documentacao` vs `app/documentos`.
 - API: `api/company-docs` vs `api/company-documents` vs `api/platform-docs`.
 
+**Investigado na Fase 5 (2026-07-18):** diferente dos outros domínios, este
+**não é duplicação real** — são 3 telas com propósito distinto, todas
+alcançáveis:
+
+- `/documentos` é o hub central real (`documentos.central`, ativo), com
+  link condicional pro wiki: `/docs` pra perfis internos, ou
+  `/empresas/[slug]/docs` pra usuário de empresa.
+- `/docs` é o wiki interno (`DocsOverviewClient`), linkado a partir de
+  `/documentos`.
+- `/documentacao` é uma base de conhecimento estática (busca por área,
+  conteúdo hardcoded em `@/data/documentation`) — alcançável porque
+  `/documentos/repositorio` (a rota curada como "ativo" em
+  `documentos.repositorio`) hoje **só redireciona pra ela**
+  (`router.replace("/documentacao")`) ao invés de ter conteúdo próprio.
+  Isso é uma inconsistência de nomenclatura (rota "oficial" em português
+  redirecionando pra outra página em português com nome parecido) que vale
+  renomear/fundir por clareza, mas não é código morto nem risco — só
+  confuso.
+- `api/platform-docs` serve `/docs/platform` (documentação técnica da
+  plataforma, rota "oculta" mas ativa, propósito distinto de
+  `/documentos`). `api/company-docs`/`api/company-documents` não foram
+  comparados a fundo (ficaram fora do orçamento de tempo desta varredura);
+  os nomes `-docs` vs `-documents` merecem, no mínimo, virar um só por
+  consistência de nome quando a Fase de renomeação de pastas/arquivos
+  avançar, mesmo que hoje sirvam dados diferentes.
+  **Recomendação**: nenhuma ação de consolidação necessária agora (não é
+  duplicação, é design intencional já funcionando); considerar só, como
+  polimento futuro, mover o conteúdo de `/documentacao` pra dentro de
+  `/documentos/repositorio` (eliminando o redirect) e unificar
+  `company-docs`/`company-documents` num nome só.
+
 ## Domínio de solicitações/acesso
 
 - Páginas: `app/requests` vs `app/solicitacoes`.
 - API: `api/requests` vs `api/access-requests`.
 
+**Investigado na Fase 5 (2026-07-18): falso positivo.** `app/solicitacoes`
+é um redirect stub pra `/admin/access-requests` (mesmo padrão de
+`/admin/permissoes`, `/suporte` etc.). `app/requests` é uma página real e
+ativa, mas de um conceito diferente: "minhas solicitações de conta"
+(troca de e-mail, troca de empresa, reset de senha, exclusão de perfil —
+`api/requests/{email-change,company-change,password-reset,
+profile-deletion}`), não tem relação com `api/access-requests` (fluxo
+administrativo de aprovação de acesso/permissão, já tratado na branch
+`fix/profile-user-management-hardening`). Nenhuma ação necessária.
+
 ## Domínio de kanban
 
 - `api/kanban` (board genérico, com `export`/`import`/`link`) vs
   `api/kanban-columns` (namespace separado) vs página `app/kanban-it`.
+
+**Investigado na Fase 5 (2026-07-18): falso positivo.** `api/kanban` é a
+persistência genérica de board (usada por `Kanban.tsx`/`KanbanClient.tsx`
+pros kanbans de execução/run em `app/empresas/[slug]/*`).
+`api/kanban-columns` é a configuração de colunas especificamente do kanban
+de chamados de suporte (`useTicketKanbanColumns.ts` →
+`useSuporteKanbanColumns.ts` → `KanbanSuportes.tsx`/`app/kanban-it`) — um
+sub-conceito diferente (layout de colunas, não dados do board). Nenhuma
+ação necessária.
 
 ## Domínio "usuário atual" (me/profile)
 
@@ -253,6 +303,27 @@ independente desta lista. Vale registrar aqui pra não perder de vista:
   domínio de usuário acima, não a este grupo. Só compartilha o prefixo
   singular `api/user` com `api/user/settings`.
 
+**Investigado na Fase 5 (2026-07-18):** `app/me` e `app/profile` são
+redirects legados pra `/settings/profile` (já documentado como "legado" em
+`route-map.ts`, nota "Avaliar consolidação com /settings/profile" — Fase 5
+confirma que já é só um redirect, sem conteúdo próprio). `api/profile/*`
+(`companies/[companyId]`, `users/[userId]`) é o backend real de
+`/settings/profile` (`CompanyProfileForm.tsx`/`UserProfileForm.tsx`),
+checa permissão granular via `buildProfileRuntimeContext`
+(`canView`/`canEdit`, não só autenticação) e não devolve segredos. `api/me`
+é uma API mais ampla e genérica ("sessão atual": avatar, senha, clientes
+vinculados, sugestão de username, resumo de perfil), usada por vários
+componentes diferentes — não é duplicata de `api/profile`, é escopo
+diferente (utilitários da própria sessão vs edição estruturada de perfil
+por ID, que também permite ver/editar o perfil de outra empresa/usuário
+com permissão). Nenhuma ação de consolidação necessária.
+- **Achado menor (não corrigido, baixa severidade)**: `GET
+  /api/profile/companies/[companyId]/route.ts` devolve o objeto interno de
+  contexto de permissão inteiro no campo `context` da resposta, com o
+  comentário `// Debug: incluir contexto para validação` — parece um debug
+  esquecido em produção. Não expõe segredo/credencial, só metadados de
+  decisão de permissão, mas vale remover num follow-up de limpeza.
+
 ## Outros
 
 - `api/assistant/ask` e `api/assistente/ask` — mesmo endpoint em inglês e
@@ -264,6 +335,30 @@ independente desta lista. Vale registrar aqui pra não perder de vista:
   (API, inglês) — o resto do cluster `test-*` (`test-data-assets`,
   `test-data-packs`, `test-plans`, `test-projects`, `test-runs`) é
   consistente em inglês, só a página que não bate com a API.
+
+**Investigado na Fase 5 (2026-07-18):**
+
+- `api/runs` só tem a sub-rota `kanban` (visão kanban de execuções, usada
+  por `RunKanbanStream.tsx` dentro da feature real `app/release`) — não é
+  duplicata de nada, é um recorte específico.
+- `api/test-runs` (`route.ts` GET/POST/PATCH + `[id]/route.ts`) **não tem
+  nenhum chamador em `app/`** — órfã, devidamente autenticada
+  (`authenticateRequest` em todos os métodos), mesmo padrão dos outros
+  pares órfãos já encontrados nesta varredura (não são a mesma rota, `runs`
+  e `test-runs` cobrem escopos diferentes — kanban vs CRUD completo — mas
+  o CRUD completo não tem consumidor vivo).
+- `app/casos-de-teste` (página, português) → `api/test-cases` (API,
+  inglês) é só inconsistência de nome, não duplicação — confirmado, sem
+  ação necessária além de rename futuro por consistência.
+- **Limpeza feita nesta branch (não é decisão de produto, é o mesmo padrão
+  já aplicado a `RelationshipManagementClientV2`/`V3` na branch
+  `fix/profile-user-management-hardening`)**: `app/casos-de-teste/
+  TestCaseRepositoryClient.tsx` (V1, sem sufixo) tinha zero referências de
+  import em todo o repositório — só `TestCaseRepositoryClientV2.tsx` é
+  importado por `app/casos-de-teste/page.tsx` e
+  `app/empresas/[slug]/casos-de-teste/page.tsx`. Confirmado via grep
+  repositório inteiro antes de remover; removido nesta branch (commit
+  separado).
 
 ## Como decidir o que fazer com cada um
 

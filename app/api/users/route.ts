@@ -46,6 +46,11 @@ function buildTempPasswordHash() {
 }
 
 export async function GET(req: Request) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+  }
+
   const { searchParams } = new URL(req.url);
   const companyId = searchParams.get("companyId");
   if (!companyId) {
@@ -57,6 +62,11 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+  }
+
   const body = await req.json().catch(() => null);
   const companyId = typeof body?.companyId === "string" ? body.companyId : "";
   const name = typeof body?.name === "string" ? body.name.trim() : "";
@@ -135,6 +145,11 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const { admin, status } = await requireGlobalAdminWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+  }
+
   const body = await req.json().catch(() => null);
   const companyId = typeof body?.companyId === "string" ? body.companyId : "";
   const userId = typeof body?.userId === "string" ? body.userId : "";

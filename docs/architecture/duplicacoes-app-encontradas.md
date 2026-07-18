@@ -72,6 +72,55 @@ da reorganização. Registrado aqui para virar um trabalho futuro deliberado.
   `api/company-documents` (variantes compostas, `-docs` vs `-documents`
   inconsistente entre si).
 
+**Investigado na Fase 5 (2026-07-18):**
+
+- `api/empresas/[slug]/*` **não é duplicata** de `api/companies`/`api/clients`
+  — não existe `api/empresas/route.ts` (nem lista, nem CRUD). É um namespace
+  de recursos aninhados por empresa (dashboard, releases, quality/export,
+  metrics/summary etc.), nome consistente com as páginas
+  `app/empresas/[slug]/*`. Nenhuma ação necessária.
+- Páginas: `app/admin/clients` é a listagem administrativa oficial
+  (`backend/navigation/route-map.ts`, rota `empresas.listagem` no
+  `CORE_SYSTEM_ROUTES`). `app/clients` e `app/clients-list` estão só em
+  `SUPPLEMENTAL_SYSTEM_ROUTES` (a lista de páginas "existem mas fora do mapa
+  curado") e **não têm nenhum `Link`/`router.push` apontando pra elas em todo
+  o repositório** — órfãs, alcançáveis só por URL direta.
+- **3 vazamentos de segredo corrigidos nesta branch** (mesma classe do
+  vazamento em `api/users`, descoberto ao comparar as APIs deste domínio):
+  `api/clients` (`route.ts` GET/POST, `[id]/route.ts` GET/PATCH) e
+  `api/company` (GET/POST) devolviam `qase_token`/`jira_api_token` crus no
+  corpo da resposta, ao invés de só `has_qase_token`/`has_jira_api_token`
+  como `api/companies` e `api/me/company-profile` já faziam (esses dois já
+  eram seguros por design, com teste dedicado). `api/company` era o mais
+  amplo dos três: não exigia admin global, qualquer usuário autenticado
+  recebia o token cru da própria empresa. Corrigido trocando o mapeamento
+  manual/local pelo `mapCompanyRecord(..., { maskQaseToken: true,
+  maskJiraToken: true })` já usado com segurança em outro lugar do código,
+  e removidos 2 `console.error` de debug que logavam o payload/empresa
+  crus em `api/clients` (mesmos segredos, exposição via log de servidor).
+  Testes dedicados cobrindo os 3 arquivos (commits
+  `fix(security): não vaza qase_token/jira_api_token cru em /api/clients` e
+  `.../em /api/company`).
+- Com os vazamentos corrigidos, ainda restam **3 APIs paralelas para o
+  mesmo conceito** (empresa/cliente), com escopos de permissão
+  inconsistentes entre si: `api/companies` (permissão granular
+  `applications:view/create/delete` + admin global verdadeiro pra criar,
+  com escopo por `companySlugs` pra perfis não-globais) é a mais rigorosa;
+  `api/clients` (só `requireGlobalAdminWithStatus`, sem granularidade, é o
+  que a página `app/admin/clients` de fato usa pra CRUD completo) é a mais
+  usada na prática; `api/company` (mistura `getAccessContext` simples no
+  GET com `requireGlobalAdminWithStatus` no POST, único chamador de
+  frontend é `CreateCompanyForm.tsx`, componente **órfão**, não renderizado
+  em lugar nenhum) parece a mais antiga/abandonada. `app/clients` e
+  `app/clients-list` (páginas órfãs) também chamam `api/clients`.
+  **Recomendação (avaliada, não executada nesta branch)**: escolher
+  `api/companies` (o mais rigoroso em permissão) ou `api/clients` (o mais
+  usado na prática pela página real) como oficial, migrar
+  `app/admin/clients` pra usar só um dos dois, e então remover `api/company`
+  e as páginas órfãs `app/clients`/`app/clients-list`. Não fiz essa escolha
+  agora pelo mesmo motivo do domínio de usuário: é decisão de produto sobre
+  qual modelo de permissão vira o padrão, não simples renomeação de rota.
+
 ## Domínio de suporte/chamados
 
 - Páginas: `app/suporte` vs `app/chamados` vs `app/meus-chamados`.

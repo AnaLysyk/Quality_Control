@@ -25,7 +25,7 @@ import {
   AUTOMATION_REQUEST_TOTAL,
 } from "@/data/automationCatalog";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { resolveAutomationAccess } from "@/lib/automations/access";
+import { resolveAutomationAccess } from "@/backend/automations/access";
 import AutomationStudio from "./AutomationStudio";
 
 const BiometricAutomationRunner = dynamic(() => import("./BiometricAutomationRunner"), {

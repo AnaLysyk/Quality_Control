@@ -2,7 +2,7 @@
   normalizeRequestProfileType,
   toRequestProfileTypeLabel,
   type RequestProfileTypeLabel,
-} from "@/lib/requestRouting";
+} from "@/backend/requestRouting";
 
 export type AccessTypeLabel = RequestProfileTypeLabel;
 

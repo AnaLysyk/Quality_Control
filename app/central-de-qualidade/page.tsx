@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { FiAlertTriangle, FiBarChart2, FiBriefcase, FiDownload, FiRefreshCw, FiSearch, FiShield, FiTrendingUp } from "react-icons/fi";
 
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type QualityCompany = {
   id: string;

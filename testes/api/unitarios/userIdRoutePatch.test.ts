@@ -1,14 +1,14 @@
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/localStore", () => ({
   listLocalUsers: jest.fn(async () => [{ id: "user-1", email: "user1@empresa.com" }]),
   updateLocalUser: jest.fn(async (id: string, data: any) => ({ id, ...data })),
 }));
 
-jest.mock("@/lib/rbac/requireGlobalAdmin", () => ({
+jest.mock("@/backend/rbac/requireGlobalAdmin", () => ({
   requireGlobalAdminWithStatus: jest.fn(),
 }));
 
 import { PATCH } from "@/api/user/[id]/route";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 const mockedRequireGlobalAdminWithStatus = requireGlobalAdminWithStatus as jest.MockedFunction<
   typeof requireGlobalAdminWithStatus

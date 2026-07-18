@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { canAccessBrainModule, resolveBrainAccess } from "@/lib/brain/access";
+import { canAccessBrainModule, resolveBrainAccess } from "@/backend/brain/access";
 import { prisma } from "@/database/prismaClient";
 
 export async function GET(req: Request) {

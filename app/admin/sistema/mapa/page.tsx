@@ -1,6 +1,6 @@
-import { SYSTEM_MODULES } from "@/lib/navigation/module-map";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
-import { getUnmappedSystemPageFiles } from "@/lib/navigation/systemPageAudit";
+import { SYSTEM_MODULES } from "@/backend/navigation/module-map";
+import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
+import { getUnmappedSystemPageFiles } from "@/backend/navigation/systemPageAudit";
 import SistemaMapaClient from "./SistemaMapaClient";
 
 export default function SistemaMapaPage() {

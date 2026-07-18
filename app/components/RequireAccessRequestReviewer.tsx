@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { normalizeLegacyRole } from "@/lib/auth/roles";
+import { normalizeLegacyRole } from "@/backend/auth/roles";
 
 type RequireAccessRequestReviewerProps = {
   children: ReactNode;

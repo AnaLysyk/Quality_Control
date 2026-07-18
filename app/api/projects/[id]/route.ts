@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import { checkPermission } from "@/lib/permissions/checkPermission";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import { checkPermission } from "@/backend/permissions/checkPermission";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

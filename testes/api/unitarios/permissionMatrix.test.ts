@@ -8,7 +8,7 @@
   getUsersViewScope,
   toVisibilityMap,
   PermissionMatrix
-} from "../../../lib/permissionMatrix";
+} from "../../../backend/permissionMatrix";
 
 describe("permissionMatrix - Matriz Rígida de Autorização baseada em Módulos", () => {
   describe("normalizePermissionMatrix", () => {

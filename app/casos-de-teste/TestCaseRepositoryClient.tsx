@@ -25,7 +25,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
 import { useProjectContext } from "@/context/ProjectContext";

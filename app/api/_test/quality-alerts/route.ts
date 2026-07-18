@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { writeAlertsStore, type QualityAlert } from "@/lib/qualityAlert";
+import { writeAlertsStore, type QualityAlert } from "@/backend/qualityAlert";
 
 const IS_TEST_ENV =
   process.env.PLAYWRIGHT_MOCK === "true" ||

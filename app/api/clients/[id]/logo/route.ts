@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { uploadAndPersistCompanyLogo } from "@/lib/companyLogoUpload";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { uploadAndPersistCompanyLogo } from "@/backend/companyLogoUpload";
 
 export const runtime = "nodejs";
 

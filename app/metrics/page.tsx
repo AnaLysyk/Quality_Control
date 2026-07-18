@@ -6,7 +6,7 @@ import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 
 export default function MetricasPage() {
   const router = useRouter();

@@ -1,5 +1,5 @@
 ﻿import { AUTOMATION_STUDIO_ASSETS, AUTOMATION_STUDIO_BLUEPRINTS } from "@/data/automationStudio";
-import type { AutomationCompanyScope } from "@/lib/automations/companyScope";
+import type { AutomationCompanyScope } from "@/backend/automations/companyScope";
 
 export type AutomationCaseSource = "manual" | "qase" | "catalog";
 export type AutomationCaseStatus = "draft" | "ready" | "automated" | "review";

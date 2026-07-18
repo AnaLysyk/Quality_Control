@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
+import type { NavItemDef, NavModuleDef } from "@/backend/navigation/navigationCatalog";
 
 const NAV_QUERY_KEYS = ["tab", "modal", "role"] as const;
 

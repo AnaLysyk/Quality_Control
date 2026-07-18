@@ -1,17 +1,17 @@
-jest.mock("@/lib/brain/sourceSettings", () => ({
+jest.mock("@/backend/brain/sourceSettings", () => ({
   getBrainSourceById: jest.fn(),
   getDecryptedSourceSecret: jest.fn(),
   isBrainSourceStorageUnavailable: jest.fn().mockReturnValue(false),
 }));
 
-jest.mock("@/lib/brain/ssrfGuard", () => ({
+jest.mock("@/backend/brain/ssrfGuard", () => ({
   safeOutboundFetch: jest.fn(),
 }));
 
-import { canSendToGithub, createGithubIssueFromSource } from "@/lib/brain/integrations/githubIssues";
-import { getBrainSourceById, getDecryptedSourceSecret } from "@/lib/brain/sourceSettings";
-import { safeOutboundFetch } from "@/lib/brain/ssrfGuard";
-import type { BrainAccessContext } from "@/lib/brain/access";
+import { canSendToGithub, createGithubIssueFromSource } from "@/backend/brain/integrations/githubIssues";
+import { getBrainSourceById, getDecryptedSourceSecret } from "@/backend/brain/sourceSettings";
+import { safeOutboundFetch } from "@/backend/brain/ssrfGuard";
+import type { BrainAccessContext } from "@/backend/brain/access";
 
 function fakeAccess(overrides: Partial<BrainAccessContext> = {}): BrainAccessContext {
   return {

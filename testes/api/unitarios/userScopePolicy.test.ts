@@ -3,7 +3,7 @@
   canViewCompanyUsersByScope, 
   canCreateCompanyUsersByScope,
   normalizeScopeRoleKey,
-} from "../../../lib/userScopePolicy";
+} from "../../../backend/userScopePolicy";
 
 describe("userScopePolicy - Matriz Rígida de Escopos de Usuários", () => {
   describe("resoveUserScopePolicy", () => {

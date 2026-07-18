@@ -4,11 +4,11 @@ import {
   extractHttpMethods,
   findUndocumentedOperations,
   routeFileToApiPath,
-} from "@/lib/documentation/apiDocsCoverage";
+} from "@/backend/documentation/apiDocsCoverage";
 import {
   buildQualityControlOfficialDocsStore,
   getOfficialCompanyDocsForSlug,
-} from "@/lib/documentation/qualityControlOfficialDocs";
+} from "@/backend/documentation/qualityControlOfficialDocs";
 
 describe("quality control official docs", () => {
   it("exposes manual and OpenAPI content for Testing Company", () => {

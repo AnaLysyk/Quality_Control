@@ -2,29 +2,29 @@
  * Unit tests for POST /api/assistente/ask
  */
 
-jest.mock("@/lib/jwtAuth", () => ({
+jest.mock("@/backend/jwtAuth", () => ({
   authenticateRequest: jest.fn(),
 }));
 
-jest.mock("@/lib/permissionMatrix", () => ({
+jest.mock("@/backend/permissionMatrix", () => ({
   hasPermissionAccess: jest.fn(),
 }));
 
-jest.mock("@/lib/brain/internalEngine", () => ({
+jest.mock("@/backend/brain/internalEngine", () => ({
   InternalBrainEngine: jest.fn().mockImplementation(() => ({
     run: jest.fn(),
   })),
 }));
 
-jest.mock("@/lib/brain/orchestrator", () => ({
+jest.mock("@/backend/brain/orchestrator", () => ({
   logAgentExecution: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/brain/agents", () => ({
+jest.mock("@/backend/brain/agents", () => ({
   detectAgentMode: jest.fn().mockReturnValue("qa"),
 }));
 
-jest.mock("@/lib/assistant/service", () => ({
+jest.mock("@/backend/assistant/service", () => ({
   runAssistantRequest: jest.fn(),
 }));
 
@@ -36,13 +36,13 @@ jest.mock("@/database/prismaClient", () => ({
   },
 }));
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
-import { InternalBrainEngine } from "@/lib/brain/internalEngine";
-import { logAgentExecution } from "@/lib/brain/orchestrator";
-import { runAssistantRequest } from "@/lib/assistant/service";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { hasPermissionAccess } from "@/backend/permissionMatrix";
+import { InternalBrainEngine } from "@/backend/brain/internalEngine";
+import { logAgentExecution } from "@/backend/brain/orchestrator";
+import { runAssistantRequest } from "@/backend/assistant/service";
 import { POST } from "@/api/assistant/ask/route";
-import type { AuthUser } from "@/lib/jwtAuth";
+import type { AuthUser } from "@/backend/jwtAuth";
 
 function makeAuthUser(overrides: Partial<AuthUser> = {}): AuthUser {
   return {

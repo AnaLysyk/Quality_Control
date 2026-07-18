@@ -1,15 +1,15 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { InternalBrainEngine } from "@/lib/brain/internalEngine";
-import { logAgentExecution } from "@/lib/brain/orchestrator";
-import { AGENT_REGISTRY } from "@/lib/brain/agents";
-import { buildBrainAccessContextFromAuthUser } from "@/lib/brain/access";
-import { answerBrainChatQuestion } from "@/lib/brain/chat";
-import { buildAutoBrainRoute } from "@/lib/brain/autoRouter";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
-import { buildWebSupportContext, shouldUseWebSupport } from "@/lib/assistant/webSupport";
-import type { AgentMode } from "@/lib/brain/agents";
-import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { InternalBrainEngine } from "@/backend/brain/internalEngine";
+import { logAgentExecution } from "@/backend/brain/orchestrator";
+import { AGENT_REGISTRY } from "@/backend/brain/agents";
+import { buildBrainAccessContextFromAuthUser } from "@/backend/brain/access";
+import { answerBrainChatQuestion } from "@/backend/brain/chat";
+import { buildAutoBrainRoute } from "@/backend/brain/autoRouter";
+import { hasPermissionAccess } from "@/backend/permissionMatrix";
+import { buildWebSupportContext, shouldUseWebSupport } from "@/backend/assistant/webSupport";
+import type { AgentMode } from "@/backend/brain/agents";
+import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/backend/assistant/types";
 
 export const runtime = "nodejs";
 
@@ -279,7 +279,7 @@ export async function POST(req: Request) {
     const brainContext = body.brainContext ?? null;
 
     if (isStructuredToolAction(body)) {
-      const { runAssistantRequest } = await import("@/lib/assistant/service");
+      const { runAssistantRequest } = await import("@/backend/assistant/service");
       const response = await withTimeout(runAssistantRequest(authUser, {
         message: body.message,
         context: body.context ?? null,
@@ -357,7 +357,7 @@ export async function POST(req: Request) {
       }
     }
     if (!shouldUseBrainFirstContext(brainContext)) {
-      const { runAssistantRequest } = await import("@/lib/assistant/service");
+      const { runAssistantRequest } = await import("@/backend/assistant/service");
       const response = await withTimeout(runAssistantRequest(authUser, {
         message: body.message,
         context: body.context ?? null,

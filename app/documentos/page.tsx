@@ -10,8 +10,8 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { RequireAuth } from "@/components/RequireAuth";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
-import { fetchApi } from "@/lib/api";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
+import { fetchApi } from "@/backend/api";
 
 function normalizeRole(value?: string | null) {
   return (value ?? "").trim().toLowerCase();

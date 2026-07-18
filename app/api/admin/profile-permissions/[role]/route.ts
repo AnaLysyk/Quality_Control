@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { normalizeLegacyRole, type SystemRole } from "@/lib/auth/roles";
-import { getAccessContext } from "@/lib/auth/session";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
+import { normalizeLegacyRole, type SystemRole } from "@/backend/auth/roles";
+import { getAccessContext } from "@/backend/auth/session";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
 import {
   deleteProfilePermissionOverride,
   getProfilePermissionOverride,
   setProfilePermissionOverride,
-} from "@/lib/store/profilePermissionsStore";
-import { applyPermissionOverride, normalizePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
-import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { notifyProfilePermissionsChanged } from "@/lib/notificationService";
-import { invalidateBrainCache } from "@/lib/brain/cache";
-import { invalidatePermissionAccessCache } from "@/lib/serverPermissionAccess";
+} from "@/backend/store/profilePermissionsStore";
+import { applyPermissionOverride, normalizePermissionMatrix, type PermissionMatrix } from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
+import { validarAcessoUsuariosNoServidor } from "@/backend/permissions/validarAcessoUsuariosNoServidor";
+import { notifyProfilePermissionsChanged } from "@/backend/notificationService";
+import { invalidateBrainCache } from "@/backend/brain/cache";
+import { invalidatePermissionAccessCache } from "@/backend/serverPermissionAccess";
 
 export const revalidate = 0;
 

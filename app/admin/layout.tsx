@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { getAccessContext } from "@/backend/auth/session";
+import { hasPermissionAccess, type PermissionMatrix } from "@/backend/permissionMatrix";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 
 function hasAnyPermission(
   permissions: PermissionMatrix,

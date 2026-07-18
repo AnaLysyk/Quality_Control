@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { generateRunPdf } from "@/lib/runPdfGenerator";
-import { getRunDetailViewModel } from "@/lib/runDetailViewModel";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { generateRunPdf } from "@/backend/runPdfGenerator";
+import { getRunDetailViewModel } from "@/backend/runDetailViewModel";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 function buildCsv(vm: {
   displayTitle: string;

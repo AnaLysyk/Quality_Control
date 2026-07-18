@@ -1,5 +1,5 @@
 import { BrainDashboard } from "./_components/BrainDashboard";
-import { registerScreen } from "@/lib/brain/registry";
+import { registerScreen } from "@/backend/brain/registry";
 import styles from "./brain-theme.module.css";
 import nodeThemeStyles from "./brain-node-theme-fixes.module.css";
 import pageStyles from "./brain-page-theme.module.css";

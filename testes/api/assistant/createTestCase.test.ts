@@ -1,4 +1,4 @@
-﻿jest.mock("@/lib/test-cases/testCaseRepository", () => ({
+﻿jest.mock("@/backend/test-cases/testCaseRepository", () => ({
   createManualTestCaseRecord: jest.fn().mockResolvedValue({
     testCase: {
       id: "tc-1",
@@ -20,15 +20,15 @@
   listTestCaseRecords: jest.fn().mockResolvedValue([]),
 }));
 
-jest.mock("@/lib/test-cases/testCasePermissions", () => ({
+jest.mock("@/backend/test-cases/testCasePermissions", () => ({
   canCreateTestCaseForCompany: jest.fn().mockReturnValue(true),
 }));
 
-import { executeCreateTestCase } from "@/lib/assistant/tools/createTestCase";
-import { createManualTestCaseRecord, listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
-import { canCreateTestCaseForCompany } from "@/lib/test-cases/testCasePermissions";
-import type { AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
-import type { AuthUser } from "@/lib/jwtAuth";
+import { executeCreateTestCase } from "@/backend/assistant/tools/createTestCase";
+import { createManualTestCaseRecord, listTestCaseRecords } from "@/backend/test-cases/testCaseRepository";
+import { canCreateTestCaseForCompany } from "@/backend/test-cases/testCasePermissions";
+import type { AssistantScreenContext, AssistantToolAction } from "@/backend/assistant/types";
+import type { AuthUser } from "@/backend/jwtAuth";
 
 function makeUser(overrides: Partial<AuthUser> = {}): AuthUser {
   return {

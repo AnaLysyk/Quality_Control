@@ -14,46 +14,46 @@ const mockTicket = {
   updatedAt: new Date().toISOString(),
 };
 
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/localStore", () => ({
   getLocalUserById: jest.fn().mockResolvedValue({ id: "u1", name: "Ana", email: "ana@test.com" }),
 }));
 
-jest.mock("@/lib/rbac/tickets", () => ({
+jest.mock("@/backend/rbac/tickets", () => ({
   canCommentTicket: jest.fn().mockReturnValue(true),
   canViewTicket: jest.fn().mockReturnValue(true),
 }));
 
-jest.mock("@/lib/ticketCommentsStore", () => ({
+jest.mock("@/backend/ticketCommentsStore", () => ({
   createTicketComment: jest.fn().mockResolvedValue({ id: "c1", body: "Comentario mock", updatedAt: new Date().toISOString() }),
   listTicketComments: jest.fn().mockResolvedValue([]),
 }));
 
-jest.mock("@/lib/ticketEventsStore", () => ({
+jest.mock("@/backend/ticketEventsStore", () => ({
   appendTicketEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/notificationService", () => ({
+jest.mock("@/backend/notificationService", () => ({
   notifyTicketCommentAdded: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/ticketsStore", () => ({
+jest.mock("@/backend/ticketsStore", () => ({
   getTicketById: jest.fn().mockResolvedValue(mockTicket),
   touchTicket: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/assistant/data", () => ({
+jest.mock("@/backend/assistant/data", () => ({
   buildPromptActions: jest.fn().mockReturnValue([]),
   displayName: jest.fn().mockReturnValue("Ana"),
   findVisibleTicket: jest.fn().mockResolvedValue(mockTicket),
 }));
 
-import { buildCommentCreationAction, executeCreateComment } from "@/lib/assistant/tools/createComment";
-import { findVisibleTicket } from "@/lib/assistant/data";
-import { canCommentTicket, canViewTicket } from "@/lib/rbac/tickets";
-import { listTicketComments, createTicketComment } from "@/lib/ticketCommentsStore";
-import { getTicketById } from "@/lib/ticketsStore";
-import type { AuthUser } from "@/lib/jwtAuth";
-import type { AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
+import { buildCommentCreationAction, executeCreateComment } from "@/backend/assistant/tools/createComment";
+import { findVisibleTicket } from "@/backend/assistant/data";
+import { canCommentTicket, canViewTicket } from "@/backend/rbac/tickets";
+import { listTicketComments, createTicketComment } from "@/backend/ticketCommentsStore";
+import { getTicketById } from "@/backend/ticketsStore";
+import type { AuthUser } from "@/backend/jwtAuth";
+import type { AssistantScreenContext, AssistantToolAction } from "@/backend/assistant/types";
 
 /* â”€â”€ Helpers â”€â”€ */
 

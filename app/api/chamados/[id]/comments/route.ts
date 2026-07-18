@@ -1,12 +1,12 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { getTicketById, touchTicket } from "@/lib/ticketsStore";
-import { listTicketComments, createTicketComment } from "@/lib/ticketCommentsStore";
-import { listReactionsByTicket } from "@/lib/ticketReactionsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketCommentAdded } from "@/lib/notificationService";
-import { canCommentTicket } from "@/lib/rbac/tickets";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { getTicketById, touchTicket } from "@/backend/ticketsStore";
+import { listTicketComments, createTicketComment } from "@/backend/ticketCommentsStore";
+import { listReactionsByTicket } from "@/backend/ticketReactionsStore";
+import { appendTicketEvent } from "@/backend/ticketEventsStore";
+import { notifyTicketCommentAdded } from "@/backend/notificationService";
+import { canCommentTicket } from "@/backend/rbac/tickets";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;

@@ -8,7 +8,7 @@
   isSupportOperatorUser,
   canAccessGlobalSupportScope,
   canManageSupportWorkflow,
-} from "../../../lib/supportAccess";
+} from "../../../backend/supportAccess";
 
 describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", () => {
   describe("Identidades Base e Papéis de Suporte", () => {

@@ -1,7 +1,7 @@
 const cookieStoreMock = { get: jest.fn() };
 jest.mock("next/headers", () => ({ cookies: jest.fn(async () => cookieStoreMock) }));
 
-import { getMockRole } from "@/lib/rbac/defects";
+import { getMockRole } from "@/backend/rbac/defects";
 
 describe("getMockRole - gate do cookie mock_role", () => {
   const originalPlaywrightMock = process.env.PLAYWRIGHT_MOCK;

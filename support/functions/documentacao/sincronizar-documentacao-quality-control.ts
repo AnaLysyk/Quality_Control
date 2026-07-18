@@ -7,7 +7,7 @@ import {
   buildQualityControlOfficialDocsStore,
   mergePlatformDocsStore,
   QUALITY_CONTROL_OFFICIAL_COMPANY_SLUG,
-} from "../../../lib/documentation/qualityControlOfficialDocs";
+} from "../../../backend/documentation/qualityControlOfficialDocs";
 
 const QUALITY_CONTROL_PROJECT_SLUG = "quality-control";
 

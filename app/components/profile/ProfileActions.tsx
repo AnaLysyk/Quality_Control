@@ -4,8 +4,8 @@
  * Profile Actions — botões de ação contextuais
  */
 
-import { useProfileAction, useDangerZone, useProfileMode } from "@/lib/profile/useProfileContext";
-import { cn } from "@/lib/cn";
+import { useProfileAction, useDangerZone, useProfileMode } from "@/backend/profile/useProfileContext";
+import { cn } from "@/backend/cn";
 
 export type ProfileActionButton = {
   label: string;

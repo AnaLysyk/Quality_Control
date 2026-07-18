@@ -15,7 +15,7 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
 }
 export const dynamic = "force-dynamic";
 
-import { getPermissionModulesWithScreens } from "@/lib/navigation/screenPermissions";
+import { getPermissionModulesWithScreens } from "@/backend/navigation/screenPermissions";
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
@@ -23,16 +23,16 @@ import {
   FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiRefreshCw, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, FiX, } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
+import { getActionLabel, type PermissionModule } from "@/backend/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
   normalizePermissionMatrix,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+} from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 type ProfileUserSummary = {
   id: string;

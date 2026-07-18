@@ -7,18 +7,18 @@ import {
   FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiEye, FiEyeOff, FiGrid, FiInfo, FiLock, FiRefreshCw, FiSave, FiSearch, FiShield, FiSliders, FiUnlock, FiUsers, } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileHint, getFixedProfileLabel, getFixedProfileTone } from "@/lib/fixedProfilePresentation";
-import { ACTION_LABELS, getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
-import { getPermissionModulesWithScreens } from "@/lib/navigation/screenPermissions";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileHint, getFixedProfileLabel, getFixedProfileTone } from "@/backend/fixedProfilePresentation";
+import { ACTION_LABELS, getActionLabel, type PermissionModule } from "@/backend/permissionCatalog";
+import { getPermissionModulesWithScreens } from "@/backend/navigation/screenPermissions";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
   normalizePermissionMatrix,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
+} from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
+import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
 
 type RoutePermission = { moduleId: string; action: string } | null;
 type ActiveTab = "overview" | "modules" | "screens" | "brain" | "users";

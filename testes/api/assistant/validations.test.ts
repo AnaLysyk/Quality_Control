@@ -5,7 +5,7 @@
   looksLikeInstructionOnly,
   normalizeTicketTypeInput,
   normalizeTicketPriorityInput,
-} from "@/lib/assistant/validations";
+} from "@/backend/assistant/validations";
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*  normalizeTicketTypeInput                        */

@@ -1,20 +1,20 @@
-jest.mock("@/lib/auth/session", () => ({ getAccessContext: jest.fn() }));
-jest.mock("@/lib/serverPermissionAccess", () => ({ resolvePermissionAccessForUser: jest.fn() }));
-jest.mock("@/lib/rbac/requireGlobalAdmin", () => ({ requireGlobalAdminWithStatus: jest.fn() }));
-jest.mock("@/lib/brain-sync", () => ({ syncCompanyToBrain: jest.fn(async () => {}) }));
+jest.mock("@/backend/auth/session", () => ({ getAccessContext: jest.fn() }));
+jest.mock("@/backend/serverPermissionAccess", () => ({ resolvePermissionAccessForUser: jest.fn() }));
+jest.mock("@/backend/rbac/requireGlobalAdmin", () => ({ requireGlobalAdminWithStatus: jest.fn() }));
+jest.mock("@/backend/brain-sync", () => ({ syncCompanyToBrain: jest.fn(async () => {}) }));
 jest.mock("@/data/auditLogRepository", () => ({ addAuditLogSafe: jest.fn(async () => {}) }));
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/localStore", () => ({
   listLocalCompanies: jest.fn(),
   createLocalCompany: jest.fn(),
   deleteLocalCompany: jest.fn(async () => true),
 }));
 
 import { GET, POST, PATCH, DELETE } from "@/api/companies/route";
-import { getAccessContext } from "@/lib/auth/session";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getAccessContext } from "@/backend/auth/session";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { listLocalCompanies, createLocalCompany, deleteLocalCompany } from "@/lib/auth/localStore";
+import { listLocalCompanies, createLocalCompany, deleteLocalCompany } from "@/backend/auth/localStore";
 
 const mockedGetAccessContext = getAccessContext as jest.MockedFunction<typeof getAccessContext>;
 const mockedResolvePermissionAccessForUser = resolvePermissionAccessForUser as jest.MockedFunction<

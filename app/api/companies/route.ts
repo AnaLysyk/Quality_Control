@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { createLocalCompany, deleteLocalCompany, listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { requirePermission } from "@/lib/rbac/requirePermission";
-import { syncCompanyToBrain } from "@/lib/brain-sync";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import type { AccessContext } from "@/lib/auth/session";
+import { createLocalCompany, deleteLocalCompany, listLocalCompanies, type LocalAuthCompany } from "@/backend/auth/localStore";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { requirePermission } from "@/backend/rbac/requirePermission";
+import { syncCompanyToBrain } from "@/backend/brain-sync";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import type { AccessContext } from "@/backend/auth/session";
 
 // Módulo oficial do catálogo de permissões para empresas/clientes/aplicações
-// (lib/permissionCatalog.ts: id "applications", label "Empresas e aplicações").
+// (backend/permissionCatalog.ts: id "applications", label "Empresas e aplicações").
 // Não existe módulo específico "companies"/"clients" — reaproveita o existente
 // em vez de inventar uma permissão nova.
 const COMPANIES_MODULE = "applications";
@@ -116,11 +116,11 @@ function resolveRole(access: AccessContext) {
   );
 }
 
-// lib/auth/session.ts (getAccessContext) já deriva
+// backend/auth/session.ts (getAccessContext) já deriva
 // access.companySlugs/companyId corretamente por perfil, inclusive para
 // Líder TC e Usuário TC: para esses dois, a partir de ProjectTeamAssignment
 // ativos (role leader_tc/qa_tc, status="active") — não de Membership/link
-// antigo. Confirmado lendo lib/auth/session.ts:217-304: um
+// antigo. Confirmado lendo backend/auth/session.ts:217-304: um
 // vínculo antigo (Membership) sem assignment ativo correspondente NÃO entra
 // em companySlugs quando o usuário tem papel leader_tc/qa_tc. Por isso esta
 // rota confia diretamente em access.companySlugs/companyId, sem reconsultar

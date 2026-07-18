@@ -3,7 +3,7 @@
  */
 
 import { test, expect } from "../../../support/fixtures/test";
-import { PERMISSION_MODULES } from "../../../lib/permissionCatalog";
+import { PERMISSION_MODULES } from "../../../backend/permissionCatalog";
 import {
   SENHA_ADMIN_PADRAO,
   SENHA_USUARIO_NOVO,

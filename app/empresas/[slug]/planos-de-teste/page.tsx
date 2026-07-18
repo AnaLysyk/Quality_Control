@@ -19,7 +19,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useProjectContext } from "@/context/ProjectContext";
@@ -31,7 +31,7 @@ import {
   parseQaseCaseIdsInput,
   type TestPlanCase,
   type TestPlanCaseStep,
-} from "@/lib/testPlanCases";
+} from "@/backend/testPlanCases";
 
 const COPY = {
   "pt-BR": {

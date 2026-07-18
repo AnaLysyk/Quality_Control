@@ -6,7 +6,7 @@
   },
 }));
 
-jest.mock("@/lib/brain", () => ({
+jest.mock("@/backend/brain", () => ({
   searchNodes: jest.fn(async () => []),
   getNodeMemories: jest.fn(async () => []),
   getSubgraph: jest.fn(async () => ({ nodes: [] })),
@@ -20,8 +20,8 @@ jest.mock("@/lib/brain", () => ({
   })),
 }));
 
-import { InternalBrainEngine } from "@/lib/brain/internalEngine";
-import { searchNodes } from "@/lib/brain";
+import { InternalBrainEngine } from "@/backend/brain/internalEngine";
+import { searchNodes } from "@/backend/brain";
 
 async function collectReply(messages: Array<{ role: "user" | "assistant"; content: string }>) {
   const engine = new InternalBrainEngine();

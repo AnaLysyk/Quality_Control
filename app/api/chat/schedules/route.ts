@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { registerChatSchedule, type ChatScheduleEntry } from "@/lib/chatPresenceStore";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { registerChatSchedule, type ChatScheduleEntry } from "@/backend/chatPresenceStore";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { upsertReleaseCalendarEvent } from "@/backend/releaseCalendarStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

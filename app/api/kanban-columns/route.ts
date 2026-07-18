@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { isDevRole } from "@/lib/rbac/devAccess";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { isDevRole } from "@/backend/rbac/devAccess";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/database/persistentJsonStore";
 
 export const revalidate = 0;

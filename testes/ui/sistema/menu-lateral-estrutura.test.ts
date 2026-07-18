@@ -3,8 +3,8 @@
   NAV_CATALOG,
   resolverPerfilVisual,
 } from "@/features/menu-lateral";
-import { SYSTEM_ROLES } from "@/lib/auth/roles";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+import { SYSTEM_ROLES } from "@/backend/auth/roles";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 function itemIds(modules: ReturnType<typeof filtrarMenuPorPerfil>) {
   return modules.flatMap((module) => module.items.map((item) => item.id));

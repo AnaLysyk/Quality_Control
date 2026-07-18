@@ -1,4 +1,4 @@
-﻿import { hasPermissionAccess, resolveEffectivePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
+﻿import { hasPermissionAccess, resolveEffectivePermissionMatrix, type PermissionMatrix } from "@/backend/permissionMatrix";
 import type { AccessRequestsBrainActionType } from "./accessRequestsBrain.types";
 
 type Viewer = {

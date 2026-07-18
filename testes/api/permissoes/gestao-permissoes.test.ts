@@ -17,7 +17,7 @@ jest.setTimeout(30000);
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 // Mock redis para evitar erros de conexão nos testes
-jest.mock("../../../lib/redis", () => ({
+jest.mock("../../../backend/redis", () => ({
   isRedisConfigured: jest.fn(() => false),
   getRedis: jest.fn(() => ({
     get: jest.fn().mockResolvedValue(null),
@@ -29,21 +29,21 @@ jest.mock("../../../lib/redis", () => ({
 import { randomUUID } from "crypto";
 import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
-import { effectivePermissions } from "@/lib/store/permissionsStore";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
+import { effectivePermissions } from "@/backend/store/permissionsStore";
 import {
   hasPermissionAccess,
   applyPermissionOverride,
   toVisibilityMap,
   getTicketViewScope,
-} from "@/lib/permissionMatrix";
-import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+} from "@/backend/permissionMatrix";
+import { resolvePermissionRoleForUser } from "@/backend/adminUsers";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 import {
   createLocalUser,
   createLocalCompany,
   upsertLocalLink,
-} from "@/lib/auth/localStore";
+} from "@/backend/auth/localStore";
 
 // â”€â”€ Helper: retorna a matriz de permissões padrão para um perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function perm(role: string): Record<string, string[]> {

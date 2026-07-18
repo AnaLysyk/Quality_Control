@@ -1,4 +1,4 @@
-﻿import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "../../../lib/adminUserDeleteAccess";
+﻿import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "../../../backend/adminUserDeleteAccess";
 
 describe("adminUserDeleteAccess - Rigorous Access Control Tests", () => {
 

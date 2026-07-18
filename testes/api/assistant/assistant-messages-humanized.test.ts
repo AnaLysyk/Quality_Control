@@ -1,4 +1,4 @@
-﻿import { CLARIFY_REPLY, REPEATED_REPLY_MESSAGES } from "@/lib/assistant/messages";
+﻿import { CLARIFY_REPLY, REPEATED_REPLY_MESSAGES } from "@/backend/assistant/messages";
 
 describe("assistant fallback messages humanization", () => {
   it("clarify reply uses humanized conversational wording", () => {

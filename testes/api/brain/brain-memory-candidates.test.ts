@@ -1,4 +1,4 @@
-jest.mock("@/lib/brain/brainPrisma", () => ({
+jest.mock("@/backend/brain/brainPrisma", () => ({
   brainPrisma: {
     brainInboxItem: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     brainMemory: { create: jest.fn() },
@@ -7,7 +7,7 @@ jest.mock("@/lib/brain/brainPrisma", () => ({
   },
 }));
 
-jest.mock("@/lib/brain/access", () => ({
+jest.mock("@/backend/brain/access", () => ({
   resolveBrainAccess: jest.fn(),
 }));
 
@@ -15,11 +15,11 @@ import {
   MEMORY_CANDIDATE_KIND,
   detectMemoryCandidate,
   recordMemoryCandidateFromChat,
-} from "@/lib/brain/memoryCandidates";
-import { brainPrisma } from "@/lib/brain/brainPrisma";
-import { resolveBrainAccess } from "@/lib/brain/access";
+} from "@/backend/brain/memoryCandidates";
+import { brainPrisma } from "@/backend/brain/brainPrisma";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import { PATCH } from "@/api/brain/inbox/route";
-import type { BrainAccessContext } from "@/lib/brain/access";
+import type { BrainAccessContext } from "@/backend/brain/access";
 
 function fakeAccess(): BrainAccessContext {
   return {

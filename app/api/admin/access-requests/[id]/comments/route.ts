@@ -6,19 +6,19 @@ import {
   createAccessRequestComment,
   listAccessRequestComments,
 } from "@/data/accessRequestCommentsStore";
-import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
-import type { AccessRequestV2 } from "@/lib/accessRequestsV2/domain";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { notifyAccessRequestComment } from "@/lib/notificationService";
-import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
+import { getAccessRequestV2ById } from "@/backend/accessRequestsV2/repository";
+import type { AccessRequestV2 } from "@/backend/accessRequestsV2/domain";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { notifyAccessRequestComment } from "@/backend/notificationService";
+import { extractPasswordResetRequestId } from "@/backend/passwordResetAccessQueue";
 import { prisma } from "@/database/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
+import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
 import {
   canReviewerAccessQueue,
   resolveAccessRequestQueue,
-} from "@/lib/requestReviewAccess";
-import { shouldUseJsonStore } from "@/lib/storeMode";
+} from "@/backend/requestReviewAccess";
+import { shouldUseJsonStore } from "@/backend/storeMode";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

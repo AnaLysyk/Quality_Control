@@ -10,7 +10,7 @@ import {
   traceImpact,
   getSubgraph,
   validateBrainIntegrity,
-} from '@/lib/brain'
+} from '@/backend/brain'
 
 describe('Brain - Cérebro do Quality Control', () => {
   let testCompanyNodeId: string

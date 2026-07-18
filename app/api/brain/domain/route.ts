@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import { prisma } from "@/database/prismaClient";
 
 type DomainNode = {

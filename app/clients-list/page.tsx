@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { RequireAuth } from "@/components/RequireAuth";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 
 type Client = {
   id: string;
@@ -76,7 +76,7 @@ function ClientesPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const { getAccessToken } = await import("@/lib/api");
+      const { getAccessToken } = await import("@/backend/api");
       const token = await getAccessToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
       const res = await fetch("/api/clients", { cache: "no-store", headers, credentials: "include" });
@@ -117,7 +117,7 @@ function ClientesPage() {
         website: data.website,
         active: data.active,
       };
-      const { getAccessToken } = await import("@/lib/api");
+      const { getAccessToken } = await import("@/backend/api");
       const token = await getAccessToken();
       const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
       const res = await fetch("/api/clients", {

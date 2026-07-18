@@ -9,25 +9,25 @@ import { AccessRequestProfileWorkspace, AccessRequestsTableExperience } from "./
 import { FiCheckCircle, FiClock, FiRefreshCw, FiSearch, FiSlash } from "react-icons/fi";
 import { RequireAccessRequestReviewer } from "@/components/RequireAccessRequestReviewer";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { getAccessToken } from "@/lib/api";
-import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import { getAccessToken } from "@/backend/api";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/backend/apiEnvelope";
 import type {
   AccessRequestAdjustmentEntry,
   AccessRequestAdjustmentField,
   AccessRequestAdjustmentRound,
   AccessRequestSnapshot,
   AccessType,
-} from "@/lib/accessRequestMessage";
-import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
+} from "@/backend/accessRequestMessage";
+import { parseAccessRequestMessage } from "@/backend/accessRequestMessage";
 import {
   normalizeRequestProfileType,
   requestProfileTypeNeedsCompany,
   toInternalAccessType,
   toRequestProfileTypeLabel,
   type RequestProfileTypeLabel,
-} from "@/lib/requestRouting";
-import { parsePasswordResetAccessRequestMessage } from "@/lib/passwordResetAccessQueue";
-import { ACCESS_REQUEST_REJECTION_REASONS } from "@/lib/accessRequestsV2/domain";
+} from "@/backend/requestRouting";
+import { parsePasswordResetAccessRequestMessage } from "@/backend/passwordResetAccessQueue";
+import { ACCESS_REQUEST_REJECTION_REASONS } from "@/backend/accessRequestsV2/domain";
 
 type ClientOption = { id: string; name: string };
 

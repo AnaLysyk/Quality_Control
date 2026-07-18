@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
-import { generateRunPdf } from "@/lib/runPdfGenerator";
+import { generateRunPdf } from "@/backend/runPdfGenerator";
 
 export const runtime = "nodejs";
 

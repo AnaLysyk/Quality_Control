@@ -21,7 +21,7 @@ jest.setTimeout(30000);
 
 // Suprimir import server-only
 jest.mock("server-only", () => ({}));
-jest.mock("../../../lib/redis", () => ({
+jest.mock("../../../backend/redis", () => ({
   isRedisConfigured: jest.fn(() => false),
   getRedis: jest.fn(() => ({ get: jest.fn().mockResolvedValue(null) })),
 }));
@@ -29,9 +29,9 @@ jest.mock("../../../lib/redis", () => ({
 import { randomUUID } from "crypto";
 import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
-import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "@/lib/store/permissionsStore";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
-import { createLocalUser } from "@/lib/auth/localStore";
+import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "@/backend/store/permissionsStore";
+import { hasPermissionAccess } from "@/backend/permissionMatrix";
+import { createLocalUser } from "@/backend/auth/localStore";
 
 // Forçar uso do Postgres para estes testes
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";

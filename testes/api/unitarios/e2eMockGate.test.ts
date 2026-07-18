@@ -1,4 +1,4 @@
-import { isE2eMockAllowed } from "@/lib/auth/e2eMockGate";
+import { isE2eMockAllowed } from "@/backend/auth/e2eMockGate";
 
 describe("isE2eMockAllowed - gate único do mock E2E", () => {
   const originalPlaywrightMock = process.env.PLAYWRIGHT_MOCK;

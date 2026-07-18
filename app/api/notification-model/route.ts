@@ -1,11 +1,11 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getNotificationOperationModel } from "@/data/notificationOperationModel";
-import { buildNotificationBrianInsights } from "@/lib/notificationBrianInsights";
-import { getNotificationEventsSummary, listNotificationEvents } from "@/lib/notificationEventsStore";
-import { getNotificationPreferenceSummary, listNotificationPreferences, upsertNotificationPreference } from "@/lib/notificationPreferencesStore";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { buildNotificationBrianInsights } from "@/backend/notificationBrianInsights";
+import { getNotificationEventsSummary, listNotificationEvents } from "@/backend/notificationEventsStore";
+import { getNotificationPreferenceSummary, listNotificationPreferences, upsertNotificationPreference } from "@/backend/notificationPreferencesStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

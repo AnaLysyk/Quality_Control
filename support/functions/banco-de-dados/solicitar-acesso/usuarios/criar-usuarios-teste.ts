@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { hashPasswordSha256 } from "../../../../../lib/passwordHash";
+import { hashPasswordSha256 } from "../../../../../backend/passwordHash";
 
 const dataDir = process.env.LOCAL_AUTH_DATA_DIR?.trim();
 const password = process.env.E2E_PROFILE_PASSWORD;

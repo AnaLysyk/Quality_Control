@@ -1,20 +1,20 @@
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { buildManualAutomationIndex } from "@/lib/automations/manualLinks";
+import { buildManualAutomationIndex } from "@/backend/automations/manualLinks";
 import {
   resolveAutomationAccess,
   resolveAutomationAllowedCompanySlugs,
-} from "@/lib/automations/access";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getManualTestPlan, updateManualTestPlan } from "@/lib/testPlansStore";
+} from "@/backend/automations/access";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getManualTestPlan, updateManualTestPlan } from "@/backend/testPlansStore";
 import {
   normalizeTestPlanAutomationState,
   normalizeTestPlanCaseAutomation,
   type TestPlanAutomationState,
   type TestPlanCaseAutomation,
-} from "@/lib/testPlanCases";
-import { normalizeAutomationWorkflowStatus } from "@/lib/automations/workflowStatus";
+} from "@/backend/testPlanCases";
+import { normalizeAutomationWorkflowStatus } from "@/backend/automations/workflowStatus";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -1,11 +1,11 @@
 ﻿import { NextResponse } from "next/server";
 import { deleteReleaseFromStore, getAllReleases, upsertRelease } from "@/release/data";
-import { slugifyRelease } from "@/lib/slugifyRelease";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { canCreateRun, canDeleteRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
+import { slugifyRelease } from "@/backend/slugifyRelease";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { canCreateRun, canDeleteRun, getRunMockRole, resolveRunRole } from "@/backend/rbac/runs";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { notifyIntegrationRunCreated } from "@/lib/notificationService";
-import { syncReleaseToBrain } from "@/lib/brain-sync";
+import { notifyIntegrationRunCreated } from "@/backend/notificationService";
+import { syncReleaseToBrain } from "@/backend/brain-sync";
 
 // Garantir ambiente Node para fs
 export const runtime = "nodejs";

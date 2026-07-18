@@ -6,11 +6,11 @@ import { FiChevronDown, FiMaximize2, FiMessageSquare, FiPaperclip, FiSearch, FiS
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useI18n } from "@/hooks/useI18n";
 import { useProjectContext } from "@/context/ProjectContext";
-import { fetchApi } from "@/lib/api";
-import { calcMTTR } from "@/lib/mttr";
-import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
-import { normalizeLocale, type Locale } from "@/lib/i18n";
-import { slugifyRelease } from "@/lib/slugifyRelease";
+import { fetchApi } from "@/backend/api";
+import { calcMTTR } from "@/backend/mttr";
+import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/backend/defectNormalization";
+import { normalizeLocale, type Locale } from "@/backend/i18n";
+import { slugifyRelease } from "@/backend/slugifyRelease";
 
 type CompanyDefect = {
   id: string;

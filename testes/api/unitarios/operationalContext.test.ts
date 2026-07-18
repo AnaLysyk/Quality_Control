@@ -1,11 +1,11 @@
-jest.mock("@/lib/auth/session", () => ({ getAccessContext: jest.fn() }));
-jest.mock("@/lib/serverPermissionAccess", () => ({ resolvePermissionAccessForUser: jest.fn() }));
-jest.mock("@/lib/context/operationalProjectResolver", () => ({ resolveOperationalProject: jest.fn() }));
+jest.mock("@/backend/auth/session", () => ({ getAccessContext: jest.fn() }));
+jest.mock("@/backend/serverPermissionAccess", () => ({ resolvePermissionAccessForUser: jest.fn() }));
+jest.mock("@/backend/context/operationalProjectResolver", () => ({ resolveOperationalProject: jest.fn() }));
 
-import { getAccessContext } from "@/lib/auth/session";
-import { resolveOperationalContext, assertOperationalAccess } from "@/lib/context/operationalContext";
-import { resolveOperationalProject } from "@/lib/context/operationalProjectResolver";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { getAccessContext } from "@/backend/auth/session";
+import { resolveOperationalContext, assertOperationalAccess } from "@/backend/context/operationalContext";
+import { resolveOperationalProject } from "@/backend/context/operationalProjectResolver";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 
 const mockedGetAccessContext = getAccessContext as jest.MockedFunction<typeof getAccessContext>;
 const mockedResolvePermissions = resolvePermissionAccessForUser as jest.MockedFunction<

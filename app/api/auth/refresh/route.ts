@@ -1,11 +1,11 @@
 ﻿import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
-import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
-import { getRedis } from "@/lib/redis";
-import { shouldUseSecureCookies } from "@/lib/auth/cookies";
-import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { buildLocalSessionForUser } from "@/backend/auth/sessionBuilder";
+import { createRefreshToken, hashRefreshToken } from "@/backend/auth/refreshToken";
+import { getRedis } from "@/backend/redis";
+import { shouldUseSecureCookies } from "@/backend/auth/cookies";
+import { getJwtSecret } from "@/backend/auth/jwtSecret";
 
 const DEFAULT_ACCESS_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;

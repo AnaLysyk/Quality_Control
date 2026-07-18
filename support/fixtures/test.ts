@@ -1,10 +1,10 @@
 ﻿import fs from "node:fs/promises";
 import path from "node:path";
 import { test as base, expect, type TestInfo, type TestStatus } from "@playwright/test";
-import { createQaseClient, QaseError } from "../../lib/qaseSdk";
-import { slugifyRelease } from "@/lib/slugifyRelease";
+import { createQaseClient, QaseError } from "../../backend/qaseSdk";
+import { slugifyRelease } from "@/backend/slugifyRelease";
 import type { Release } from "@/types/release";
-import type { TestPlanCase } from "@/lib/testPlanCases";
+import type { TestPlanCase } from "@/backend/testPlanCases";
 
 type QaseStatus = "passed" | "failed" | "blocked" | "skipped" | "invalid" | "untested";
 

@@ -4,7 +4,7 @@
  * Company Identity Section — Dados básicos da empresa
  */
 
-import { useProfileContext } from "@/lib/profile/useProfileContext";
+import { useProfileContext } from "@/backend/profile/useProfileContext";
 import { CompanyProfileForm } from "../forms/CompanyProfileForm";
 
 export type CompanyIdentitySectionProps = {

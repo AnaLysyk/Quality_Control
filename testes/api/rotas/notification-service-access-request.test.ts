@@ -1,9 +1,9 @@
-﻿jest.mock("@/lib/userNotificationsStore", () => ({
+﻿jest.mock("@/backend/userNotificationsStore", () => ({
   closeNotificationsByDedupeKey: jest.fn().mockResolvedValue(false),
   createNotificationsForUsers: jest.fn().mockResolvedValue([]),
 }));
 
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/localStore", () => ({
   listLocalCompanies: jest.fn().mockResolvedValue([]),
   listLocalLinksForCompany: jest.fn().mockResolvedValue([]),
   listLocalUsers: jest.fn().mockResolvedValue([]),
@@ -11,19 +11,19 @@ jest.mock("@/lib/auth/localStore", () => ({
   getLocalUserById: jest.fn().mockResolvedValue(null),
 }));
 
-import { createNotificationsForUsers } from "@/lib/userNotificationsStore";
+import { createNotificationsForUsers } from "@/backend/userNotificationsStore";
 import {
   listLocalCompanies,
   listLocalLinksForCompany,
   listLocalUsers,
   listLocalMemberships,
-} from "@/lib/auth/localStore";
+} from "@/backend/auth/localStore";
 import {
   notifyAccessRequestCreated,
   notifyAccessRequestComment,
   notifyAccessRequestAccepted,
   notifyAccessRequestRejected,
-} from "@/lib/notificationService";
+} from "@/backend/notificationService";
 
 describe("notificationService access request recipients", () => {
   beforeEach(() => {

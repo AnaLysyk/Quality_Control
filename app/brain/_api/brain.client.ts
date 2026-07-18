@@ -1,9 +1,9 @@
 ﻿"use client";
 
-import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
-import { parsePasswordResetAccessRequestMessage } from "@/lib/passwordResetAccessQueue";
-import { normalizeRequestProfileType, toRequestProfileTypeLabel } from "@/lib/requestRouting";
-import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import { parseAccessRequestMessage } from "@/backend/accessRequestMessage";
+import { parsePasswordResetAccessRequestMessage } from "@/backend/passwordResetAccessQueue";
+import { normalizeRequestProfileType, toRequestProfileTypeLabel } from "@/backend/requestRouting";
+import { unwrapEnvelopeData } from "@/backend/apiEnvelope";
 import { normalizeBrainText, statusLabel } from "../_utils/brainGraphFormatters";
 import type {
   BrainAccessRequestRemovalHistoryItem,

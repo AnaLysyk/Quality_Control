@@ -3,8 +3,8 @@
 import { randomUUID } from "crypto";
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
-import { emailService } from "@/lib/email";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { emailService } from "@/backend/email";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 
 loadEnv({ path: path.resolve(process.cwd(), ".env.local"), override: true });

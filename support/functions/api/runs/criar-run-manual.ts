@@ -1,6 +1,6 @@
 ﻿import type { APIRequestContext } from "@playwright/test";
 
-import { slugifyRelease as slugifyRun } from "../../../../lib/slugifyRelease";
+import { slugifyRelease as slugifyRun } from "../../../../backend/slugifyRelease";
 import { EMPRESA_CLIENTE_E2E } from "../../ui/runs/rotas-runs";
 
 type DadosRunManualApi = {

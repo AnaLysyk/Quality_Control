@@ -3,15 +3,15 @@
 import { ClientCreateRequestSchema, ClientSchema } from "@/contracts/client";
 import { ErrorResponseSchema } from "@/contracts/errors";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { syncCompanyApplications } from "@/lib/applicationsStore";
-import { deleteLocalCompany, listLocalCompanies, updateLocalCompany } from "@/lib/auth/localStore";
+import { syncCompanyApplications } from "@/backend/applicationsStore";
+import { deleteLocalCompany, listLocalCompanies, updateLocalCompany } from "@/backend/auth/localStore";
 import {
   buildCompanyUpdatePatch,
   mapCompanyRecord,
   normalizeComparableName,
   normalizeTaxId,
-} from "@/lib/companyRecord";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+} from "@/backend/companyRecord";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

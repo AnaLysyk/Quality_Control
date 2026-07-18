@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiCheckCircle, FiEdit2, FiLayers, FiLink2, FiPlus, FiTrendingUp, FiX } from "react-icons/fi";
-import { getAppMeta } from "@/lib/appMeta";
+import { getAppMeta } from "@/backend/appMeta";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
-import { fetchApi } from "@/lib/api";
-import { stripRunPrefix } from "@/lib/runPresentation";
+import { fetchApi } from "@/backend/api";
+import { stripRunPrefix } from "@/backend/runPresentation";
 
 type NewManualRelease = {
   name: string;

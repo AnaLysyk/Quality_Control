@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { updateApplication } from "../../../../lib/applicationsStore";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { updateApplication } from "../../../../backend/applicationsStore";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 type RouteContext = { params: Promise<{ id: string }> };
 

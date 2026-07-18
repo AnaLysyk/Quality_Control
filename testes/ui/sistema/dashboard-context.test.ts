@@ -1,4 +1,4 @@
-﻿import { resolveDashboardContext } from "@/lib/dashboard/context";
+﻿import { resolveDashboardContext } from "@/backend/dashboard/context";
 
 describe("resolveDashboardContext", () => {
   it("locks company scope for company users", () => {

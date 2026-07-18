@@ -2,8 +2,8 @@
 
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
-import { getRedis, isRedisConfigured } from "@/lib/redis";
-import { shouldUseJsonStore } from "@/lib/storeMode";
+import { getRedis, isRedisConfigured } from "@/backend/redis";
+import { shouldUseJsonStore } from "@/backend/storeMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 function shouldUsePostgresStore() {

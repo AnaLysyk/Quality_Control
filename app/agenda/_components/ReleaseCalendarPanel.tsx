@@ -4,7 +4,7 @@ import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import useSWR from "swr";
 import { FiBell, FiCalendar, FiCheckCircle, FiClock, FiFilter, FiGrid, FiPlus, FiRefreshCw, FiTarget, FiUserCheck, FiUsers } from "react-icons/fi";
 
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type CalendarEvent = {
   id: string;

@@ -1,8 +1,8 @@
 ﻿import { NextRequest } from "next/server";
 
-import { apiFail, apiOk } from "@/lib/apiResponse";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { apiFail, apiOk } from "@/backend/apiResponse";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { getRedis, isRedisConfigured } from "@/backend/redis";
 
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);

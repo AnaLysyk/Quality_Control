@@ -1,4 +1,4 @@
-﻿import { isCompanyProfileContext, resolveActiveIdentity } from "@/lib/activeIdentity";
+﻿import { isCompanyProfileContext, resolveActiveIdentity } from "@/backend/activeIdentity";
 import type { AuthUser } from "../../../packages/contracts/src/auth";
 
 describe("active identity", () => {

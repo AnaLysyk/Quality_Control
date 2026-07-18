@@ -1,4 +1,4 @@
-﻿import { hasAdminClientToolAccess } from "../../../lib/adminClientAccess";
+﻿import { hasAdminClientToolAccess } from "../../../backend/adminClientAccess";
 
 describe("adminClientAccess - Controle Rígido de Ferramentas de Cliente Admin", () => {
   describe("hasAdminClientToolAccess", () => {

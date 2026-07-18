@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { connectNodes } from "@/lib/brain";
+import { connectNodes } from "@/backend/brain";
 import { prisma } from "@/database/prismaClient";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);

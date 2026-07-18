@@ -1,7 +1,7 @@
-﻿import { SYSTEM_ROLES } from "@/lib/auth/roles";
-import { NAV_CATALOG, type NavModuleDef } from "@/lib/navigation/navigationCatalog";
-import { buildNavigationForUser } from "@/lib/navigation/navigationPermissions";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+﻿import { SYSTEM_ROLES } from "@/backend/auth/roles";
+import { NAV_CATALOG, type NavModuleDef } from "@/backend/navigation/navigationCatalog";
+import { buildNavigationForUser } from "@/backend/navigation/navigationPermissions";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 function buildSupportNavigation() {
   return buildNavigationForUser(

@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 
-import { hasPasswordResetToken } from "@/lib/auth/passwordResetToken";
+import { hasPasswordResetToken } from "@/backend/auth/passwordResetToken";
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { token?: string | null } | null;

@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getExtendedNotificationOperationModel } from "@/lib/notificationWorkflowCatalog";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { getExtendedNotificationOperationModel } from "@/backend/notificationWorkflowCatalog";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

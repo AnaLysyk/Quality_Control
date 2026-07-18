@@ -12,7 +12,7 @@
   },
 }));
 
-jest.mock("@/lib/brain", () => ({
+jest.mock("@/backend/brain", () => ({
   searchNodes: jest.fn(async () => []),
   getNodeMemories: jest.fn(async () => []),
   getSubgraph: jest.fn(async () => ({ nodes: [] })),
@@ -26,7 +26,7 @@ jest.mock("@/lib/brain", () => ({
   })),
 }));
 
-import { InternalBrainEngine } from "@/lib/brain/internalEngine";
+import { InternalBrainEngine } from "@/backend/brain/internalEngine";
 
 async function collectReply(message: string, screenLabel = "Dashboard") {
   const engine = new InternalBrainEngine();

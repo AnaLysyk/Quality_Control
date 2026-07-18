@@ -1,10 +1,10 @@
-import type { PermissionMatrix } from "@/lib/permissionMatrix";
+import type { PermissionMatrix } from "@/backend/permissionMatrix";
 
-jest.mock("@/lib/jwtAuth", () => ({
+jest.mock("@/backend/jwtAuth", () => ({
   authenticateRequest: jest.fn(),
 }));
 
-jest.mock("@/lib/serverPermissionAccess", () => ({
+jest.mock("@/backend/serverPermissionAccess", () => ({
   resolvePermissionAccessForUser: jest.fn(),
 }));
 
@@ -24,11 +24,11 @@ import {
   isBrainDomainNodeVisible,
   isBrainNodeVisible,
   resolveBrainAccess,
-} from "@/lib/brain/access";
+} from "@/backend/brain/access";
 import { mergeBrainGraphs } from "../../../app/brain/_utils/brainGraphBuilder";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 
 type MockAuthUser = {
   id: string;

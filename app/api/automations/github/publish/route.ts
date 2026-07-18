@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
 import { automationPool, ensureAutomationTables } from "@/database/automationPool";
-import { ingestSystemEventIntoBrain } from "@/lib/brain/systemIngest";
-import { parseRepository, publishFilesToRepo } from "@/lib/github/publishToRepo";
+import { ingestSystemEventIntoBrain } from "@/backend/brain/systemIngest";
+import { parseRepository, publishFilesToRepo } from "@/backend/github/publishToRepo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

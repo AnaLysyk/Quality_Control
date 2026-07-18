@@ -1,12 +1,12 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 import { ClientCreateRequestSchema, ClientListResponseSchema, ClientSchema } from "@/contracts/client";
 import { ErrorResponseSchema } from "@/contracts/errors";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { syncCompanyApplications } from "@/lib/applicationsStore";
-import { createLocalCompany, listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
+import { syncCompanyApplications } from "@/backend/applicationsStore";
+import { createLocalCompany, listLocalCompanies, type LocalAuthCompany } from "@/backend/auth/localStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

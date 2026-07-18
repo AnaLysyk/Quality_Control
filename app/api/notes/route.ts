@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { createUserNote, listUserNotes } from "@/lib/userNotesStore";
-import { syncNoteToBrain } from "@/lib/brain-sync";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { createUserNote, listUserNotes } from "@/backend/userNotesStore";
+import { syncNoteToBrain } from "@/backend/brain-sync";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);

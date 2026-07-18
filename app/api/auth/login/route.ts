@@ -2,15 +2,15 @@
 import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
-import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
-import { shouldUseSecureCookies } from "@/lib/auth/cookies";
-import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
-import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
-import { getRedis } from "@/lib/redis";
-import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
-import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { hashPasswordSha256, safeEqualHex } from "@/backend/passwordHash";
+import { shouldUseSecureCookies } from "@/backend/auth/cookies";
+import { createRefreshToken, hashRefreshToken } from "@/backend/auth/refreshToken";
+import { buildLocalSessionForUser } from "@/backend/auth/sessionBuilder";
+import { getRedis } from "@/backend/redis";
+import { findLocalUserByEmailOrId } from "@/backend/auth/localStore";
+import { getJwtSecret } from "@/backend/auth/jwtSecret";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
+import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/backend/companyRoutes";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;

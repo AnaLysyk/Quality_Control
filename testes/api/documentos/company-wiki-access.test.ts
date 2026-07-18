@@ -1,5 +1,5 @@
-﻿import type { AccessContext } from "@/lib/auth/session";
-import { canEditCompanyWiki, canReadCompanyWiki } from "@/lib/companyWikiAccess";
+﻿import type { AccessContext } from "@/backend/auth/session";
+import { canEditCompanyWiki, canReadCompanyWiki } from "@/backend/companyWikiAccess";
 
 function makeAccess(overrides: Partial<AccessContext> = {}): AccessContext {
   return {

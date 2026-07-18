@@ -1,6 +1,6 @@
 "use client";
 
-import { getPermissionModulesWithScreens, getRouteScreenPermission, isScreenPermissionModuleId } from "@/lib/navigation/screenPermissions";
+import { getPermissionModulesWithScreens, getRouteScreenPermission, isScreenPermissionModuleId } from "@/backend/navigation/screenPermissions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,17 +11,17 @@ import {
 
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
-import { getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
+import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
+import { getActionLabel, type PermissionModule } from "@/backend/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
   normalizePermissionMatrix,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+} from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 type ProfileOverride = {
   role?: SystemRole;

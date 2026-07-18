@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { hasCapability, type Capability } from "@/lib/permissions";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { hasCapability, type Capability } from "@/backend/permissions";
 
 type Country = {
   id: string;

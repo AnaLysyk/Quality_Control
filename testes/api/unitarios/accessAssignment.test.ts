@@ -5,7 +5,7 @@ import {
   isCompanyAllowed,
   isCompanyProjectPairAllowed,
   type AccessAssignment,
-} from "@/lib/auth/accessAssignment";
+} from "@/backend/auth/accessAssignment";
 
 // Massa: Empresa A (Projeto A1, Projeto A2), Empresa B (Projeto B1), Empresa C (Projeto C1).
 function assignment(

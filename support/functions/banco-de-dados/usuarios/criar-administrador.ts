@@ -1,6 +1,6 @@
 ﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 import { prisma } from "@/database/prismaClient";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 
 async function createAdmin() {
   const email = 'admin@test.com';

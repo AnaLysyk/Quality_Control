@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
-import { filterBrainDomainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess } from "@/backend/brain/access";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

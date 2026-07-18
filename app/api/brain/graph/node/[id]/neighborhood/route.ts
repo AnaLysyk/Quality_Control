@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getSubgraph } from "@/lib/brain";
-import { assertBrainNodeAccess, filterBrainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
+import { getSubgraph } from "@/backend/brain";
+import { assertBrainNodeAccess, filterBrainGraphByAccess, resolveBrainAccess } from "@/backend/brain/access";
 
 export async function GET(
   req: Request,

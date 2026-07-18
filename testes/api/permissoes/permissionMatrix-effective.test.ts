@@ -1,4 +1,4 @@
-﻿import { resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
+﻿import { resolveEffectivePermissionMatrix } from "@/backend/permissionMatrix";
 
 describe("resolveEffectivePermissionMatrix", () => {
   it("falls back to role defaults when the matrix is empty", () => {

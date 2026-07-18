@@ -9,12 +9,12 @@
   canEditTicketContent,
   canAssignTicket,
   canMoveTicket,
-} from "../../../lib/rbac/tickets";
-import * as supportAccess from "../../../lib/supportAccess";
-import type { AuthUser } from "../../../lib/jwtAuth";
-import type { TicketRecord } from "../../../lib/ticketsStore";
+} from "../../../backend/rbac/tickets";
+import * as supportAccess from "../../../backend/supportAccess";
+import type { AuthUser } from "../../../backend/jwtAuth";
+import type { TicketRecord } from "../../../backend/ticketsStore";
 
-jest.mock("../../../lib/supportAccess", () => ({
+jest.mock("../../../backend/supportAccess", () => ({
   canAccessGlobalSupportScope: jest.fn(),
   canCommentSupportTickets: jest.fn(),
   canManageSupportWorkflow: jest.fn(),

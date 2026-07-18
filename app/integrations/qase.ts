@@ -2,8 +2,8 @@
 
 import { mapQaseToKanban, type RawQaseEntity } from "@/utils/qaseMapper";
 import { KanbanData } from "@/types/kanban";
-import { createQaseClient, type QaseClient, QaseError } from "@/lib/qaseSdk";
-import { getClientQaseSettings } from "@/lib/qaseConfig";
+import { createQaseClient, type QaseClient, QaseError } from "@/backend/qaseSdk";
+import { getClientQaseSettings } from "@/backend/qaseConfig";
 
 const FALLBACK_PROJECT = process.env.QASE_DEFAULT_PROJECT || process.env.QASE_PROJECT || "";
 const FALLBACK_TOKEN = process.env.QASE_API_TOKEN || process.env.QASE_TOKEN || "";

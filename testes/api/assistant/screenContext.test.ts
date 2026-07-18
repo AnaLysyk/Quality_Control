@@ -1,5 +1,5 @@
-﻿import { normalizeSearch } from "@/lib/assistant/helpers";
-import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
+﻿import { normalizeSearch } from "@/backend/assistant/helpers";
+import { resolveAssistantScreenContext } from "@/backend/assistant/screenContext";
 
 describe("resolveAssistantScreenContext", () => {
   it("matches /admin/support as support module", () => {

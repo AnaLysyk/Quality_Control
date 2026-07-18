@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 
 export const runtime = "nodejs";
 

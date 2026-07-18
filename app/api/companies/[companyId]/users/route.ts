@@ -1,19 +1,19 @@
 ﻿import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-import { canDeleteUserByProfile } from "@/lib/adminUserDeleteAccess";
-import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
+import { canDeleteUserByProfile } from "@/backend/adminUserDeleteAccess";
+import { getAdminUserItem, listAdminUserItems } from "@/backend/adminUsers";
 import {
   createLocalUser,
   listLocalCompanies,
   listLocalUsers,
   updateLocalUser,
   upsertLocalLink,
-} from "@/lib/auth/localStore";
-import { getAccessContext } from "@/lib/auth/session";
-import { isUserScopeLockedError } from "@/lib/companyUserScope";
-import { generateTempPassword, hashPasswordSha256 } from "@/lib/passwordHash";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+} from "@/backend/auth/localStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { isUserScopeLockedError } from "@/backend/companyUserScope";
+import { generateTempPassword, hashPasswordSha256 } from "@/backend/passwordHash";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export const revalidate = 0;
 

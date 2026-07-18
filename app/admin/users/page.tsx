@@ -20,17 +20,17 @@ import Breadcrumb from "@/components/Breadcrumb";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { UserDetailsModal } from "@/admin/users/components/UserDetailsModal";
-import { canAccess } from "@/lib/permissions/can-access";
+import { canAccess } from "@/backend/permissions/can-access";
 import {
   getFixedProfileLabel,
   getFixedProfileTone,
   normalizeFixedProfileKind,
   resolveFixedProfileKind,
   type FixedProfileKind,
-} from "@/lib/fixedProfilePresentation";
+} from "@/backend/fixedProfilePresentation";
 
 type CompanyOption = {
   id: string;

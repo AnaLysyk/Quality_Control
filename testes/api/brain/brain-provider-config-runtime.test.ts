@@ -13,8 +13,8 @@ import {
   getBrainProviderRuntimeConfig,
   resolveBrainProviderModels,
   resolveBrainProviderOrder,
-} from "@/lib/brain/providerConfig";
-import { runBrainModel } from "@/lib/brain/modelProvider";
+} from "@/backend/brain/providerConfig";
+import { runBrainModel } from "@/backend/brain/modelProvider";
 
 const envBackup = {
   BRAIN_FREE_PROVIDER_ORDER: process.env.BRAIN_FREE_PROVIDER_ORDER,

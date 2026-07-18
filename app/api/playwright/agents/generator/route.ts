@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { requireAiApiKey } from "@/lib/ai/apiKey";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
+import { requireAiApiKey } from "@/backend/ai/apiKey";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { automationPool, ensureAutomationTables } from "@/database/automationPool";

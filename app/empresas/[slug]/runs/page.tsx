@@ -9,8 +9,8 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { fetchApi } from "@/lib/api";
-import { formatRunTitle } from "@/lib/runPresentation";
+import { fetchApi } from "@/backend/api";
+import { formatRunTitle } from "@/backend/runPresentation";
 import { FiSearch, FiCalendar, FiChevronLeft, FiChevronRight, FiActivity, FiLayers, FiGrid, FiBookOpen, FiShield } from "react-icons/fi";
 
 type RunStats = {

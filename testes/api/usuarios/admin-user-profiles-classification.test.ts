@@ -2,8 +2,8 @@
   buildAdminUserItem,
   resolveAdminUserProfileKind,
   resolvePermissionRoleForUser,
-} from "@/lib/adminUsers";
-import type { LocalAuthCompany, LocalAuthMembership, LocalAuthUser } from "@/lib/auth/localStore";
+} from "@/backend/adminUsers";
+import type { LocalAuthCompany, LocalAuthMembership, LocalAuthUser } from "@/backend/auth/localStore";
 
 function makeUser(overrides: Partial<LocalAuthUser> = {}): LocalAuthUser {
   return {

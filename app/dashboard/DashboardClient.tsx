@@ -24,9 +24,9 @@ import {
 } from "react-icons/fi";
 import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import Breadcrumb from "@/components/Breadcrumb";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 
 type CompanyRisk = "critical" | "warning" | "stable" | "empty";
 

@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { findLocalUserByEmailOrId, updateLocalUser } from "@/lib/auth/localStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { findLocalUserByEmailOrId, updateLocalUser } from "@/backend/auth/localStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 const MIN_PASSWORD_LENGTH = 8;

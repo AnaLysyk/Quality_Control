@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 
-import { getAppMeta } from "@/lib/appMeta";
+import { getAppMeta } from "@/backend/appMeta";
 
 type AppInfo = {
   slug: string;

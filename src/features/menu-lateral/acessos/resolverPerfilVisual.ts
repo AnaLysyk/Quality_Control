@@ -1,4 +1,4 @@
-﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
 
 export type PerfilVisualInput = {
   companyRole?: string | null;

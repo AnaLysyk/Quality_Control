@@ -1,4 +1,4 @@
-﻿import { InternalBrainEngine } from "@/lib/brain/internalEngine";
+﻿import { InternalBrainEngine } from "@/backend/brain/internalEngine";
 
 type Case = {
   name: string;

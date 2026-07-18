@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 
-import { addMemory, connectNodes, upsertNode } from "@/lib/brain";
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { isAllowedBrainEvent } from "@/lib/brain/contracts";
+import { addMemory, connectNodes, upsertNode } from "@/backend/brain";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { isAllowedBrainEvent } from "@/backend/brain/contracts";
 import { prisma } from "@/database/prismaClient";
 
 type IngestPayload = {

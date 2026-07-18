@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
 import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 
 export const runtime = "nodejs";

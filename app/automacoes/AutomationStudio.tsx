@@ -48,7 +48,7 @@ import {
   type AutomationStudioTriggerMode,
 } from "@/data/automationStudio";
 import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
-import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/backend/automations/companyScope";
 
 type CompanyOption = {
   name: string;

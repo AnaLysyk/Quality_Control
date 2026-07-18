@@ -8,7 +8,7 @@ const mockRedis = {
   del: jest.fn(async (key: string) => (mockRedisStore.delete(key) ? 1 : 0)),
 };
 
-jest.mock("@/lib/redis", () => ({
+jest.mock("@/backend/redis", () => ({
   getRedis: jest.fn(() => mockRedis),
 }));
 
@@ -18,7 +18,7 @@ import {
   listChatInboxSummaries,
   listChatThreadMessages,
   makeChatThreadKey,
-} from "@/lib/chatStore";
+} from "@/backend/chatStore";
 
 describe("chatStore", () => {
   beforeEach(async () => {

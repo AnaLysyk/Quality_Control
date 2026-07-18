@@ -1,5 +1,5 @@
-﻿import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
-import type { ParsedAccessRequest } from "@/lib/accessRequestMessage";
+﻿import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/backend/accessRequestLookup";
+import type { ParsedAccessRequest } from "@/backend/accessRequestMessage";
 
 function makeParsed(overrides?: Partial<ParsedAccessRequest>): ParsedAccessRequest {
   return {

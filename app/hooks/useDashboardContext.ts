@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { useMemo } from "react";
-import { resolveDashboardContext, type DashboardUserLike } from "@/lib/dashboard/context";
-import type { DashboardCompanyOption, DashboardContextLabels } from "@/lib/dashboard/types";
+import { resolveDashboardContext, type DashboardUserLike } from "@/backend/dashboard/context";
+import type { DashboardCompanyOption, DashboardContextLabels } from "@/backend/dashboard/types";
 
 type UseDashboardContextOptions = {
   user?: DashboardUserLike | null;

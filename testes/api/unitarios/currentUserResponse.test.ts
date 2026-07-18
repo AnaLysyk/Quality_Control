@@ -1,4 +1,4 @@
-import { buildCurrentUserResponse } from "@/lib/auth/currentUserResponse";
+import { buildCurrentUserResponse } from "@/backend/auth/currentUserResponse";
 
 const access = {
   userId: "user-1",

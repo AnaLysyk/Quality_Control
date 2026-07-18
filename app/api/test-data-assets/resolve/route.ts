@@ -1,15 +1,15 @@
 ﻿import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
 import {
   canAccessCompany,
   canAccessSensitivity,
   canViewBase64,
   PermissionError,
-} from "@/lib/test-data-hub/permissions";
-import { RunnerAssetGuardrail, UsagePolicyValidator } from "@/lib/test-data-hub/guardrails";
+} from "@/backend/test-data-hub/permissions";
+import { RunnerAssetGuardrail, UsagePolicyValidator } from "@/backend/test-data-hub/guardrails";
 
 /**
  * POST /api/test-data-assets/resolve

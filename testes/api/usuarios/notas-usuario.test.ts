@@ -18,9 +18,9 @@ import {
   updateUserNote,
   deleteUserNote,
   listUserNotes,
-} from "@/lib/userNotesStore";
-import { pgCreateLocalUser } from "@/lib/auth/pgStore";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+} from "@/backend/userNotesStore";
+import { pgCreateLocalUser } from "@/backend/auth/pgStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 
 jest.setTimeout(30000);
 

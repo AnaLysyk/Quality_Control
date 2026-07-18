@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { traceImpact } from "@/lib/brain";
-import { assertBrainNodeAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
+import { traceImpact } from "@/backend/brain";
+import { assertBrainNodeAccess, isBrainNodeVisible, resolveBrainAccess } from "@/backend/brain/access";
 
 export async function GET(
   req: Request,

@@ -1,6 +1,6 @@
 ﻿import { expect, test } from "../../../support/fixtures/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
+import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
 
 const TOTAL_ROUTES = SYSTEM_ROUTES.length;
 const BRAIN_ROUTES = SYSTEM_ROUTES.filter((route) => route.moduleId === "brain").length;

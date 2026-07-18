@@ -12,9 +12,9 @@ jest.mock("@/database/prismaClient", () => ({
   },
 }));
 
-import { listBrainSources, BRAIN_SOURCE_MEMORY_TYPE } from "@/lib/brain/sourceSettings";
+import { listBrainSources, BRAIN_SOURCE_MEMORY_TYPE } from "@/backend/brain/sourceSettings";
 import { prisma } from "@/database/prismaClient";
-import type { BrainAccessContext } from "@/lib/brain/access";
+import type { BrainAccessContext } from "@/backend/brain/access";
 
 function fakeAccess(overrides: Partial<BrainAccessContext> = {}): BrainAccessContext {
   return {

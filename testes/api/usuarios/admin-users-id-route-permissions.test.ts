@@ -1,18 +1,18 @@
 /// <reference types="jest" />
 
-jest.mock("@/lib/auth/session", () => ({
+jest.mock("@/backend/auth/session", () => ({
   getAccessContext: jest.fn(),
 }));
 
-jest.mock("@/lib/serverPermissionAccess", () => ({
+jest.mock("@/backend/serverPermissionAccess", () => ({
   resolvePermissionAccessForUser: jest.fn(),
 }));
 
-jest.mock("@/lib/adminUsers", () => ({
+jest.mock("@/backend/adminUsers", () => ({
   getAdminUserItem: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/localStore", () => ({
   findLocalCompanyById: jest.fn(),
   listLocalLinksForUser: jest.fn(),
   listLocalUsers: jest.fn(),
@@ -25,11 +25,11 @@ jest.mock("@/data/auditLogRepository", () => ({
   addAuditLogSafe: jest.fn(),
 }));
 
-jest.mock("@/lib/brain/autoSync", () => ({
+jest.mock("@/backend/brain/autoSync", () => ({
   brainOnUserCreated: jest.fn(),
 }));
 
-jest.mock("@/lib/email", () => ({
+jest.mock("@/backend/email", () => ({
   emailService: {
     sendWelcomeEmail: jest.fn(),
   },
@@ -39,16 +39,16 @@ import { DELETE, GET, PATCH } from "../../../app/api/admin/users/[id]/route";
 
 type RouteParams = Parameters<typeof GET>[1];
 
-const { getAccessContext } = jest.requireMock("@/lib/auth/session") as {
+const { getAccessContext } = jest.requireMock("@/backend/auth/session") as {
   getAccessContext: jest.Mock;
 };
-const { resolvePermissionAccessForUser } = jest.requireMock("@/lib/serverPermissionAccess") as {
+const { resolvePermissionAccessForUser } = jest.requireMock("@/backend/serverPermissionAccess") as {
   resolvePermissionAccessForUser: jest.Mock;
 };
-const { getAdminUserItem } = jest.requireMock("@/lib/adminUsers") as {
+const { getAdminUserItem } = jest.requireMock("@/backend/adminUsers") as {
   getAdminUserItem: jest.Mock;
 };
-const localStore = jest.requireMock("@/lib/auth/localStore") as {
+const localStore = jest.requireMock("@/backend/auth/localStore") as {
   listLocalLinksForUser: jest.Mock;
   updateLocalUser: jest.Mock;
 };

@@ -1,11 +1,11 @@
 ﻿/* Mock ticketHelpers to avoid transitive server-only deps */
-jest.mock("@/lib/assistant/tools/ticketHelpers", () => ({
+jest.mock("@/backend/assistant/tools/ticketHelpers", () => ({
   parseStructuredTicketDraft: () => null,
   extractNarrativePayload: () => null,
 }));
 
-import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload } from "@/lib/assistant/router";
-import type { AssistantConversationTurn, AssistantScreenContext } from "@/lib/assistant/types";
+import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload } from "@/backend/assistant/router";
+import type { AssistantConversationTurn, AssistantScreenContext } from "@/backend/assistant/types";
 
 /* â”€â”€ Helpers â”€â”€ */
 

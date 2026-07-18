@@ -36,7 +36,7 @@ jest.mock("@/hooks/usePermissionAccess", () => ({
   }),
 }));
 
-jest.mock("@/lib/api", () => ({
+jest.mock("@/backend/api", () => ({
   fetchApi: (input: string, init?: RequestInit) => fetchApiMock(input, init),
 }));
 

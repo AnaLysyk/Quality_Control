@@ -10,14 +10,14 @@ jest.mock("@/database/prismaClient", () => ({
   },
 }));
 
-jest.mock("@/lib/brain/access", () => ({
+jest.mock("@/backend/brain/access", () => ({
   resolveBrainAccess: jest.fn(),
 }));
 
 import type { NextRequest } from "next/server";
 
 import { GET, PATCH } from "@/api/admin/brain/provider-config/route";
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 
 const envBackup = {
   GROQ_API_KEY: process.env.GROQ_API_KEY,

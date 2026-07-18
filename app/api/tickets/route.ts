@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { createTicket, listAllTickets, listTicketsForUser, type TicketRecord } from "@/lib/ticketsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketCreated } from "@/lib/notificationService";
-import { attachAssigneeInfo, attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { brainOnTicketCreated } from "@/lib/brain/autoSync";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { createTicket, listAllTickets, listTicketsForUser, type TicketRecord } from "@/backend/ticketsStore";
+import { appendTicketEvent } from "@/backend/ticketEventsStore";
+import { notifyTicketCreated } from "@/backend/notificationService";
+import { attachAssigneeInfo, attachAssigneeToTicket } from "@/backend/ticketsPresenter";
+import { brainOnTicketCreated } from "@/backend/brain/autoSync";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 import {
   buildTicketsListCacheKey,
   clearTicketsListCache,
   readTicketsListCache,
   writeTicketsListCache,
-} from "@/lib/ticketsListResponseCache";
+} from "@/backend/ticketsListResponseCache";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;

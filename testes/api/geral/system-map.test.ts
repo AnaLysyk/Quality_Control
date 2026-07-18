@@ -1,18 +1,18 @@
 ﻿import fs from "node:fs";
 import path from "node:path";
 
-import { SYSTEM_MODULES } from "@/lib/navigation/module-map";
-import { NAV_CATALOG } from "@/lib/navigation/navigationCatalog";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
+import { SYSTEM_MODULES } from "@/backend/navigation/module-map";
+import { NAV_CATALOG } from "@/backend/navigation/navigationCatalog";
+import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
 import {
   getUnmappedSystemPageFiles,
   SYSTEM_PAGE_MAP_EXCLUSIONS,
-} from "@/lib/navigation/systemPageAudit";
-import { PERMISSION_MODULES } from "@/lib/permissionCatalog";
+} from "@/backend/navigation/systemPageAudit";
+import { PERMISSION_MODULES } from "@/backend/permissionCatalog";
 import {
   getPermissionModulesWithScreens,
   RELATIONSHIP_PERMISSION_MODULE_ID,
-} from "@/lib/navigation/screenPermissions";
+} from "@/backend/navigation/screenPermissions";
 
 function flattenMenuRouteIds() {
   return NAV_CATALOG.flatMap((moduleDefinition) => [

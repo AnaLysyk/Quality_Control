@@ -1,13 +1,13 @@
 ﻿import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
-import { notifyPasswordResetRequest } from "@/lib/notificationService";
+import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/backend/auth/localStore";
+import { notifyPasswordResetRequest } from "@/backend/notificationService";
 import {
   deriveProfileTypeFromAccount,
   normalizeRequestProfileType,
   resolveReviewQueue,
-} from "@/lib/requestRouting";
+} from "@/backend/requestRouting";
 
 type ResetRequestBody = {
   login: string;

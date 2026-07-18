@@ -6,7 +6,7 @@
   rewriteShortCompanyPathname,
   shortenCompanyPathname,
   shouldUseShortCompanyRoutes,
-} from "@/lib/companyRoutes";
+} from "@/backend/companyRoutes";
 
 describe("companyRoutes", () => {
   it("usa rota curta para conta institucional da empresa", () => {

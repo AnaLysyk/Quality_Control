@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
-export { publishAuthUser } from "@/lib/authUserSync";
-import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
+export { publishAuthUser } from "@/backend/authUserSync";
+import { normalizeAuthenticatedUser } from "@/backend/auth/normalizeAuthenticatedUser";
 
 export type { AuthUser } from "@/contracts/auth";
 

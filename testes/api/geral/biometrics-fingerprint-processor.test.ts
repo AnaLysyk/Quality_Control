@@ -12,8 +12,8 @@ import {
   isWsqFormat,
   MAX_FINGERPRINT_BASE64_LENGTH,
   maxBytesForBase64Limit,
-} from "@/lib/automations/biometrics/fingerprintProcessor";
-import { resolveExistingLocalBiometricFixtures } from "@/lib/automations/biometrics/localFixtures";
+} from "@/backend/automations/biometrics/fingerprintProcessor";
+import { resolveExistingLocalBiometricFixtures } from "@/backend/automations/biometrics/localFixtures";
 
 function createSeededNoiseBuffer(width: number, height: number, seed = 17) {
   const buffer = Buffer.alloc(width * height);

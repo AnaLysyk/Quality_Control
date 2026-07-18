@@ -6,14 +6,14 @@ import { FiMap, FiSearch, FiX } from "react-icons/fi";
 import Breadcrumb from "@/components/Breadcrumb";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import type { SystemRole } from "@/lib/auth/roles";
+import type { SystemRole } from "@/backend/auth/roles";
 import type {
   SystemMapStatus,
   SystemModuleDefinition,
   SystemPermission,
   SystemRouteDefinition,
-} from "@/lib/navigation/navigation.types";
-import { canAccess } from "@/lib/permissions/can-access";
+} from "@/backend/navigation/navigation.types";
+import { canAccess } from "@/backend/permissions/can-access";
 
 type SistemaMapaClientProps = {
   modules: readonly SystemModuleDefinition[];

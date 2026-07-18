@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { FiActivity, FiAlertTriangle, FiBriefcase, FiCalendar, FiClipboard, FiFilter, FiSearch, FiShield, FiUser, FiUsers } from "react-icons/fi";
 import type { IconType } from "react-icons";
-import { fetchApi } from "@/lib/api";
-import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import type { CompanyRow, Stats } from "@/lib/quality";
+import { fetchApi } from "@/backend/api";
+import { unwrapEnvelopeData } from "@/backend/apiEnvelope";
+import type { CompanyRow, Stats } from "@/backend/quality";
 
 type Overview = { companies: CompanyRow[]; globalStats: Stats; projectRows?: Array<{ id: string; name: string }> };
 type Audit = { id: string; created_at: string; actor_email: string | null; action: string; entity_label: string | null; entity_type?: string | null };

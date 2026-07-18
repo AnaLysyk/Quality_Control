@@ -1,10 +1,10 @@
 /// <reference types="jest" />
 
-jest.mock("@/lib/auth/session", () => ({
+jest.mock("@/backend/auth/session", () => ({
   getAccessContext: jest.fn(),
 }));
 
-jest.mock("@/lib/serverPermissionAccess", () => ({
+jest.mock("@/backend/serverPermissionAccess", () => ({
   invalidatePermissionAccessCache: jest.fn(),
   resolvePermissionAccessForUser: jest.fn(),
 }));
@@ -13,15 +13,15 @@ jest.mock("@/data/auditLogRepository", () => ({
   addAuditLogSafe: jest.fn(),
 }));
 
-jest.mock("@/lib/adminUsers", () => ({
+jest.mock("@/backend/adminUsers", () => ({
   getAdminUserItem: jest.fn(),
 }));
 
-jest.mock("@/lib/notificationService", () => ({
+jest.mock("@/backend/notificationService", () => ({
   notifyUserAccessUpdated: jest.fn(),
 }));
 
-jest.mock("@/lib/brain/cache", () => ({
+jest.mock("@/backend/brain/cache", () => ({
   invalidateBrainCache: jest.fn(),
 }));
 
@@ -30,10 +30,10 @@ import { DELETE, GET, PATCH } from "../../../app/api/admin/users/[id]/permission
 type PermissionRouteHandler = typeof GET;
 type PermissionRouteParams = Parameters<PermissionRouteHandler>[1];
 
-const { getAccessContext } = jest.requireMock("@/lib/auth/session") as {
+const { getAccessContext } = jest.requireMock("@/backend/auth/session") as {
   getAccessContext: jest.Mock;
 };
-const { resolvePermissionAccessForUser } = jest.requireMock("@/lib/serverPermissionAccess") as {
+const { resolvePermissionAccessForUser } = jest.requireMock("@/backend/serverPermissionAccess") as {
   resolvePermissionAccessForUser: jest.Mock;
 };
 

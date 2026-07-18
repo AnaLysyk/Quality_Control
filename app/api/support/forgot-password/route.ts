@@ -4,7 +4,7 @@ let prisma: typeof import("@/database/prismaClient").prisma | undefined;
 if (typeof process !== "undefined" && process.release?.name === "node") {
   prisma = require("@/database/prismaClient").prisma;
 }
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 
 type Payload = {
   email?: string;

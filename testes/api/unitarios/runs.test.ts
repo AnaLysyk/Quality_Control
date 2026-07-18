@@ -1,7 +1,7 @@
-﻿import { resolveRunRole, canCreateRun, canEditRun, canDeleteRun, canLinkDefect } from "../../../lib/rbac/runs";
-import { resolveDefectRole } from "../../../lib/rbac/defects";
+﻿import { resolveRunRole, canCreateRun, canEditRun, canDeleteRun, canLinkDefect } from "../../../backend/rbac/runs";
+import { resolveDefectRole } from "../../../backend/rbac/defects";
 
-jest.mock("../../../lib/rbac/defects", () => ({
+jest.mock("../../../backend/rbac/defects", () => ({
   resolveDefectRole: jest.fn(),
   getPerfilSimulado: jest.fn()
 }));

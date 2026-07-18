@@ -7,9 +7,9 @@ import {
   THEME_PREFERENCE_COOKIE,
   THEME_RESOLVED_COOKIE,
   type ResolvedTheme,
-} from "@/lib/appSettingsCookies";
-import { getAccessToken } from "@/lib/api";
-import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
+} from "@/backend/appSettingsCookies";
+import { getAccessToken } from "@/backend/api";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/backend/i18n";
 import { useLanguage } from "@/context/LanguageContext";
 
 export type Theme = "light" | "dark" | "system";

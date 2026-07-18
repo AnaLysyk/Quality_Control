@@ -1,9 +1,9 @@
-﻿jest.mock("@/lib/userNotificationsStore", () => ({
+﻿jest.mock("@/backend/userNotificationsStore", () => ({
   closeNotificationsByDedupeKey: jest.fn().mockResolvedValue(false),
   createNotificationsForUsers: jest.fn().mockResolvedValue([]),
 }));
 
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/localStore", () => ({
   listLocalCompanies: jest.fn().mockResolvedValue([]),
   listLocalLinksForCompany: jest.fn().mockResolvedValue([]),
   listLocalUsers: jest.fn().mockResolvedValue([]),
@@ -11,15 +11,15 @@ jest.mock("@/lib/auth/localStore", () => ({
   getLocalUserById: jest.fn().mockResolvedValue(null),
 }));
 
-jest.mock("@/lib/requestRouting", () => ({
+jest.mock("@/backend/requestRouting", () => ({
   canAdminReviewQueue: jest.fn().mockReturnValue(false),
   resolveReviewQueue: jest.fn().mockReturnValue("global_only"),
   toRequestProfileTypeLabel: jest.fn().mockReturnValue("Usuario"),
 }));
 
-import { createNotificationsForUsers } from "@/lib/userNotificationsStore";
-import { listLocalCompanies, listLocalLinksForCompany } from "@/lib/auth/localStore";
-import { notifyTicketCommentAdded, notifyTicketStatusChanged } from "@/lib/notificationService";
+import { createNotificationsForUsers } from "@/backend/userNotificationsStore";
+import { listLocalCompanies, listLocalLinksForCompany } from "@/backend/auth/localStore";
+import { notifyTicketCommentAdded, notifyTicketStatusChanged } from "@/backend/notificationService";
 
 describe("notificationService support recipients", () => {
   beforeEach(() => {

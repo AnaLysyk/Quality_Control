@@ -6,7 +6,7 @@ import {
   collectApiRouteDescriptors,
   findUndocumentedOperations,
   type OpenApiDocument,
-} from "../../../lib/documentation/apiDocsCoverage";
+} from "../../../backend/documentation/apiDocsCoverage";
 
 async function main() {
   const rootDir = process.cwd();

@@ -7,7 +7,7 @@
   normalizeEntityKind,
   normalizeImpulseType,
   processBrianImpulse,
-} from "@/lib/brain/contextual";
+} from "@/backend/brain/contextual";
 
 const compareText = (left: string, right: string) => left.localeCompare(right);
 

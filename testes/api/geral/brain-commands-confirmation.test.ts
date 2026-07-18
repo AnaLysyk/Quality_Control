@@ -1,16 +1,16 @@
-﻿jest.mock("@/lib/brain/access", () => ({
+﻿jest.mock("@/backend/brain/access", () => ({
   resolveBrainAccess: jest.fn(),
 }));
 
-jest.mock("@/lib/brain/commandInterpreter", () => ({
+jest.mock("@/backend/brain/commandInterpreter", () => ({
   interpretBrainCommand: jest.fn(),
   listBrainCommands: jest.fn().mockReturnValue([]),
   executeBrainCommand: jest.fn(),
 }));
 
 import { POST } from "@/api/brain/commands/route";
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { executeBrainCommand, interpretBrainCommand } from "@/lib/brain/commandInterpreter";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { executeBrainCommand, interpretBrainCommand } from "@/backend/brain/commandInterpreter";
 
 function makeRequest(body: object) {
   return new Request("http://localhost/api/brain/commands", {

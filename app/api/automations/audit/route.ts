@@ -2,8 +2,8 @@
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
 
 export const runtime = "nodejs";

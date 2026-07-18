@@ -1,20 +1,20 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import {
   buildTestCaseMetrics,
   createManualTestCaseRecord,
   listTestCaseRecords,
   updateTestCaseRecord,
   archiveTestCaseRecord,
-} from "@/lib/test-cases/testCaseRepository";
+} from "@/backend/test-cases/testCaseRepository";
 import {
   canCreateTestCaseForCompany,
   canAccessTestCaseRecord,
   filterTestCasesByPermission,
-} from "@/lib/test-cases/testCasePermissions";
-import { listIntegratedQaseTestCaseRecords } from "@/lib/test-projects/testProjectsRepository";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import type { CreateTestCaseInput, TestCaseFilters } from "@/lib/test-cases/types";
+} from "@/backend/test-cases/testCasePermissions";
+import { listIntegratedQaseTestCaseRecords } from "@/backend/test-projects/testProjectsRepository";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import type { CreateTestCaseInput, TestCaseFilters } from "@/backend/test-cases/types";
 
 function mapTestCaseError(error: unknown) {
   if (!(error instanceof Error)) return null;

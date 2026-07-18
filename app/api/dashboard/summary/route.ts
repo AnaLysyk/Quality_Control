@@ -1,10 +1,10 @@
 ﻿import { NextResponse } from "next/server";
-import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/lib/companyQuality";
+import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/backend/companyQuality";
 import { getAllReleases } from "@/release/data";
-import { ensureSummaryAlerts, readAlertsStore } from "@/lib/qualityAlert";
-import { getRedis } from "@/lib/redis";
-import { rateLimit } from "@/lib/rateLimit";
-import { calculateQualityScore } from "@/lib/qualityScore";
+import { ensureSummaryAlerts, readAlertsStore } from "@/backend/qualityAlert";
+import { getRedis } from "@/backend/redis";
+import { rateLimit } from "@/backend/rateLimit";
+import { calculateQualityScore } from "@/backend/qualityScore";
 
 export async function GET(req: Request, context: { params: Promise<{ slug?: string }> }) {
     // Rate limit: 30 req/min per IP

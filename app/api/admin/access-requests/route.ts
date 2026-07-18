@@ -1,12 +1,12 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
 import { listAllRequests } from "@/data/requestsStore";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { mapPasswordResetRequestToAccessQueueItem } from "@/lib/passwordResetAccessQueue";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { listAccessRequestsV2 } from "@/lib/accessRequestsV2/repository";
-import { mapV2ToLegacySupportRow } from "@/lib/accessRequestsV2/service";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { mapPasswordResetRequestToAccessQueueItem } from "@/backend/passwordResetAccessQueue";
+import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
+import { listAccessRequestsV2 } from "@/backend/accessRequestsV2/repository";
+import { mapV2ToLegacySupportRow } from "@/backend/accessRequestsV2/service";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

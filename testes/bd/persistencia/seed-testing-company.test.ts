@@ -16,8 +16,8 @@ import {
   pgCreateLocalUser,
   pgUpsertLocalLink,
   pgFindLocalCompanyBySlug,
-} from "@/lib/auth/pgStore";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+} from "@/backend/auth/pgStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 

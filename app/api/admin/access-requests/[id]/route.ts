@@ -6,20 +6,20 @@ import {
   composeAccessRequestMessage,
   normalizeAccessType,
   parseAccessRequestMessage,
-} from "@/lib/accessRequestMessage";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+} from "@/backend/accessRequestMessage";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
-import { appendAccessRequestRemovalHistory } from "@/lib/accessRequestRemovalHistory";
+import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
+import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/backend/requestReviewAccess";
+import { appendAccessRequestRemovalHistory } from "@/backend/accessRequestRemovalHistory";
 import {
   normalizeRequestProfileType,
   resolveReviewQueue,
   toInternalAccessType,
-} from "@/lib/requestRouting";
-import { shouldUseJsonStore } from "@/lib/storeMode";
-import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
-import { updateAccessRequestDetailsForReviewer } from "@/lib/accessRequestsV2/service";
+} from "@/backend/requestRouting";
+import { shouldUseJsonStore } from "@/backend/storeMode";
+import { getAccessRequestV2ById } from "@/backend/accessRequestsV2/repository";
+import { updateAccessRequestDetailsForReviewer } from "@/backend/accessRequestsV2/service";
 
 type AccessRequestBody = {
   email?: string;

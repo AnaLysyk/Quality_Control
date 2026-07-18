@@ -10,14 +10,14 @@ import type {
   AccessRequestAdjustmentField,
   AccessRequestAdjustmentRound,
   AccessRequestSnapshot,
-} from "@/lib/accessRequestMessage";
-import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, type RequestProfileType } from "@/lib/requestRouting";
-import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+} from "@/backend/accessRequestMessage";
+import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, type RequestProfileType } from "@/backend/requestRouting";
+import { JOB_TITLE_OPTIONS } from "@/backend/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/hooks/useI18n";
-import { normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
-import { ACCESS_REQUEST_BASE_ADJUSTMENT_OPTIONS, ACCESS_REQUEST_COMPANY_ADJUSTMENT_OPTIONS } from "@/lib/accessRequestAdjustmentFields";
-import { isCnpjValid, normalizeCnpj } from "@/lib/brasilApiCnpj";
+import { normalizeAccessRequestLookup } from "@/backend/accessRequestLookup";
+import { ACCESS_REQUEST_BASE_ADJUSTMENT_OPTIONS, ACCESS_REQUEST_COMPANY_ADJUSTMENT_OPTIONS } from "@/backend/accessRequestAdjustmentFields";
+import { isCnpjValid, normalizeCnpj } from "@/backend/brasilApiCnpj";
 
 const ACCESS_OPTIONS = [
   {

@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { getQaseRunKanban } from "@/integrations/qase";
-import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
+import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/backend/auth/normalizeAuthenticatedUser";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });

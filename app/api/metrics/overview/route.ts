@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getRedis } from "@/lib/redis";
-import { listLocalCompanies, listLocalUsers } from "@/lib/auth/localStore";
+import { getRedis } from "@/backend/redis";
+import { listLocalCompanies, listLocalUsers } from "@/backend/auth/localStore";
 import { getAllReleases } from "@/release/data";
 import { readManualReleaseStore } from "@/data/manualData";
 

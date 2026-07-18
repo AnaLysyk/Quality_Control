@@ -9,8 +9,8 @@
   extractTicketNarrativeSource,
   isTicketTemplateRequest,
   isGenericTicketPrompt,
-} from "@/lib/assistant/tools/ticketHelpers";
-import type { AssistantScreenContext } from "@/lib/assistant/types";
+} from "@/backend/assistant/tools/ticketHelpers";
+import type { AssistantScreenContext } from "@/backend/assistant/types";
 
 /* â”€â”€ Helpers â”€â”€ */
 

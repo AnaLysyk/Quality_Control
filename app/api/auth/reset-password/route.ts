@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { updateLocalUser } from "@/lib/auth/localStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { updateLocalUser } from "@/backend/auth/localStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { consumePasswordResetToken } from "@/lib/auth/passwordResetToken";
+import { consumePasswordResetToken } from "@/backend/auth/passwordResetToken";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);

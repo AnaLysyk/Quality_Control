@@ -1,9 +1,9 @@
 jest.mock("next/headers", () => ({ cookies: jest.fn(async () => ({ get: () => undefined })) }));
-jest.mock("@/lib/redis", () => ({ getRedis: jest.fn() }));
-jest.mock("@/lib/auth/jwtSecret", () => ({ getJwtSecret: jest.fn(() => null) }));
-jest.mock("@/lib/auth/session", () => ({ getAccessContext: jest.fn() }));
+jest.mock("@/backend/redis", () => ({ getRedis: jest.fn() }));
+jest.mock("@/backend/auth/jwtSecret", () => ({ getJwtSecret: jest.fn(() => null) }));
+jest.mock("@/backend/auth/session", () => ({ getAccessContext: jest.fn() }));
 
-import { requireGlobalAdmin } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdmin } from "@/backend/rbac/requireGlobalAdmin";
 
 function makeRequest(headers: Record<string, string> = {}) {
   return new Request("https://app.local/api/user/123", { method: "PATCH", headers });

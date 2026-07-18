@@ -1,9 +1,9 @@
-jest.mock("@/lib/context/operationalContext", () => ({
+jest.mock("@/backend/context/operationalContext", () => ({
   resolveOperationalContext: jest.fn(),
 }));
 
 import { GET } from "@/api/projects/route";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 
 const mockedResolveOperationalContext = resolveOperationalContext as jest.MockedFunction<
   typeof resolveOperationalContext

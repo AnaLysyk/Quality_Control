@@ -2,10 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contracts/auth";
-import { getAccessToken, refreshClientSession } from "@/lib/api";
-import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import { publishAuthUser, subscribeAuthUserSync } from "@/lib/authUserSync";
-import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
+import { getAccessToken, refreshClientSession } from "@/backend/api";
+import { unwrapEnvelopeData } from "@/backend/apiEnvelope";
+import { publishAuthUser, subscribeAuthUserSync } from "@/backend/authUserSync";
+import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/backend/auth/normalizeAuthenticatedUser";
 
 type MeResult = {
   user: AuthUser | null;

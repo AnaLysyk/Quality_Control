@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
 
 /**

@@ -6,7 +6,7 @@
   normalizeUserScope,
   resolveAllowMultiCompanyLink,
   resolveUserOriginLabel,
-} from "@/lib/companyUserScope";
+} from "@/backend/companyUserScope";
 
 describe("company user scope", () => {
   it("builds closed scope metadata for company-created users", () => {

@@ -1,4 +1,4 @@
-﻿import { extractTicketReference } from "@/lib/assistant/pure/parsing";
+﻿import { extractTicketReference } from "@/backend/assistant/pure/parsing";
 
 describe("extractTicketReference", () => {
   it("parses SP code references", () => {

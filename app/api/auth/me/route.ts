@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { buildCurrentUserResponse } from "@/lib/auth/currentUserResponse";
-import { getLocalUserById, findLocalCompanyById, findLocalCompanyBySlug } from "@/lib/auth/localStore";
-import { isAvatarKey } from "@/lib/avatarCatalog";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { getAccessContext } from "@/backend/auth/session";
+import { buildCurrentUserResponse } from "@/backend/auth/currentUserResponse";
+import { getLocalUserById, findLocalCompanyById, findLocalCompanyBySlug } from "@/backend/auth/localStore";
+import { isAvatarKey } from "@/backend/avatarCatalog";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 
 export const revalidate = 0;
 

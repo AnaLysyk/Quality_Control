@@ -1,9 +1,9 @@
 ﻿import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
-import { canAccessCompany, canDeleteAsset, PermissionError } from "@/lib/test-data-hub/permissions";
+import { canAccessCompany, canDeleteAsset, PermissionError } from "@/backend/test-data-hub/permissions";
 
 /**
  * GET /api/test-data-assets/:id

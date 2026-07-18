@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { isCompanyUser } from "@/lib/rbac/companyAccess";
-import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { isCompanyUser } from "@/backend/rbac/companyAccess";
+import { getClientQaseSettings } from "@/backend/qaseConfig";
+import { normalizeDefectStatus, resolveClosedAt } from "@/backend/defectNormalization";
 import { getAllReleases } from "@/release/data";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");

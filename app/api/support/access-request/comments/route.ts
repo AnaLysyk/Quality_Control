@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 
-import { addPublicAccessRequestComment } from "@/lib/accessRequestsV2/service";
+import { addPublicAccessRequestComment } from "@/backend/accessRequestsV2/service";
 
 function text(value: unknown, max: number) {
   if (typeof value !== "string") return "";

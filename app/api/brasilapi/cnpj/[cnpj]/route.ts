@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { normalizeCnpj } from "@/lib/brasilApiCnpj";
-import { lookupCompanyByCnpj } from "@/lib/company-lookup/companyLookup";
+import { normalizeCnpj } from "@/backend/brasilApiCnpj";
+import { lookupCompanyByCnpj } from "@/backend/company-lookup/companyLookup";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

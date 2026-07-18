@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { BrainGraphAnalyticsService } from "@/backend/brain/graphAnalyticsService";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

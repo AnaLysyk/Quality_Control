@@ -1,12 +1,12 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import { checkPermission } from "@/lib/permissions/checkPermission";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import { checkPermission } from "@/backend/permissions/checkPermission";
 import {
   canUseGlobalTestCaseScope,
   resolveAllowedProjectIds,
   resolveAllowedTestCaseCompanies,
-} from "@/lib/test-cases/testCasePermissions";
+} from "@/backend/test-cases/testCasePermissions";
 
 function matchesRunScope(user: AuthUser, companyId?: string | null, projectId?: string | null) {
   if (!canUseGlobalTestCaseScope(user)) {

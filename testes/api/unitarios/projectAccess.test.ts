@@ -1,8 +1,8 @@
 import {
   assignmentMatchesCompany,
   resolveCompanyProjectVisibility,
-} from "@/lib/permissions/projectAccess";
-import type { AccessAssignment } from "@/lib/auth/accessAssignment";
+} from "@/backend/permissions/projectAccess";
+import type { AccessAssignment } from "@/backend/auth/accessAssignment";
 
 function assignment(overrides: Partial<AccessAssignment> = {}): AccessAssignment {
   return {

@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
-import { importTickets } from "@/lib/ticketsStore";
-import { isItDev } from "@/lib/rbac/tickets";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
+import { importTickets } from "@/backend/ticketsStore";
+import { isItDev } from "@/backend/rbac/tickets";
 
 type ImportBody = {
   mode?: "merge" | "replace" | "upsert";

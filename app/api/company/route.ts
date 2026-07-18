@@ -1,8 +1,8 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { createLocalCompany, findLocalCompanyById, listLocalCompanies } from "@/lib/auth/localStore";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getAccessContext } from "@/backend/auth/session";
+import { createLocalCompany, findLocalCompanyById, listLocalCompanies } from "@/backend/auth/localStore";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export const revalidate = 0;
 

@@ -1,12 +1,12 @@
-﻿jest.mock("@/lib/brain/access", () => ({
+﻿jest.mock("@/backend/brain/access", () => ({
   resolveBrainAccess: jest.fn(),
 }));
 
-jest.mock("@/lib/brain/contracts", () => ({
+jest.mock("@/backend/brain/contracts", () => ({
   isAllowedBrainEvent: jest.fn(),
 }));
 
-jest.mock("@/lib/brain", () => ({
+jest.mock("@/backend/brain", () => ({
   upsertNode: jest.fn(),
   connectNodes: jest.fn(),
   addMemory: jest.fn(),
@@ -21,9 +21,9 @@ jest.mock("@/database/prismaClient", () => ({
 }));
 
 import { POST } from "@/api/brain/graph/ingest/route";
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { isAllowedBrainEvent } from "@/lib/brain/contracts";
-import { addMemory, connectNodes, upsertNode } from "@/lib/brain";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { isAllowedBrainEvent } from "@/backend/brain/contracts";
+import { addMemory, connectNodes, upsertNode } from "@/backend/brain";
 
 function makeRequest(body: object) {
   return new Request("http://localhost/api/brain/graph/ingest", {

@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { findPathBetweenNodes } from "@/lib/brain";
-import { assertBrainNodeAccess, isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
-import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
+import { findPathBetweenNodes } from "@/backend/brain";
+import { assertBrainNodeAccess, isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
+import { BrainGraphAnalyticsService } from "@/backend/brain/graphAnalyticsService";
 import { prisma } from "@/database/prismaClient";
 
 async function allPathNodesVisible(nodeIds: string[], access: BrainAccessContext) {

@@ -13,7 +13,7 @@ import {
   FiUsers,
 } from "react-icons/fi";
 
-import type { CompanyRow, Stats } from "@/lib/quality";
+import type { CompanyRow, Stats } from "@/backend/quality";
 
 type Audit = {
   id: string;

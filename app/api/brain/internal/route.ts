@@ -1,13 +1,13 @@
 ﻿import { NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import {
   brainCreateEvent,
   brainExplainRelation,
   brainGetContext,
   brainGetImpact,
   brainGetRelated,
-} from "@/lib/brain/publicApi";
+} from "@/backend/brain/publicApi";
 
 export async function POST(req: Request) {
   const accessResult = await resolveBrainAccess(req);

@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { shouldUseSecureCookies } from "@/lib/auth/cookies";
+import { shouldUseSecureCookies } from "@/backend/auth/cookies";
 
 export async function POST(request: Request) {
   const secureCookies = shouldUseSecureCookies(request);

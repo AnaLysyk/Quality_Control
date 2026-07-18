@@ -2,7 +2,7 @@
 process.env.USE_JSON_STORE = "true";
 
 jest.mock("server-only", () => ({}));
-jest.mock("../../../lib/redis", () => ({
+jest.mock("../../../backend/redis", () => ({
   isRedisConfigured: jest.fn(() => false),
   getRedis: jest.fn(() => ({
     get: jest.fn().mockResolvedValue(null),
@@ -10,7 +10,7 @@ jest.mock("../../../lib/redis", () => ({
     del: jest.fn().mockResolvedValue(1),
   })),
 }));
-jest.mock("../../../lib/notificationService", () => ({
+jest.mock("../../../backend/notificationService", () => ({
   notifyAccessRequestAccepted: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock("@/data/auditLogRepository", () => ({
@@ -24,9 +24,9 @@ const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 import { POST } from "@/api/admin/access-requests/[id]/accept/route";
 import { createAccessRequest, getAccessRequestById } from "@/data/accessRequestsStore";
 import { prisma } from "@/database/prismaClient";
-import { composeAccessRequestMessage } from "@/lib/accessRequestMessage";
-import { pgCreateLocalCompany, pgDeleteLocalCompany } from "@/lib/auth/pgStore";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { composeAccessRequestMessage } from "@/backend/accessRequestMessage";
+import { pgCreateLocalCompany, pgDeleteLocalCompany } from "@/backend/auth/pgStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 
 const uid = Math.random().toString(36).slice(2, 10);
 const createdCompanyIds: string[] = [];

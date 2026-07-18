@@ -1,8 +1,8 @@
 ﻿import {
   DEFAULT_WALLET_LIMIT,
   MAX_FINGERPRINT_BASE64_LENGTH,
-} from "@/lib/automations/biometrics/fingerprintProcessor";
-import { runBiometricAttach } from "@/lib/automations/biometrics/attachRunner";
+} from "@/backend/automations/biometrics/fingerprintProcessor";
+import { runBiometricAttach } from "@/backend/automations/biometrics/attachRunner";
 
 type ParsedArgs = Record<string, string>;
 

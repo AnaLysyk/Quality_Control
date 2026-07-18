@@ -36,13 +36,13 @@ import {
   deleteSuporteForUser,
   getSuporteById,
   listSuportesForUser,
-} from "@/lib/ticketsStore";
+} from "@/backend/ticketsStore";
 import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgDeleteLocalCompany,
-} from "@/lib/auth/pgStore";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+} from "@/backend/auth/pgStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 
 const PASSWORD = hashPasswordSha256("TC@Teste2026");
 const UID = Math.random().toString(36).slice(2, 10);

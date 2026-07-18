@@ -1,16 +1,16 @@
 ﻿jest.mock("server-only", () => ({}));
 
-jest.mock("../../../lib/auth/localStore", () => ({
+jest.mock("../../../backend/auth/localStore", () => ({
   listLocalCompanies: jest.fn(),
 }));
 
-jest.mock("../../../lib/adminUsers", () => ({
+jest.mock("../../../backend/adminUsers", () => ({
   listAdminUserItems: jest.fn(),
 }));
 
-import { listAdminUserItems } from "@/lib/adminUsers";
-import { listLocalCompanies } from "@/lib/auth/localStore";
-import { listChatContacts } from "@/lib/chatContacts";
+import { listAdminUserItems } from "@/backend/adminUsers";
+import { listLocalCompanies } from "@/backend/auth/localStore";
+import { listChatContacts } from "@/backend/chatContacts";
 
 // listChatContacts usa prisma.$executeRawUnsafe/$queryRaw diretamente (nao mockado aqui),
 // entao esta suite precisa de um Postgres real. Sem DATABASE_URL, pula (mesmo padrao

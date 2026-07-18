@@ -29,7 +29,7 @@ describe("userPermissionsStore JSON fallback", () => {
   });
 
   it("persiste allow/deny locais para o resolver oficial ler depois", async () => {
-    const store = await import("@/lib/store/userPermissionsStore");
+    const store = await import("@/backend/store/userPermissionsStore");
 
     await store.setUserPermissionOverride("user-json-1", {
       allow: { users: ["view", "edit"] },

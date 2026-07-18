@@ -8,11 +8,11 @@
 
 /* â”€â”€ Mock everything server-side â”€â”€ */
 
-jest.mock("@/lib/assistantAuditLog", () => ({
+jest.mock("@/backend/assistantAuditLog", () => ({
   appendAssistantAuditEntry: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/localStore", () => ({
   getLocalUserById: jest.fn().mockResolvedValue({ id: "u1", name: "Ana", email: "ana@test.com" }),
   findLocalCompanyBySlug: jest.fn().mockResolvedValue({ id: "c1", slug: "acme" }),
   listLocalUsers: jest.fn().mockResolvedValue([]),
@@ -20,17 +20,17 @@ jest.mock("@/lib/auth/localStore", () => ({
   listLocalMemberships: jest.fn().mockResolvedValue([]),
 }));
 
-jest.mock("@/lib/permissionMatrix", () => ({
+jest.mock("@/backend/permissionMatrix", () => ({
   hasPermissionAccess: jest.fn().mockReturnValue(true),
 }));
 
-jest.mock("@/lib/rbac/tickets", () => ({
+jest.mock("@/backend/rbac/tickets", () => ({
   canAccessGlobalTicketWorkspace: jest.fn().mockReturnValue(true),
   canViewTicket: jest.fn().mockReturnValue(true),
   canCommentTicket: jest.fn().mockReturnValue(true),
 }));
 
-jest.mock("@/lib/ticketsStore", () => ({
+jest.mock("@/backend/ticketsStore", () => ({
   listAllTickets: jest.fn().mockResolvedValue([]),
   listTicketsForUser: jest.fn().mockResolvedValue([]),
   getTicketById: jest.fn().mockResolvedValue(null),
@@ -38,33 +38,33 @@ jest.mock("@/lib/ticketsStore", () => ({
   touchTicket: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/ticketsPresenter", () => ({
+jest.mock("@/backend/ticketsPresenter", () => ({
   attachAssigneeInfo: jest.fn().mockImplementation((t: unknown) => Promise.resolve(t)),
   attachAssigneeToTicket: jest.fn().mockImplementation((t: unknown) => Promise.resolve(t)),
 }));
 
-jest.mock("@/lib/ticketCommentsStore", () => ({
+jest.mock("@/backend/ticketCommentsStore", () => ({
   createTicketComment: jest.fn().mockResolvedValue({ id: "c1", body: "mock" }),
   listTicketComments: jest.fn().mockResolvedValue([]),
 }));
 
-jest.mock("@/lib/ticketEventsStore", () => ({
+jest.mock("@/backend/ticketEventsStore", () => ({
   appendTicketEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/notificationService", () => ({
+jest.mock("@/backend/notificationService", () => ({
   notifyTicketCreated: jest.fn().mockResolvedValue(undefined),
   notifyTicketCommentAdded: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/brain/aiContext", () => ({
+jest.mock("@/backend/brain/aiContext", () => ({
   buildBrainContextForAI: jest.fn().mockResolvedValue(null),
 }));
 
-import { runAssistantRequest } from "@/lib/assistant/service";
-import { appendAssistantAuditEntry } from "@/lib/assistantAuditLog";
-import type { AuthUser } from "@/lib/jwtAuth";
-import type { AssistantClientRequest, AssistantToolAction } from "@/lib/assistant/types";
+import { runAssistantRequest } from "@/backend/assistant/service";
+import { appendAssistantAuditEntry } from "@/backend/assistantAuditLog";
+import type { AuthUser } from "@/backend/jwtAuth";
+import type { AssistantClientRequest, AssistantToolAction } from "@/backend/assistant/types";
 
 /* â”€â”€ Helpers â”€â”€ */
 

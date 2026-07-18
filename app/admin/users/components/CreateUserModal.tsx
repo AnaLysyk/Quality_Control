@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { readApiError } from "@/lib/apiEnvelope";
+import { readApiError } from "@/backend/apiEnvelope";
 import {
   editableProfileNeedsCompany,
   editableProfileUsesAutomaticCompany,
   normalizeEditableProfileRole,
-} from "@/lib/editableProfileRoles";
-import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
-import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+} from "@/backend/editableProfileRoles";
+import type { FixedProfileKind } from "@/backend/fixedProfilePresentation";
+import { JOB_TITLE_OPTIONS } from "@/backend/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/UserAvatar";
 import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";

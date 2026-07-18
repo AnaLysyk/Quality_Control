@@ -16,8 +16,8 @@ import {
 } from "react-icons/fi";
 
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { fetchApi } from "@/lib/api";
-import { resolveDashboardContext } from "@/lib/dashboard/context";
+import { fetchApi } from "@/backend/api";
+import { resolveDashboardContext } from "@/backend/dashboard/context";
 import {
   DEFAULT_CONTEXTUAL_DASHBOARD_FILTERS,
   buildDashboardAggregate,
@@ -42,8 +42,8 @@ import {
   type DashboardSignalStatus,
   type DashboardViewMode,
   type DashboardWidgetDefinition,
-} from "@/lib/dashboard/contextual";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+} from "@/backend/dashboard/contextual";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 type DashboardPayload = {
   period?: string;

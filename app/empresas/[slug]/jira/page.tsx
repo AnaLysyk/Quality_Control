@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { FiExternalLink, FiLink, FiRefreshCw, FiSearch } from "react-icons/fi";
 import Breadcrumb from "@/components/Breadcrumb";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { useProjectContext } from "@/context/ProjectContext";
 
 type JiraIssue = {

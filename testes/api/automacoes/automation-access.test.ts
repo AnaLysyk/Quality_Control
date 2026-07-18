@@ -1,4 +1,4 @@
-﻿import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
+﻿import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
 
 describe("resolveAutomationAccess", () => {
   it("libera configuração para líder TC", () => {

@@ -1,9 +1,9 @@
-﻿import { assertCompanyAccess, requireCompanyIdPresent } from "../../../lib/rbac/validateCompanyAccess";
-import { SYSTEM_ROLES } from "../../../lib/auth/roles";
-import type { AuthUser } from "../../../lib/jwtAuth";
-import * as localStore from "../../../lib/auth/localStore";
+﻿import { assertCompanyAccess, requireCompanyIdPresent } from "../../../backend/rbac/validateCompanyAccess";
+import { SYSTEM_ROLES } from "../../../backend/auth/roles";
+import type { AuthUser } from "../../../backend/jwtAuth";
+import * as localStore from "../../../backend/auth/localStore";
 
-jest.mock("../../../lib/auth/localStore", () => ({
+jest.mock("../../../backend/auth/localStore", () => ({
   listLocalLinksForUser: jest.fn(),
 }));
 

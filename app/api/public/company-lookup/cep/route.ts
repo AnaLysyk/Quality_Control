@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { lookupAddressByCep } from "@/lib/company-lookup/companyLookup";
+import { lookupAddressByCep } from "@/backend/company-lookup/companyLookup";
 
 export const dynamic = "force-dynamic";
 

@@ -1,7 +1,7 @@
 ﻿console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 
 async function createAnaAdmin() {

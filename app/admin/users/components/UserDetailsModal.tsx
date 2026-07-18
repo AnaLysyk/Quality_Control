@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
-import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
-import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/backend/editableProfileRoles";
+import type { FixedProfileKind } from "@/backend/fixedProfilePresentation";
+import { JOB_TITLE_OPTIONS } from "@/backend/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ClientOption = { id: string; name: string; slug?: string | null };

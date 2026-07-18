@@ -6,7 +6,7 @@
     jest.resetModules();
     process.env.E2E_USE_JSON = "1";
     process.env.LOCAL_AUTH_IN_MEMORY = "true";
-    return import("../../../lib/auth/localStore");
+    return import("../../../backend/auth/localStore");
   }
 
   it("rejects creating two users with the same usuario", async () => {

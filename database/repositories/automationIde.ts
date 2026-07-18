@@ -1,5 +1,5 @@
 ﻿import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
-import type { AutomationCompanyScope } from "@/lib/automations/companyScope";
+import type { AutomationCompanyScope } from "@/backend/automations/companyScope";
 
 export type AutomationHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 

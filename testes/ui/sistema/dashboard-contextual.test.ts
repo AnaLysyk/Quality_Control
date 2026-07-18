@@ -5,7 +5,7 @@
   composeDashboardWidgets,
   filterDashboardSignals,
   type DashboardSignal,
-} from "@/lib/dashboard/contextual";
+} from "@/backend/dashboard/contextual";
 
 const baseSignal: DashboardSignal = {
   id: "s1",

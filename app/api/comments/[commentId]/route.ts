@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById, touchTicket } from "@/lib/ticketsStore";
-import { findTicketCommentById, softDeleteTicketComment, updateTicketComment } from "@/lib/ticketCommentsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { canViewTicket, isItDev } from "@/lib/rbac/tickets";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById, touchTicket } from "@/backend/ticketsStore";
+import { findTicketCommentById, softDeleteTicketComment, updateTicketComment } from "@/backend/ticketCommentsStore";
+import { appendTicketEvent } from "@/backend/ticketEventsStore";
+import { canViewTicket, isItDev } from "@/backend/rbac/tickets";
 
 export async function PATCH(req: Request, context: { params: Promise<{ commentId: string }> }) {
   const user = await authenticateRequest(req);

@@ -1,4 +1,4 @@
-﻿import { listLocalCompanies } from "@/lib/auth/localStore";
+﻿import { listLocalCompanies } from "@/backend/auth/localStore";
 
 type ClientEntry = {
   slug: string;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { listChatContacts } from "@/lib/chatContacts";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
+import { listChatContacts } from "@/backend/chatContacts";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

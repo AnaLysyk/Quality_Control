@@ -3,8 +3,8 @@
   decodeDefectAssigneeNote,
   encodeDefectAssigneeNote,
   summarizeDefectActivity,
-} from "@/lib/defectActivity";
-import type { DefectHistoryEvent } from "@/lib/manualDefectHistoryStore";
+} from "@/backend/defectActivity";
+import type { DefectHistoryEvent } from "@/backend/manualDefectHistoryStore";
 
 describe("defectActivity", () => {
   it("extracts comments and latest assignee from history", () => {

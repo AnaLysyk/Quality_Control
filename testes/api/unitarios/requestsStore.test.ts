@@ -3,10 +3,10 @@
 jest.mock("../../../database/persistenceMode", () => ({
   shouldUsePostgresPersistence: () => false,
 }));
-jest.mock("../../../lib/storeMode", () => ({
+jest.mock("../../../backend/storeMode", () => ({
   shouldUseJsonStore: () => false,
 }));
-jest.mock("../../../lib/redis", () => ({
+jest.mock("../../../backend/redis", () => ({
   isRedisConfigured: () => false,
   getRedis: () => null,
 }));

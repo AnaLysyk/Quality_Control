@@ -1,8 +1,8 @@
 ﻿// Mocks for dependencies (synchronous for Jest CommonJS environment)
-jest.mock('../../../lib/redis', () => ({
+jest.mock('../../../backend/redis', () => ({
   getRedis: jest.fn(),
 }));
-jest.mock('../../../lib/auth/localStore', () => ({
+jest.mock('../../../backend/auth/localStore', () => ({
   getLocalUserById: jest.fn(),
   listLocalCompanies: jest.fn(),
   listLocalLinksForUser: jest.fn(),
@@ -10,7 +10,7 @@ jest.mock('../../../lib/auth/localStore', () => ({
   normalizeLocalRole: jest.fn(),
   toLegacyRole: jest.fn(),
 }));
-jest.mock('../../../lib/permissions', () => ({
+jest.mock('../../../backend/permissions', () => ({
   resolveCapabilities: jest.fn(),
 }));
 jest.mock('jsonwebtoken', () => ({
@@ -24,10 +24,10 @@ jest.mock('@/database/prismaClient', () => ({
 }));
 
 // Import the module under test after setting up mocks
-import * as sessionStore from '@/lib/auth/session';
+import * as sessionStore from '@/backend/auth/session';
 
 // Import the mocked implementations for assertions
-const { getRedis } = require("@/lib/redis");
+const { getRedis } = require("@/backend/redis");
 const {
   getLocalUserById,
   listLocalCompanies,
@@ -35,8 +35,8 @@ const {
   normalizeGlobalRole,
   normalizeLocalRole,
   toLegacyRole,
-} = require("@/lib/auth/localStore");
-const { resolveCapabilities } = require("@/lib/permissions");
+} = require("@/backend/auth/localStore");
+const { resolveCapabilities } = require("@/backend/permissions");
 const jwt = require('jsonwebtoken');
 const { prisma } = require('@/database/prismaClient');
 

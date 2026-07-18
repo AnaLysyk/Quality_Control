@@ -1,6 +1,6 @@
 ﻿import { listClients } from "../../../database/repositories/clientsRepository";
 
-jest.mock("../../../lib/auth/localStore", () => ({
+jest.mock("../../../backend/auth/localStore", () => ({
   listLocalCompanies: jest.fn().mockResolvedValue([
     { slug: "client-a", name: "Client A" },
     { slug: "client-b", company_name: "Client B" },

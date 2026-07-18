@@ -1,40 +1,40 @@
-﻿jest.mock("@/lib/jwtAuth", () => ({
+﻿jest.mock("@/backend/jwtAuth", () => ({
   authenticateRequest: jest.fn(),
 }));
 
-jest.mock("@/lib/ticketsStore", () => ({
+jest.mock("@/backend/ticketsStore", () => ({
   getTicketById: jest.fn(),
   updateTicketStatus: jest.fn(),
 }));
 
-jest.mock("@/lib/ticketsPresenter", () => ({
+jest.mock("@/backend/ticketsPresenter", () => ({
   attachAssigneeToTicket: jest.fn(),
 }));
 
-jest.mock("@/lib/rbac/tickets", () => ({
+jest.mock("@/backend/rbac/tickets", () => ({
   canAccessGlobalTicketWorkspace: jest.fn(),
   canMoveTicket: jest.fn(),
 }));
 
-jest.mock("@/lib/ticketEventsStore", () => ({
+jest.mock("@/backend/ticketEventsStore", () => ({
   appendTicketEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/notificationService", () => ({
+jest.mock("@/backend/notificationService", () => ({
   notifyTicketStatusChanged: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/ticketsStatus", () => ({
+jest.mock("@/backend/ticketsStatus", () => ({
   getTicketStatusLabel: jest.fn(),
 }));
 
 import { PATCH } from "@/api/suportes/[id]/status/route";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
-import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/lib/rbac/tickets";
-import { notifyTicketStatusChanged } from "@/lib/notificationService";
-import { getTicketStatusLabel } from "@/lib/ticketsStatus";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById, updateTicketStatus } from "@/backend/ticketsStore";
+import { attachAssigneeToTicket } from "@/backend/ticketsPresenter";
+import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/backend/rbac/tickets";
+import { notifyTicketStatusChanged } from "@/backend/notificationService";
+import { getTicketStatusLabel } from "@/backend/ticketsStatus";
 
 describe("api/suportes/[id]/status notifications", () => {
   beforeEach(() => {

@@ -1,11 +1,11 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { emitBrainEvent } from "@/lib/brain/events";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { emitBrainEvent } from "@/backend/brain/events";
 import {
   canUseGlobalTestCaseScope,
   resolveAllowedProjectIds,
   resolveAllowedTestCaseCompanies,
-} from "@/lib/test-cases/testCasePermissions";
+} from "@/backend/test-cases/testCasePermissions";
 
 function matchesRunScope(user: AuthUser, companyId?: string | null, projectId?: string | null) {
   if (!canUseGlobalTestCaseScope(user)) {

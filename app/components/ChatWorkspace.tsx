@@ -23,8 +23,8 @@ import {
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
-import { fetchApi } from "@/lib/api";
-import { resolveActiveIdentity } from "@/lib/activeIdentity";
+import { fetchApi } from "@/backend/api";
+import { resolveActiveIdentity } from "@/backend/activeIdentity";
 
 type ChatContact = {
   id: string;

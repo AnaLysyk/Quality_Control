@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { createQualityRun, updateQualityRunStatus, updateRunItemResult } from "@/lib/runOperationStore";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { createQualityRun, updateQualityRunStatus, updateRunItemResult } from "@/backend/runOperationStore";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

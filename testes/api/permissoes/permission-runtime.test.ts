@@ -1,8 +1,8 @@
-﻿import { SYSTEM_ROLES } from "@/lib/auth/roles";
-import { getVisibleRouteIds } from "@/lib/navigation/get-visible-routes";
-import { SYSTEM_ROUTE_BY_ID } from "@/lib/navigation/route-map";
-import { canAccess, canAccessRoute } from "@/lib/permissions/can-access";
-import { getUserAccessContext } from "@/lib/permissions/get-user-access-context";
+﻿import { SYSTEM_ROLES } from "@/backend/auth/roles";
+import { getVisibleRouteIds } from "@/backend/navigation/get-visible-routes";
+import { SYSTEM_ROUTE_BY_ID } from "@/backend/navigation/route-map";
+import { canAccess, canAccessRoute } from "@/backend/permissions/can-access";
+import { getUserAccessContext } from "@/backend/permissions/get-user-access-context";
 
 function contextFor(
   role: string,

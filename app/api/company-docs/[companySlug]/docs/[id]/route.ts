@@ -1,9 +1,9 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
-import { canEditCompanyWiki } from "@/lib/companyWikiAccess";
-import { notifyCompanyWikiDocPublished } from "@/lib/notificationService";
+import { getAccessContext } from "@/backend/auth/session";
+import { canEditCompanyWiki } from "@/backend/companyWikiAccess";
+import { notifyCompanyWikiDocPublished } from "@/backend/notificationService";
 import { readCompanyDocs, writeCompanyDocs, nowIso, sanitizeSlug, type DocBlock } from "@/data/platformDocsStore";
-import { shouldNotifyWikiDocPublished } from "@/lib/wikiDocsStatus";
+import { shouldNotifyWikiDocPublished } from "@/backend/wikiDocsStatus";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ companySlug: string; id: string }> }) {
   try {

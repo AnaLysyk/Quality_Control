@@ -40,7 +40,7 @@ jest.mock("@/database/prismaClient", () => ({
   prisma: prismaMock,
 }));
 
-jest.mock("@/lib/test-cases/testCaseMappers", () => ({
+jest.mock("@/backend/test-cases/testCaseMappers", () => ({
   listSeedTestCaseRecords: jest.fn(() => []),
 }));
 
@@ -48,7 +48,7 @@ import {
   createManualTestCaseRecord,
   saveTestCaseAutomationLink,
   updateTestCaseRecord,
-} from "@/lib/test-cases/testCaseRepository";
+} from "@/backend/test-cases/testCaseRepository";
 
 describe("test case repository contracts", () => {
   beforeEach(() => {

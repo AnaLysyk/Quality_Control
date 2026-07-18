@@ -1,4 +1,4 @@
-﻿import { hasAdminClientToolAccess } from "../../../lib/adminClientAccess";
+﻿import { hasAdminClientToolAccess } from "../../../backend/adminClientAccess";
 
 describe("admin client access", () => {
   it("allows leader TC and technical support roles to see client admin tools", () => {

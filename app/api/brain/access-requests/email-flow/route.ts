@@ -2,8 +2,8 @@
 
 import { listAuditLogs } from "@/data/auditLogRepository";
 import { listBrainEmailFlow, isAccessRequestEmail, type BrainEmailFlowEntry } from "@/data/brainEmailFlowRepository";
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { listAccessRequestsV2 } from "@/lib/accessRequestsV2/repository";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { listAccessRequestsV2 } from "@/backend/accessRequestsV2/repository";
 
 const PUBLIC_ROUTES = [
   {

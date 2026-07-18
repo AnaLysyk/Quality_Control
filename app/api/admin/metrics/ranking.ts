@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { listClients } from "@/data/clientsRepository";
-import { getAccessContext } from "@/lib/auth/session";
+import { getAccessContext } from "@/backend/auth/session";
 
 const MOCK_CLIENTS = [
   { slug: "demo", name: "Demo" },

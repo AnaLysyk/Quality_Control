@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
-import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
+import { getAccessContext } from "@/backend/auth/session";
+import { getLocalUserById, updateLocalUser } from "@/backend/auth/localStore";
+import { hashPasswordSha256, safeEqualHex } from "@/backend/passwordHash";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 const MIN_PASSWORD_LENGTH = 8;

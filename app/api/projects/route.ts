@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
-import { resolveCompanyProjectVisibility } from "@/lib/permissions/projectAccess";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
+import { resolveCompanyProjectVisibility } from "@/backend/permissions/projectAccess";
 import { z } from "zod";
 
 export const runtime = "nodejs";

@@ -8,12 +8,12 @@ import {
   type ReleaseCalendarEvent,
   type ReleaseCalendarEventType,
 } from "@/data/releaseCalendarModel";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { getAccessContext } from "@/lib/auth/session";
-import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
-import { listReleaseCalendarEvents, updateReleaseCalendarEvent, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent, type ReleaseCalendarEventInput } from "@/lib/releaseCalendarStore";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/backend/permissionMatrix";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { createNotificationEvent, type NotificationEventRecipient } from "@/backend/notificationEventsStore";
+import { listReleaseCalendarEvents, updateReleaseCalendarEvent, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent, type ReleaseCalendarEventInput } from "@/backend/releaseCalendarStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

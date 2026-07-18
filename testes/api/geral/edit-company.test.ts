@@ -19,7 +19,7 @@ import {
   pgCreateLocalCompany,
   pgUpdateLocalCompany,
   pgDeleteLocalCompany,
-} from "@/lib/auth/pgStore";
+} from "@/backend/auth/pgStore";
 
 const describePg = describeDb; 
 

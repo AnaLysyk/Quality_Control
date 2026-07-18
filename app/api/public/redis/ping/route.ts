@@ -1,7 +1,7 @@
 ﻿import { NextRequest } from "next/server";
 
-import { apiFail, apiOk } from "@/lib/apiResponse";
-import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { apiFail, apiOk } from "@/backend/apiResponse";
+import { getRedis, isRedisConfigured } from "@/backend/redis";
 
 function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.REDIS_PING_SECRET;

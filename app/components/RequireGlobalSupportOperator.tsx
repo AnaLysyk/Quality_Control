@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 type RequireGlobalSupportOperatorProps = {
   children: ReactNode;

@@ -20,7 +20,7 @@ import {
   FiSearch,
 } from "react-icons/fi";
 import Breadcrumb from "@/components/Breadcrumb";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { useProjectContext } from "@/context/ProjectContext";
 
 type ProjectItem = {

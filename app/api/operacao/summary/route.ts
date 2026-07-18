@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { hasGlobalCompanyVisibility, resolveAllowedCompanySlugs } from "@/lib/companyDefectsAccess";
-import { listLocalCompanies } from "@/lib/auth/localStore";
-import { canAccess } from "@/lib/permissions/can-access";
-import { getUserAccessContext } from "@/lib/permissions/get-user-access-context";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { hasGlobalCompanyVisibility, resolveAllowedCompanySlugs } from "@/backend/companyDefectsAccess";
+import { listLocalCompanies } from "@/backend/auth/localStore";
+import { canAccess } from "@/backend/permissions/can-access";
+import { getUserAccessContext } from "@/backend/permissions/get-user-access-context";
 
 type OperationSignal = {
   id: string;

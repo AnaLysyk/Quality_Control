@@ -1,15 +1,15 @@
 ﻿import { NextResponse } from "next/server";
-import { createSuporte, listAllSuportes, listSuportesForUser } from "@/lib/ticketsStore";
-import { appendSuporteEvent } from "@/lib/ticketEventsStore";
-import { notifySuporteCreated } from "@/lib/notificationService";
-import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
-import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
-import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
+import { createSuporte, listAllSuportes, listSuportesForUser } from "@/backend/ticketsStore";
+import { appendSuporteEvent } from "@/backend/ticketEventsStore";
+import { notifySuporteCreated } from "@/backend/notificationService";
+import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/backend/ticketsPresenter";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { resolvePrimaryCompanySlug } from "@/backend/auth/normalizeAuthenticatedUser";
+import { assertCompanyAccess } from "@/backend/rbac/validateCompanyAccess";
+import { canAccessGlobalTicketWorkspace } from "@/backend/rbac/tickets";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { canCreateSupportTickets, canViewSupportBoard } from "@/lib/supportAccess";
+import { canCreateSupportTickets, canViewSupportBoard } from "@/backend/supportAccess";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;

@@ -1,6 +1,6 @@
 ﻿import "server-only";
 
-import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { getRedis, isRedisConfigured } from "@/backend/redis";
 import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();

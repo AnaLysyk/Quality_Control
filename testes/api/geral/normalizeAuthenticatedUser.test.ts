@@ -1,6 +1,6 @@
-﻿import { normalizeAuthenticatedUser, resolveCompanyAccess } from "@/lib/auth/normalizeAuthenticatedUser";
-import { SYSTEM_ROLES } from "@/lib/auth/roles";
-import { resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
+﻿import { normalizeAuthenticatedUser, resolveCompanyAccess } from "@/backend/auth/normalizeAuthenticatedUser";
+import { SYSTEM_ROLES } from "@/backend/auth/roles";
+import { resolveCompanyRouteAccessInput } from "@/backend/companyRoutes";
 
 describe("normalizeAuthenticatedUser", () => {
   it("normaliza clientSlugs, roles e permissions vindos em formatos antigos", () => {

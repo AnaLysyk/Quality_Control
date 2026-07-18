@@ -18,7 +18,7 @@ import {
   FiUploadCloud,
   FiX,
 } from "react-icons/fi";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { useClientContext } from "@/context/ClientContext";
 import { useProjectContext } from "@/context/ProjectContext";
 import TestCaseRepositoryImportExportPanel from "./TestCaseRepositoryImportExportPanel";

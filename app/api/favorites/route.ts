@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import type { CreateFavoriteInput, FavoriteItem } from "@/lib/navigation/favoritesTypes";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import type { CreateFavoriteInput, FavoriteItem } from "@/backend/navigation/favoritesTypes";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

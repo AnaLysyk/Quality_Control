@@ -13,7 +13,7 @@ import {
   THEME_RESOLVED_COOKIE,
   normalizeResolvedTheme,
   normalizeThemePreference,
-} from "@/lib/appSettingsCookies";
+} from "@/backend/appSettingsCookies";
 import "./globals.css";
 import "./operational-theme.css";
 import "./sidebar-dropdown-fix.css";

@@ -1,13 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import {
   BrainProviderSensitivePayloadError,
   canManageBrainProviderConfig,
   getBrainProviderConfigAdminPayload,
   isBrainProviderConfigStorageUnavailable,
   updateBrainProviderConfigs,
-} from "@/lib/brain/providerConfig";
+} from "@/backend/brain/providerConfig";
 
 const MIGRATION_ERROR = "Tabelas de configuracao dos providers do Brain ainda nao existem. Aplique a migration 20260708153000_add_brain_provider_config.";
 

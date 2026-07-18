@@ -21,7 +21,7 @@ import {
 } from "react-icons/fi";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { getAppMeta } from "@/lib/appMeta";
+import { getAppMeta } from "@/backend/appMeta";
 import css from "./CompanyIntelligenceDashboard.module.css";
 import type { CompanyDashboardData } from "./companyDashboardData";
 

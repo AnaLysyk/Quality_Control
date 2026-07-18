@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
 
 /**

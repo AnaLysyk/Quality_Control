@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { syncBrain } from "@/lib/brain-sync";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { syncBrain } from "@/backend/brain-sync";
 import { prisma } from "@/database/prismaClient";
 
 export async function POST(req: Request) {

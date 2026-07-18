@@ -1,4 +1,4 @@
-﻿import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
+﻿import { resolverAcessoUsuarios } from "@/backend/permissions/validarAcessoUsuarios";
 
 describe("acesso da feature de usuarios", () => {
   it("permite gestao completa para Lider TC", () => {

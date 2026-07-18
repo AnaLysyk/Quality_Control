@@ -3,8 +3,8 @@ import Papa from "papaparse";
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
 import type { Status } from "../types";
-import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
+import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/backend/auth/normalizeAuthenticatedUser";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
 
 type ImportItem = {
   title: string;

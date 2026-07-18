@@ -1,7 +1,7 @@
 import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 
 import { Role } from "@prisma/client";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 
 const TEST_PASSWORD = "Teste@12345";

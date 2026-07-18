@@ -3,27 +3,27 @@
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { createLocalCompany, createLocalUser, findLocalCompanyById, findLocalCompanyBySlug, listLocalCompanies, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
+import { createLocalCompany, createLocalUser, findLocalCompanyById, findLocalCompanyBySlug, listLocalCompanies, listLocalUsers, upsertLocalLink } from "@/backend/auth/localStore";
 import {
   composeAccessRequestMessage,
   normalizeAccessType,
   parseAccessRequestMessage,
-} from "@/lib/accessRequestMessage";
+} from "@/backend/accessRequestMessage";
 import { prisma } from "@/database/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
+import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/requestReviewAccess";
 import {
   normalizeRequestProfileType,
   toInternalAccessType,
-} from "@/lib/requestRouting";
-import { resolveEditableProfileUserState, type EditableProfileRole } from "@/lib/editableProfileRoles";
-import { notifyAccessRequestAccepted } from "@/lib/notificationService";
-import { resolveReviewQueue } from "@/lib/requestRouting";
-import { shouldUseJsonStore } from "@/lib/storeMode";
-import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
-import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
-import { transitionAccessRequest } from "@/lib/accessRequestsV2/service";
-import { reviewPasswordResetRequest } from "@/lib/passwordResetReview";
+} from "@/backend/requestRouting";
+import { resolveEditableProfileUserState, type EditableProfileRole } from "@/backend/editableProfileRoles";
+import { notifyAccessRequestAccepted } from "@/backend/notificationService";
+import { resolveReviewQueue } from "@/backend/requestRouting";
+import { shouldUseJsonStore } from "@/backend/storeMode";
+import { extractPasswordResetRequestId } from "@/backend/passwordResetAccessQueue";
+import { getAccessRequestV2ById } from "@/backend/accessRequestsV2/repository";
+import { transitionAccessRequest } from "@/backend/accessRequestsV2/service";
+import { reviewPasswordResetRequest } from "@/backend/passwordResetReview";
 
 type AcceptBody = {
   comment?: string;

@@ -1,6 +1,6 @@
 ﻿import { randomUUID } from "crypto";
 import { prisma } from "@/database/prismaClient";
-import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "@/lib/auth/pgStore";
+import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "@/backend/auth/pgStore";
 
 const uid = randomUUID().slice(0, 8);
 const COMPANY_NAME = `Empresa Integrações Teste ${uid}`;

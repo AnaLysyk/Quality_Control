@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
+import { authenticateRequest } from "@/backend/jwtAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

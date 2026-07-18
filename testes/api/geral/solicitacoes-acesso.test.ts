@@ -27,7 +27,7 @@
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 jest.mock("server-only", () => ({}));
-jest.mock("../../../lib/redis", () => ({ isRedisConfigured: jest.fn(() => false) }));
+jest.mock("../../../backend/redis", () => ({ isRedisConfigured: jest.fn(() => false) }));
 
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
@@ -40,8 +40,8 @@ import {
 } from "@/data/accessRequestsStore";
 import {
   pgCreateLocalUser,
-} from "@/lib/auth/pgStore";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+} from "@/backend/auth/pgStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 
 jest.setTimeout(30000);
 

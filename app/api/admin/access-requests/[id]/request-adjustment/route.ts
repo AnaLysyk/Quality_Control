@@ -8,15 +8,15 @@ import {
   parseAccessRequestMessage,
   type AccessRequestAdjustmentField,
   type AccessRequestAdjustmentRound,
-} from "@/lib/accessRequestMessage";
-import { notifyAccessRequestAdjustmentRequested } from "@/lib/notificationService";
+} from "@/backend/accessRequestMessage";
+import { notifyAccessRequestAdjustmentRequested } from "@/backend/notificationService";
 import { prisma } from "@/database/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
-import { resolveReviewQueue } from "@/lib/requestRouting";
-import { shouldUseJsonStore } from "@/lib/storeMode";
-import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
-import { transitionAccessRequest } from "@/lib/accessRequestsV2/service";
+import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
+import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/requestReviewAccess";
+import { resolveReviewQueue } from "@/backend/requestRouting";
+import { shouldUseJsonStore } from "@/backend/storeMode";
+import { getAccessRequestV2ById } from "@/backend/accessRequestsV2/repository";
+import { transitionAccessRequest } from "@/backend/accessRequestsV2/service";
 
 type AdjustmentBody = {
   comment?: string | null;

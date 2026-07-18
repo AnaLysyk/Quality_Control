@@ -7,7 +7,7 @@
   roleAtCompany?: string | null;
 };
 
-import type { SystemRole } from "@/lib/auth/roles";
+import type { SystemRole } from "@/backend/auth/roles";
 
 export type AppUser = {
   id: string;

@@ -1,10 +1,10 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getSubgraph, searchNodes } from "@/lib/brain";
-import { filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
-import { getExecutiveBrainContextGraph } from "@/lib/brain/executiveContext";
-import { sanitizeBrainMetadata, sanitizeBrainText } from "@/lib/brain/security";
-import { canAccess } from "@/lib/permissions/can-access";
+import { getSubgraph, searchNodes } from "@/backend/brain";
+import { filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
+import { getExecutiveBrainContextGraph } from "@/backend/brain/executiveContext";
+import { sanitizeBrainMetadata, sanitizeBrainText } from "@/backend/brain/security";
+import { canAccess } from "@/backend/permissions/can-access";
 import { prisma } from "@/database/prismaClient";
 
 function isE2eJsonMode() {

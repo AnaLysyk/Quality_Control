@@ -1,6 +1,6 @@
 ﻿import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
-import * as jiraSync from "@/lib/jiraSync";
+import * as jiraSync from "@/backend/jiraSync";
 
 describeDb("jiraSync.syncJiraIssuesToApplications", () => {
   beforeEach(() => {

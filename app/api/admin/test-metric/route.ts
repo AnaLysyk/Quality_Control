@@ -1,12 +1,12 @@
 ﻿import { NextRequest } from "next/server";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { apiFail, apiOk } from "@/lib/apiResponse";
-import { listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { apiFail, apiOk } from "@/backend/apiResponse";
+import { listLocalCompanies, type LocalAuthCompany } from "@/backend/auth/localStore";
 import { getAllReleases, type ReleaseEntry } from "@/release/data";
 import { getAllManualReleases } from "@/data/manualData";
 import type { Release as ManualRelease } from "@/types/release";
-import { buildCompanyRows, buildReleaseWithStats, sumStats, toPercent, type Stats } from "@/lib/quality";
-import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
+import { buildCompanyRows, buildReleaseWithStats, sumStats, toPercent, type Stats } from "@/backend/quality";
+import { resolveManualReleaseKind } from "@/backend/manualReleaseKind";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

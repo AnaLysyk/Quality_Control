@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from "@jest/globals";
 
-import { buildBrainNodeActions, resolveBrainAction } from "@/lib/brain/actions";
-import { buildBrainSearchIndex, searchBrainIndex } from "@/lib/brain/searchIndex";
+import { buildBrainNodeActions, resolveBrainAction } from "@/backend/brain/actions";
+import { buildBrainSearchIndex, searchBrainIndex } from "@/backend/brain/searchIndex";
 
 const baseAccess = {
   user: { id: "user-1", isGlobalAdmin: false },

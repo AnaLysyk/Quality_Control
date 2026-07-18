@@ -4,17 +4,17 @@ jest.mock("@/database/prismaClient", () => ({
   },
 }));
 
-jest.mock("@/lib/brain/sourceSettings", () => ({
+jest.mock("@/backend/brain/sourceSettings", () => ({
   BRAIN_SOURCE_MEMORY_TYPE: "BRAIN_SOURCE",
   canConfigureBrainSources: jest.fn(),
   createBrainSource: jest.fn(),
   isBrainSourceStorageUnavailable: jest.fn().mockReturnValue(false),
 }));
 
-import { detectFileKind, extractTextFromFile, importBrainFileDocument } from "@/lib/brain/fileImport";
-import { canConfigureBrainSources, createBrainSource } from "@/lib/brain/sourceSettings";
+import { detectFileKind, extractTextFromFile, importBrainFileDocument } from "@/backend/brain/fileImport";
+import { canConfigureBrainSources, createBrainSource } from "@/backend/brain/sourceSettings";
 import { prisma } from "@/database/prismaClient";
-import type { BrainAccessContext } from "@/lib/brain/access";
+import type { BrainAccessContext } from "@/backend/brain/access";
 
 function fakeAccess(): BrainAccessContext {
   return { user: { id: "user-1", email: "user@example.com", isGlobalAdmin: false } } as unknown as BrainAccessContext;

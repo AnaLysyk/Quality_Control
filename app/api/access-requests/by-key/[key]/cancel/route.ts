@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 
-import { cancelAccessRequestByKey } from "@/lib/accessRequestsV2/service";
+import { cancelAccessRequestByKey } from "@/backend/accessRequestsV2/service";
 
 export async function POST(_req: Request, context: { params: Promise<{ key: string }> }) {
   const { key } = await context.params;

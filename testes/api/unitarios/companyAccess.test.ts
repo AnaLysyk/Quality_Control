@@ -1,6 +1,6 @@
-﻿import { isCompanyUser } from "../../../lib/rbac/companyAccess";
-import { SYSTEM_ROLES } from "../../../lib/auth/roles";
-import type { AuthUser } from "../../../lib/jwtAuth";
+﻿import { isCompanyUser } from "../../../backend/rbac/companyAccess";
+import { SYSTEM_ROLES } from "../../../backend/auth/roles";
+import type { AuthUser } from "../../../backend/jwtAuth";
 
 describe("companyAccess - Controles Rígidos de Isolamento de Empresa", () => {
   describe("isCompanyUser", () => {

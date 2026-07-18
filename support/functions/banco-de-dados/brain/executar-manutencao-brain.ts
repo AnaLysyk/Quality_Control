@@ -1,4 +1,4 @@
-﻿import { runBrainDailyMaintenance } from "@/lib/brain/maintenanceService";
+﻿import { runBrainDailyMaintenance } from "@/backend/brain/maintenanceService";
 
 async function main() {
   const companySlug = process.argv.find((item) => item.startsWith("--company="))?.split("=")[1] ?? null;

@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { isCompanyUser } from "@/lib/rbac/companyAccess";
-import { withCompanyValidation } from "@/lib/middleware/withCompanyValidation";
-import { ProjectsStore, type ProjectRecord } from "@/lib/projects/projectsStore";
-import { getQaseIntegrationSettings } from "@/lib/integrations";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { isCompanyUser } from "@/backend/rbac/companyAccess";
+import { withCompanyValidation } from "@/backend/middleware/withCompanyValidation";
+import { ProjectsStore, type ProjectRecord } from "@/backend/projects/projectsStore";
+import { getQaseIntegrationSettings } from "@/backend/integrations";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";

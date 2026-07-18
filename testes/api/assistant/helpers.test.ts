@@ -8,7 +8,7 @@
   normalizeCommentForComparison,
   formatValidationIssues,
   sanitizeRoute,
-} from "@/lib/assistant/helpers";
+} from "@/backend/assistant/helpers";
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*  stripAccents                                    */

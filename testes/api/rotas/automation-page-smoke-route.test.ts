@@ -1,14 +1,14 @@
-﻿jest.mock("@/lib/jwtAuth", () => ({
+﻿jest.mock("@/backend/jwtAuth", () => ({
   authenticateRequest: jest.fn(),
 }));
 
-jest.mock("@/lib/automations/executionAuditStore", () => ({
+jest.mock("@/backend/automations/executionAuditStore", () => ({
   saveAutomationExecutionAudit: jest.fn().mockResolvedValue(undefined),
 }));
 
 import { POST } from "@/api/automations/qc/page-smoke/route";
-import { saveAutomationExecutionAudit } from "@/lib/automations/executionAuditStore";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { saveAutomationExecutionAudit } from "@/backend/automations/executionAuditStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
 
 const ORIGINAL_FETCH = global.fetch;
 const ORIGINAL_PORT = process.env.PORT;

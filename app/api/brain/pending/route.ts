@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { BrainGraphAnalyticsService } from "@/backend/brain/graphAnalyticsService";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import { prisma } from "@/database/prismaClient";
 
 export async function GET(req: Request) {

@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { runAssistantRequest } from "@/lib/assistant/service";
-import type { AssistantClientRequest } from "@/lib/assistant/types";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { runAssistantRequest } from "@/backend/assistant/service";
+import type { AssistantClientRequest } from "@/backend/assistant/types";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { hasPermissionAccess } from "@/backend/permissionMatrix";
 
 // Keep the API aligned with the client-side toggle used by ChatButton.
 const ASSISTANT_ENABLED = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";

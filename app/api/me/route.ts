@@ -4,8 +4,8 @@ import path from "node:path";
 
 import type { AuthCompany } from "@/../packages/contracts/src/auth";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAccessContext } from "@/lib/auth/session";
-import { buildCurrentUserResponse } from "@/lib/auth/currentUserResponse";
+import { getAccessContext } from "@/backend/auth/session";
+import { buildCurrentUserResponse } from "@/backend/auth/currentUserResponse";
 import {
   findLocalUserByEmailOrId,
   getLocalUserById,
@@ -14,12 +14,12 @@ import {
   listLocalUsers,
   normalizeLocalRole,
   updateLocalUser,
-} from "@/lib/auth/localStore";
-import { isAvatarKey } from "@/lib/avatarCatalog";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+} from "@/backend/auth/localStore";
+import { isAvatarKey } from "@/backend/avatarCatalog";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/backend/companyRoutes";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

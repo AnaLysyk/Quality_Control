@@ -7,10 +7,10 @@ import { CreateClientModal, type ClientFormValues } from "@/clients/components/C
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { hasAdminClientToolAccess } from "@/lib/adminClientAccess";
-import { fetchApi } from "@/lib/api";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import { hasAdminClientToolAccess } from "@/backend/adminClientAccess";
+import { fetchApi } from "@/backend/api";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/backend/apiEnvelope";
 import { FiCheckCircle, FiChevronLeft, FiChevronRight, FiCircle, FiExternalLink, FiEye, FiEyeOff, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle, FiCloudLightning, FiShield, FiTool, FiUser, FiUserPlus } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +21,7 @@ import {
   normalizeFixedProfileKind,
   resolveFixedProfileKind,
   type FixedProfileKind,
-} from "@/lib/fixedProfilePresentation";
+} from "@/backend/fixedProfilePresentation";
 import { mapClient, hasQaseTokenConfigured, hasJiraTokenConfigured, type Client } from "./companyMapper";
 
 // ============================================================================

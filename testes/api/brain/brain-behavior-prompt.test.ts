@@ -1,4 +1,4 @@
-import { buildBrainSystemPrompt } from "@/lib/brain/modelProvider";
+import { buildBrainSystemPrompt } from "@/backend/brain/modelProvider";
 
 describe("buildBrainSystemPrompt com perfil de comportamento", () => {
   it("sem perfil, mantem o prompt padrao sem secao de modo de conversa", () => {

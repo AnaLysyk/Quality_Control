@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { getTicketById } from "@/lib/ticketsStore";
-import { listTicketEvents } from "@/lib/ticketEventsStore";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { getTicketById } from "@/backend/ticketsStore";
+import { listTicketEvents } from "@/backend/ticketEventsStore";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;

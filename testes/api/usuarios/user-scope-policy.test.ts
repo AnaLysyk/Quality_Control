@@ -3,7 +3,7 @@
   canViewCompanyUsersByScope,
   normalizeScopeRoleKey,
   resolveUserScopePolicy,
-} from "@/lib/userScopePolicy";
+} from "@/backend/userScopePolicy";
 
 describe("user scope policy", () => {
   it("keeps company scope isolated without replacing permission matrix", () => {

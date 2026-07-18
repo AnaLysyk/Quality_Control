@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { createAccessRequestFromPayload } from "@/lib/accessRequestsV2/service";
-import { rateLimit } from "@/lib/rateLimit";
+import { createAccessRequestFromPayload } from "@/backend/accessRequestsV2/service";
+import { rateLimit } from "@/backend/rateLimit";
 
 const GENERIC_MESSAGE =
   "Sua solicitação foi recebida. Se os dados informados forem válidos, enviaremos atualizações pelo e-mail informado.";

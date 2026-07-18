@@ -3,7 +3,7 @@
 import {
   getPublicAccessRequestByKey,
   updateAccessRequestByKey,
-} from "@/lib/accessRequestsV2/service";
+} from "@/backend/accessRequestsV2/service";
 
 export async function GET(_req: Request, context: { params: Promise<{ key: string }> }) {
   const { key } = await context.params;

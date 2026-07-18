@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 
-import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
-import { resolveEdgeConfidence, toRecord } from "@/lib/brain/ontology";
+import { assertBrainNodeAccess, resolveBrainAccess } from "@/backend/brain/access";
+import { resolveEdgeConfidence, toRecord } from "@/backend/brain/ontology";
 import { prisma } from "@/database/prismaClient";
 
 export async function GET(

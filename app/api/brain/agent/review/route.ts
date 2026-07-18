@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import {
   createBrainAgentReview,
   reviewBrainAgentReview,
   type BrainAgentReviewAction,
-} from "@/lib/brain/agentReview";
-import { brainPrisma } from "@/lib/brain/brainPrisma";
+} from "@/backend/brain/agentReview";
+import { brainPrisma } from "@/backend/brain/brainPrisma";
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};

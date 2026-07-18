@@ -17,7 +17,7 @@
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 jest.mock("server-only", () => ({}));
-jest.mock("../../../lib/redis", () => ({ isRedisConfigured: jest.fn(() => false) }));
+jest.mock("../../../backend/redis", () => ({ isRedisConfigured: jest.fn(() => false) }));
 
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
@@ -31,15 +31,15 @@ import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import {
   composeAccessRequestMessage,
   parseAccessRequestMessage,
-} from "@/lib/accessRequestMessage";
+} from "@/backend/accessRequestMessage";
 import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgDeleteLocalCompany,
-} from "@/lib/auth/pgStore";
-import { createLocalUser } from "@/lib/auth/localStore";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { getLocalUserById } from "@/lib/auth/localStore";
+} from "@/backend/auth/pgStore";
+import { createLocalUser } from "@/backend/auth/localStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { getLocalUserById } from "@/backend/auth/localStore";
 
 jest.setTimeout(30000);
 

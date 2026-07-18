@@ -13,7 +13,7 @@ import {
   ProfileTabs,
   ProfileActions,
 } from "@/components/profile";
-import type { ProfileRuntimeContext, EntityType } from "@/lib/profile/types";
+import type { ProfileRuntimeContext, EntityType } from "@/backend/profile/types";
 
 export default function ProfileContent() {
   const router = useRouter();

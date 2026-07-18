@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { suggestNextUniqueLogin } from "@/lib/auth/localStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { suggestNextUniqueLogin } from "@/backend/auth/localStore";
 
 export async function POST(req: Request) {
   try {

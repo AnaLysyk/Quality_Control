@@ -59,8 +59,8 @@ const qualityControlSupportAndTestsCleanup = {
   files: [
     "support/**/*.{js,ts,mjs,cjs}",
     "testes/**/*.{js,ts,tsx}",
-    "data/**/*.{js,ts}",
-    "lib/core/auth/pgStore.ts"
+    "database/**/*.{js,ts}",
+    "backend/auth/pgStore.ts"
   ],
   rules: {
     "@typescript-eslint/no-explicit-any": "off",

@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 const BASE_DIR = path.join(process.cwd(), "data", "s3");
 

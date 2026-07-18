@@ -2,7 +2,7 @@
 import ManualReleaseActions from "@/components/ManualReleaseActions";
 import { EditReleaseButton } from "@/components/EditReleaseButton";
 import { QualityGateHistory } from "../QualityGateHistory";
-import type { RunDetailViewModel } from "@/lib/runDetailViewModel";
+import type { RunDetailViewModel } from "@/backend/runDetailViewModel";
 import type { ReleaseEntry } from "../data";
 
 const GATE_BADGE: Record<string, string> = {

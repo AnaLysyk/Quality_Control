@@ -1,6 +1,6 @@
-import { applyPermissionOverride, type PermissionMatrix } from "@/lib/permissionMatrix";
-import { canAccess } from "@/lib/permissions/can-access";
-import { getUserAccessContext } from "@/lib/permissions/get-user-access-context";
+import { applyPermissionOverride, type PermissionMatrix } from "@/backend/permissionMatrix";
+import { canAccess } from "@/backend/permissions/can-access";
+import { getUserAccessContext } from "@/backend/permissions/get-user-access-context";
 
 function contextFor(userId: string, permissions: PermissionMatrix) {
   return getUserAccessContext({

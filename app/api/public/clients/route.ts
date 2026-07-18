@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { listLocalCompanies } from "@/lib/auth/localStore";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { listLocalCompanies } from "@/backend/auth/localStore";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

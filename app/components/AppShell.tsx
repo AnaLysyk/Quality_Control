@@ -7,7 +7,7 @@ import { FiMenu } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
 import { useI18n } from "@/hooks/useI18n";
-import { hasFailedImageSrc, markFailedImageSrc } from "@/lib/failedImageSrc";
+import { hasFailedImageSrc, markFailedImageSrc } from "@/backend/failedImageSrc";
 import {
   canonicalizeCompanyPathnameForAccess,
   getCompanyRouteSection,
@@ -15,12 +15,12 @@ import {
   isCompanyHomePathname,
   isCompanyRoutePathname,
   parseCompanyRoutePathname,
-} from "@/lib/companyRoutes";
-import { normalizeLocale, type Locale } from "@/lib/i18n";
+} from "@/backend/companyRoutes";
+import { normalizeLocale, type Locale } from "@/backend/i18n";
 import {
   resolveFixedProfileKind,
   type FixedProfileKind,
-} from "@/lib/fixedProfilePresentation";
+} from "@/backend/fixedProfilePresentation";
 import { AppShellCoverSlotProvider } from "./AppShellCoverSlotContext";
 import MainWrapper from "./MainWrapper";
 import Sidebar from "@/features/menu-lateral/componentes/Sidebar";

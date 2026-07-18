@@ -1,6 +1,6 @@
-jest.mock("@/lib/auth/session", () => ({ getAccessContext: jest.fn() }));
-jest.mock("@/lib/serverPermissionAccess", () => ({ resolvePermissionAccessForUser: jest.fn() }));
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/session", () => ({ getAccessContext: jest.fn() }));
+jest.mock("@/backend/serverPermissionAccess", () => ({ resolvePermissionAccessForUser: jest.fn() }));
+jest.mock("@/backend/auth/localStore", () => ({
   getLocalUserById: jest.fn(),
   findLocalCompanyById: jest.fn(),
   findLocalCompanyBySlug: jest.fn(),
@@ -11,8 +11,8 @@ jest.mock("@/lib/auth/localStore", () => ({
   listLocalUsers: jest.fn(),
   updateLocalUser: jest.fn(),
 }));
-jest.mock("@/lib/avatarCatalog", () => ({ isAvatarKey: jest.fn(() => true) }));
-jest.mock("@/lib/companyRoutes", () => ({
+jest.mock("@/backend/avatarCatalog", () => ({ isAvatarKey: jest.fn(() => true) }));
+jest.mock("@/backend/companyRoutes", () => ({
   COMPANY_ROUTE_MODE_COOKIE: "company_route_mode",
   resolveCompanyRouteMode: jest.fn(() => "platform"),
 }));
@@ -20,14 +20,14 @@ jest.mock("@/data/auditLogRepository", () => ({ addAuditLogSafe: jest.fn() }));
 
 import { GET as getMe } from "@/api/me/route";
 import { GET as getAuthMe } from "@/api/auth/me/route";
-import { getAccessContext } from "@/lib/auth/session";
+import { getAccessContext } from "@/backend/auth/session";
 import {
   getLocalUserById,
   findLocalCompanyById,
   listLocalCompanies,
   listLocalLinksForUser,
-} from "@/lib/auth/localStore";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+} from "@/backend/auth/localStore";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 
 const mockedGetAccessContext = getAccessContext as jest.MockedFunction<typeof getAccessContext>;
 const mockedGetLocalUserById = getLocalUserById as jest.MockedFunction<typeof getLocalUserById>;

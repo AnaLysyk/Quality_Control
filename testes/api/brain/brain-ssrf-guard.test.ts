@@ -1,4 +1,4 @@
-import { guardOutboundUrl } from "@/lib/brain/ssrfGuard";
+import { guardOutboundUrl } from "@/backend/brain/ssrfGuard";
 
 describe("guardOutboundUrl - protecao SSRF para fontes externas do Brain", () => {
   it("bloqueia protocolos que nao sejam http/https", async () => {

@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { PERMISSION_MODULES } from "@/lib/permissionCatalog";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { PERMISSION_MODULES } from "@/backend/permissionCatalog";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 export const revalidate = 0;
 

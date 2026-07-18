@@ -1,9 +1,9 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAdminUserItem } from "@/lib/adminUsers";
-import { findLocalCompanyById, removeLocalLink } from "@/lib/auth/localStore";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getAdminUserItem } from "@/backend/adminUsers";
+import { findLocalCompanyById, removeLocalLink } from "@/backend/auth/localStore";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export async function DELETE(
   req: NextRequest,

@@ -125,7 +125,7 @@ function emitAuditLogToBrain(input: {
 }): void {
   void (async () => {
     try {
-      const { ingestSystemEventIntoBrain } = await import("@/lib/brain/systemIngest");
+      const { ingestSystemEventIntoBrain } = await import("@/backend/brain/systemIngest");
       await ingestSystemEventIntoBrain({
         action: input.action,
         entityType: input.entityType,

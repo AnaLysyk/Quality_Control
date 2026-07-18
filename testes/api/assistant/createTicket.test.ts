@@ -1,27 +1,27 @@
 ﻿/* â”€â”€ Mock server-only and all store/RBAC dependencies â”€â”€ */
 
-jest.mock("@/lib/auth/localStore", () => ({
+jest.mock("@/backend/auth/localStore", () => ({
   getLocalUserById: jest.fn().mockResolvedValue({ id: "u1", name: "Ana", email: "ana@test.com" }),
   findLocalCompanyBySlug: jest.fn().mockResolvedValue({ id: "c1", slug: "acme" }),
 }));
 
-jest.mock("@/lib/permissionMatrix", () => ({
+jest.mock("@/backend/permissionMatrix", () => ({
   hasPermissionAccess: jest.fn().mockReturnValue(true),
 }));
 
-jest.mock("@/lib/ticketEventsStore", () => ({
+jest.mock("@/backend/ticketEventsStore", () => ({
   appendTicketEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/notificationService", () => ({
+jest.mock("@/backend/notificationService", () => ({
   notifyTicketCreated: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/lib/ticketsPresenter", () => ({
+jest.mock("@/backend/ticketsPresenter", () => ({
   attachAssigneeToTicket: jest.fn().mockImplementation((t: Record<string, unknown>) => Promise.resolve(t)),
 }));
 
-jest.mock("@/lib/ticketsStore", () => ({
+jest.mock("@/backend/ticketsStore", () => ({
   createTicket: jest.fn().mockResolvedValue({
     id: "t1",
     code: "SP-000001",
@@ -36,17 +36,17 @@ jest.mock("@/lib/ticketsStore", () => ({
   }),
 }));
 
-jest.mock("@/lib/assistant/data", () => ({
+jest.mock("@/backend/assistant/data", () => ({
   buildPromptActions: jest.fn().mockReturnValue([]),
   displayName: jest.fn().mockReturnValue("Ana"),
   formatTicketCard: jest.fn().mockReturnValue("SP-000001 | Mock ticket | bug | high"),
 }));
 
-import { buildTicketCreationAction, executeCreateTicket } from "@/lib/assistant/tools/createTicket";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
-import { createTicket } from "@/lib/ticketsStore";
-import type { AuthUser } from "@/lib/jwtAuth";
-import type { AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
+import { buildTicketCreationAction, executeCreateTicket } from "@/backend/assistant/tools/createTicket";
+import { hasPermissionAccess } from "@/backend/permissionMatrix";
+import { createTicket } from "@/backend/ticketsStore";
+import type { AuthUser } from "@/backend/jwtAuth";
+import type { AssistantScreenContext, AssistantToolAction } from "@/backend/assistant/types";
 
 /* â”€â”€ Helpers â”€â”€ */
 

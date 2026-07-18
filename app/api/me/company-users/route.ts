@@ -1,26 +1,26 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { listAdminUserItems } from "@/lib/adminUsers";
-import { createLocalUser, upsertLocalLink } from "@/lib/auth/localStore";
-import { getAccessContext } from "@/lib/auth/session";
+import { listAdminUserItems } from "@/backend/adminUsers";
+import { createLocalUser, upsertLocalLink } from "@/backend/auth/localStore";
+import { getAccessContext } from "@/backend/auth/session";
 import {
   buildCompanyScopedUserState,
   isUserScopeLockedError,
-} from "@/lib/companyUserScope";
+} from "@/backend/companyUserScope";
 import {
   canManageInstitutionalCompanyAccess,
   resolveCurrentCompanyFromAccess,
-} from "@/lib/companyProfileAccess";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+} from "@/backend/companyProfileAccess";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hasPermissionAccess } from "@/backend/permissionMatrix";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 import {
   canCreateCompanyUsersByScope,
   canViewCompanyUsersByScope,
   resolveUserScopePolicy,
-} from "@/lib/userScopePolicy";
-import { readSyncedUserProfileFields } from "@/lib/userProfileData";
+} from "@/backend/userScopePolicy";
+import { readSyncedUserProfileFields } from "@/backend/userProfileData";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

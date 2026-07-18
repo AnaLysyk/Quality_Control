@@ -1,12 +1,12 @@
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getAccessContext } from "@/lib/auth/session";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getAccessContext } from "@/backend/auth/session";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 
-jest.mock("@/lib/auth/session", () => ({
+jest.mock("@/backend/auth/session", () => ({
   getAccessContext: jest.fn(),
 }));
 
-jest.mock("@/lib/serverPermissionAccess", () => ({
+jest.mock("@/backend/serverPermissionAccess", () => ({
   resolvePermissionAccessForUser: jest.fn(),
 }));
 

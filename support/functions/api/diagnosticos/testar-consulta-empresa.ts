@@ -1,5 +1,5 @@
 ﻿async function main() {
-  const { lookupCompanyByCnpj, lookupAddressByCep } = await import("@/lib/company-lookup/companyLookup");
+  const { lookupCompanyByCnpj, lookupAddressByCep } = await import("@/backend/company-lookup/companyLookup");
 
   const cnpj = process.env.TEST_CNPJ ?? "19131243000197";
   const cep = process.env.TEST_CEP ?? "01001000";

@@ -1,4 +1,4 @@
-﻿jest.mock("@/lib/auth/localStore", () => ({
+﻿jest.mock("@/backend/auth/localStore", () => ({
   getLocalUserById: jest.fn().mockResolvedValue({
     id: "u1",
     name: "Ana Silva",
@@ -6,7 +6,7 @@
   }),
 }));
 
-jest.mock("@/lib/assistant/data", () => ({
+jest.mock("@/backend/assistant/data", () => ({
   buildPromptActions: (context: { suggestedPrompts: string[] }) =>
     context.suggestedPrompts.slice(0, 4).map((prompt) => ({ kind: "prompt", label: prompt, prompt })),
   displayName: (user: { name?: string | null; email?: string | null } | null | undefined) =>
@@ -17,9 +17,9 @@ jest.mock("@/lib/assistant/data", () => ({
   isEmpresaUser: () => false,
 }));
 
-import type { AuthUser } from "@/lib/jwtAuth";
-import { toolGetScreenContext } from "@/lib/assistant/tools/getScreenContext";
-import type { AssistantScreenContext } from "@/lib/assistant/types";
+import type { AuthUser } from "@/backend/jwtAuth";
+import { toolGetScreenContext } from "@/backend/assistant/tools/getScreenContext";
+import type { AssistantScreenContext } from "@/backend/assistant/types";
 
 function makeUser(overrides: Partial<AuthUser> = {}): AuthUser {
   return {

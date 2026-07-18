@@ -8,7 +8,7 @@ delete process.env.EMAIL_CAPTURE_MODE;
 delete process.env.EMAIL_CAPTURE_FILE;
 
 async function main() {
-  const { emailService } = await import("@/lib/email");
+  const { emailService } = await import("@/backend/email");
 
   const to = process.env.TEST_EMAIL_TO;
 

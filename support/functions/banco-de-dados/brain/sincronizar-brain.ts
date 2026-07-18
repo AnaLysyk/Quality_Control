@@ -5,7 +5,7 @@ const log = (msg: string) => console.log(`[SYNC] ${msg}`)
 const logError = (msg: string, error?: unknown) =>
   console.error(`[SYNC ERROR] ${msg}`, error instanceof Error ? error.message : '')
 
-type BrainModule = typeof import('@/lib/brain')
+type BrainModule = typeof import('@/backend/brain')
 type NodeInput = Parameters<BrainModule['upsertNode']>[0]
 type CompanyScope = { companyId: string | null; companySlug: string | null }
 type BrainSyncDeps = {
@@ -29,7 +29,7 @@ async function loadDependencies(): Promise<BrainSyncDeps> {
   loadLocalEnv()
 
   const prismaModule = await import('@/database/prismaClient')
-  const brainModule = await import('@/lib/brain')
+  const brainModule = await import('@/backend/brain')
 
   dependencies = {
     prisma: prismaModule.prisma,

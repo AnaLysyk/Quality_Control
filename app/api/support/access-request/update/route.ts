@@ -3,7 +3,7 @@
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { getAccessRequestById, listAccessRequests, updateAccessRequest } from "@/data/accessRequestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { findLocalCompanyById } from "@/lib/auth/localStore";
+import { findLocalCompanyById } from "@/backend/auth/localStore";
 import {
   type AccessRequestAdjustmentEntry,
   type AccessRequestAdjustmentField,
@@ -12,9 +12,9 @@ import {
   normalizeAccessType,
   parseAccessRequestMessage,
   type AccessType,
-} from "@/lib/accessRequestMessage";
-import { notifyAccessRequestComment } from "@/lib/notificationService";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+} from "@/backend/accessRequestMessage";
+import { notifyAccessRequestComment } from "@/backend/notificationService";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 import {
   normalizeRequestProfileType,
@@ -22,9 +22,9 @@ import {
   resolveReviewQueue,
   toInternalAccessType,
   type RequestProfileType,
-} from "@/lib/requestRouting";
-import { shouldUseJsonStore } from "@/lib/storeMode";
-import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
+} from "@/backend/requestRouting";
+import { shouldUseJsonStore } from "@/backend/storeMode";
+import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/backend/accessRequestLookup";
 
 type SupportRequestRow = {
   id: string;

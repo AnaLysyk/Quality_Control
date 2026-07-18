@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { consumePasswordResetToken } from "@/lib/auth/passwordResetToken";
-import { updateLocalUser } from "@/lib/auth/localStore";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { consumePasswordResetToken } from "@/backend/auth/passwordResetToken";
+import { updateLocalUser } from "@/backend/auth/localStore";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 export async function POST(req: Request) {

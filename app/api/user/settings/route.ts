@@ -4,9 +4,9 @@ import {
   APP_SETTINGS_COOKIE_MAX_AGE,
   THEME_PREFERENCE_COOKIE,
   THEME_RESOLVED_COOKIE,
-} from "@/lib/appSettingsCookies";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
+} from "@/backend/appSettingsCookies";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/backend/i18n";
 import { readPersistentJson, writePersistentJson } from "@/database/persistentJsonStore";
 
 export const revalidate = 0;

@@ -1,13 +1,13 @@
 ﻿import { NextResponse } from "next/server";
 import { prisma } from "@/database/prismaClient";
-import { shouldUseJsonStore } from "@/lib/storeMode";
+import { shouldUseJsonStore } from "@/backend/storeMode";
 import { listAccessRequests } from "@/data/accessRequestsStore";
 import { listAccessRequestComments } from "@/data/accessRequestCommentsStore";
-import { extractAdminNotes, parseAccessRequestMessage } from "@/lib/accessRequestMessage";
-import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { resendAccessRequestCode } from "@/lib/accessRequestsV2/service";
-import { rateLimit } from "@/lib/rateLimit";
+import { extractAdminNotes, parseAccessRequestMessage } from "@/backend/accessRequestMessage";
+import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/backend/accessRequestLookup";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { resendAccessRequestCode } from "@/backend/accessRequestsV2/service";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

@@ -1,7 +1,7 @@
 ﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { hashPasswordSha256 } from "@/backend/passwordHash";
 
 type QualityAlertType =
   | "quality_score"

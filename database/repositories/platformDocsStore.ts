@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import crypto from "node:crypto";
-import { getOfficialCompanyDocsForSlug, mergePlatformDocsStore } from "@/lib/documentation/qualityControlOfficialDocs";
+import { getOfficialCompanyDocsForSlug, mergePlatformDocsStore } from "@/backend/documentation/qualityControlOfficialDocs";
 
 // â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

@@ -1,14 +1,14 @@
 ﻿import { NextResponse, NextRequest } from 'next/server';
 import { addAuditLogSafe } from '@/data/auditLogRepository';
-import { getAdminUserItem } from '@/lib/adminUsers';
-import { notifyUserAccessUpdated } from '@/lib/notificationService';
-import { invalidatePermissionAccessCache, resolvePermissionAccessForUser } from '@/lib/serverPermissionAccess';
-import { invalidateBrainCache } from '@/lib/brain/cache';
-import { requirePermission } from '@/lib/rbac/requirePermission';
+import { getAdminUserItem } from '@/backend/adminUsers';
+import { notifyUserAccessUpdated } from '@/backend/notificationService';
+import { invalidatePermissionAccessCache, resolvePermissionAccessForUser } from '@/backend/serverPermissionAccess';
+import { invalidateBrainCache } from '@/backend/brain/cache';
+import { requirePermission } from '@/backend/rbac/requirePermission';
 import {
   deleteUserPermissionOverride,
   setUserPermissionOverride,
-} from '@/lib/store/userPermissionsStore';
+} from '@/backend/store/userPermissionsStore';
 
 export const revalidate = 0;
 

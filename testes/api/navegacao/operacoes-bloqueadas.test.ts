@@ -1,10 +1,10 @@
-﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { NAV_CATALOG, type NavModuleDef } from "@/lib/navigation/navigationCatalog";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
-import { buildNavigationForUser } from "@/lib/navigation/navigationPermissions";
-import { canAccessRoute } from "@/lib/permissions/can-access";
-import { getUserAccessContext } from "@/lib/permissions/get-user-access-context";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+﻿import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { NAV_CATALOG, type NavModuleDef } from "@/backend/navigation/navigationCatalog";
+import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
+import { buildNavigationForUser } from "@/backend/navigation/navigationPermissions";
+import { canAccessRoute } from "@/backend/permissions/can-access";
+import { getUserAccessContext } from "@/backend/permissions/get-user-access-context";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 const ROLES: SystemRole[] = [
   SYSTEM_ROLES.LEADER_TC,

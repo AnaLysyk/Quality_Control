@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getMockRole } from "@/lib/rbac/defects";
-import { readAlertsStore } from "@/lib/qualityAlert";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getMockRole } from "@/backend/rbac/defects";
+import { readAlertsStore } from "@/backend/qualityAlert";
 
 export const revalidate = 0;
 

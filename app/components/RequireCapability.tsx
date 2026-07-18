@@ -3,7 +3,7 @@
 import { ReactNode, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { hasCapability, type Capability } from "@/lib/permissions";
+import { hasCapability, type Capability } from "@/backend/permissions";
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 
 type RequireCapabilityProps = {

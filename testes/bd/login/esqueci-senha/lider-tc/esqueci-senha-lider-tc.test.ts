@@ -17,14 +17,14 @@ process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 jest.mock("server-only", () => ({}));
 
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
-jest.mock("@/lib/email", () => ({
+jest.mock("@/backend/email", () => ({
   emailService: {
     sendPasswordResetEmail: jest.fn().mockResolvedValue(true),
   },
 }));
 
 import { prisma } from "../../../../../database/prismaClient";
-import { getRedis } from "../../../../../lib/redis";
+import { getRedis } from "../../../../../backend/redis";
 import {
   addRequest,
   listUserRequests,
@@ -36,9 +36,9 @@ import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgDeleteLocalCompany,
-} from "../../../../../lib/auth/pgStore";
-import { hashPasswordSha256 } from "../../../../../lib/passwordHash";
-import { getLocalUserById, updateLocalUser } from "../../../../../lib/auth/localStore";
+} from "../../../../../backend/auth/pgStore";
+import { hashPasswordSha256 } from "../../../../../backend/passwordHash";
+import { getLocalUserById, updateLocalUser } from "../../../../../backend/auth/localStore";
 
 jest.setTimeout(30000);
 

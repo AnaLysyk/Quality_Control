@@ -1,7 +1,7 @@
 ﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 
 import { type Role } from "@prisma/client";
-import { hashPasswordSha256 } from "../../../../../lib/passwordHash";
+import { hashPasswordSha256 } from "../../../../../backend/passwordHash";
 import { prisma } from "../../../../database/prismaClient";
 
 const senhaPadrao = process.env.QC_REVIEWER_PASSWORD ?? process.env.E2E_PROFILE_PASSWORD ?? "SenhaVisual@123";

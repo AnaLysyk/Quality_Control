@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { FiActivity, FiBarChart2, FiCheckCircle, FiCpu, FiGitBranch, FiLayers, FiList, FiMessageCircle, FiPlayCircle } from "react-icons/fi";
 
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type QaOperationStep = {
   id: string;

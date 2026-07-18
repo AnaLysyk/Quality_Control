@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { isCompanyUser } from "@/lib/rbac/companyAccess";
-import { getCompanyDefects } from "@/lib/companyDefects";
-import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { isCompanyUser } from "@/backend/rbac/companyAccess";
+import { getCompanyDefects } from "@/backend/companyDefects";
+import { hasGlobalCompanyVisibility } from "@/backend/companyDefectsAccess";
 
 function normalizeKanbanStatus(status: "open" | "in_progress" | "done") {
   if (status === "done") return "aprovado";

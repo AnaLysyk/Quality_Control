@@ -4,8 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAccessContext } from "@/lib/auth/session";
-import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { getLocalUserById, updateLocalUser } from "@/backend/auth/localStore";
 
 export const runtime = "nodejs";
 

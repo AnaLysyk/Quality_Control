@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FiAlertTriangle, FiCheckCircle, FiCode, FiGitBranch, FiRefreshCcw, FiSearch } from "react-icons/fi";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { useProjectContext } from "@/context/ProjectContext";
-import type { AutomationAccess } from "@/lib/automations/access";
+import type { AutomationAccess } from "@/backend/automations/access";
 
 type CompanyOption = {
   name: string;

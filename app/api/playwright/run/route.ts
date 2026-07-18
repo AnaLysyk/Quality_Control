@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createHash } from "crypto";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { startPlaywrightRun } from "@/lib/playwright/executionService";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
+import { startPlaywrightRun } from "@/backend/playwright/executionService";
 import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 
 export const runtime = "nodejs";

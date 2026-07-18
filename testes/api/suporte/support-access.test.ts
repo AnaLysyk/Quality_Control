@@ -6,7 +6,7 @@ import {
   canCreateSupportTickets,
   canManageSupportWorkflow,
   canViewSupportBoard,
-} from "../../../lib/supportAccess";
+} from "../../../backend/supportAccess";
 
 describe("supportAccess", () => {
   it("libera a tela para perfil empresa mesmo sem matriz carregada", () => {

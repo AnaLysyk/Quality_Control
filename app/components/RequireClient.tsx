@@ -5,7 +5,7 @@ import { ReactNode, useEffect, useMemo, useState, useSyncExternalStore } from "r
 import { usePathname, useRouter } from "next/navigation";
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPath } from "@/lib/companyRoutes";
+import { buildCompanyPath } from "@/backend/companyRoutes";
 
 type RequireClientProps = {
   slug?: string; // slug da rota /empresas/[slug]

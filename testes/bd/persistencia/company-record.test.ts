@@ -1,4 +1,4 @@
-﻿import { buildCompanyUpdatePatch, mapCompanyRecord } from "@/lib/companyRecord";
+﻿import { buildCompanyUpdatePatch, mapCompanyRecord } from "@/backend/companyRecord";
 
 describe("companyRecord persistence helpers", () => {
   it("preserves saved integrations from the integrations array when saving unrelated company details", () => {

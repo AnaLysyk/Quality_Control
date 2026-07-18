@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
-import { canAccessBrainModule, filterBrainDomainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
-import { sanitizeBrainMetadata } from "@/lib/brain/security";
-import { buildBrainSearchIndex, normalizeBrainSearchText, searchBrainIndex } from "@/lib/brain/searchIndex";
+import { canAccessBrainModule, filterBrainDomainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/backend/brain/access";
+import { sanitizeBrainMetadata } from "@/backend/brain/security";
+import { buildBrainSearchIndex, normalizeBrainSearchText, searchBrainIndex } from "@/backend/brain/searchIndex";
 import { prisma } from "@/database/prismaClient";
 
 function readString(value: unknown) {

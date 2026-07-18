@@ -1,14 +1,14 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import {
   archiveTestCaseRecord,
   getTestCaseRecord,
   updateTestCaseRecord,
-} from "@/lib/test-cases/testCaseRepository";
+} from "@/backend/test-cases/testCaseRepository";
 import {
   canAccessTestCaseRecord,
   canCreateTestCaseForCompany,
-} from "@/lib/test-cases/testCasePermissions";
+} from "@/backend/test-cases/testCasePermissions";
 import {
   TEST_CASE_AUTOMATION_STATUSES,
   TEST_CASE_PRIORITIES,
@@ -21,7 +21,7 @@ import {
   type TestCaseSource,
   type TestCaseStatus,
   type TestCaseType,
-} from "@/lib/test-cases/types";
+} from "@/backend/test-cases/types";
 
 function pickEnum<T extends string>(value: unknown, allowed: readonly T[]): T | undefined {
   if (typeof value !== "string") return undefined;

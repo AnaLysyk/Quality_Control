@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
+import { getAccessContext } from "@/backend/auth/session";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
 import { prisma } from "@/database/prismaClient";
-import { applyPermissionOverride, normalizePermissionMatrix } from "@/lib/permissionMatrix";
-import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { resolveProfilePermissionDefaults } from "@/lib/store/profilePermissionsStore";
-import { countPermissionActions } from "@/lib/store/userPermissionsStore";
+import { applyPermissionOverride, normalizePermissionMatrix } from "@/backend/permissionMatrix";
+import { validarAcessoUsuariosNoServidor } from "@/backend/permissions/validarAcessoUsuariosNoServidor";
+import { resolveProfilePermissionDefaults } from "@/backend/store/profilePermissionsStore";
+import { countPermissionActions } from "@/backend/store/userPermissionsStore";
 
 export const revalidate = 0;
 

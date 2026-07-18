@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 type CreateSupportTicketButtonProps = {
   hiddenTrigger?: boolean;

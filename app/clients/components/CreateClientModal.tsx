@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap, FiEdit2 } from "react-icons/fi";
-import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, isCnpjValid } from "@/lib/brasilApiCnpj";
+import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, isCnpjValid } from "@/backend/brasilApiCnpj";
 import UserAvatar from "@/components/UserAvatar";
 import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";
 

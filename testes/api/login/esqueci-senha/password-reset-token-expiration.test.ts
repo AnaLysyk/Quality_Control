@@ -44,7 +44,7 @@ describe("codigo de redefinicao enviado por e-mail", () => {
       consumePasswordResetToken,
       hasPasswordResetToken,
       storePasswordResetToken,
-    } = await import("../../../../lib/auth/passwordResetToken");
+    } = await import("../../../../backend/auth/passwordResetToken");
 
     const token = "codigo-email-expiravel";
 

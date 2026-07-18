@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { createAccessRequestFromPayload, listAccessRequestsForUser } from "@/lib/accessRequestsV2/service";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { createAccessRequestFromPayload, listAccessRequestsForUser } from "@/backend/accessRequestsV2/service";
 
 export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);

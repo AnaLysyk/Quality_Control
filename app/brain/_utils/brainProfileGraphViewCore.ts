@@ -1,4 +1,4 @@
-import { NAV_CATALOG } from "@/lib/navigation/navigationCatalog";
+import { NAV_CATALOG } from "@/backend/navigation/navigationCatalog";
 import type { BrainContextCompany, BrainContextProject, BrainEdge, BrainNode, BrainNodeStatus } from "../_types/brain.types";
 
 export type BrainViewerMode = "leadership" | "tc_user" | "company_user" | "company" | "unknown";

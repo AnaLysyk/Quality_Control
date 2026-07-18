@@ -1,4 +1,4 @@
-﻿import { maskQaseToken } from "@/lib/qaseTokenMask";
+﻿import { maskQaseToken } from "@/backend/qaseTokenMask";
 
 describe("maskQaseToken", () => {
   it("returns null when token is empty", () => {

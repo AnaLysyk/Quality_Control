@@ -6,7 +6,10 @@ import { ClientCreateRequestSchema, ClientListResponseSchema, ClientSchema } fro
 import { ErrorResponseSchema } from "@/contracts/errors";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { syncCompanyApplications } from "@/backend/applicationsStore";
-import { createLocalCompany, listLocalCompanies, type LocalAuthCompany } from "@/backend/auth/localStore";
+import { createLocalCompany, listLocalCompanies } from "@/backend/auth/localStore";
+import { mapCompanyRecord } from "@/backend/companyRecord";
+
+const MASK_SECRETS = { maskQaseToken: true, maskJiraToken: true } as const;
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -22,15 +25,6 @@ function toSlug(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
-}
-
-function asString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
-}
-
-function asStringArray(value: unknown): string[] | null {
-  if (!Array.isArray(value)) return null;
-  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
 }
 
 function normalizeProjectCodes(value: unknown): string[] | null {
@@ -51,62 +45,14 @@ function normalizeProjectCodes(value: unknown): string[] | null {
   return null;
 }
 
-function mapCompany(company: LocalAuthCompany) {
-  const normalizedProjectCodes = asStringArray(company.qase_project_codes);
-  const legacyProjectCode =
-    normalizedProjectCodes?.[0] ??
-    (typeof (company as { qase_project_code?: unknown }).qase_project_code === "string"
-      ? ((company as { qase_project_code?: string | null }).qase_project_code ?? null)
-      : null);
-  return {
-    id: company.id,
-    name: (company.name ?? company.company_name ?? "").toString(),
-    company_name: (company.company_name ?? company.name ?? "").toString(),
-    slug: company.slug,
-    tax_id: asString(company.tax_id),
-    address: asString(company.address),
-    phone: asString(company.phone),
-    website: asString(company.website),
-    logo_url: asString(company.logo_url),
-    docs_link: asString(company.docs_link ?? company.docs_url),
-    notes: asString(company.notes ?? company.description),
-    cep: asString(company.cep),
-    address_number: asString(company.address_number),
-    address_detail: asString(company.address_detail),
-    linkedin_url: asString(company.linkedin_url),
-    qase_project_code: legacyProjectCode,
-    qase_project_codes: normalizedProjectCodes,
-    qase_token: asString(company.qase_token),
-    jira_base_url: asString(company.jira_base_url),
-    jira_email: asString(company.jira_email),
-    jira_username: asString(company.jira_username),
-    jira_api_token: asString(company.jira_api_token),
-    integration_mode: asString(company.integration_mode),
-    integration_type: asString((company as { integration_type?: unknown }).integration_type),
-    notifications_fanout_enabled:
-      typeof (company as { notifications_fanout_enabled?: unknown }).notifications_fanout_enabled === "boolean"
-        ? ((company as { notifications_fanout_enabled?: boolean }).notifications_fanout_enabled ?? true)
-        : true,
-    integrations: Array.isArray((company as any).integrations)
-      ? (company as any).integrations.map((i: any) => ({ id: i.id ?? undefined, type: i.type, config: i.config ?? undefined, createdAt: i.createdAt ?? undefined }))
-      : undefined,
-    short_description: asString(company.short_description),
-    internal_notes: asString(company.internal_notes),
-    extra_notes: asString(company.extra_notes),
-    status: asString(company.status),
-    active: company.active ?? true,
-    updated_at: asString(company.updated_at),
-    created_at: asString(company.created_at),
-    created_by: asString(company.created_by),
-  };
-}
-
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const companies = await listLocalCompanies();
-  const payload = ClientListResponseSchema.parse({ items: companies.map(mapCompany) });
+  const payload = ClientListResponseSchema.parse({
+    items: companies.map((company) => mapCompanyRecord(company, MASK_SECRETS)),
+  });
   return NextResponse.json(payload, { status: 200 });
 }
 
@@ -115,8 +61,6 @@ export async function POST(req: NextRequest) {
   if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const body = await req.json().catch(() => null);
-  // Loga o payload recebido
-  console.error('[CLIENTS][POST] Payload recebido:', JSON.stringify(body));
   const parsed = ClientCreateRequestSchema.safeParse(body);
   if (!parsed.success) {
     // Loga o erro de válidação do Zod
@@ -198,8 +142,6 @@ export async function POST(req: NextRequest) {
     ...(input.admin_email ? { admin_email: input.admin_email } : {}),
   });
 
-  console.error('[CLIENTS][POST] company stored:', JSON.stringify(company));
-
   if (Array.isArray((input as any).qase_projects) && (input as any).qase_projects.length) {
     const projects = (input as any).qase_projects
       .filter((p: unknown): p is Record<string, unknown> => typeof p === "object" && p !== null)
@@ -216,7 +158,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const payload = ClientSchema.parse(mapCompany(company));
+  const payload = ClientSchema.parse(mapCompanyRecord(company, MASK_SECRETS));
 
   await addAuditLogSafe({
     actorUserId: admin.id,

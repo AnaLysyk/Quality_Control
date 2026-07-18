@@ -28,7 +28,10 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   const company = companies.find((item) => item.id === id);
   if (!company) return jsonError("Empresa não encontrada", 404);
 
-  return NextResponse.json(ClientSchema.parse(mapCompanyRecord(company)), { status: 200 });
+  return NextResponse.json(
+    ClientSchema.parse(mapCompanyRecord(company, { maskQaseToken: true, maskJiraToken: true })),
+    { status: 200 },
+  );
 }
 
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -119,7 +122,10 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     },
   });
 
-  return NextResponse.json(ClientSchema.parse(mapCompanyRecord(updated)), { status: 200 });
+  return NextResponse.json(
+    ClientSchema.parse(mapCompanyRecord(updated, { maskQaseToken: true, maskJiraToken: true })),
+    { status: 200 },
+  );
 }
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {

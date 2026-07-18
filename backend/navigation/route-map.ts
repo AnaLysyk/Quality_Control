@@ -348,6 +348,17 @@ const CORE_SYSTEM_ROUTES = [
     mainFile: "app/empresas/[slug]/planos-de-teste/page.tsx",
   },
   {
+    id: "testes-manuais.planos-standalone",
+    moduleId: "testes-manuais",
+    path: "/planos-de-teste",
+    label: "Planos de teste",
+    description: "Mesma tela de testes-manuais.planos, sem empresa fixa na URL — resolve a empresa ativa via contexto de sessão (perfis internos como suporte técnico).",
+    requiredPermission: { moduleId: "test_plan", action: "read" },
+    expectedProfiles: ALL_PROFILES,
+    status: "ativo",
+    mainFile: "app/planos-de-teste/page.tsx",
+  },
+  {
     id: "testes-manuais.runs",
     moduleId: "testes-manuais",
     path: "/empresas/[slug]/runs",

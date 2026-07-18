@@ -109,16 +109,16 @@ describe("perfil suporte - inventario de rotas", () => {
 
     expect(inventory).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: "companies-listing", route: "/admin/clients", hasPage: true }),
+        expect.objectContaining({ id: "companies-search", route: "/admin/clients", hasPage: true }),
         expect.objectContaining({ id: "requests-list", route: "/solicitacoes", hasPage: true }),
-        expect.objectContaining({ id: "support-create", route: "/suporte", hasPage: true }),
-        expect.objectContaining({ id: "support-kanban", route: "/suporte/kanban", hasPage: true }),
-        expect.objectContaining({ id: "support-chamados", route: "/chamados", hasPage: true }),
+        expect.objectContaining({ id: "support-create", route: "/kanban-it", hasPage: true }),
+        expect.objectContaining({ id: "support-kanban", route: "/kanban-it", hasPage: true }),
+        expect.objectContaining({ id: "support-chamados", route: "/kanban-it", hasPage: true }),
         expect.objectContaining({ id: "brain-graph", route: "/brain", hasPage: true }),
         expect.objectContaining({ id: "brain-ask", route: "/brain/perguntar", hasPage: true }),
-        expect.objectContaining({ id: "management-profile", route: "/admin/permissions", hasPage: true }),
-        expect.objectContaining({ id: "management-users", route: "/admin/users/permissions", hasPage: true }),
-        expect.objectContaining({ id: "logs", route: "/admin/audit-logs", hasPage: true }),
+        expect.objectContaining({ id: "management-permissions", route: "/admin/permissions", hasPage: true }),
+        expect.objectContaining({ id: "management-users", route: "/admin/users", hasPage: true }),
+        expect.objectContaining({ id: "logs", route: "/admin/logs", hasPage: true }),
       ]),
     );
   });

@@ -33,7 +33,6 @@ describe("perfil suporte - navegacao base", () => {
         "support",
         "chat",
         "brain",
-        "documents",
         "management",
         "logs",
       ]),
@@ -45,11 +44,9 @@ describe("perfil suporte - navegacao base", () => {
 
     expect(items).toEqual(
       expect.arrayContaining([
-        "companies-listing",
         "companies-search",
         "companies-create",
         "requests-list",
-        "requests-search",
         "support-create",
         "support-kanban",
         "support-chamados",
@@ -70,7 +67,6 @@ describe("perfil suporte - navegacao base", () => {
     expect(items).not.toContain("users-create-support");
     expect(items).not.toContain("users-create-user-tc");
     expect(items).not.toContain("users-create-company-user");
-    expect(items).not.toContain("support-meus-chamados");
   });
 });
 

@@ -22,6 +22,7 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { fetchApi } from "@/backend/api";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useClientContext } from "@/context/ClientContext";
 import { useProjectContext } from "@/context/ProjectContext";
 import {
   buildQaseCaseLink,
@@ -457,11 +458,17 @@ function normalizeCasesForSave(source: "manual" | "local" | "automation" | "qase
     .map((id) => ({ id }));
 }
 
-export default function TestPlansPage() {
+export default function TestPlansClient({
+  initialCompanySlug,
+}: {
+  initialCompanySlug?: string;
+} = {}) {
   const { user } = useAuthUser();
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: routeSlug } = useParams<{ slug?: string }>();
+  const { activeClientSlug } = useClientContext();
   const { language } = useI18n();
   const { activeProject: selectedProject } = useProjectContext();
+  const slug = initialCompanySlug ?? routeSlug ?? activeClientSlug ?? undefined;
   const copy = (COPY[language] ?? COPY["pt-BR"]) as CopyType;
   const roleKey =
     (typeof user?.permissionRole === "string" && user.permissionRole.trim()) ||
@@ -491,13 +498,14 @@ export default function TestPlansPage() {
 
   useEffect(() => {
     if (!slug) return;
+    const companySlug = slug;
     let canceled = false;
 
     async function loadApplications() {
       setLoadingApplications(true);
       setError(null);
       try {
-        const response = await fetchApi(`/api/applications?companySlug=${encodeURIComponent(slug)}`);
+        const response = await fetchApi(`/api/applications?companySlug=${encodeURIComponent(companySlug)}`);
         const payload = await response.json().catch(() => null);
         if (!response.ok) throw new Error(copy.errLoadApp);
         const items = Array.isArray(payload?.items) ? (payload.items as ApplicationItem[]) : [];

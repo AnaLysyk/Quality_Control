@@ -12,7 +12,14 @@ import {
   validateBrainIntegrity,
 } from '@/backend/brain'
 
-describe('Brain - Cérebro do Quality Control', () => {
+// Teste de integração real (opera direto no Postgres via prisma, sem mock).
+// Só roda quando DATABASE_URL aponta pra um banco de verdade (ex.: via
+// "npm run brain:test" com a env var definida); no restante da suíte
+// (npm test/test:coverage) o setup global apaga DATABASE_URL de propósito,
+// e describePg vira describe.skip pra não quebrar por falta de banco.
+const describePg = process.env.DATABASE_URL ? describe : describe.skip
+
+describePg('Brain - Cérebro do Quality Control', () => {
   let testCompanyNodeId: string
   let testAppNodeId: string
   let testModuleNodeId: string

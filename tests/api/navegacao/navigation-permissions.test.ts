@@ -26,11 +26,17 @@ function itemIds(modules: NavModuleDef[]) {
 }
 
 describe("navigation permission filtering", () => {
-  it("hides QA and privileged support links from company users without permissions", () => {
+  // buildNavigationForUser só decide RBAC por papel (o que o perfil pode ver
+  // em tese), sem conhecer empresa/projeto ativos — por isso "quality" segue
+  // permitido aqui pro company_user. A regra "sem projeto vinculado o módulo
+  // quality fica sem itens e desaparece do menu" é aplicada depois, na
+  // camada de contexto (computeNavigationModules, ver
+  // navigation-project-scope.test.ts).
+  it("allows QA module by role, but hides privileged support links from company users without permissions", () => {
     const modules = buildClientNavigation(SYSTEM_ROLES.COMPANY_USER);
     const items = itemIds(modules);
 
-    expect(moduleIds(modules)).not.toContain("quality");
+    expect(moduleIds(modules)).toContain("quality");
     expect(items).not.toContain("support-chamados");
     expect(items).toEqual(
       expect.arrayContaining([

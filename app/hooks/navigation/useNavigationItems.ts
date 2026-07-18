@@ -684,6 +684,46 @@ function filterByActiveContext(modules: NavModuleDef[], companySlug: string | nu
   });
 }
 
+// Monta os módulos visíveis dado o papel do usuário + o contexto de
+// empresa/projeto ativo. Extraído do useMemo do hook pra ser testável sem
+// precisar montar ClientContext/ProjectContext/usePermissionAccess reais —
+// é aqui (não em buildNavigationForUser) que mora a regra "sem projeto
+// vinculado, o módulo quality (e outros com itens PROJECT_SCOPED_ITEM_IDS)
+// fica sem itens visíveis e desaparece do menu".
+export function computeNavigationModules(params: {
+  isClientProfile: boolean;
+  effectiveRole: SystemRole | null;
+  roleForFiltering: SystemRole | null;
+  permissions?: PermissionMatrix | null;
+  accessContext?: Parameters<typeof buildNavigationForUser>[3];
+  companySlug: string | null;
+  activeProjectSlug: string | null;
+  companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2];
+}): NavModuleDef[] {
+  const {
+    isClientProfile,
+    effectiveRole,
+    roleForFiltering,
+    permissions,
+    accessContext,
+    companySlug,
+    activeProjectSlug,
+    companyRouteInput,
+  } = params;
+
+  const baseCatalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
+  const catalog = withScopedManagementModule(baseCatalog, effectiveRole);
+  const contextCatalog = filterByActiveContext(catalog, companySlug, activeProjectSlug).filter(
+    (module) => !DISABLED_MODULE_IDS.has(module.id),
+  );
+  const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
+  const resolvedModules = filtered
+    .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole, permissions))
+    .filter((mod) => mod.href || mod.items.length > 0);
+
+  return withReleaseAgendaModule(resolvedModules, effectiveRole, permissions);
+}
+
 function withReleaseAgendaModule(modules: NavModuleDef[], effectiveRole: SystemRole | null, permissions?: PermissionMatrix | null) {
   if (!effectiveRole || !AGENDA_ROLES.includes(effectiveRole)) return modules;
   if (!hasPermissionAccess(permissions, "release_calendar", "view")) return modules;
@@ -762,17 +802,16 @@ export function useNavigationItems() {
   const modules = useMemo<NavModuleDef[]>(() => {
     if (!user) return [];
 
-    const baseCatalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
-    const catalog = withScopedManagementModule(baseCatalog, effectiveRole);
-    const contextCatalog = filterByActiveContext(catalog, companySlug, activeProjectSlug).filter(
-      (module) => !DISABLED_MODULE_IDS.has(module.id),
-    );
-    const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
-    const resolvedModules = filtered
-      .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole, permissions))
-      .filter((mod) => mod.href || mod.items.length > 0);
-
-    return withReleaseAgendaModule(resolvedModules, effectiveRole, permissions);
+    return computeNavigationModules({
+      isClientProfile,
+      effectiveRole,
+      roleForFiltering,
+      permissions,
+      accessContext,
+      companySlug,
+      activeProjectSlug,
+      companyRouteInput,
+    });
   }, [
     user,
     isClientProfile,

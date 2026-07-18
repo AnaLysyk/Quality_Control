@@ -180,6 +180,53 @@ da reorganização. Registrado aqui para virar um trabalho futuro deliberado.
   `api/releases` (plural) vs `api/releases-manual` (plural) — quatro
   namespaces para o que lê como um domínio só.
 
+**Investigado na Fase 5 (2026-07-18):**
+
+- `api/release-calendar` é **falso positivo**: é a agenda/calendário de
+  releases (`app/agenda/*` — agendamento de reuniões, painel de calendário),
+  conceito totalmente diferente que só compartilha a palavra "release".
+  Nenhuma ação necessária.
+- `app/release` (com `api/releases` e `api/releases-manual/[slug]/cases`) é
+  a feature real e ativa — lista de releases + casos manuais associados a
+  um release por slug. Nenhuma ação necessária, os dois namespaces plural
+  cobrem sub-conceitos diferentes do mesmo recurso (não são duplicata um do
+  outro).
+- `app/painel-releases-manuais/page.tsx` é um **scaffold/demo morto**:
+  `COMPANY_ID = "ID_DA_EMPRESA_AQUI"` literal, nunca ligado a dado real.
+  `app/painel-releases-manuais-autenticado/page.tsx` é a versão que
+  substituiu o scaffold (usa `useAuthUser`/`useClientContext` de verdade),
+  mas **nenhuma das duas tem link/redirect apontando pra ela em lugar
+  nenhum do app** — órfãs. Ambas renderizam `ReleaseManualList`/`DefectList`,
+  que chamam `api/release-manual` (singular) — devidamente autenticado
+  (`authenticateRequest`), sem vulnerabilidade, só sem nenhum consumidor
+  vivo.
+  **Recomendação (avaliada, não executada)**: confirmar ausência de
+  consumidor externo e remover as duas páginas órfãs + `api/release-manual`
+  (singular), já que o recurso equivalente vive hoje em
+  `api/releases-manual/[slug]`.
+
+## Outras duplicações já autodocumentadas em `route-map.ts`
+
+Enquanto investigava o domínio de releases, `backend/navigation/route-map.ts`
+revelou ter seu próprio mecanismo de nota (`status: "legado"` + campo
+`notes`) para marcar rotas que já são conhecidas como duplicadas/legado,
+independente desta lista. Vale registrar aqui pra não perder de vista:
+
+- `/automacoes/fluxos` e `/automacoes/scripts` — nota do autor: "Fluxos,
+  Scripts e UI Studio eram 3 rotas para o mesmo componente
+  (AutomationStudio.tsx). A tela canônica passou a ser
+  `/automacoes/ui-studio`; esta rota só redireciona." Já resolvido (redirect
+  stub), nenhuma ação necessária.
+- `/automacoes/casos` — nota: "A navegação canônica de casos manuais
+  permanece em `/casos-de-teste`." Relevante pro item "runs vs test-runs e
+  casos-de-teste vs test-cases" desta lista.
+- `/conversas` — nota: "Avaliar consolidação com `/chat`." Domínio novo, não
+  estava nesta lista original.
+- `/profile` — nota: "Avaliar consolidação com `/settings/profile`."
+  Relevante pro domínio "usuário atual (me/profile)" desta lista.
+- `/admin/permissoes` — já resolvido na Fase 5 (ver domínio de usuário
+  acima).
+
 ## Domínio de documentação
 
 - Páginas: `app/docs` vs `app/documentacao` vs `app/documentos`.

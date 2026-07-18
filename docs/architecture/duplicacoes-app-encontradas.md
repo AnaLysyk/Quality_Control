@@ -127,6 +127,38 @@ da reorganização. Registrado aqui para virar um trabalho futuro deliberado.
 - API: `api/support` vs `api/suportes` (plural português) vs `api/chamados`
   vs `api/tickets` (inglês).
 
+**Investigado na Fase 5 (2026-07-18):**
+
+- `api/support` é **falso positivo**: não tem nada a ver com chamados de
+  suporte — é "solicitação de acesso"/"esqueci minha senha"
+  (`api/support/access-request`, `api/support/forgot-password`). Nenhuma
+  ação necessária.
+- `api/suportes/route.ts` já é um **wrapper de compatibilidade
+  intencional**: `export { GET, POST } from "../tickets/route"` — reaproveita
+  o handler de `api/tickets` de propósito, não é uma reimplementação
+  paralela. Usado por `app/meus-chamados`, `app/kanban-it`,
+  `app/components/KanbanSuportes.tsx` e `CreateSupportTicketButton.tsx`.
+- `app/suporte/page.tsx` é um redirect stub pra `/admin/chamados`, que por
+  sua vez é um *gate* que redireciona (por papel) pra `/kanban-it` ou
+  `/meus-chamados` — nunca pra `/chamados`. Mesmo padrão de "página vira
+  redirect legado" já visto em `app/admin/permissoes`.
+- `app/chamados/page.tsx` (com sua própria API `api/chamados`, reimplementação
+  completa e paralela sobre o mesmo `backend/ticketsStore`, devidamente
+  autenticada em todos os métodos — não é um buraco de segurança) **não tem
+  nenhum link/redirect apontando pra ela em lugar nenhum do app** — órfã,
+  igual ao par `app/clients`/`app/clients-list` do domínio de empresa e ao
+  par `CreateUserForm.tsx`/`api/user` do domínio de usuário. Está listada em
+  `CORE_SYSTEM_ROUTES` (`backend/navigation/route-map.ts`, id
+  `suporte.chamados`), mas a cadeia de redirecionamento real evoluiu e
+  parou de apontar pra ela.
+- `api/tickets` é a implementação canônica de fato: mais completa (backup,
+  export, import, versions, comments, events, timeline) e é quem
+  `api/suportes` reaproveita por baixo. Usada diretamente por
+  `TicketsButton.tsx`, `TicketDetailsModal.tsx`, `NotificationsButton.tsx`.
+  **Recomendação (avaliada, não executada)**: confirmar que `app/chamados`
+  e `api/chamados` não têm nenhum consumidor externo, migrar o que
+  sobrar pra `api/tickets`, e remover a página e a API órfãs.
+
 ## Domínio de vínculos ("Gestão de Vínculos")
 
 - Duas rotas vivas, ambas guardadas no servidor e explicitamente excluídas do

@@ -6,6 +6,7 @@ import { canCreateRun, canDeleteRun, getRunMockRole, resolveRunRole } from "@/ba
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { notifyIntegrationRunCreated } from "@/backend/notificationService";
 import { syncReleaseToBrain } from "@/backend/brain-sync";
+import { canAccessCompanyDefects, hasGlobalCompanyVisibility, resolveAllowedCompanySlugs } from "@/backend/companyDefectsAccess";
 
 // Garantir ambiente Node para fs
 export const runtime = "nodejs";
@@ -14,12 +15,29 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const companySlugParam = url.searchParams.get("companySlug") || undefined;
 
+  const user = await authenticateRequest(request);
+  if (!user) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+  if (companySlugParam && !canAccessCompanyDefects(user, companySlugParam)) {
+    return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
+  }
+  const hasGlobalVisibility = hasGlobalCompanyVisibility(user);
+  const allowedCompanySlugs = resolveAllowedCompanySlugs(user);
+
   const releases = await getAllReleases();
 
-  // Filtra por empresa se o parâmetro foi fornecido
+  // Filtra por empresa: pelo slug solicitado (quando informado) ou, para
+  // quem não tem visão global, pelas empresas às quais o usuário tem acesso.
   const filteredReleases = companySlugParam
     ? releases.filter((r) => r.clientId === companySlugParam || r.clientName === companySlugParam)
-    : releases;
+    : hasGlobalVisibility
+      ? releases
+      : releases.filter(
+          (r) =>
+            (r.clientId && allowedCompanySlugs.includes(r.clientId)) ||
+            (r.clientName && allowedCompanySlugs.includes(r.clientName)),
+        );
 
   // normaliza payload com id/title/status consistente para o Kanban/listas
   const normalized = filteredReleases.map((r) => ({

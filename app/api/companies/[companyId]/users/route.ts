@@ -11,9 +11,27 @@ import {
   upsertLocalLink,
 } from "@/backend/auth/localStore";
 import { getAccessContext } from "@/backend/auth/session";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { isUserScopeLockedError } from "@/backend/companyUserScope";
 import { generateTempPassword, hashPasswordSha256 } from "@/backend/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { assertCompanyAccess } from "@/backend/rbac/validateCompanyAccess";
+
+async function requireCompanyMemberAccess(req: NextRequest, companyId: string) {
+  const user = await authenticateRequest(req);
+  if (!user) {
+    return { response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }) };
+  }
+  try {
+    await assertCompanyAccess(user, companyId);
+    return { user };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const status = message === "MISSING_COMPANY_ID" ? 400 : 403;
+    const errorMessage = status === 400 ? "companyId é obrigatório" : "Sem permissão";
+    return { response: NextResponse.json({ error: errorMessage }, { status }) };
+  }
+}
 
 export const revalidate = 0;
 
@@ -53,10 +71,13 @@ async function parseCompanyId(
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ companyId: string }> },
 ) {
   const companyId = await parseCompanyId(context);
+  const { user, response } = await requireCompanyMemberAccess(req, companyId);
+  if (!user) return response;
+
   const users = await listAdminUserItems({ companyId });
   return NextResponse.json(users);
 }
@@ -149,12 +170,21 @@ export async function PATCH(
   context: { params: Promise<{ companyId: string }> },
 ) {
   const companyId = await parseCompanyId(context);
+  const { user, response } = await requireCompanyMemberAccess(req, companyId);
+  if (!user) return response;
+
   const body = await req.json().catch(() => null);
   const userId = typeof body?.id === "string" ? body.id : "";
   const updates = body?.updates && typeof body.updates === "object" ? body.updates : null;
 
   if (!userId || !updates) {
     return NextResponse.json({ error: "Campos obrigatorios" }, { status: 400 });
+  }
+
+  const targetBeforeUpdate = await getAdminUserItem(userId);
+  const targetCompanyIds = targetBeforeUpdate?.companyIds ?? targetBeforeUpdate?.company_ids ?? [];
+  if (!targetBeforeUpdate || !targetCompanyIds.includes(companyId)) {
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const email = typeof updates.email === "string" ? updates.email.trim().toLowerCase() : null;

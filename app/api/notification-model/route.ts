@@ -6,6 +6,7 @@ import { getNotificationEventsSummary, listNotificationEvents } from "@/backend/
 import { getNotificationPreferenceSummary, listNotificationPreferences, upsertNotificationPreference } from "@/backend/notificationPreferencesStore";
 import { authenticateRequest } from "@/backend/jwtAuth";
 import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { canAccessCompanyDefects, hasGlobalCompanyVisibility, resolveAllowedCompanySlugs } from "@/backend/companyDefectsAccess";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -17,11 +18,21 @@ export async function GET(req: NextRequest) {
   const sourceType = url.searchParams.get("sourceType")?.trim() || null;
   const limit = Number(url.searchParams.get("limit") ?? 50);
 
+  const user = await authenticateRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+  if (companySlug && !canAccessCompanyDefects(user, companySlug)) {
+    return NextResponse.json({ error: "Empresa fora do escopo permitido" }, { status: 403 });
+  }
+  const hasGlobalVisibility = hasGlobalCompanyVisibility(user);
+  const effectiveCompanySlug = companySlug ?? (hasGlobalVisibility ? null : resolveAllowedCompanySlugs(user)[0] ?? "__none__");
+
   const [preferences, preferenceSummary, notificationEvents, notificationEventsSummary] = await Promise.all([
     listNotificationPreferences(),
     getNotificationPreferenceSummary(),
     listNotificationEvents({
-      companySlug,
+      companySlug: effectiveCompanySlug,
       projectSlug,
       sourceType: sourceType === "release_calendar" || sourceType === "chat" || sourceType === "qa_operation" || sourceType === "manual" ? sourceType : null,
       limit: Number.isFinite(limit) ? limit : 50,

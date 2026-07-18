@@ -15,6 +15,54 @@ da reorganização. Registrado aqui para virar um trabalho futuro deliberado.
 - API: `api/user` (singular) vs `api/users` (plural) vs `api/usuarios`
   (português) vs `api/admin/users` (escopo admin).
 
+**Investigado na Fase 5 (2026-07-18):**
+
+- `api/usuarios/*` só tem `vinculos` (business-users, history, leadership,
+  search) — feature de "gestão de vínculos", não duplica CRUD de usuário.
+  Nenhuma ação necessária.
+- **Vulnerabilidade corrigida nesta branch**: `api/users/route.ts`
+  (GET/POST/PATCH) não tinha nenhuma autenticação — qualquer request direto
+  listava, criava ou editava usuário de qualquer empresa (só o `DELETE` era
+  protegido). Corrigido aplicando `requireGlobalAdminWithStatus` nos 3
+  métodos, mesmo padrão já usado no `DELETE` desta rota, com teste cobrindo
+  os cenários sem autenticação/sem privilégio (commit
+  `fix(security): exige admin global em GET/POST/PATCH de /api/users`).
+- Com a vulnerabilidade corrigida, ficou claro que **existem 3 caminhos
+  paralelos de criação/edição de usuário** com regras de negócio
+  divergentes, não só nomes diferentes:
+  - `api/admin/users` (GET/POST/PATCH) — o caminho real e completo: usa
+    `resolveOperationalContext`/`validarAcessoUsuariosNoServidor` (permissão
+    granular, não só "é admin global"), grava auditoria
+    (`addAuditLogSafe`), envia e-mail de boas-vindas, bloqueia
+    escalonamento de privilégio sem ser Líder TC. É o único chamado pela
+    UI real: `app/admin/users/page.tsx` e seus modais
+    (`CreateUserModal.tsx`, `UserDetailsModal.tsx`,
+    `UserPermissionsPanel.tsx`).
+  - `api/users` (plural) — GET é usado por `CreateSupportTicketButton.tsx`
+    (dropdown de operadores de suporte por empresa). POST/PATCH/DELETE
+    **não têm nenhum chamador no frontend** — órfãos, sem auditoria, sem
+    e-mail, sem as mesmas checagens de escalonamento de privilégio do
+    `api/admin/users`.
+  - `api/user` (singular, só POST) e `api/user/[id]` (singular, só PATCH) —
+    o único chamador de `api/user` é `app/components/CreateUserForm.tsx`,
+    que por sua vez **não é importado em lugar nenhum do repositório**
+    (componente órfão). `api/user/[id]` PATCH não tem nenhum chamador
+    encontrado no frontend, mas tem um teste unitário dedicado
+    (`tests/api/unitarios/userIdRoutePatch.test.ts`) focado em não vazar
+    segredos/headers e no gate de mock E2E — sinal de que pode ter sido
+    mantido de propósito (ex.: consumidor externo, script, ferramenta de
+    suporte) mesmo sem uso na UI atual.
+  - **Recomendação (avaliada, não executada nesta branch)**: migrar o único
+    caso de uso real fora do painel admin (se `CreateUserForm.tsx` for
+    reativado) para `api/admin/users`, e então remover `api/user`,
+    `api/user/[id]` e os métodos órfãos de `api/users` (mantendo só o GET).
+    Não fiz essa remoção agora porque (1) esta branch é sobre reorganizar
+    pastas + corrigir a vulnerabilidade ativa, não redesenhar fluxos de
+    negócio; (2) um grep no `app/` não prova ausência de consumidores
+    externos (scripts, Postman, integrações) dessas rotas; (3) o teste
+    dedicado do `api/user/[id]` sugere manutenção intencional recente que
+    merece confirmação direta antes de apagar.
+
 ## Domínio de empresa/cliente
 
 - Páginas: `app/empresas` (22 páginas, a maior árvore fora de admin) vs
@@ -68,9 +116,14 @@ da reorganização. Registrado aqui para virar um trabalho futuro deliberado.
 
 ## Domínio "usuário atual" (me/profile)
 
-- `api/me`, `api/profile`, `api/user/[id]` e `api/user/settings` parecem
-  tratar do mesmo conceito ("usuário autenticado atual") em três lugares
-  diferentes. Páginas espelham com `app/me` e `app/profile` separados.
+- `api/me`, `api/profile` e `api/user/settings` parecem tratar do mesmo
+  conceito ("usuário autenticado atual") em lugares diferentes. Páginas
+  espelham com `app/me` e `app/profile` separados.
+- Correção (Fase 5): `api/user/[id]` **não** é sobre o usuário atual — é
+  edição administrativa de qualquer usuário por ID (exige
+  `requireGlobalAdminWithStatus`), então na verdade pertence à discussão do
+  domínio de usuário acima, não a este grupo. Só compartilha o prefixo
+  singular `api/user` com `api/user/settings`.
 
 ## Outros
 

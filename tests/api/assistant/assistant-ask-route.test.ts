@@ -40,6 +40,28 @@ jest.mock("@/database/prismaClient", () => ({
   },
 }));
 
+// buildAutoBrainRoute é intencionalmente amplo em produção: qualquer
+// mensagem que não seja uma saudação pura aciona o Brain automaticamente
+// (useBrain = !isCasual(texto) || wantsX). Isso tem cobertura própria em
+// backend/brain/autoRouter — aqui mockamos useBrain:false por padrão pra
+// isolar o "standard assistant flow" e o "brain-first flow" (que já força
+// o Brain via brainContext explícito, numa camada diferente) sem depender
+// de escolher mensagens de teste que "escapem" do auto-roteamento real.
+jest.mock("@/backend/brain/autoRouter", () => ({
+  buildAutoBrainRoute: jest.fn().mockReturnValue({
+    agentMode: "qa",
+    useBrain: false,
+    useRag: false,
+    useDatabase: false,
+    useWeb: false,
+    useLocalModel: false,
+    useQaCopilot: false,
+    label: "Brain QA",
+    reason: "mock",
+    sources: [],
+  }),
+}));
+
 jest.mock("@/backend/brain/brainPrisma", () => ({
   brainPrisma: {
     brainNode: {
@@ -169,7 +191,7 @@ describe("standard assistant flow", () => {
 
     expect(runAssistantRequest).toHaveBeenCalledWith(
       expect.any(Object),
-      expect.objectContaining({ context, actor, action }),
+      expect.objectContaining({ context: { ...context, metadata: null }, actor, action }),
     );
   });
 

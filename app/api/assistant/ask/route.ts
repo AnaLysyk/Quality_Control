@@ -393,7 +393,10 @@ export async function POST(req: Request) {
     }
 
     const companySlug = resolveCompanySlug(body, authUser);
-    const agentMode: AgentMode = autoBrainRoute.agentMode;
+    const explicitAgentMode = brainContext?.agentMode;
+    const isValidAgentMode = (value: unknown): value is AgentMode =>
+      value === "qa" || value === "debug" || value === "playwright" || value === "memory";
+    const agentMode: AgentMode = isValidAgentMode(explicitAgentMode) ? explicitAgentMode : autoBrainRoute.agentMode;
     const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "ðŸ§ ", label: "Agente Brain", color: "#5b92ff" };
     const startedAt = Date.now();
 

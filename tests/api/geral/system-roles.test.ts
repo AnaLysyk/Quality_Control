@@ -33,7 +33,16 @@ describe("system role contract", () => {
       "approve",
       "reject",
     ]);
-    expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].users).toEqual(["view"]);
+    // Suporte tecnico administra usuarios e enxerga todas as empresas por
+    // padrao (confirmado como comportamento intencional, nao um bug).
+    expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].users).toEqual([
+      "view",
+      "create",
+      "edit",
+      "delete",
+      "view_company",
+      "view_all",
+    ]);
   });
 
   it("keeps access-request review queue gated by capability", () => {

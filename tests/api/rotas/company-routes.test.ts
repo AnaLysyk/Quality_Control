@@ -61,5 +61,13 @@ describe("companyRoutes", () => {
   it("nao trata automacoes como slug de empresa", () => {
     expect(rewriteShortCompanyPathname("/automacoes")).toBeNull();
   });
+
+  it("nao trata planos-de-teste como slug de empresa", () => {
+    // Regressão: /planos-de-teste (página standalone) estava sendo
+    // reescrita para /empresas/planos-de-teste/home, tratando o nome da
+    // rota como se fosse um slug de empresa, porque não estava em
+    // RESERVED_APP_ROOTS.
+    expect(rewriteShortCompanyPathname("/planos-de-teste")).toBeNull();
+  });
 });
 

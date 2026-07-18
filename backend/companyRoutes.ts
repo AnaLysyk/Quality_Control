@@ -101,6 +101,7 @@ const RESERVED_APP_ROOTS = new Set([
   "chat",
   "operacao",
   "operacoes",
+  "planos-de-teste",
 ]);
 
 const COMPANY_SECTION_ROOTS = new Set([

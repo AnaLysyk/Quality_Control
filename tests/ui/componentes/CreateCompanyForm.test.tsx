@@ -54,7 +54,7 @@ describe("CreateCompanyForm", () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2);
 
     await act(async () => {
-      secondLookup.resolve(createJsonResponse({ nome_fantasia: "Empresa Nova" }));
+      secondLookup.resolve(createJsonResponse({ ok: true, item: { fantasyName: "Empresa Nova" } }));
       await Promise.resolve();
     });
 
@@ -63,19 +63,19 @@ describe("CreateCompanyForm", () => {
     });
 
     await act(async () => {
-      firstLookup.resolve(createJsonResponse({ nome_fantasia: "Empresa Antiga" }));
+      firstLookup.resolve(createJsonResponse({ ok: true, item: { fantasyName: "Empresa Antiga" } }));
       await Promise.resolve();
     });
 
     expect(nameInput).toHaveValue("Empresa Nova");
     expect(fetchSpy).toHaveBeenNthCalledWith(
       1,
-      "/api/brasilapi/cnpj/11111111111111",
+      "/api/public/company-lookup/cnpj?cnpj=11111111111111",
       expect.objectContaining({ cache: "no-store" }),
     );
     expect(fetchSpy).toHaveBeenNthCalledWith(
       2,
-      "/api/brasilapi/cnpj/22222222222222",
+      "/api/public/company-lookup/cnpj?cnpj=22222222222222",
       expect.objectContaining({ cache: "no-store" }),
     );
   });
@@ -99,8 +99,11 @@ describe("CreateCompanyForm", () => {
     await act(async () => {
       lookup.resolve(
         createJsonResponse({
-          nome_fantasia: "REDE PELO CONHECIMENTO LIVRE",
-          razao_social: "OPEN KNOWLEDGE BRASIL",
+          ok: true,
+          item: {
+            fantasyName: "REDE PELO CONHECIMENTO LIVRE",
+            companyName: "OPEN KNOWLEDGE BRASIL",
+          },
         }),
       );
       await Promise.resolve();

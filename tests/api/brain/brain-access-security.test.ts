@@ -13,6 +13,7 @@ jest.mock("@/database/prismaClient", () => ({
     company: { findMany: jest.fn() },
     project: { findMany: jest.fn() },
     brainNode: { findUnique: jest.fn() },
+    membership: { findMany: jest.fn() },
   },
 }));
 
@@ -89,6 +90,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   (prisma.company.findMany as jest.Mock).mockResolvedValue([]);
   (prisma.project.findMany as jest.Mock).mockResolvedValue([]);
+  (prisma.membership.findMany as jest.Mock).mockResolvedValue([]);
 });
 
 describe("Brain access - Lider TC com Empresas/Usuarios mas sem Auditoria", () => {

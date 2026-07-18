@@ -1,4 +1,12 @@
-﻿import { POST } from "@/api/brain/convert/route";
+﻿jest.mock("@/backend/rbac/requirePermission", () => ({
+  requirePermission: jest.fn().mockResolvedValue({
+    ok: true,
+    access: { userId: "user-1", email: "user@test.com", isGlobalAdmin: true },
+    permissionAccess: null,
+  }),
+}));
+
+import { POST } from "@/api/brain/convert/route";
 
 function makeRequest(body: Record<string, unknown>) {
   return new Request("http://localhost/api/brain/convert", {

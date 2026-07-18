@@ -7,6 +7,7 @@ jest.mock("@/backend/jwtAuth", () => ({
 }));
 
 jest.mock("@/backend/permissionMatrix", () => ({
+  ...jest.requireActual("@/backend/permissionMatrix"),
   hasPermissionAccess: jest.fn(),
 }));
 
@@ -32,6 +33,23 @@ jest.mock("@/database/prismaClient", () => ({
   prisma: {
     brainMemory: {
       create: jest.fn().mockResolvedValue({ id: "m1" }),
+    },
+    userPermissionOverride: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
+  },
+}));
+
+jest.mock("@/backend/brain/brainPrisma", () => ({
+  brainPrisma: {
+    brainNode: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    brainEdge: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    brainAuditLog: {
+      create: jest.fn().mockResolvedValue({ id: "audit-1" }),
     },
   },
 }));

@@ -1,6 +1,6 @@
 ﻿import nodemailer from 'nodemailer';
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { appendFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 
 function escapeHtml(value: unknown) {
   return String(value ?? "")
@@ -86,27 +86,133 @@ class EmailService {
 
 
   private resolveEmailLogoSrc() {
-    const configured =
-      process.env.EMAIL_LOGO_URL ||
-      process.env.NEXT_PUBLIC_EMAIL_LOGO_URL ||
-      "";
-
-    if (configured.trim()) return configured.trim();
-
-    if (process.env.NODE_ENV !== "production") {
-      const localLogoPath = join(process.cwd(), "public", "images", "tc.png");
-
-      try {
-        if (existsSync(localLogoPath)) {
-          const base64Logo = readFileSync(localLogoPath).toString("base64");
-          return `data:image/png;base64,${base64Logo}`;
-        }
-      } catch {
-        // Fallback para URL pública caso não consiga ler o arquivo local.
-      }
-    }
-
+    // Sempre uma URL http(s) real, nunca "data:" embutido em base64: o Gmail
+    // (e outros webmails) bloqueia/remove imagens embutidas como data URI em
+    // e-mails recebidos por segurança, deixando o logo quebrado no cliente
+    // real mesmo quando renderiza normalmente em um preview local.
     return this.resolveEmailLogoUrl();
+  }
+
+  // Casca visual única para todos os e-mails da plataforma (Design System -
+  // Testing Company): fundo em gradiente navy→vermelho cobrindo a página,
+  // card grande arredondado, logo circular no header, badge de status e
+  // rodapé com a marca. Baseado no padrão já usado em aprovação/rejeição de
+  // acesso, escolhido como referência pra unificar todos os e-mails.
+  private buildEmailShell(options: {
+    pageTitle: string;
+    headerSubtitle: string;
+    badgeText: string;
+    badgeVariant: "success" | "danger" | "info" | "warning";
+    bodyHtml: string;
+  }) {
+    const badgeColors: Record<typeof options.badgeVariant, { bg: string; color: string; border: string }> = {
+      success: { bg: "#dcfce7", color: "#166534", border: "#bbf7d0" },
+      danger: { bg: "#fee2e2", color: "#991b1b", border: "#fecaca" },
+      info: { bg: "#dbeafe", color: "#1d4ed8", border: "#bfdbfe" },
+      warning: { bg: "#fff7ed", color: "#c2410c", border: "#fed7aa" },
+    };
+    const badge = badgeColors[options.badgeVariant];
+    const logoSrc = escapeHtml(this.resolveEmailLogoSrc());
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(options.pageTitle)} - Quality Control</title>
+  <style>
+    body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb}
+    table{border-collapse:collapse}
+    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
+    .header p{margin:8px 0 0;font-size:13px;color:#ffffff;opacity:1;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+    .badge{display:inline-block;padding:8px 14px;border-radius:999px;background:${badge.bg};color:${badge.color};border:1px solid ${badge.border};font-size:13px;font-weight:800;margin-bottom:18px}
+    h2{margin:0 0 12px;color:#011848;font-size:23px;line-height:1.3}
+    p{margin:0 0 16px;color:#475569;font-size:14px;line-height:1.75}
+    .section-title{margin:20px 0 8px;color:#011848;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
+    .info{margin:24px 0;border:1px solid #d8dfeb;border-radius:18px;overflow:hidden;background:#f8fafc}
+    .info table{width:100%}
+    .info td{padding:15px 18px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
+    .info tr:last-child td{border-bottom:0}
+    .label{width:34%;color:#64748b;font-weight:800}
+    .value{color:#011848;font-weight:800;word-break:break-word}
+    .box{margin:22px 0;padding:18px 20px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:16px;color:#27457d;font-size:13px;line-height:1.65}
+    .box strong{color:#011848}
+    .box.warning{background:#fff7ed;border-color:#fed7aa;border-left-color:#f97316;color:#9a3412}
+    .box.warning strong{color:#9a3412}
+    .reasonBox{margin:22px 0;padding:18px 20px;background:#fff1f2;border:1px solid #fecdd3;border-left:5px solid #ef4444;border-radius:16px;color:#7f1d1d;font-size:14px;line-height:1.65}
+    .reasonBox strong{color:#7f1d1d}
+    .list{margin:10px 0 0;padding-left:20px;color:#27457d}
+    .list li{margin:7px 0}
+    .cred-box{background:linear-gradient(135deg,#f9fafb 0%,#ffffff 100%);border:2px solid #d8dfeb;border-radius:14px;padding:18px 20px;margin:22px 0}
+    .cred-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #d8dfeb}
+    .cred-row:last-child{border-bottom:none}
+    .cred-label{color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+    .cred-value{color:#011848;font-weight:800;font-size:14px;font-family:'Monaco','Courier New',monospace}
+    .steps{margin:22px 0}
+    .steps-title{font-weight:800;margin-bottom:12px;color:#011848;font-size:14px}
+    .step{display:flex;gap:14px;margin:8px 0;padding:6px 0;align-items:flex-start}
+    .step-number{display:flex;align-items:center;justify-content:center;width:26px;height:26px;min-width:26px;background:#011848;color:#fff;border-radius:50%;font-size:12px;font-weight:800}
+    .step-text{color:#475569;font-size:13px;padding-top:4px}
+    .buttonWrap{text-align:center;margin:32px 0 12px}
+    .button{display:inline-block;padding:16px 38px;border-radius:14px;background:linear-gradient(135deg,#011848 0%,#ef0001 100%);color:#ffffff!important;text-decoration:none;font-weight:900;font-size:15px;box-shadow:0 14px 28px rgba(239,0,1,.28)}
+    @media only screen and (max-width:620px){
+      .email-card{width:100%!important;border-radius:0!important}
+      .email-content{padding:28px 20px 24px!important}
+      .label,.value{display:block!important;width:auto!important}
+      .label{padding-bottom:3px!important;border-bottom:0!important}
+      .value{padding-top:0!important}
+    }
+    .email-logo-spin{animation:emailLogoSpin 18s linear infinite}
+    @keyframes emailLogoSpin{
+      from{transform:rotate(0deg)}
+      to{transform:rotate(360deg)}
+    }
+    @media (prefers-reduced-motion:reduce){
+      .email-logo-spin{animation:none!important}
+    }
+  </style>
+  <!--[if mso]>
+  <style>
+    .email-logo-spin{animation:none!important;transform:none!important}
+  </style>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6fb;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f6fb" style="width:100%;background-color:#f4f6fb;">
+    <tr>
+      <td align="center" style="padding:32px 12px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" class="email-card" style="width:600px;max-width:600px;background-color:#ffffff;border:1px solid rgba(1,24,72,.14);border-radius:20px;overflow:hidden;">
+          <tr>
+            <td align="center" bgcolor="#011848" class="header" style="background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);padding:28px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 14px;">
+                <tr>
+                  <td align="center" bgcolor="#ffffff" width="74" height="74" style="width:74px;height:74px;border-radius:999px;background-color:#ffffff;">
+                    <img class="email-logo-spin" src="${logoSrc}" alt="" width="74" height="74" style="display:block;width:74px;height:74px;object-fit:cover;border-radius:999px;border:0;outline:none;text-decoration:none;" />
+                  </td>
+                </tr>
+              </table>
+              <h1 style="margin:0;color:#ffffff;font-size:22px;line-height:1.15;letter-spacing:-.2px;">Quality Control</h1>
+              <p style="margin:8px 0 0;color:#ffffff;font-size:13px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35);">${escapeHtml(options.headerSubtitle)}</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="email-content" style="padding:36px 40px 32px;">
+              <span class="badge">${options.badgeText}</span>
+              ${options.bodyHtml}
+            </td>
+          </tr>
+          <tr>
+            <td align="center" bgcolor="#ffffff" style="padding:20px 28px 28px;text-align:center;color:#64748b;font-size:12px;background-color:#ffffff;">
+              E-mail automático. Não responda.<br>
+              © ${new Date().getFullYear()} Testing Company. Todos os direitos reservados.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
@@ -155,6 +261,12 @@ class EmailService {
         subject: options.subject,
         html: options.html,
         text: options.text,
+        // Evita quoted-printable: com acentos, o nodemailer insere quebras de
+        // linha "soft break" que, em certos clientes/parsers, corrompem links
+        // longos (ex.: "?key=ABC..." vira "?key<byte inválido>C..." quando a
+        // quebra cai logo antes de outro caractere escapado). Base64 não sofre
+        // desse problema de reinterpretação textual.
+        textEncoding: 'base64' as const,
       };
 
       const result = await transporter.sendMail(mailOptions);
@@ -169,60 +281,27 @@ class EmailService {
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
     const resetUrl = `${this.resolvePublicBaseUrl()}/login/reset-password?token=${resetToken}`;
     const safeResetUrl = escapeHtml(resetUrl);
-    const logoUrl = escapeHtml(this.resolveEmailLogoSrc());
 
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Redefinir senha - Quality Control</title>
-</head>
-<body style="width:100%!important;margin:0;padding:0;background-color:#f4f6fb;font-family:Arial,Helvetica,sans-serif;color:#011848;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f6fb" style="width:100%;border-collapse:collapse;background-color:#f4f6fb;">
-    <tr>
-      <td align="center" style="padding:20px 8px;">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:100%;max-width:600px;border:1px solid #d8dfeb;border-collapse:separate;border-spacing:0;background-color:#ffffff;border-radius:18px;overflow:hidden;">
-          <tr>
-            <td align="center" bgcolor="#011848" style="padding:14px 20px;background-color:#011848;border-top:4px solid #ef0001;color:#ffffff;text-align:center;">
-              <img src="${logoUrl}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 5px;border:0;outline:none;text-decoration:none;">
-              <div style="color:#ffffff;font-size:22px;font-weight:900;line-height:26px;">Quality Control</div>
-              <div style="margin-top:3px;color:#ffffff;font-size:12px;line-height:16px;">Segurança da sua conta</div>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:26px 28px 28px;color:#011848;font-family:Arial,Helvetica,sans-serif;">
-              <div style="display:inline-block;margin-bottom:12px;padding:6px 11px;border:1px solid #bfdbfe;border-radius:999px;background-color:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:900;">Redefinição de senha</div>
-              <h1 style="margin:0 0 10px;color:#011848;font-size:22px;line-height:28px;">Crie uma nova senha</h1>
-              <p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:22px;">Recebemos uma solicitação para redefinir a senha da sua conta no Quality Control.</p>
-              <p style="margin:0 0 18px;color:#475569;font-size:14px;line-height:22px;">Use o botão abaixo para escolher uma nova senha. O link é individual e válido por 15 minutos.</p>
+    const bodyHtml = `
+        <h2>Crie uma nova senha</h2>
+        <p>Recebemos uma solicitação para redefinir a senha da sua conta no Quality Control.</p>
+        <p>Use o botão abaixo para escolher uma nova senha. O link é individual e válido por 15 minutos.</p>
 
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto;border-collapse:separate;">
-                <tr>
-                  <td align="center" bgcolor="#ef0001" style="background-color:#ef0001;border-radius:9px;mso-padding-alt:11px 22px;">
-                    <a href="${safeResetUrl}" style="display:inline-block;padding:11px 22px;color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;line-height:18px;text-align:center;text-decoration:none;">Redefinir senha</a>
-                  </td>
-                </tr>
-              </table>
+        <div class="buttonWrap">
+          <a href="${safeResetUrl}" class="button">Redefinir senha</a>
+        </div>
 
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f0f4ff" style="width:100%;margin:18px 0;border:1px solid #d8dfeb;border-collapse:separate;border-left:5px solid #011848;border-radius:12px;background-color:#f0f4ff;">
-                <tr>
-                  <td style="padding:13px 15px;color:#27457d;font-size:13px;line-height:20px;">Se você não solicitou esta alteração, ignore este e-mail. Sua senha atual continuará válida.</td>
-                </tr>
-              </table>
+        <div class="box">Se você não solicitou esta alteração, ignore este e-mail. Sua senha atual continuará válida.</div>
 
-              <p style="margin:0;color:#64748b;font-size:11px;line-height:17px;word-break:break-all;">Link direto: <a href="${safeResetUrl}" style="color:#27457d;text-decoration:underline;">${safeResetUrl}</a></p>
-            </td>
-          </tr>
-          <tr>
-            <td align="center" bgcolor="#ffffff" style="padding:16px 24px 20px;border-top:1px solid #e5eaf3;background-color:#ffffff;color:#64748b;font-size:12px;line-height:18px;text-align:center;">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Link direto: <a href="${safeResetUrl}" style="color:#27457d;text-decoration:underline;">${safeResetUrl}</a></p>`;
+
+    const html = this.buildEmailShell({
+      pageTitle: "Redefinir senha",
+      headerSubtitle: "Segurança da sua conta",
+      badgeText: "Redefinição de senha",
+      badgeVariant: "info",
+      bodyHtml,
+    });
 
     const text = `Quality Control - Redefinição de senha
 
@@ -252,349 +331,66 @@ Equipe Quality Control`;
     fullName?: string | null,
   ): Promise<boolean> {
     const loginUrl = `${this.resolvePublicBaseUrl()}/login`;
-    const greeting = fullName ? `Olá, ${fullName}!` : 'Olá!';
+    const greetingText = fullName ? `Olá, ${fullName}!` : 'Olá!';
+    const greeting = fullName ? `Olá, ${escapeHtml(fullName)}!` : 'Olá!';
 
-    // Design System - Testing Company
-    const colors = {
-      primary: '#011848',      // Login Navy
-      primaryDark: '#02307a',  // Login Dark Navy
-      secondary: '#ef0001',    // Login Red
-      success: '#10b981',      // Green
-      warning: '#f59e0b',      // Amber
-      danger: '#ef4444',       // Red
-      neutral50: '#f9fafb',    // Very Light Gray
-      neutral100: '#f4f6fb',   // Login Background Light
-      neutral200: '#d8dfeb',   // Login Border
-      neutral400: '#5f77a2',   // Login Muted
-      neutral600: '#27457d',   // Login Body Text
-      neutral900: '#081f4d',   // Login Heading
-      white: '#ffffff',
-    };
+    const bodyHtml = `
+        <h2>${greeting}</h2>
+        <p>Sua conta foi criada com sucesso! Você agora tem acesso à plataforma <strong>Quality Control da Testing Company</strong>.</p>
 
-    const typography = {
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      fontSize: {
-        xs: '12px',
-        sm: '13px',
-        base: '14px',
-        lg: '15px',
-        xl: '18px',
-        '2xl': '24px',
-      },
-      fontWeight: {
-        normal: 400,
-        medium: 500,
-        semibold: 600,
-        bold: 700,
-      },
-    };
-
-    const spacing = {
-      xs: '4px',
-      sm: '8px',
-      md: '12px',
-      lg: '16px',
-      xl: '20px',
-      '2xl': '24px',
-      '3xl': '32px',
-    };
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Bem-vindo ao Testing Company - Quality Control</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              font-family: ${typography.fontFamily};
-              line-height: 1.6;
-              color: ${colors.neutral600};
-              background: ${colors.neutral100};
-            }
-            .container {
-              max-width: 600px;
-              margin: 0 auto;
-              padding: ${spacing.lg};
-            }
-            .email-body {
-              background: ${colors.white};
-              border-radius: 12px;
-              overflow: hidden;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-            .header {
-              background: linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%);
-              color: ${colors.white};
-              padding: ${spacing['3xl']} ${spacing['2xl']};
-              text-align: center;
-              border-bottom: 4px solid ${colors.secondary};
-            }
-            .header-logo {
-              font-size: ${typography.fontSize['2xl']};
-              font-weight: ${typography.fontWeight.bold};
-              margin-bottom: ${spacing.md};
-              letter-spacing: -0.5px;
-            }
-            .header-subtitle {
-              font-size: ${typography.fontSize.sm};
-              opacity: 0.95;
-              font-weight: ${typography.fontWeight.medium};
-              letter-spacing: 0.5px;
-            }
-            .content {
-              padding: ${spacing['3xl']} ${spacing['2xl']};
-            }
-            .greeting {
-              font-size: ${typography.fontSize.xl};
-              font-weight: ${typography.fontWeight.semibold};
-              margin-bottom: ${spacing.lg};
-              color: ${colors.neutral900};
-            }
-            .intro-text {
-              color: ${colors.neutral600};
-              margin-bottom: ${spacing.xl};
-              font-size: ${typography.fontSize.base};
-              line-height: 1.8;
-            }
-            .section-title {
-              font-size: ${typography.fontSize.sm};
-              font-weight: ${typography.fontWeight.bold};
-              color: ${colors.neutral400};
-              text-transform: uppercase;
-              letter-spacing: 1px;
-              margin-bottom: ${spacing.lg};
-              margin-top: ${spacing['2xl']};
-            }
-            .cred-box {
-              background: linear-gradient(135deg, ${colors.neutral50} 0%, ${colors.white} 100%);
-              border: 2px solid ${colors.neutral200};
-              border-radius: 8px;
-              padding: ${spacing.xl};
-              margin: ${spacing.xl} 0;
-              font-family: 'Monaco', 'Courier New', monospace;
-            }
-            .cred-row {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: ${spacing.md} 0;
-              border-bottom: 1px solid ${colors.neutral200};
-            }
-            .cred-row:last-child {
-              border-bottom: none;
-            }
-            .cred-label {
-              color: ${colors.neutral400};
-              font-size: ${typography.fontSize.sm};
-              font-weight: ${typography.fontWeight.medium};
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-            .cred-value {
-              color: ${colors.primary};
-              font-weight: ${typography.fontWeight.bold};
-              font-size: ${typography.fontSize.base};
-              letter-spacing: 0.3px;
-            }
-            .button {
-              display: inline-block;
-              padding: ${spacing.md} ${spacing.xl};
-              background: ${colors.secondary};
-              color: ${colors.white};
-              text-decoration: none;
-              border-radius: 8px;
-              font-size: ${typography.fontSize.lg};
-              font-weight: ${typography.fontWeight.semibold};
-              margin: ${spacing.xl} 0;
-              border: none;
-              cursor: pointer;
-              transition: all 0.3s ease;
-              text-align: center;
-              box-shadow: 0 2px 8px rgba(239, 0, 1, 0.28);
-            }
-            .button:hover {
-              background: #c70000;
-              color: ${colors.white};
-            }
-            .button-center {
-              text-align: center;
-            }
-            .link-direct {
-              text-align: center;
-              color: ${colors.neutral400};
-              font-size: ${typography.fontSize.sm};
-              margin-top: ${spacing.lg};
-            }
-            .link-direct code {
-              background: ${colors.neutral50};
-              padding: 2px 6px;
-              border-radius: 4px;
-              font-family: 'Monaco', 'Courier New', monospace;
-              color: ${colors.primary};
-              font-weight: ${typography.fontWeight.semibold};
-            }
-            .steps {
-              margin: ${spacing.xl} 0;
-            }
-            .steps-title {
-              font-weight: ${typography.fontWeight.semibold};
-              margin-bottom: ${spacing.lg};
-              color: ${colors.neutral900};
-              font-size: ${typography.fontSize.base};
-            }
-            .step {
-              display: flex;
-              gap: ${spacing.lg};
-              margin: ${spacing.md} 0;
-              padding: ${spacing.md} 0;
-              align-items: flex-start;
-            }
-            .step-number {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              width: 28px;
-              height: 28px;
-              min-width: 28px;
-              background: ${colors.primary};
-              color: ${colors.white};
-              border-radius: 50%;
-              font-size: ${typography.fontSize.sm};
-              font-weight: ${typography.fontWeight.bold};
-            }
-            .step-text {
-              color: ${colors.neutral600};
-              font-size: ${typography.fontSize.sm};
-              padding-top: 2px;
-            }
-            .divider {
-              height: 1px;
-              background: ${colors.neutral200};
-              margin: ${spacing.xl} 0;
-            }
-            .warning-box {
-              background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-              border-left: 4px solid ${colors.warning};
-              padding: ${spacing.lg};
-              margin: ${spacing.xl} 0;
-              border-radius: 4px;
-              font-size: ${typography.fontSize.sm};
-            }
-            .warning-box strong {
-              color: #b45309;
-              display: block;
-              margin-bottom: ${spacing.sm};
-            }
-            .footer {
-              background: ${colors.neutral50};
-              padding: ${spacing.xl} ${spacing['2xl']};
-              text-align: center;
-              border-top: 1px solid ${colors.neutral200};
-              font-size: ${typography.fontSize.xs};
-              color: ${colors.neutral400};
-            }
-            .footer p {
-              margin: ${spacing.sm} 0;
-            }
-            .badge {
-              display: inline-block;
-              background: ${colors.secondary};
-              color: ${colors.white};
-              padding: 2px 8px;
-              border-radius: 4px;
-              font-size: ${typography.fontSize.xs};
-              font-weight: ${typography.fontWeight.semibold};
-              margin-right: ${spacing.sm};
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="email-body">
-              <!-- HEADER -->
-              <div class="header">
-                <div class="header-logo"><img src="${this.resolveEmailLogoSrc()}" alt="" style="display:block;margin:0 auto 10px;max-width:90px;height:auto;border:0;" /></div>
-                <div class="header-subtitle">Quality Control • Bem-vindo à plataforma</div>
-              </div>
-
-              <!-- CONTENT -->
-              <div class="content">
-                <p class="greeting">${greeting}</p>
-                <p class="intro-text">
-                  Sua conta foi criada com sucesso! Você agora tem acesso à plataforma 
-                  <strong>Quality Control da Testing Company</strong>.
-                </p>
-
-                <!-- CREDENTIALS SECTION -->
-                <div class="section-title">🔐 Suas Credenciais de Acesso</div>
-                <div class="cred-box">
-                  <div class="cred-row">
-                    <span class="cred-label">Login</span>
-                    <span class="cred-value">${login}</span>
-                  </div>
-                  <div class="cred-row">
-                    <span class="cred-label">Senha</span>
-                    <span class="cred-value">${tempPassword}</span>
-                  </div>
-                </div>
-
-                <!-- CTA BUTTON -->
-                <div class="button-center">
-                  <a href="${loginUrl}" class="button" style="color:#ffffff !important;background:${colors.secondary};display:inline-block;padding:${spacing.md} ${spacing.xl};border-radius:8px;text-decoration:none;font-weight:${typography.fontWeight.semibold};">🚀 Acessar a Plataforma</a>
-                </div>
-                <div class="link-direct">
-                  Link: <code>${loginUrl}</code>
-                </div>
-
-                <div class="divider"></div>
-
-                <!-- NEXT STEPS -->
-                <div class="steps">
-                  <p class="steps-title">📋 Seus Próximos Passos:</p>
-                  <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-text">Acesse a plataforma com suas credenciais</div>
-                  </div>
-                  <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-text">Navegue até <strong>Meu Perfil</strong></div>
-                  </div>
-                  <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-text">Clique em <strong>Alterar Senha</strong> e defina uma nova senha segura</div>
-                  </div>
-                  <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-text">Comece a usar a plataforma!</div>
-                  </div>
-                </div>
-
-                <!-- WARNING -->
-                <div class="warning-box">
-                  <strong>⚠️ Importante:</strong>
-                  Esta senha é <strong>temporária</strong>. Troque-a imediatamente após seu primeiro acesso. 
-                  Não compartilhe estas credenciais com outras pessoas.
-                </div>
-              </div>
-
-              <!-- FOOTER -->
-              <div class="footer">
-                <p><strong></strong> • Quality Control Platform</p>
-                <p>Este é um email automático. Por favor, não responda.</p>
-                <p>&copy; 2026 Testing Company. Todos os direitos reservados.</p>
-              </div>
-            </div>
+        <div class="section-title">Suas credenciais de acesso</div>
+        <div class="cred-box">
+          <div class="cred-row">
+            <span class="cred-label">Login</span>
+            <span class="cred-value">${escapeHtml(login)}</span>
           </div>
-        </body>
-      </html>
-    `;
+          <div class="cred-row">
+            <span class="cred-label">Senha</span>
+            <span class="cred-value">${escapeHtml(tempPassword)}</span>
+          </div>
+        </div>
+
+        <div class="buttonWrap">
+          <a href="${escapeHtml(loginUrl)}" class="button">Acessar a plataforma</a>
+        </div>
+        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Link direto: ${escapeHtml(loginUrl)}</p>
+
+        <div class="steps">
+          <p class="steps-title">Seus próximos passos</p>
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-text">Acesse a plataforma com suas credenciais</div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-text">Navegue até <strong>Meu Perfil</strong></div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-text">Clique em <strong>Alterar Senha</strong> e defina uma nova senha segura</div>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-text">Comece a usar a plataforma!</div>
+          </div>
+        </div>
+
+        <div class="box warning">
+          <strong>Importante:</strong> Esta senha é <strong>temporária</strong> e foi gerada pelo sistema. Troque-a imediatamente após seu primeiro acesso, em <strong>Meu Perfil → Alterar Senha</strong>. Não compartilhe estas credenciais com outras pessoas.
+        </div>`;
+
+    const html = this.buildEmailShell({
+      pageTitle: "Bem-vindo ao Testing Company",
+      headerSubtitle: "Bem-vindo à plataforma",
+      badgeText: "Conta criada",
+      badgeVariant: "success",
+      bodyHtml,
+    });
 
     const text = `
 Quality Control - Seus dados de acesso
 
-${greeting}
+${greetingText}
 
 Sua conta foi criada. Use as credenciais abaixo para acessar a plataforma:
 
@@ -721,69 +517,7 @@ Equipe Testing Company
       ? `<div class="section-title">Dados da empresa</div><div class="info"><table>${companyRows}</table></div>`
       : "";
 
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Solicitação de acesso recebida - Quality Control</title>
-  <style>
-    body{width:100%!important;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
-    table{border-spacing:0}
-    .card{width:600px;max-width:600px;margin:0 auto;background:#fff;border:1px solid rgba(1,24,72,.12);border-radius:20px;overflow:hidden;box-shadow:0 18px 46px rgba(1,24,72,.20)}
-    .header{background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:10px 20px;text-align:center}
-    .email-logo-spin{animation:emailLogoSpin 18s linear infinite}
-    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
-    .header p{margin:3px 0 0;font-size:12px;line-height:16px;opacity:.92}
-    .content{padding:22px 28px 26px;word-wrap:break-word}
-    .badge{display:inline-block;padding:7px 12px;border-radius:999px;background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;font-size:12px;font-weight:900;margin-bottom:12px}
-    h2{margin:0 0 10px;color:#011848;font-size:22px;line-height:1.3}
-    p{margin:0 0 14px;color:#475569;font-size:14px;line-height:1.65}
-    .section-title{margin:20px 0 8px;color:#011848;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
-    .info{margin:0 0 16px;border:1px solid #d8dfeb;border-radius:14px;overflow:hidden;background:#f8fafc}
-    .info table{width:100%;border-collapse:collapse;table-layout:fixed}
-    .info td{padding:11px 14px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
-    .info tr:last-child td{border-bottom:0}
-    .label{width:34%;color:#64748b;font-weight:900}
-    .value{color:#011848;font-weight:900;word-break:break-word;overflow-wrap:anywhere}
-    .box{margin:18px 0;padding:14px 16px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:12px;color:#27457d;font-size:13px;line-height:1.6}
-    .footer{padding:16px 24px 20px;text-align:center;color:#64748b;font-size:12px;background:#fff}
-    @keyframes emailLogoSpin{
-      from{transform:rotate(0deg)}
-      to{transform:rotate(360deg)}
-    }
-    @media (prefers-reduced-motion:reduce){
-      .email-logo-spin{animation:none!important}
-    }
-    @media only screen and (max-width:620px){
-      .card{width:100%!important}
-      .content{padding:20px 16px 24px!important}
-      .label,.value{display:block!important;width:auto!important}
-      .label{padding-bottom:3px!important;border-bottom:0!important}
-      .value{padding-top:0!important}
-    }
-  </style>
-  <!--[if mso]>
-  <style>
-    .email-logo-spin{animation:none!important;transform:none!important}
-  </style>
-  <![endif]-->
-</head>
-<body style="width:100%!important;margin:0;padding:0;background-color:#f4f6fb;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f6fb" style="width:100%;border-collapse:collapse;background-color:#f4f6fb;background-image:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%);">
-    <tr>
-      <td align="center" style="padding:16px 8px;">
-        <table role="presentation" class="card" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border:1px solid #d8dfeb;border-collapse:separate;border-spacing:0;background-color:#ffffff;border-radius:20px;overflow:hidden;">
-          <tr>
-            <td class="header" align="center" bgcolor="#011848" style="padding:10px 20px;background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);border-radius:20px 20px 0 0;color:#ffffff;text-align:center;">
-              <img class="email-logo-spin" src="${escapeHtml(this.resolveEmailLogoSrc())}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 4px;border:0;outline:none;text-decoration:none;">
-              <h1 style="margin:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:25px;letter-spacing:-.2px;">Quality Control</h1>
-              <p style="margin:3px 0 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;">Solicitação de acesso recebida</p>
-            </td>
-          </tr>
-          <tr>
-            <td class="content" style="padding:22px 28px 26px;color:#011848;font-family:Arial,Helvetica,sans-serif;word-wrap:break-word;">
-        <span class="badge">Em análise</span>
+    const bodyHtml = `
         <h2>${greeting}</h2>
         <p>Recebemos sua solicitação de acesso. Ela está em análise pela equipe responsável. Você receberá uma atualização quando for aprovada, recusada ou quando precisar de ajuste.</p>
 
@@ -818,28 +552,20 @@ Equipe Testing Company
         ${companyUserSection}
         ${companySection}
 
-        <div class="box">Guarde este código. O botão abaixo abre a consulta desta solicitação; se o prazo expirar, use “Reenviar código” na tela de consulta para receber uma nova chave válida.</div>
+        <div class="box">Guarde este código. O botão abaixo abre a consulta desta solicitação; se o prazo expirar, use "Reenviar código" na tela de consulta para receber uma nova chave válida.</div>
 
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto 10px;border-collapse:separate;">
-                <tr>
-                  <td align="center" bgcolor="#ef0001" style="background-color:#ef0001;border-radius:9px;mso-padding-alt:11px 20px;">
-                    <a href="${escapeHtml(lookupUrl)}" style="display:inline-block;padding:11px 20px;color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;line-height:18px;text-align:center;text-decoration:none;">Consultar solicitação</a>
-                  </td>
-                </tr>
-              </table>
+        <div class="buttonWrap">
+          <a href="${escapeHtml(lookupUrl)}" class="button">Consultar solicitação</a>
+        </div>
+        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Acesse a consulta em: <a href="${escapeHtml(lookupUrl)}" style="color:#27457d;text-decoration:underline;">${escapeHtml(lookupUrl)}</a></p>`;
 
-              <p style="margin:0;text-align:center;font-size:11px;line-height:17px;color:#64748b;word-break:break-all;">Acesse a consulta em: <a href="${escapeHtml(lookupUrl)}" style="color:#27457d;text-decoration:underline;">${escapeHtml(lookupUrl)}</a></p>
-            </td>
-          </tr>
-          <tr>
-            <td class="footer" align="center" bgcolor="#ffffff" style="padding:16px 24px 20px;border-top:1px solid #e5eaf3;background-color:#ffffff;color:#64748b;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;text-align:center;">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+    const html = this.buildEmailShell({
+      pageTitle: "Solicitação de acesso recebida",
+      headerSubtitle: "Solicitação de acesso recebida",
+      badgeText: "Em análise",
+      badgeVariant: "info",
+      bodyHtml,
+    });
 
     const companyText = Object.entries(data.companyDetails ?? {})
       .filter(([key, value]) => {
@@ -1081,50 +807,7 @@ Guarde este código para acompanhar o andamento da sua solicitação.`;
     const permissionsHtml = contentByRole.permissions.map((item) => `<li>${item}</li>`).join("");
     const nextStepsHtml = contentByRole.nextSteps.map((item) => `<li>${item}</li>`).join("");
 
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${contentByRole.subject} - Quality Control</title>
-  <style>
-    body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb}
-    .page{width:100%;padding:42px 12px;background:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%)}
-    .card{max-width:780px;margin:0 auto;background:rgba(255,255,255,.98);border:1px solid rgba(1,24,72,.14);border-radius:26px;overflow:hidden;box-shadow:0 24px 70px rgba(1,24,72,.25)}
-    .header{background:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:24px 24px;text-align:center}
-    .brand{display:inline-flex;align-items:center;justify-content:center;margin:0 auto 12px;width:74px;height:74px;border-radius:999px;background:#ffffff;padding:0;box-shadow:0 10px 24px rgba(0,0,0,.22);overflow:hidden;border:1px solid rgba(255,255,255,.85)}
-    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
-    .header p{margin:8px 0 0;font-size:13px;color:#ffffff;opacity:1;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-    .content{padding:42px 46px 36px}
-    .badge{display:inline-block;padding:8px 14px;border-radius:999px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;font-size:13px;font-weight:800;margin-bottom:18px}
-    h2{margin:0 0 12px;color:#011848;font-size:23px;line-height:1.3}
-    p{margin:0 0 16px;color:#475569;font-size:14px;line-height:1.75}
-    .info{margin:24px 0;border:1px solid #d8dfeb;border-radius:18px;overflow:hidden;background:#f8fafc}
-    .info table{width:100%;border-collapse:collapse}
-    .info td{padding:15px 18px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
-    .info tr:last-child td{border-bottom:0}
-    .label{width:34%;color:#64748b;font-weight:800}
-    .value{color:#011848;font-weight:800;word-break:break-word}
-    .box{margin:22px 0;padding:18px 20px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:16px;color:#27457d;font-size:13px;line-height:1.65}
-    .box strong{color:#011848}
-    .list{margin:10px 0 0;padding-left:20px;color:#27457d}
-    .list li{margin:7px 0}
-    .buttonWrap{text-align:center;margin:32px 0 12px}
-    .button{display:inline-block;padding:16px 38px;border-radius:14px;background:linear-gradient(135deg,#011848 0%,#ef0001 100%);color:#fff!important;text-decoration:none;font-weight:900;font-size:15px;box-shadow:0 14px 28px rgba(239,0,1,.28)}
-    .footer{padding:20px 28px 28px;text-align:center;color:#64748b;font-size:12px;background:#fff}
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="card">
-      <div class="header">
-        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoSrc())}" alt="" width="74" height="74" style="display:block;width:74px;height:74px;object-fit:cover;border-radius:999px;border:0;outline:none;text-decoration:none;" /></div>
-        <h1>Quality Control</h1>
-        <p style="color:#ffffff!important;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35);">${contentByRole.title}</p>
-      </div>
-
-      <div class="content">
-        <span class="badge">✓ ${contentByRole.badge}</span>
-
+    const bodyHtml = `
         <h2>${approvedGreeting}</h2>
 
         <p>${contentByRole.intro}</p>
@@ -1152,7 +835,7 @@ Guarde este código para acompanhar o andamento da sua solicitação.`;
         <div class="box">
           A senha deste acesso é a senha cadastrada no formulário de solicitação e será tratada como temporária.
           Após o primeiro acesso, é necessário alterar a senha em
-          <strong>Meu Perfil → Alterar Senha</strong>. A senha temporária ficará válida por 10 dias após a aprovação. Após esse prazo, utilize a opção <strong>“Esqueci minha senha”</strong> para recuperar o acesso.
+          <strong>Meu Perfil → Alterar Senha</strong>. A senha temporária ficará válida por 10 dias após a aprovação. Após esse prazo, utilize a opção <strong>"Esqueci minha senha"</strong> para recuperar o acesso.
         </div>
 
         <div class="buttonWrap">
@@ -1161,17 +844,15 @@ Guarde este código para acompanhar o andamento da sua solicitação.`;
 
         <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">
           Link direto: ${escapeHtml(loginUrl)}
-        </p>
-      </div>
+        </p>`;
 
-      <div class="footer">
-        E-mail automático. Não responda.<br>
-        © ${new Date().getFullYear()} Quality Control.
-      </div>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = this.buildEmailShell({
+      pageTitle: contentByRole.subject,
+      headerSubtitle: contentByRole.title,
+      badgeText: `✓ ${contentByRole.badge}`,
+      badgeVariant: "success",
+      bodyHtml,
+    });
 
     const permissionsText = contentByRole.permissions.map((item) => `- ${item}`).join("\n");
     const nextStepsText = contentByRole.nextSteps.map((item) => `- ${item}`).join("\n");
@@ -1220,7 +901,6 @@ Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha t
 
     const greetingText = data.name ? `Olá, ${data.name}!` : "Olá!";
     const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : "Olá!";
-    const logoSrc = escapeHtml(this.resolveEmailLogoSrc());
     const comment = data.comment || "Recusado por dados incompatíveis.";
 
     const statusButton = statusUrl
@@ -1228,45 +908,7 @@ Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha t
          <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Link direto: ${escapeHtml(statusUrl)}</p>`
       : "";
 
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Solicitação de acesso rejeitada - Quality Control</title>
-  <style>
-    body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb}
-    .page{width:100%;padding:42px 12px;background:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%)}
-    .card{max-width:780px;margin:0 auto;background:rgba(255,255,255,.98);border:1px solid rgba(1,24,72,.14);border-radius:26px;overflow:hidden;box-shadow:0 24px 70px rgba(1,24,72,.25)}
-    .header{background:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:24px 24px;text-align:center}
-    .brand{display:inline-flex;align-items:center;justify-content:center;margin:0 auto 12px;width:74px;height:74px;border-radius:999px;background:#ffffff;padding:0;box-shadow:0 10px 24px rgba(0,0,0,.22);overflow:hidden;border:1px solid rgba(255,255,255,.85)}
-    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
-    .header p{margin:8px 0 0;font-size:13px;color:#ffffff;opacity:1;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-    .content{padding:42px 46px 36px}
-    .badge{display:inline-block;padding:8px 14px;border-radius:999px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;font-size:13px;font-weight:800;margin-bottom:18px}
-    h2{margin:0 0 12px;color:#011848;font-size:23px;line-height:1.3}
-    p{margin:0 0 16px;color:#475569;font-size:14px;line-height:1.75}
-    .reasonBox{margin:24px 0;padding:18px 20px;background:#fff1f2;border:1px solid #fecdd3;border-left:5px solid #ef4444;border-radius:16px;color:#7f1d1d;font-size:14px;line-height:1.65}
-    .reasonBox strong{color:#7f1d1d}
-    .box{margin:22px 0;padding:18px 20px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:16px;color:#27457d;font-size:13px;line-height:1.65}
-    .buttonWrap{text-align:center;margin:32px 0 12px}
-    .button{display:inline-block;padding:16px 38px;border-radius:14px;background:linear-gradient(135deg,#011848 0%,#ef0001 100%);color:#fff!important;text-decoration:none;font-weight:900;font-size:15px;box-shadow:0 14px 28px rgba(239,0,1,.28)}
-    .footer{padding:20px 28px 28px;text-align:center;color:#64748b;font-size:12px;background:#fff}
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="card">
-      <div class="header">
-        <div class="brand">
-          <img src="${logoSrc}" alt="" width="74" height="74" style="display:block;width:74px;height:74px;object-fit:cover;border-radius:999px;border:0;outline:none;text-decoration:none;" />
-        </div>
-        <h1>Quality Control</h1>
-        <p style="color:#ffffff!important;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35);">Solicitação de acesso rejeitada</p>
-      </div>
-
-      <div class="content">
-        <span class="badge">✕ Solicitação rejeitada</span>
-
+    const bodyHtml = `
         <h2>${greeting}</h2>
 
         <p>Infelizmente sua solicitação de acesso foi <strong>rejeitada</strong>.</p>
@@ -1279,17 +921,15 @@ Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha t
 
         <div class="box">
           Se tiver dúvidas, entre em contato com a equipe de suporte.
-        </div>
-      </div>
+        </div>`;
 
-      <div class="footer">
-        E-mail automático. Não responda.<br>
-        © ${new Date().getFullYear()} Quality Control.
-      </div>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = this.buildEmailShell({
+      pageTitle: "Solicitação de acesso rejeitada",
+      headerSubtitle: "Solicitação de acesso rejeitada",
+      badgeText: "✕ Solicitação rejeitada",
+      badgeVariant: "danger",
+      bodyHtml,
+    });
 
     const text = `${greetingText}
 
@@ -1329,95 +969,36 @@ Para dúvidas, entre em contato com o suporte.`;
     const observationHtml = escapeHtml(observation).replaceAll("\n", "<br>");
     const safeLookupUrl = escapeHtml(lookupUrl);
     const safeAccessKey = escapeHtml(data.accessKey);
-    const logoUrl = escapeHtml(this.resolveEmailLogoSrc());
 
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ajuste necessário na solicitação - Quality Control</title>
-  <style>
-    body{width:100%!important;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
-    table{border-spacing:0}
-    .card{width:600px;max-width:600px;margin:0 auto;background:#fff;border:1px solid rgba(1,24,72,.12);border-radius:20px;overflow:hidden;box-shadow:0 18px 46px rgba(1,24,72,.20)}
-    .header{background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:10px 20px;text-align:center}
-    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
-    .header p{margin:3px 0 0;font-size:12px;line-height:16px;opacity:.92}
-    .content{padding:22px 28px 26px;word-wrap:break-word}
-    .badge{display:inline-block;padding:7px 12px;border-radius:999px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;font-size:12px;font-weight:900;margin-bottom:12px}
-    h2{margin:0 0 10px;color:#011848;font-size:22px;line-height:1.3}
-    p{margin:0 0 14px;color:#475569;font-size:14px;line-height:1.65}
-    .section-title{margin:20px 0 8px;color:#011848;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
-    .info{margin:0 0 16px;border:1px solid #d8dfeb;border-radius:14px;overflow:hidden;background:#f8fafc}
-    .info table{width:100%;border-collapse:collapse;table-layout:fixed}
-    .info td{padding:11px 14px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
-    .info tr:last-child td{border-bottom:0}
-    .label{width:34%;color:#64748b;font-weight:900}
-    .value{color:#011848;font-weight:900;word-break:break-word;overflow-wrap:anywhere}
-    .box{margin:18px 0;padding:14px 16px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:12px;color:#27457d;font-size:13px;line-height:1.6}
-    .warning{background:#fff7ed;border-color:#fed7aa;border-left-color:#f97316;color:#9a3412}
-    .footer{padding:16px 24px 20px;text-align:center;color:#64748b;font-size:12px;background:#fff}
-    @media only screen and (max-width:620px){
-      .card{width:100%!important}
-      .content{padding:20px 16px 24px!important}
-      .label,.value{display:block!important;width:auto!important}
-      .label{padding-bottom:3px!important;border-bottom:0!important}
-      .value{padding-top:0!important}
-    }
-  </style>
-</head>
-<body style="width:100%!important;margin:0;padding:0;background-color:#f4f6fb;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f6fb" style="width:100%;border-collapse:collapse;background-color:#f4f6fb;background-image:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%);">
-    <tr>
-      <td align="center" style="padding:16px 8px;">
-        <table role="presentation" class="card" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border:1px solid #d8dfeb;border-collapse:separate;border-spacing:0;background-color:#ffffff;border-radius:20px;overflow:hidden;">
-          <tr>
-            <td class="header" align="center" bgcolor="#011848" style="padding:10px 20px;background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);border-radius:20px 20px 0 0;color:#ffffff;text-align:center;">
-              <img src="${logoUrl}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 4px;border:0;outline:none;text-decoration:none;">
-              <h1 style="margin:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:25px;letter-spacing:-.2px;">Quality Control</h1>
-              <p style="margin:3px 0 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;">Ajuste necessário na solicitação</p>
-            </td>
-          </tr>
-          <tr>
-            <td class="content" style="padding:22px 28px 26px;color:#011848;font-family:Arial,Helvetica,sans-serif;word-wrap:break-word;">
-              <span class="badge">Ajuste necessário</span>
-              <h2>${greeting}</h2>
-              <p>Sua solicitação de acesso precisa de ajuste antes de seguir para aprovação.</p>
+    const bodyHtml = `
+        <h2>${greeting}</h2>
+        <p>Sua solicitação de acesso precisa de ajuste antes de seguir para aprovação.</p>
 
-              <div class="section-title">Observação do revisor</div>
-              <div class="box warning">${observationHtml}</div>
+        <div class="section-title">Observação do revisor</div>
+        <div class="box warning">${observationHtml}</div>
 
-              <div class="section-title">Código de consulta</div>
-              <div class="info">
-                <table>
-                  <tr><td class="label">Código</td><td class="value">${safeAccessKey}</td></tr>
-                  <tr><td class="label">Validade</td><td class="value">Este código expira em ${ttlMinutes} minutos.</td></tr>
-                </table>
-              </div>
+        <div class="section-title">Código de consulta</div>
+        <div class="info">
+          <table>
+            <tr><td class="label">Código</td><td class="value">${safeAccessKey}</td></tr>
+            <tr><td class="label">Validade</td><td class="value">Este código expira em ${ttlMinutes} minutos.</td></tr>
+          </table>
+        </div>
 
-              <div class="box">Para consultar e ajustar sua solicitação, acesse a tela de consulta e informe seu nome, e-mail e código de consulta.</div>
+        <div class="box">Para consultar e ajustar sua solicitação, acesse a tela de consulta e informe seu nome, e-mail e código de consulta.</div>
 
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto 10px;border-collapse:separate;">
-                <tr>
-                  <td align="center" bgcolor="#ef0001" style="background-color:#ef0001;border-radius:9px;mso-padding-alt:11px 20px;">
-                    <a href="${safeLookupUrl}" style="display:inline-block;padding:11px 20px;color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;line-height:18px;text-align:center;text-decoration:none;">Consultar solicitação</a>
-                  </td>
-                </tr>
-              </table>
+        <div class="buttonWrap">
+          <a href="${safeLookupUrl}" class="button">Consultar solicitação</a>
+        </div>
+        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Acesse a consulta em: <a href="${safeLookupUrl}" style="color:#27457d;text-decoration:underline;">${safeLookupUrl}</a></p>`;
 
-              <p style="margin:0;text-align:center;font-size:11px;line-height:17px;color:#64748b;word-break:break-all;">Acesse a consulta em: <a href="${safeLookupUrl}" style="color:#27457d;text-decoration:underline;">${safeLookupUrl}</a></p>
-            </td>
-          </tr>
-          <tr>
-            <td class="footer" align="center" bgcolor="#ffffff" style="padding:16px 24px 20px;border-top:1px solid #e5eaf3;background-color:#ffffff;color:#64748b;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;text-align:center;">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+    const html = this.buildEmailShell({
+      pageTitle: "Ajuste necessário na solicitação",
+      headerSubtitle: "Ajuste necessário na solicitação",
+      badgeText: "Ajuste necessário",
+      badgeVariant: "warning",
+      bodyHtml,
+    });
 
     const text = `${greetingText}
 

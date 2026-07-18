@@ -564,7 +564,7 @@ export function buildQualityControlOfficialDocsStore(): PlatformDocsStore {
             ["Backend/API", "Next.js route handlers, TypeScript, Prisma Client, PostgreSQL, Upstash Redis opcional", "APIs internas, RBAC, persistencia, cache e integracoes."],
             ["IA e agentes", "OpenAI SDK/AI SDK, Brain interno, agentes QA/Playwright/Memory/Debug", "Assistencia operacional, busca contextual, geracao de testes e documentacao assistida."],
             ["Qualidade", "Jest, Playwright, Axe, ESLint, TypeScript", "Testes unitarios/API/UI/acessibilidade, typecheck e lint."],
-            ["Documentacao", "OpenAPI JSON, Postman/Newman, wiki `platform-docs`, scripts `support/functions/documentacao`", "Contratos, colecoes, sync da wiki e capturas de tela."],
+            ["Documentacao", "OpenAPI JSON, Postman/Newman, wiki `platform-docs`, scripts `tools/functions/documentacao`", "Contratos, colecoes, sync da wiki e capturas de tela."],
             ["Deploy/ops", "Dockerfile, Render Blueprint, scripts de ambiente", "Build, start, migracoes e verificacoes de ambiente."]
           ],
         },
@@ -572,7 +572,7 @@ export function buildQualityControlOfficialDocsStore(): PlatformDocsStore {
           id: "qc-tools-code",
           type: "code",
           language: "bash",
-          code: "npm run typecheck\nnpm test -- --runInBand testes/api/documentacao/quality-control-docs.test.ts\nnpm run docs:check-api\nnpm run docs:sync-quality-control\nnpm run docs:capture-screens",
+          code: "npm run typecheck\nnpm test -- --runInBand tests/api/documentacao/quality-control-docs.test.ts\nnpm run docs:check-api\nnpm run docs:sync-quality-control\nnpm run docs:capture-screens",
           caption: "Comandos de verificacao e sincronizacao da documentacao oficial."
         },
         {

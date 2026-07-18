@@ -545,7 +545,15 @@ function resolveImportToProjectPath(sourcePath: string, specifier: string, proje
   const candidates: string[] = [];
 
   if (specifier.startsWith("@/backend/")) {
-    candidates.push(`lib/${specifier.slice("@/backend/".length)}`);
+    candidates.push(`backend/${specifier.slice("@/backend/".length)}`);
+  } else if (specifier.startsWith("@/database/")) {
+    candidates.push(`database/${specifier.slice("@/database/".length)}`);
+  } else if (specifier.startsWith("@/data/")) {
+    candidates.push(`database/repositories/${specifier.slice("@/data/".length)}`);
+  } else if (specifier.startsWith("@/contracts/")) {
+    candidates.push(`shared/contracts/src/${specifier.slice("@/contracts/".length)}`);
+  } else if (specifier.startsWith("@/shared/")) {
+    candidates.push(`shared/${specifier.slice("@/shared/".length)}`);
   } else if (specifier.startsWith("@/components/")) {
     candidates.push(`app/components/${specifier.slice("@/components/".length)}`);
   } else if (specifier.startsWith("@/hooks/")) {
@@ -553,7 +561,7 @@ function resolveImportToProjectPath(sourcePath: string, specifier: string, proje
   } else if (specifier.startsWith("@/utils/")) {
     candidates.push(`app/utils/${specifier.slice("@/utils/".length)}`);
   } else if (specifier.startsWith("@/types/")) {
-    candidates.push(`app/types/${specifier.slice("@/types/".length)}`);
+    candidates.push(`shared/types/${specifier.slice("@/types/".length)}`);
   } else if (specifier.startsWith("@/")) {
     candidates.push(`app/${specifier.slice(2)}`);
   } else if (specifier.startsWith(".")) {

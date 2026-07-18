@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { AuthCompany } from "@/../packages/contracts/src/auth";
+import type { AuthCompany } from "@/contracts/auth";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/backend/auth/session";
 import { buildCurrentUserResponse } from "@/backend/auth/currentUserResponse";

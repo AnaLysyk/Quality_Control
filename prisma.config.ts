@@ -11,9 +11,9 @@ function resolveDatabaseUrl() {
 }
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: "database/prisma/schema.prisma",
   migrations: {
-    path: "prisma/migrations",
+    path: "database/prisma/migrations",
   },
   datasource: {
     url: resolveDatabaseUrl(),

@@ -5,7 +5,7 @@
 - `tests/`: testes unitários, de contrato e de integração executados pelo Jest.
 - `tests-e2e/`: fluxos de interface e APIs executados pelo Playwright.
 
-`types/` não contém testes; ele guarda declarações TypeScript globais. `specs/` contém planos de teste em Markdown, não testes executáveis.
+`types/` não contém testes; ele guarda declarações TypeScript globais. `docs/specs/` contém planos de teste em Markdown, não testes executáveis.
 
 ## Situação atual
 
@@ -28,7 +28,7 @@ Mover tudo de uma vez poderia esconder duplicidades, quebrar imports e alterar c
 - Jest: `tests/<dominio>-<comportamento>.test.ts` ou `.test.tsx`.
 - Playwright: `tests-e2e/<fluxo>.spec.ts`.
 - Utilitários E2E: `tests-e2e/utils/`.
-- Planos manuais: manter em `specs/` por enquanto.
+- Planos manuais: manter em `docs/specs/` por enquanto.
 - Fixtures compartilhadas: usar `data/` somente quando forem dados de teste, sem regra de negócio.
 
 ## Critério de conclusão

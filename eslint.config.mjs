@@ -57,8 +57,8 @@ const qualityControlWarningCleanup = {
 
 const qualityControlSupportAndTestsCleanup = {
   files: [
-    "support/**/*.{js,ts,mjs,cjs}",
-    "testes/**/*.{js,ts,tsx}",
+    "tools/**/*.{js,ts,mjs,cjs}",
+    "tests/**/*.{js,ts,tsx}",
     "database/**/*.{js,ts}",
     "backend/auth/pgStore.ts"
   ],

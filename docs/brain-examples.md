@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 ```typescript
 // pages/api/admin/brain/sync.ts
 import { NextApiRequest, NextApiResponse } from 'next'
-import { syncBrain } from '@/../support/functions/banco-de-dados/brain/sincronizar-brain'
+import { syncBrain } from '@/../tools/functions/banco-de-dados/brain/sincronizar-brain'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Proteger com auth

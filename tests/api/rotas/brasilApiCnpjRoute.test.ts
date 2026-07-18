@@ -29,7 +29,7 @@ describe("GET /api/brasilapi/cnpj/[cnpj]", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       cnpj: "19131243000197",
-      company_name: "Testing Company",
+      company_name: "Testing Company LTDA",
       nome_fantasia: "Testing Company",
       razao_social: "Testing Company LTDA",
     });
@@ -45,7 +45,7 @@ describe("GET /api/brasilapi/cnpj/[cnpj]", () => {
     });
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({ error: "CNPJ invalido" });
+    await expect(response.json()).resolves.toMatchObject({ error: "CNPJ inválido" });
   });
 });
 

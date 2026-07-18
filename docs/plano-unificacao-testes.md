@@ -1,41 +1,38 @@
-# Plano de unificação dos testes
+# Unificação dos testes — concluída
 
-## Destinos oficiais
-
-- `tests/`: testes unitários, de contrato e de integração executados pelo Jest.
-- `tests-e2e/`: fluxos de interface e APIs executados pelo Playwright.
-
-`types/` não contém testes; ele guarda declarações TypeScript globais. `docs/specs/` contém planos de teste em Markdown, não testes executáveis.
+> Reescrito na branch `refactor/estrutura-de-pastas` (2026-07-18). Este
+> documento descrevia um plano (destino final: `tests/` para Jest e
+> `tests-e2e/` separado para Playwright, migração incremental de
+> `__tests__/`). O plano foi **concluído e superado**: hoje existe uma única
+> pasta de testes. Não confie em cópias antigas deste arquivo.
 
 ## Situação atual
 
-O comando `npm run test` usa `**/tests/**/*.test.ts?(x)`. Portanto, `tests/` é o conjunto Jest padrão.
+Toda a suíte de testes vive em `tests/`, um nível acima do que o plano
+original previa — não há mais divisão entre `tests/` (Jest) e `tests-e2e/`
+(Playwright); os dois frameworks compartilham a mesma árvore, distinguidos
+só pela extensão do arquivo:
 
-`__tests__/` é legado e não entra no comando padrão. A exceção conhecida é `npm run brain:test`, que chama `__tests__/brain.test.ts` diretamente.
+- Jest: `tests/**/*.test.ts` e `tests/**/*.test.tsx` (`jest.config.ts`,
+  `testMatch`).
+- Playwright: `tests/**/*.spec.ts` (`playwright.config.ts`/
+  `playwright.prod.config.ts`, `testDir: "tests"`).
 
-Mover tudo de uma vez poderia esconder duplicidades, quebrar imports e alterar cobertura. A unificação será incremental.
+`__tests__/` e `tests-e2e/` não existem mais no repositório — não há
+referência ativa a nenhum dos dois em nenhum script ou config.
 
-## Etapas
-
-1. Inventariar arquivos de `__tests__/` e identificar duplicados em `tests/`.
-2. Migrar primeiro testes ativos de regras críticas.
-3. Atualizar scripts específicos antes de mover o arquivo correspondente.
-4. Executar o teste migrado isoladamente e depois `npm run test`.
-5. Remover `__tests__/` apenas quando não houver referência em scripts, CI ou documentação.
+`docs/specs/` (era `specs/` na raiz) continua guardando planos de teste em
+Markdown, não testes executáveis — não faz parte desta unificação.
 
 ## Convenções
 
 - Jest: `tests/<dominio>-<comportamento>.test.ts` ou `.test.tsx`.
-- Playwright: `tests-e2e/<fluxo>.spec.ts`.
-- Utilitários E2E: `tests-e2e/utils/`.
-- Planos manuais: manter em `docs/specs/` por enquanto.
-- Fixtures compartilhadas: usar `data/` somente quando forem dados de teste, sem regra de negócio.
+- Playwright: `tests/<área>/<fluxo>.spec.ts`.
+- Fixtures/dados de teste: `tools/functions/` (era `support/`), nunca
+  `database/` (que é só código de produção de acesso a dados).
 
-## Critério de conclusão
+## Se aparecer uma referência antiga
 
-A unificação termina quando:
-
-- `npm run test` executa todos os testes Jest ativos;
-- nenhum script aponta para `__tests__/`;
-- `__tests__/` pode ser removido sem perda de cobertura;
-- `tests-e2e/` continua separado por ser uma suíte de natureza diferente.
+Se algum script, doc ou comentário ainda apontar para `tests-e2e/` ou
+`__tests__/`, é resíduo de antes desta unificação — corrigir para `tests/`
+ao encontrar, não recriar as pastas antigas.

@@ -3,7 +3,7 @@
 const { execFileSync } = require("node:child_process");
 
 function git(args) {
-  return execFileSync("git", args, {
+  return execFileSync("git", args, { // NOSONAR: local dev-tooling script, PATH is the developer's own trusted shell
     cwd: process.cwd(),
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
@@ -72,7 +72,7 @@ function collectHotspots(paths) {
 }
 
 function escapeCell(value) {
-  return value.replace(/\|/g, "\\|");
+  return value.replaceAll("|", String.raw`\|`);
 }
 
 const base = process.argv[2] || "origin/main";

@@ -1,8 +1,8 @@
-﻿import {
+import {
   normalizeRequestProfileType,
   toRequestProfileTypeLabel,
   type RequestProfileTypeLabel,
-} from "@/backend/requestRouting";
+} from "@/backend/access-requests/routing";
 
 export type AccessTypeLabel = RequestProfileTypeLabel;
 

@@ -4,7 +4,7 @@ import { slugifyRelease } from "@/backend/slugifyRelease";
 import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
 import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
 import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/backend/rbac/defects";
-import { syncReleaseManualToBrain } from "@/backend/brain-sync";
+import { syncReleaseManualToBrain } from "@/backend/brain/sync";
 import type { Release, Stats } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/backend/defectNormalization";
 import { resolveManualReleaseKind } from "@/backend/manualReleaseKind";
@@ -248,4 +248,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Erro ao salvar run manual" }, { status: 500 });
   }
 }
-

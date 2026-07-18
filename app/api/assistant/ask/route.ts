@@ -10,6 +10,7 @@ import { hasPermissionAccess } from "@/backend/permissionMatrix";
 import { buildWebSupportContext, shouldUseWebSupport } from "@/backend/assistant/webSupport";
 import type { AgentMode } from "@/backend/brain/agents";
 import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/backend/assistant/types";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -273,6 +274,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
 
+  const limiter = await rateLimit(req, `assistant-ask:${authUser.id}`, 20, 60);
+  if (limiter.limited) return limiter.response;
+
   try {
     const rawBody = (await req.json().catch(() => ({}))) as AssistantRequestBody;
     const body = sanitizeRequestBody(rawBody);
@@ -470,9 +474,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro interno";
     console.error("[assistant/ask] error:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno ao processar a solicitação" }, { status: 500 });
   }
 }
-

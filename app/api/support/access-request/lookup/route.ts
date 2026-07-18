@@ -1,12 +1,12 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/database/prismaClient";
 import { shouldUseJsonStore } from "@/backend/storeMode";
-import { listAccessRequests } from "@/data/accessRequestsStore";
-import { listAccessRequestComments } from "@/data/accessRequestCommentsStore";
-import { extractAdminNotes, parseAccessRequestMessage } from "@/backend/accessRequestMessage";
-import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/backend/accessRequestLookup";
+import { listAccessRequests } from "@/data/access-requests/store";
+import { listAccessRequestComments } from "@/data/access-requests/commentsStore";
+import { extractAdminNotes, parseAccessRequestMessage } from "@/backend/access-requests/message";
+import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/backend/access-requests/lookup";
 import { NO_STORE_HEADERS } from "@/backend/http/noStore";
-import { resendAccessRequestCode } from "@/backend/accessRequestsV2/service";
+import { getPublicAccessRequestByKey, resendAccessRequestCode } from "@/backend/access-requests/service";
 import { rateLimit } from "@/backend/rateLimit";
 
 export const dynamic = "force-dynamic";
@@ -65,12 +65,25 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const rawName = url.searchParams.get("name") ?? "";
   const rawEmail = url.searchParams.get("email") ?? "";
+  const accessKey = url.searchParams.get("accessKey")?.trim() ?? "";
   const name = normalizeAccessRequestLookup(rawName);
   const email = normalizeAccessRequestLookup(rawEmail);
   const trimmedEmail = rawEmail.trim().toLowerCase();
 
-  if (!name || !email) {
-    return NextResponse.json({ error: "Informe nome e e-mail." }, { status: 400, headers: NO_STORE_HEADERS });
+  if (!accessKey || accessKey.length < 10 || accessKey.length > 160 || !name || !email) {
+    return NextResponse.json({ error: "Informe código de acesso, nome e e-mail." }, { status: 400, headers: NO_STORE_HEADERS });
+  }
+
+  const limiter = await rateLimit(req, `legacy-access-request-lookup:${accessKey}`, 15, 60);
+  if (limiter.limited) return limiter.response;
+
+  const keyedRequest = await getPublicAccessRequestByKey(accessKey);
+  if (
+    !keyedRequest ||
+    normalizeAccessRequestLookup(keyedRequest.request.requesterName) !== name ||
+    normalizeAccessRequestLookup(keyedRequest.request.requesterEmail) !== email
+  ) {
+    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
   }
 
   let items: SupportRequestRow[] = [];
@@ -127,7 +140,7 @@ export async function GET(req: Request) {
     });
   });
 
-  if (!match) {
+  if (!match || match.id !== keyedRequest.request.id) {
     return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
   }
 
@@ -168,4 +181,3 @@ export async function GET(req: Request) {
     { status: 200, headers: NO_STORE_HEADERS },
   );
 }
-

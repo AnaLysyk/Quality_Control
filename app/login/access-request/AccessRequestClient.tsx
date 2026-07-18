@@ -10,13 +10,13 @@ import type {
   AccessRequestAdjustmentField,
   AccessRequestAdjustmentRound,
   AccessRequestSnapshot,
-} from "@/backend/accessRequestMessage";
-import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, type RequestProfileType } from "@/backend/requestRouting";
+} from "@/backend/access-requests/message";
+import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, type RequestProfileType } from "@/backend/access-requests/routing";
 import { JOB_TITLE_OPTIONS } from "@/backend/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/hooks/useI18n";
-import { normalizeAccessRequestLookup } from "@/backend/accessRequestLookup";
-import { ACCESS_REQUEST_BASE_ADJUSTMENT_OPTIONS, ACCESS_REQUEST_COMPANY_ADJUSTMENT_OPTIONS } from "@/backend/accessRequestAdjustmentFields";
+import { normalizeAccessRequestLookup } from "@/backend/access-requests/lookup";
+import { ACCESS_REQUEST_BASE_ADJUSTMENT_OPTIONS, ACCESS_REQUEST_COMPANY_ADJUSTMENT_OPTIONS } from "@/backend/access-requests/adjustmentFields";
 import { isCnpjValid, normalizeCnpj } from "@/backend/brasilApiCnpj";
 
 const ACCESS_OPTIONS = [
@@ -42,7 +42,7 @@ const ACCESS_OPTIONS = [
   },
   {
     value: "technical_support",
-    label: "Suporte Técnico",
+    label: "Administrador",
     hint: "Atuacao tecnica e operacional da Testing Company.",
   },
 ];
@@ -702,6 +702,7 @@ export default function AccessRequestClient() {
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          accessKey: lookupAccessKey.trim(),
           requestId: lookupItem.id,
           name: lookupName.trim(),
           email: lookupEmail.trim().toLowerCase(),
@@ -882,6 +883,7 @@ export default function AccessRequestClient() {
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          access_key: lookupAccessKey.trim(),
           requestId: lookupItem.id,
           lookup_name: lookupName.trim(),
           lookup_email: lookupEmail.trim().toLowerCase(),

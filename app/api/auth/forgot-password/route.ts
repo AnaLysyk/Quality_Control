@@ -1,4 +1,4 @@
-﻿import { randomBytes } from "crypto";
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
@@ -8,7 +8,7 @@ import { storePasswordResetToken } from "@/backend/auth/passwordResetToken";
 import { emailService } from "@/backend/email";
 import { notifyPasswordResetRequest } from "@/backend/notificationService";
 import { rateLimit } from "@/backend/rateLimit";
-import { deriveProfileTypeFromAccount, normalizeRequestProfileType, resolveReviewQueue } from "@/backend/requestRouting";
+import { deriveProfileTypeFromAccount, normalizeRequestProfileType, resolveReviewQueue } from "@/backend/access-requests/routing";
 
 const GENERIC_MESSAGE = "Se o e-mail informado estiver cadastrado, enviaremos as instruções para redefinir sua senha.";
 

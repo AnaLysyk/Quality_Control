@@ -5,10 +5,14 @@ import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
 import {
   canAccessCompany,
+  canAccessProject,
   canAccessSensitivity,
   canCreateAsset,
+  getCompanyProjectAccess,
+  isSensitivityLevel,
   PermissionError,
 } from "@/backend/test-data-hub/permissions";
+import type { Prisma } from "@prisma/client";
 
 /**
  * GET /api/test-data-assets
@@ -60,14 +64,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No access to this company" }, { status: 403 });
     }
 
+    const projectAccess = getCompanyProjectAccess(user, companySlug);
+    if (projectId && !canAccessProject(user, companySlug, projectId)) {
+      return NextResponse.json({ error: "No access to this project" }, { status: 403 });
+    }
+
     // Build where clause
-    const where: any = {
+    const where: Prisma.TestDataAssetWhereInput = {
       companySlug,
       status,
     };
 
     if (projectId) {
       where.projectId = projectId;
+    } else if (!projectAccess.allProjects) {
+      where.AND = [
+        {
+          OR: [
+            { projectId: null },
+            { projectId: { in: projectAccess.projectIds } },
+          ],
+        },
+      ];
     }
 
     if (assetType) {
@@ -197,6 +215,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (projectId && !canAccessProject(user, companySlug, projectId)) {
+      return NextResponse.json({ error: "No permission to create assets in this project" }, { status: 403 });
+    }
+
+    if (!isSensitivityLevel(sensitivity) || !canAccessSensitivity(user, sensitivity)) {
+      return NextResponse.json({ error: "Invalid or unauthorized sensitivity level" }, { status: 403 });
+    }
+
+    if (!['file', 'base64', 'json', 'text'].includes(encoding)) {
+      return NextResponse.json({ error: "Unsupported asset encoding" }, { status: 400 });
+    }
+
+    if (projectId) {
+      const project = await prisma.project.findFirst({
+        where: { id: projectId, company: { slug: companySlug } },
+        select: { id: true },
+      });
+      if (!project) return NextResponse.json({ error: "Project does not belong to this company" }, { status: 400 });
+    }
+
+    if (documentId) {
+      const document = await prisma.automationDocument.findFirst({
+        where: { id: documentId, companySlug },
+        select: { id: true },
+      });
+      if (!document) return NextResponse.json({ error: "Document does not belong to this company" }, { status: 400 });
+    }
+
+    if (fragmentId) {
+      const fragment = await prisma.automationDocumentFragment.findFirst({
+        where: { id: fragmentId, companySlug },
+        select: { id: true },
+      });
+      if (!fragment) return NextResponse.json({ error: "Fragment does not belong to this company" }, { status: 400 });
+    }
+
     // Check if key already exists
     const existing = await prisma.testDataAsset.findUnique({
       where: { key },
@@ -277,4 +331,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

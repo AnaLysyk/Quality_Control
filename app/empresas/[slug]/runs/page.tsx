@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/backend/api";
@@ -91,7 +92,7 @@ type UnifiedRun = {
 
 const PROFILE_LABEL: Record<string, string> = {
   empresa: "Empresa",
-  technical_support: "Suporte Técnico",
+  technical_support: "Administrador",
   leader_tc: "Líder TC",
   testing_company_user: "Usuário TC",
   company_user: "Usuário da Empresa",
@@ -755,7 +756,7 @@ export default function CompanyRunsPage() {
           </div>
 
           {/* Runs */}
-          <div className="space-y-2 border-t border-[var(--tc-border,#e5e7eb)] pt-3">
+          <ScrollReveal className="space-y-2 border-t border-[var(--tc-border,#e5e7eb)] pt-3" stagger={0.05} deps={[loading, page, pageSize]}>
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-(--tc-accent,#ef0001)" />
@@ -887,7 +888,7 @@ export default function CompanyRunsPage() {
                 );
               })
             )}
-          </div>
+          </ScrollReveal>
 
           {/* Pagination */}
           {!loading && filteredRuns.length > 0 && (

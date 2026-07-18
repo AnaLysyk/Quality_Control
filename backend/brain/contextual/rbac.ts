@@ -1,6 +1,6 @@
 ﻿import type { BrianContextCarrier, BrianNeuron, BrianProcessingResult, BrianSynapse } from "./types";
 
-const BROAD_ROLES = new Set(["admin", "global_admin", "leader_tc", "technical_support"]);
+const BROAD_ROLES = new Set(["admin", "global_admin", "technical_support"]);
 
 function normalize(value?: string | null) {
   return String(value ?? "").trim().toLowerCase();
@@ -17,18 +17,21 @@ export function canSeeBrianNeuron(context: BrianContextCarrier, neuron: BrianNeu
   if (BROAD_ROLES.has(role)) return true;
 
   const allowedRoles = neuron.visibility.allowedRoles ?? [];
-  if (allowedRoles.length > 0 && allowedRoles.map(normalize).includes(role)) return true;
-
   const requiredPermissions = neuron.visibility.requiredPermissions ?? [];
-  if (requiredPermissions.length > 0 && hasIntersection(requiredPermissions, context.permissions)) return true;
-
   const companyId = normalize(context.companyId);
   const companySlug = normalize(context.companySlug);
   const neuronCompanyIds = (neuron.visibility.companyIds ?? []).map(normalize);
   const neuronCompanySlugs = (neuron.visibility.companySlugs ?? []).map(normalize);
+  const hasCompanyRestriction = neuronCompanyIds.length > 0 || neuronCompanySlugs.length > 0;
+  const companyMatches =
+    (companyId.length > 0 && neuronCompanyIds.includes(companyId)) ||
+    (companySlug.length > 0 && neuronCompanySlugs.includes(companySlug));
 
-  if (companyId && neuronCompanyIds.includes(companyId)) return true;
-  if (companySlug && neuronCompanySlugs.includes(companySlug)) return true;
+  if (hasCompanyRestriction && !companyMatches) return false;
+  if (allowedRoles.length > 0 && allowedRoles.map(normalize).includes(role)) return true;
+  if (requiredPermissions.length > 0 && hasIntersection(requiredPermissions, context.permissions)) return true;
+
+  if (companyMatches) return true;
 
   return !neuronCompanyIds.length && !neuronCompanySlugs.length && !requiredPermissions.length;
 }
@@ -59,4 +62,3 @@ export function filterBrianProcessingResultByRBAC(result: BrianProcessingResult)
     },
   };
 }
-

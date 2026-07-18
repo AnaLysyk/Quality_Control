@@ -194,7 +194,13 @@ function inferModuleKeyFromProjectPath(projectPath: string) {
   if (top === "lib") {
     const second = parts[1] ?? "";
     if (second === "assistant") return "ai";
-    if (second === "brain" || normalized === "lib/brain.ts" || normalized === "lib/brain-sync.ts") return "brain";
+    if (
+      second === "brain" ||
+      normalized === "backend/brain.ts" ||
+      normalized === "backend/brain/sync.ts" ||
+      normalized === "lib/brain.ts" ||
+      normalized === "lib/brain-sync.ts"
+    ) return "brain";
     if (second === "automations") return "automacoes";
     if (second === "auth" || second === "session" || normalized.includes("jwt") || normalized.includes("password")) return "auth";
     if (second === "rbac" || second === "permissions" || normalized.includes("permission")) return "permissions";
@@ -763,4 +769,3 @@ export async function syncSystemMapToBrain(rootRefId = "testing-company-root") {
 
   return { nodeCount, edgeCount };
 }
-

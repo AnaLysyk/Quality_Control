@@ -1,4 +1,4 @@
-﻿import type { AccessRequestAdjustmentField } from "@/backend/accessRequestMessage";
+import type { AccessRequestAdjustmentField } from "@/backend/access-requests/message";
 
 export type AccessRequestAdjustmentCategory = "context" | "registration" | "company";
 
@@ -209,4 +209,3 @@ export function getAccessRequestAdjustmentFieldDefinition(field: string) {
 export function isAccessRequestContextField(field: string) {
   return getAccessRequestAdjustmentFieldDefinition(field)?.category === "context";
 }
-

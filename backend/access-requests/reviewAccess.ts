@@ -1,5 +1,5 @@
-﻿import type { RequestRecord } from "@/data/requestsStore";
-import { parseAccessRequestMessage } from "@/backend/accessRequestMessage";
+import type { RequestRecord } from "@/data/requestsStore";
+import { parseAccessRequestMessage } from "@/backend/access-requests/message";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import { hasPermissionAccess } from "@/backend/permissionMatrix";
 import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
@@ -8,7 +8,7 @@ import {
   normalizeRequestProfileType,
   resolveReviewQueue,
   type ReviewQueue,
-} from "@/backend/requestRouting";
+} from "@/backend/access-requests/routing";
 
 type ReviewerSession = {
   role?: string | null;
@@ -44,4 +44,3 @@ export function resolveGenericRequestQueue(request: Pick<RequestRecord, "payload
   const profileType = normalizeRequestProfileType(typeof payload.profileType === "string" ? payload.profileType : "");
   return resolveReviewQueue(profileType ?? "testing_company_user");
 }
-

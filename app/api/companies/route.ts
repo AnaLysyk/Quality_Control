@@ -4,7 +4,7 @@ import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { createLocalCompany, deleteLocalCompany, listLocalCompanies, type LocalAuthCompany } from "@/backend/auth/localStore";
 import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 import { requirePermission } from "@/backend/rbac/requirePermission";
-import { syncCompanyToBrain } from "@/backend/brain-sync";
+import { syncCompanyToBrain } from "@/backend/brain/sync";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import type { AccessContext } from "@/backend/auth/session";
 
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
   // no catálogo (para gerenciar as próprias "aplicações"), o que não deveria
   // autorizar criar OUTRA empresa no sistema. Até existir uma permissão
   // específica de gestão de empresas, exige também admin global verdadeiro
-  // (access.isGlobalAdmin — não Líder TC nem Suporte Técnico "global por
+  // (access.isGlobalAdmin — não Líder TC nem Administrador "global por
   // papel"; session.store.ts já não conflacia isso, ver comentário acima).
   if (!permission.access.isGlobalAdmin) {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });

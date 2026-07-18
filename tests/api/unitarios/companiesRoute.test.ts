@@ -1,7 +1,7 @@
 jest.mock("@/backend/auth/session", () => ({ getAccessContext: jest.fn() }));
 jest.mock("@/backend/serverPermissionAccess", () => ({ resolvePermissionAccessForUser: jest.fn() }));
 jest.mock("@/backend/rbac/requireGlobalAdmin", () => ({ requireGlobalAdminWithStatus: jest.fn() }));
-jest.mock("@/backend/brain-sync", () => ({ syncCompanyToBrain: jest.fn(async () => {}) }));
+jest.mock("@/backend/brain/sync", () => ({ syncCompanyToBrain: jest.fn(async () => {}) }));
 jest.mock("@/data/auditLogRepository", () => ({ addAuditLogSafe: jest.fn(async () => {}) }));
 jest.mock("@/backend/auth/localStore", () => ({
   listLocalCompanies: jest.fn(),

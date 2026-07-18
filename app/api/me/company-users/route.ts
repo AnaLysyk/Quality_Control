@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { listAdminUserItems } from "@/backend/adminUsers";
@@ -12,7 +12,7 @@ import {
   canManageInstitutionalCompanyAccess,
   resolveCurrentCompanyFromAccess,
 } from "@/backend/companyProfileAccess";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hashPassword } from "@/backend/passwordHash";
 import { hasPermissionAccess } from "@/backend/permissionMatrix";
 import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 import {
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
       name,
       email,
       ...(login ? { user: login } : {}),
-      password_hash: hashPasswordSha256(password),
+      password_hash: hashPassword(password),
       phone: profileFields.phone,
       job_title: profileFields.jobTitle,
       linkedin_url: profileFields.linkedinUrl,
@@ -232,7 +232,7 @@ export async function POST(req: NextRequest) {
       error instanceof Error && error.message.trim()
         ? error.message.trim()
         : "Não foi possível criar o usuário da empresa";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

@@ -1,4 +1,4 @@
-﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
 import type { AuthUser } from "@/backend/jwtAuth";
 import { hasPermissionAccess } from "@/backend/permissionMatrix";
 import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
@@ -30,7 +30,7 @@ export const ACCESS_REQUEST_PROFILE_LABELS: Record<AccessRequestProfileType, str
   [SYSTEM_ROLES.COMPANY_USER]: "Usuario da empresa",
   [SYSTEM_ROLES.TESTING_COMPANY_USER]: "Usuario TC",
   [SYSTEM_ROLES.LEADER_TC]: "Lider TC",
-  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: "Suporte Tecnico",
+  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: "Administrador",
 };
 
 export const ACCESS_REQUEST_ADJUSTMENT_FIELDS = [
@@ -366,5 +366,4 @@ export function canViewAccessRequest(
   if (requesterEmail && userEmail && requesterEmail === userEmail) return true;
   return false;
 }
-
 

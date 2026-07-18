@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 
-import { createAccessRequestFromPayload } from "@/backend/accessRequestsV2/service";
+import { createAccessRequestFromPayload } from "@/backend/access-requests/service";
 import { rateLimit } from "@/backend/rateLimit";
 
 const GENERIC_MESSAGE =
@@ -71,4 +71,3 @@ export async function POST(req: Request) {
     { status: 201 },
   );
 }
-

@@ -12,6 +12,27 @@
 - Redis (opcional): sessoes e caches leves.
 - Qase: dados externos de gestao de testes.
 
+## Dominios canonicos
+- O nome tecnico canonico de cada funcionalidade esta em `backend/architecture/domainCatalog.ts`.
+- A tela `/admin/sistema/mapa` mostra onde cada dominio vive no frontend, API, backend e banco.
+- URLs publicas em portugues podem ser mantidas como aliases de compatibilidade.
+- Regras de negocio nao devem ser duplicadas em aliases: a rota apenas adapta entrada/saida e delega ao dominio canonico.
+- O schema Prisma em `database/prisma/schema.prisma` continua sendo a unica autoridade do banco.
+- Execute `npm run architecture:check` para validar caminhos, modelos, paginas mapeadas e protecao basica de APIs sensiveis.
+
+Exemplo de rastreabilidade:
+
+```text
+companies
+  frontend: app/clients, app/admin/clients, app/empresas
+  api:      app/api/clients, app/api/companies, app/api/empresas
+  backend:  backend/company*.ts
+  banco:    Company, CompanyIntegration, UserCompanyLink
+```
+
+`clients`, `empresas` e `company` sao nomes publicos/legados do mesmo dominio
+`companies`; eles nao representam implementacoes independentes.
+
 ## Limites
 app/api (BFF):
 - API voltada para a UI, cookies/sessao, helpers de SSR.

@@ -1,4 +1,4 @@
-﻿import type { ParsedAccessRequest } from "@/backend/accessRequestMessage";
+import type { ParsedAccessRequest } from "@/backend/access-requests/message";
 
 function normalizeCandidateList(values: Array<string | null | undefined>) {
   const seen = new Set<string>();
@@ -41,4 +41,3 @@ export function matchesAccessRequestLookup(params: {
 
   return emailCandidates.has(lookupEmail) && nameCandidates.has(lookupName);
 }
-

@@ -1,4 +1,4 @@
-﻿import type { AssistantContextEntityType, AssistantModule, AssistantScreenContext } from "@/backend/assistant/types";
+import type { AssistantContextEntityType, AssistantModule, AssistantScreenContext } from "@/backend/assistant/types";
 
 function extractCompanySlug(route: string) {
   const match = route.match(/^\/empresas\/([^/]+)/);
@@ -29,12 +29,12 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     screenLabel: "Visão geral TC",
     screenSummary: [
       "Você está em: Visão geral TC.",
-      "Esta é a camada executiva da Testing Company para Líder TC e Suporte Técnico acompanharem qualidade por empresa, risco, projetos, defeitos, runs, cobertura e próximos passos consultivos.",
+      "Esta é a camada executiva da Testing Company para Líder TC e Administrador acompanharem qualidade por empresa, risco, projetos, defeitos, runs, cobertura e próximos passos consultivos.",
       "Como agente, devo ajudar por perfil: liderança recebe visão executiva e priorização; suporte recebe triagem técnica; empresa recebe apenas o próprio contexto permitido.",
       "O Brain possui nós executivos como Visão Geral TC, Empresas atendidas, Projetos e operação, Repositório de Casos, Defeitos, Planos, Runs, Qase, Perfis e Chat por perfil.",
       "Dica: use esta visão para destravar a operação e transformar risco em ação.",
       "Você está em: Visão geral TC.",
-      "Esta é a camada executiva da Testing Company para Líder TC e Suporte Técnico acompanharem qualidade por empresa, risco, projetos, defeitos, runs, cobertura e próximos passos consultivos.",
+      "Esta é a camada executiva da Testing Company para Líder TC e Administrador acompanharem qualidade por empresa, risco, projetos, defeitos, runs, cobertura e próximos passos consultivos.",
       "Como agente, devo ajudar a operação por perfil e destravar próximos passos: liderança recebe visão executiva e priorização; suporte recebe triagem técnica; empresa recebe apenas o próprio contexto permitido.",
       "O Brain possui nós executivos como Visão Geral TC, Empresas atendidas, Projetos e operações, Repositório de Casos, Defeitos, Planos, Runs, Qase, Perfis e Chat por perfil.",
     ].join(" "),
@@ -43,7 +43,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
       "Gerar resumo executivo da carteira",
       "Quais empresas precisam de ação imediata?",
       "Abrir nós executivos no Brain",
-      "Montar plano de atuação para suporte técnico",
+      "Montar plano de atuação para o administrador",
       ...PROFILE_HELP_PROMPTS,
     ],
   },
@@ -102,10 +102,10 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     screenLabel: "Gestão de Perfis",
     screenSummary: [
       "Você está em: Gestão de Perfis.",
-      "Aqui a plataforma mantém a matriz de acesso por perfil: Líder TC, Suporte Técnico, Empresa, Usuário da empresa e Usuário TC.",
+      "Aqui a plataforma mantém a matriz de acesso por perfil: Líder TC, Administrador, Empresa, Usuário da empresa e Usuário TC.",
       "Como agente, posso explicar permissões, bloqueios, por que alguém vê ou não vê uma tela, comparar perfis e sugerir ajuste seguro sem quebrar RBAC.",
       "Você está em: Gestão de Perfis.",
-      "Aqui a plataforma mantém permissões e matriz de acesso por perfil: Líder TC, Suporte Técnico, Empresa, Usuário da empresa e Usuário TC.",
+      "Aqui a plataforma mantém permissões e matriz de acesso por perfil: Líder TC, Administrador, Empresa, Usuário da empresa e Usuário TC.",
       "Como agente, posso explicar bloqueios de acesso, por que alguém vê ou não vê uma tela, comparar perfis e sugerir ajuste seguro sem quebrar RBAC.",
     ].join(" "),
     entityType: "permission_profile",

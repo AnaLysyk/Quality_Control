@@ -3,6 +3,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
+import {
+  canAccessProject,
+  canAccessSensitivity,
+  canViewBase64,
+} from "@/backend/test-data-hub/permissions";
+import { UsagePolicyValidator } from "@/backend/test-data-hub/guardrails";
+import {
+  createTestDataDownloadToken,
+  TEST_DATA_DOWNLOAD_PURPOSES,
+  type TestDataDownloadPurpose,
+} from "@/backend/test-data-hub/downloadToken";
 
 /**
  * POST /api/test-data-packs/resolve
@@ -48,7 +59,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { packId, format = "file", purpose = "test_execution" } = body;
+    const { packId, format = "file", purpose: rawPurpose = "test_execution" } = body;
+    const purpose = rawPurpose as TestDataDownloadPurpose;
 
     // Validate request
     if (!packId || typeof packId !== "string") {
@@ -57,6 +69,10 @@ export async function POST(request: NextRequest) {
 
     if (!["file", "base64"].includes(format)) {
       return NextResponse.json({ error: 'format must be "file" or "base64"' }, { status: 400 });
+    }
+
+    if (!TEST_DATA_DOWNLOAD_PURPOSES.includes(purpose)) {
+      return NextResponse.json({ error: 'purpose must be "playwright", "test_execution", or "documentation"' }, { status: 400 });
     }
 
     // Fetch pack with all items and their assets
@@ -83,6 +99,7 @@ export async function POST(request: NextRequest) {
                     allowPlaywrightUpload: true,
                     allowApiMultipart: true,
                     allowBase64Api: true,
+                    allowReportContent: true,
                   },
                 },
               },
@@ -105,23 +122,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pack has no items" }, { status: 400 });
     }
 
-    // TODO: Implement permission checks
-    // - Verify user has access to the company/project
-    // - Check sensitivity level and permission overrides
+    if (
+      !canAccessProject(user, pack.companySlug, pack.projectId) ||
+      !canAccessSensitivity(user, pack.sensitivity)
+    ) {
+      return NextResponse.json({ error: "Pack not found or unavailable" }, { status: 404 });
+    }
 
     // Validate format compatibility with each asset's usage policy
     for (const item of pack.items) {
       const asset = item.asset;
       const policy = asset.usagePolicy;
 
-      if (format === "base64" && policy && !policy.allowBase64Api) {
+      const sameTenant = asset.companySlug === pack.companySlug;
+      const compatibleProject = !asset.projectId || !pack.projectId || asset.projectId === pack.projectId;
+      if (
+        asset.status !== "active" ||
+        !sameTenant ||
+        !compatibleProject ||
+        !canAccessProject(user, asset.companySlug, asset.projectId) ||
+        !canAccessSensitivity(user, asset.sensitivity)
+      ) {
+        return NextResponse.json({ error: "Pack contains an unavailable asset" }, { status: 403 });
+      }
+
+      if (format === "base64" && !canViewBase64(user, asset.companySlug, asset.sensitivity)) {
+        return NextResponse.json({ error: "Pack contains an asset unavailable as Base64" }, { status: 403 });
+      }
+
+      if (format === "base64" && !UsagePolicyValidator.validateUsage(policy, "api_base64").allowed) {
         return NextResponse.json(
           { error: `Asset ${asset.id} in pack cannot be returned as Base64` },
           { status: 403 },
         );
       }
 
-      if (format === "file" && policy && !policy.allowPlaywrightUpload && !policy.allowApiMultipart) {
+      const fileUsage = purpose === "playwright"
+        ? "playwright_upload"
+        : purpose === "documentation"
+          ? "report_content"
+          : "api_multipart";
+      if (format === "file" && !UsagePolicyValidator.validateUsage(policy, fileUsage).allowed) {
         return NextResponse.json(
           { error: `Asset ${asset.id} in pack cannot be returned as file` },
           { status: 403 },
@@ -162,7 +203,13 @@ export async function POST(request: NextRequest) {
           const asset = item.asset;
 
           // Generate temporary download URL
-          const downloadUrl = `/api/test-data-assets/${asset.id}/content?purpose=${purpose}&expires=${expiresAt.getTime()}`;
+          const token = createTestDataDownloadToken({
+            assetId: asset.id,
+            userId: user.id,
+            purpose,
+            expiresAt: expiresAt.getTime(),
+          });
+          const downloadUrl = `/api/test-data-assets/${asset.id}/content?purpose=${purpose}&token=${encodeURIComponent(token)}`;
 
           return {
             assetId: asset.id,
@@ -178,7 +225,20 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // TODO: Log pack resolution to audit table
+    await Promise.all(
+      pack.items.map((item) =>
+        prisma.testDataAssetAudit.create({
+          data: {
+            assetId: item.asset.id,
+            action: format === "base64" ? "pack_resolved_as_base64" : "pack_resolved_as_file",
+            actorUserId: user.id,
+            companySlug: item.asset.companySlug,
+            projectId: item.asset.projectId,
+            metadata: { packId: pack.id, purpose, format },
+          },
+        }),
+      ),
+    );
 
     return NextResponse.json(responseData);
   } catch (error) {
@@ -207,4 +267,3 @@ function getMimeExtension(mimeType: string | null): string {
 
   return mimeMap[mimeType] || "bin";
 }
-

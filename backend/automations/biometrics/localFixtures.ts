@@ -13,9 +13,11 @@ export type LocalBiometricFixture = {
 };
 
 export const DEFAULT_BIOMETRIC_FIXTURES_DIR =
-  process.env.BIOMETRIC_FIXTURES_DIR || "C:\\Users\\Testing Company\\Pictures\\Screenshots\\Digitais";
+  process.env.BIOMETRIC_FIXTURES_DIR?.trim() ||
+  path.join(process.cwd(), "tools", "data", "biometria", "fixtures");
 
-const fixturePath = (fileName: string) => path.join(DEFAULT_BIOMETRIC_FIXTURES_DIR, fileName);
+const fixturePath = (fileName: string) =>
+  path.join(/* turbopackIgnore: true */ DEFAULT_BIOMETRIC_FIXTURES_DIR, fileName);
 
 export const LOCAL_BIOMETRIC_FIXTURES: LocalBiometricFixture[] = BIOMETRIC_FIXTURE_DEFINITIONS.map((fixture) => ({
   ...fixture,
@@ -30,4 +32,3 @@ export function findLocalBiometricFixture(slug: string) {
   const normalizedSlug = slug.trim().toLowerCase();
   return LOCAL_BIOMETRIC_FIXTURES.find((fixture) => fixture.slug === normalizedSlug) ?? null;
 }
-

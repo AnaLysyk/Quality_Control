@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cenários do fluxo de Solicitações de Acesso (accessRequestsStore) no banco PostgreSQL.
  * âœ… cleanup total em afterAll — nenhum dado permanece.
  *
@@ -37,7 +37,7 @@ import {
   listAccessRequests,
   getAccessRequestById,
   updateAccessRequest,
-} from "@/data/accessRequestsStore";
+} from "@/data/access-requests/store";
 import {
   pgCreateLocalUser,
 } from "@/backend/auth/pgStore";

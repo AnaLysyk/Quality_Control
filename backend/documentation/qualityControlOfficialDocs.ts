@@ -224,7 +224,7 @@ export function buildQualityControlOfficialDocsStore(): PlatformDocsStore {
           headers: ["Perfil", "Escopo padrao", "Criacao de usuario", "Gestao de Perfil global", "Observacao obrigatoria"],
           rows: [
             ["Lider TC", "Global, com troca de empresa conforme permissao.", "Pode criar perfis internos e empresariais.", "Pode acessar.", "Responsavel por governanca ampla e revisao de regras."],
-            ["Suporte Tecnico", "Global ou contextual, conforme permissao liberada.", "Somente o que a permissao permitir.", "Depende de permissao.", "Nao deve ganhar acesso por acidente a modulos fora da propria liberacao."],
+            ["Administrador", "Global ou contextual, conforme permissao liberada.", "Somente o que a permissao permitir.", "Depende de permissao.", "Nao deve ganhar acesso por acidente a modulos fora da propria liberacao."],
             ["Usuario TC", "Contextual a empresa/projeto em que foi vinculado.", "Nao cria usuarios por padrao.", "Nao acessa.", "Nao deve ver empresas nem dados fora do contexto recebido."],
             ["Empresa", "Apenas propria empresa ativa.", "Pode criar apenas `company_user`.", "Nao acessa.", "Nao pode criar `leader_tc`, `technical_support` nem `testing_company_user`, inclusive por API."],
             ["Usuario Empresarial", "Apenas propria empresa ativa.", "Nao cria usuarios por padrao.", "Nao acessa.", "Nao troca empresa e nao ve dados de outra empresa por rota direta ou API."]
@@ -292,14 +292,14 @@ export function buildQualityControlOfficialDocsStore(): PlatformDocsStore {
           type: "table",
           headers: ["Area", "Rotas de referencia", "Perfis mais comuns", "APIs que precisam proteger a regra"],
           rows: [
-            ["Gestao de Usuarios", "`/admin/users`", "Lider TC, Suporte Tecnico conforme permissao, Empresa na propria empresa.", "`/api/admin/users`, `/api/admin/user-permissions/{userId}`"],
+            ["Gestao de Usuarios", "`/admin/users`", "Lider TC, Administrador conforme permissao, Empresa na propria empresa.", "`/api/admin/users`, `/api/admin/user-permissions/{userId}`"],
             ["Permissoes por Usuario", "`/admin/users/permissions`", "Lider TC e perfis liberados.", "`/api/admin/user-permissions/{userId}`"],
-            ["Solicitacoes de Acesso", "`/admin/access-requests`", "Lider TC, Suporte Tecnico e Empresa no proprio contexto.", "`/api/access-requests`, `/api/admin/access-requests/{id}/accept`"],
-            ["Projetos", "`/empresas/[slug]/projetos`", "Lider TC, Suporte Tecnico, Empresa conforme escopo.", "`/api/projects`"],
+            ["Solicitacoes de Acesso", "`/admin/access-requests`", "Lider TC, Administrador e Empresa no proprio contexto.", "`/api/access-requests`, `/api/admin/access-requests/{id}/accept`"],
+            ["Projetos", "`/empresas/[slug]/projetos`", "Lider TC, Administrador, Empresa conforme escopo.", "`/api/projects`"],
             ["Aplicacoes", "`/empresas/[slug]/aplicacoes`", "Mesma regra do contexto operacional da empresa.", "`/api/applications`"],
             ["Chat", "`/chat`", "Perfis com modulo liberado.", "`/api/chat/contacts`, `/api/chat/messages`"],
             ["Suporte / Kanban", "`/kanban-it`", "Perfis com modulo de chamados.", "`/api/tickets`"],
-            ["Documentacao", "`/documentos`, `/empresas/[slug]/docs`", "Lider TC, Suporte Tecnico e empresa dentro do proprio contexto.", "`/api/platform-docs`, `/api/company-docs/{companySlug}`"],
+            ["Documentacao", "`/documentos`, `/empresas/[slug]/docs`", "Lider TC, Administrador e empresa dentro do proprio contexto.", "`/api/platform-docs`, `/api/company-docs/{companySlug}`"],
             ["Agenda", "`/agenda`", "Somente dentro da empresa/projeto liberado.", "Documentar endpoints reais da agenda quando forem evoluidos no OpenAPI."],
             ["Brain", "`/brain`", "Somente dados e nos do contexto liberado.", "Documentar endpoints reais do Brain quando forem evoluidos no OpenAPI."]
           ],

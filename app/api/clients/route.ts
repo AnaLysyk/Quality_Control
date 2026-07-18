@@ -8,6 +8,9 @@ import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { syncCompanyApplications } from "@/backend/applicationsStore";
 import { createLocalCompany, listLocalCompanies } from "@/backend/auth/localStore";
 import { mapCompanyRecord } from "@/backend/companyRecord";
+import { Role } from "@prisma/client";
+import { getAccessContext } from "@/backend/auth/session";
+import { isCompanyAllowed } from "@/backend/auth/accessAssignment";
 
 const MASK_SECRETS = { maskQaseToken: true, maskJiraToken: true } as const;
 
@@ -50,8 +53,12 @@ export async function GET(req: NextRequest) {
   if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const companies = await listLocalCompanies();
+  const access = await getAccessContext(req);
+  const scopedCompanies = access
+    ? companies.filter((company) => isCompanyAllowed(access, { companyId: company.id, companySlug: company.slug }))
+    : [];
   const payload = ClientListResponseSchema.parse({
-    items: companies.map((company) => mapCompanyRecord(company, MASK_SECRETS)),
+    items: scopedCompanies.map((company) => mapCompanyRecord(company, MASK_SECRETS)),
   });
   return NextResponse.json(payload, { status: 200 });
 }
@@ -142,6 +149,50 @@ export async function POST(req: NextRequest) {
     ...(input.admin_email ? { admin_email: input.admin_email } : {}),
   });
 
+  if (input.responsible_leader_id) {
+    const { prisma } = await import("@/database/prismaClient");
+    await prisma.$transaction(async (tx) => {
+      const leader = await tx.user.findFirst({
+        where: {
+          id: input.responsible_leader_id,
+          active: true,
+          OR: [
+            { role: Role.leader_tc },
+            { globalRole: "leader_tc" },
+            { memberships: { some: { role: Role.leader_tc } } },
+          ],
+        },
+        select: { id: true },
+      });
+      if (!leader) throw new Error("Líder TC responsável inválido ou inativo");
+
+      const project = await tx.project.create({
+        data: {
+          companyId: company.id,
+          slug: "geral",
+          name: "Geral",
+          description: "Projeto padrão criado com a empresa",
+          createdById: admin.id,
+        },
+        select: { id: true },
+      });
+      await tx.membership.upsert({
+        where: { userId_companyId: { userId: leader.id, companyId: company.id } },
+        update: { role: Role.leader_tc },
+        create: { userId: leader.id, companyId: company.id, role: Role.leader_tc, capabilities: [] },
+      });
+      await tx.projectTeamAssignment.create({
+        data: {
+          userId: leader.id,
+          companyId: company.id,
+          projectId: project.id,
+          role: "leader_tc",
+          createdBy: admin.id,
+        },
+      });
+    });
+  }
+
   if (Array.isArray((input as any).qase_projects) && (input as any).qase_projects.length) {
     const projects = (input as any).qase_projects
       .filter((p: unknown): p is Record<string, unknown> => typeof p === "object" && p !== null)
@@ -175,4 +226,3 @@ export async function POST(req: NextRequest) {
     return jsonError('Erro interno ao criar empresa', 500);
   }
 }
-

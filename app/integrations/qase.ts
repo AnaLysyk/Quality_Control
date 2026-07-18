@@ -27,7 +27,7 @@ type RunEntity = {
 function toNumber(value: unknown) {
   const num = Number(value ?? 0);
   if (Number.isFinite(num)) return num;
-  const parsed = parseInt((value as string) ?? "", 10);
+  const parsed = Number.parseInt((value as string) ?? "", 10);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
@@ -70,7 +70,7 @@ type QaseRuntimeContext = {
 
 function normalizeProjectCode(value: string | null | undefined) {
   const trimmed = value?.trim().toUpperCase();
-  return trimmed ? trimmed : "";
+  return trimmed || "";
 }
 
 function normalizeProjectCodes(values: Array<string | null | undefined>) {
@@ -103,6 +103,11 @@ function resolveProjectCode(input: {
   };
 }
 
+function toOptionalString<T>(value: unknown, fallback: T): string | T {
+  if (typeof value === "string") return value;
+  return value != null ? String(value) : fallback;
+}
+
 function normalizeQaseEntity(raw: unknown): RawQaseEntity {
   if (typeof raw === "number" || (typeof raw === "string" && raw.trim())) {
     const caseId = Number(raw);
@@ -116,13 +121,13 @@ function normalizeQaseEntity(raw: unknown): RawQaseEntity {
   const case_id = typeof caseIdRaw === "number" ? caseIdRaw : Number(caseIdRaw);
 
   const statusRaw = obj.status ?? obj.state ?? obj.status_text ?? obj.result;
-  const status = typeof statusRaw === "string" ? statusRaw : statusRaw != null ? String(statusRaw) : undefined;
+  const status = toOptionalString(statusRaw, undefined);
 
   const titleRaw = obj.title ?? obj.case_title ?? caseObj?.title ?? caseObj?.name;
-  const title = typeof titleRaw === "string" ? titleRaw : titleRaw != null ? String(titleRaw) : undefined;
+  const title = toOptionalString(titleRaw, undefined);
 
   const bugRaw = obj.bug ?? obj.defect ?? obj.defect_id;
-  const bug = typeof bugRaw === "string" ? bugRaw : bugRaw != null ? String(bugRaw) : null;
+  const bug = toOptionalString(bugRaw, null);
 
   return {
     case_id: Number.isFinite(case_id) ? case_id : undefined,
@@ -198,6 +203,13 @@ async function buildQaseContext(projectArg: string | undefined, slug?: string): 
   };
 }
 
+function resolveQaseErrorReason(status: number) {
+  if (status === 401 || status === 403) return "unauthorized";
+  if (status === 404) return "not_found";
+  if (status >= 500) return "server_error";
+  return "unknown";
+}
+
 function buildLogUrl(client: QaseClient, path: string, params?: Record<string, string | number | undefined>) {
   const url = new URL(client.getUrl(path));
   if (params) {
@@ -254,14 +266,7 @@ export async function getQaseRunStats(project: string, runId: number, slug?: str
     return { ...normalized, status };
   } catch (err) {
     const status = err instanceof QaseError ? err.status : 0;
-    const reason =
-      status === 401 || status === 403
-        ? "unauthorized"
-        : status === 404
-          ? "not_found"
-          : status >= 500
-            ? "server_error"
-            : "unknown";
+    const reason = resolveQaseErrorReason(status);
     console.warn(`${logBase}[ERROR]`, {
       slug: ctx.slugKey,
       status,

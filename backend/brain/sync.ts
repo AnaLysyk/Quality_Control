@@ -1,5 +1,5 @@
 ﻿/**
- * brain-sync.ts
+ * brain/sync.ts
  * Fire-and-forget helper functions that keep the Brain in sync when system
  * entities are created or updated. Each function is safe to call without await
  * — they never throw, just log errors.
@@ -90,7 +90,7 @@ const ROLE_LABELS: Record<SystemRole, string> = {
   [SYSTEM_ROLES.COMPANY_USER]: "Usuario de empresa",
   [SYSTEM_ROLES.TESTING_COMPANY_USER]: "Usuario Testing Company",
   [SYSTEM_ROLES.LEADER_TC]: "Lider Testing Company",
-  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: "Suporte tecnico",
+  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: "Administrador",
 };
 
 function resolveBrainProfileRole(input: {
@@ -793,7 +793,7 @@ export async function syncBrain() {
     log(`Created ${qualityAlerts.length} QualityAlert nodes`)
 
     log('Step 1.5: Creating system map nodes from code...')
-    const { syncSystemMapToBrain } = await import("@/backend/brain-system-map")
+    const { syncSystemMapToBrain } = await import("@/backend/brain/systemMap")
     const systemMap = await syncSystemMapToBrain()
     nodeCount += systemMap.nodeCount
     log(`Created ${systemMap.nodeCount} system/code nodes`)
@@ -973,4 +973,3 @@ export async function syncBrain() {
     throw error
   }
 }
-

@@ -1,12 +1,12 @@
-﻿import {
+import {
   normalizeRequestProfileType,
   resolveReviewQueue,
   toRequestProfileTypeLabel,
   type RequestProfileType,
   type ReviewQueue,
-} from "@/backend/requestRouting";
+} from "@/backend/access-requests/routing";
 
-export const PASSWORD_RESET_ACCESS_REQUEST_ID_PREFIX = "password-reset:";
+export const PASSWORD_RESET_ACCESS_REQUEST_ID_PREFIX = "password-reset:"; // NOSONAR: request-id prefix, not a credential
 const PASSWORD_RESET_ACCESS_REQUEST_MESSAGE_PREFIX = "SELF_SERVICE_REQUEST_V1 ";
 
 type RequestLike = {

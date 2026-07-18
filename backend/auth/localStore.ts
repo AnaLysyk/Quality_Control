@@ -1,9 +1,9 @@
-﻿import "server-only";
+import "server-only";
 
 import * as fs from "fs/promises";
 import * as path from "path";
 import { randomUUID } from "crypto";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hashPassword } from "@/backend/passwordHash";
 import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { resolveDatabaseUrlFromEnv } from "@/database/databaseUrl";
 import { getRedis, isRedisConfigured } from "@/backend/redis";
@@ -115,8 +115,15 @@ function shouldUsePostgresAuthStore() {
   return USE_POSTGRES && !shouldForceLocalAuthStore();
 }
 
+function canLoadBundledDemoUsers() {
+  // Produção nunca deve ganhar contas conhecidas só porque o banco/arquivo
+  // persistido não foi configurado.
+  if (process.env.NODE_ENV === "production") return false;
+  return process.env.LOCAL_AUTH_ENABLE_DEMO_USERS !== "false";
+}
+
 function buildDefaultLocalAuthStore(): LocalAuthStore {
-  const demoPasswordHash = hashPasswordSha256("Demo@123");
+  const demoPasswordHash = hashPassword("Demo@123");
 
   return {
     users: [
@@ -492,10 +499,14 @@ async function readStoreFromDisk(): Promise<LocalAuthStore> {
   const fromStore = await readJsonStore(STORE_PATH);
   if (fromStore) return cloneStore(fromStore);
 
-  const fromSample = await readJsonStore(SAMPLE_PATH);
-  if (fromSample) return cloneStore(fromSample);
+  if (canLoadBundledDemoUsers()) {
+    const fromSample = await readJsonStore(SAMPLE_PATH);
+    if (fromSample) return cloneStore(fromSample);
 
-  return cloneStore(buildDefaultLocalAuthStore());
+    return cloneStore(buildDefaultLocalAuthStore());
+  }
+
+  return { users: [], companies: [], memberships: [], links: [] };
 }
 
 async function readStoreFromRedis(): Promise<LocalAuthStore | null> {
@@ -1092,4 +1103,3 @@ export function toLegacyRole(companyRole?: string | null, isGlobalAdmin?: boolea
   if (isGlobalAdmin) return SYSTEM_ROLES.LEADER_TC;
   return normalized;
 }
-

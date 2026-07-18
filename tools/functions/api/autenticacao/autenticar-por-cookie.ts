@@ -1,4 +1,4 @@
-﻿import type { Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 export const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 
@@ -75,7 +75,6 @@ export async function autenticarAdminDeTeste(page: Page) {
     { user: "e2e-leader-tc@testingcompany.local", password: senhaPerfil },
     { user: "e2e-suporte@testingcompany.local", password: senhaPerfil },
     { user: "admin@demo.test", password: "Demo@123" },
-    { user: "admin@demo.test", password: "Griaule@123" },
   ].filter((item) => item.password);
 
   for (const candidato of candidatos) {
@@ -130,4 +129,3 @@ export function montarDadosEmpresaE2E(role: string) {
     requestedCompanySlug: EMPRESA_E2E.slug,
   };
 }
-

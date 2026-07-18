@@ -1,4 +1,4 @@
-﻿import type { BrainAccessContext } from "./access";
+import type { BrainAccessContext } from "./access";
 import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
 import { canAccessRoute } from "@/backend/permissions/can-access";
 
@@ -73,7 +73,7 @@ const EXECUTIVE_NODE_DEFS: ExecutiveNodeInput[] = [
     id: "exec-defects",
     label: "Defeitos",
     type: "DefectManagement",
-    description: "Gestão de bugs, severidade, risco, status e impacto por empresa/projeto para atuação de QA e suporte técnico.",
+    description: "Gestão de bugs, severidade, risco, status e impacto por empresa/projeto para atuação de QA e gestão de plataforma.",
     route: "/empresas/[slug]/defeitos",
     profiles: ["leader_tc", "technical_support", "empresa", "company_user"],
     action: "Abrir defeitos do contexto",
@@ -117,7 +117,7 @@ const EXECUTIVE_NODE_DEFS: ExecutiveNodeInput[] = [
     id: "exec-permissions",
     label: "Perfis e permissões",
     type: "ProfileGovernance",
-    description: "Governança de acesso por perfil: Líder TC, Suporte Técnico, Empresa, Usuário da empresa e Usuário TC.",
+    description: "Governança de acesso por perfil: Líder TC, Administrador, Empresa, Usuário da empresa e Usuário TC.",
     route: "/admin/users/permissions",
     profiles: ["leader_tc", "technical_support"],
     action: "Abrir gestão de perfis",

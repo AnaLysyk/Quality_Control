@@ -1,8 +1,8 @@
-﻿import "server-only";
+import "server-only";
 
 import { randomUUID } from "crypto";
 
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hashPassword } from "@/backend/passwordHash";
 import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import {
   readLocalAuthStore,
@@ -175,7 +175,7 @@ async function syncLegacyCompanyUsersInternal(): Promise<LegacySyncResult> {
           name: typeof entry.name === "string" && entry.name.trim() ? entry.name.trim() : email,
           email,
           user: login || email,
-          password_hash: hashPasswordSha256(`${companyId}:${email}:${randomUUID()}`),
+          password_hash: hashPassword(`${companyId}:${email}:${randomUUID()}`),
           role: "company_user",
           globalRole: null,
           status: entry.deletedAt ? "blocked" : "active",

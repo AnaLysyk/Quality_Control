@@ -21,14 +21,6 @@ const HIDDEN_MENU_ROUTE_IDS = new Set([
   "operacao.busca",
 ]);
 
-const ALWAYS_VISIBLE_BRAIN_ROUTES = new Set([
-  "brain.grafo",
-  "brain.admin",
-  "brain.mapa-sistema",
-  "brain.empresa",
-  "assistente.perguntar",
-]);
-
 const MANAGEMENT_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
   "gestao.perfil": { moduleId: "permissions", action: "view" },
   "gestao.usuarios": { moduleId: "users", action: "view" },
@@ -78,10 +70,6 @@ function canSeeNavigationDefinition(
 
   if (item.routeId === "logs.sistema") {
     return INTERNAL_ADMIN_ROLES.has(userRole);
-  }
-
-  if (item.routeId && ALWAYS_VISIBLE_BRAIN_ROUTES.has(item.routeId)) {
-    return true;
   }
 
   if (item.routeId) {

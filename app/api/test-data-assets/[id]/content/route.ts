@@ -3,6 +3,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/backend/jwtAuth";
 import { prisma } from "@/database/prismaClient";
+import {
+  canAccessProject,
+  canAccessSensitivity,
+  canViewBase64,
+} from "@/backend/test-data-hub/permissions";
+import { UsagePolicyValidator } from "@/backend/test-data-hub/guardrails";
+import {
+  TEST_DATA_DOWNLOAD_PURPOSES,
+  type TestDataDownloadPurpose,
+  verifyTestDataDownloadToken,
+} from "@/backend/test-data-hub/downloadToken";
 
 /**
  * GET /api/test-data-assets/:id/content
@@ -31,15 +42,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const { id: assetId } = await params;
     const { searchParams } = new URL(request.url);
-    const expiresParam = searchParams.get("expires");
-    const purpose = searchParams.get("purpose") || "test_execution";
+    const purpose = (searchParams.get("purpose") || "test_execution") as TestDataDownloadPurpose;
+    if (!TEST_DATA_DOWNLOAD_PURPOSES.includes(purpose)) {
+      return NextResponse.json({ error: "Invalid download purpose" }, { status: 400 });
+    }
 
-    // Check expiration
-    if (expiresParam) {
-      const expiresTime = parseInt(expiresParam, 10);
-      if (isNaN(expiresTime) || Date.now() > expiresTime) {
-        return NextResponse.json({ error: "Download URL expired" }, { status: 403 });
-      }
+    const tokenResult = verifyTestDataDownloadToken(searchParams.get("token"), {
+      assetId,
+      userId: user.id,
+      purpose,
+    });
+    if (!tokenResult.valid) {
+      return NextResponse.json({ error: tokenResult.reason }, { status: 403 });
     }
 
     // Fetch asset from database
@@ -57,6 +71,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         status: true,
         companySlug: true,
         projectId: true,
+        usagePolicy: {
+          select: {
+            allowPlaywrightUpload: true,
+            allowApiMultipart: true,
+            allowReportContent: true,
+          },
+        },
       },
     });
 
@@ -69,9 +90,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Asset is not active" }, { status: 410 });
     }
 
-    // TODO: Implement permission checks
-    // - Verify user has access to the company/project
-    // - Check sensitivity level and permission overrides
+    if (
+      !canAccessProject(user, asset.companySlug, asset.projectId) ||
+      !canAccessSensitivity(user, asset.sensitivity) ||
+      !canViewBase64(user, asset.companySlug, asset.sensitivity)
+    ) {
+      return NextResponse.json({ error: "Asset not found or unavailable" }, { status: 404 });
+    }
+
+    const policyUsage =
+      purpose === "playwright"
+        ? "playwright_upload"
+        : purpose === "documentation"
+          ? "report_content"
+          : "api_multipart";
+    if (!UsagePolicyValidator.validateUsage(asset.usagePolicy, policyUsage).allowed) {
+      return NextResponse.json({ error: "Asset usage is not allowed for this purpose" }, { status: 403 });
+    }
 
     let contentBuffer: Buffer;
 
@@ -90,22 +125,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Asset has no content" }, { status: 410 });
     }
 
-    // TODO: Log download to audit table
-    // await prisma.testDataAssetAudit.create({
-    //   data: {
-    //     assetId: asset.id,
-    //     action: "downloaded_for_" + purpose,
-    //     actorUserId: user.id,
-    //     companySlug: asset.companySlug,
-    //     projectId: asset.projectId,
-    //   },
-    // });
+    await prisma.testDataAssetAudit.create({
+      data: {
+        assetId: asset.id,
+        action: `downloaded_for_${purpose}`,
+        actorUserId: user.id,
+        companySlug: asset.companySlug,
+        projectId: asset.projectId,
+        metadata: { tokenExpiresAt: new Date(tokenResult.expiresAt).toISOString() },
+      },
+    });
 
     // Return file with appropriate headers
+    const safeFileName = asset.key.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120) || "test-data-asset";
     return new NextResponse(new Uint8Array(contentBuffer), {
       headers: {
         "Content-Type": asset.mimeType || "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${asset.key}.bin"`,
+        "Content-Disposition": `attachment; filename="${safeFileName}.bin"`,
         "Cache-Control": "no-cache, no-store, must-revalidate",
         Pragma: "no-cache",
         Expires: "0",
@@ -116,4 +152,3 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { normalizeCnpj } from "@/backend/brasilApiCnpj";
 import { lookupCompanyByCnpj } from "@/backend/company-lookup/companyLookup";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -14,7 +15,10 @@ function nullable(value: string | null | undefined) {
   return value && value.trim() ? value.trim() : null;
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ cnpj: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ cnpj: string }> }) {
+  const limiter = await rateLimit(req, "legacy-public-cnpj-lookup", 20, 60);
+  if (limiter.limited) return limiter.response;
+
   const { cnpj: rawCnpj } = await params;
   const cnpj = normalizeCnpj(rawCnpj);
 

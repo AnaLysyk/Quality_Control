@@ -26,10 +26,6 @@ const nextConfig = {
   deploymentId: DEPLOYMENT_ID,
   poweredByHeader: false,
   reactStrictMode: true,
-  // Ignore TS errors in Next.js auto-generated route types (Next.js 16 bug with nested dynamic segments)
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   env: {
     NEXT_PUBLIC_APP_VERSION: APP_VERSION,
   },

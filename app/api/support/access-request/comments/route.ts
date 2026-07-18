@@ -1,6 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { addPublicAccessRequestComment } from "@/backend/accessRequestsV2/service";
+import { addPublicAccessRequestComment } from "@/backend/access-requests/service";
+import { rateLimit } from "@/backend/rateLimit";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 
 function text(value: unknown, max: number) {
   if (typeof value !== "string") return "";
@@ -21,9 +23,12 @@ export async function POST(req: Request) {
   if (!accessKey || !name || !email || !comment) {
     return NextResponse.json(
       { error: "Informe chave, nome, e-mail e comentario." },
-      { status: 400 },
+      { status: 400, headers: NO_STORE_HEADERS },
     );
   }
+
+  const limiter = await rateLimit(req, `access-request-public-comment:${accessKey}`, 8, 60 * 10);
+  if (limiter.limited) return limiter.response;
 
   const result = await addPublicAccessRequestComment({
     accessKey,
@@ -32,7 +37,7 @@ export async function POST(req: Request) {
     comment,
   });
 
-  if (!result) return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+  if (!result) return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
   if (result === "forbidden") {
     return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
   }
@@ -43,6 +48,5 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({ item: result });
+  return NextResponse.json({ item: result }, { headers: NO_STORE_HEADERS });
 }
-

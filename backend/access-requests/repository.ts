@@ -1,14 +1,14 @@
-﻿import { randomBytes, randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 
-import { createAccessRequestLookupCodeExpiresAt } from "@/backend/accessRequestsV2/accessKeyExpiration";
+import { createAccessRequestLookupCodeExpiresAt } from "@/backend/access-requests/accessKeyExpiration";
 import {
   createAccessRequest,
   getAccessRequestById,
   listAccessRequests,
   updateAccessRequest,
   type AccessRequestStatus,
-} from "@/data/accessRequestsStore";
-import { parseAccessRequestMessage } from "@/backend/accessRequestMessage";
+} from "@/data/access-requests/store";
+import { parseAccessRequestMessage } from "@/backend/access-requests/message";
 import { prisma } from "@/database/prismaClient";
 import { shouldUseJsonStore } from "@/backend/storeMode";
 import {
@@ -568,4 +568,3 @@ export async function updateAccessRequestV2(
 
   return next;
 }
-

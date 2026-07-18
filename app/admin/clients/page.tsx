@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -1325,9 +1325,9 @@ export default function AdminConsolidatedPage() {
 
     if (activeUserTab === "support") {
       return {
-        title: "Criar Suporte Técnico",
+        title: "Criar Administrador",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte Técnico",
+        submitLabel: "Criar Administrador",
         initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
@@ -1589,7 +1589,15 @@ export default function AdminConsolidatedPage() {
           <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
             <Tabs value={activeUserTab} onValueChange={(value) => setActiveUserTab(value as UserTab)}>
               <div className="border-b border-[var(--tc-border,#d7deea)] pb-5">
-                <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Gestão por contexto</h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Gestão por contexto</h2>
+                  <a
+                    href="/admin/users/vinculos"
+                    className="rounded-xl border border-[var(--tc-border,#d7deea)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] hover:bg-[var(--tc-surface-alt,#f8fafc)]"
+                  >
+                    Gerenciar líderes por empresa
+                  </a>
+                </div>
                 <div className="mt-4">
                   <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-[var(--tc-surface-alt,#f8fafc)] p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                     <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
@@ -1602,7 +1610,7 @@ export default function AdminConsolidatedPage() {
                       Líder TC
                     </TabsTrigger>
                     <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                      Suporte Técnico
+                      Administrador
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -1762,8 +1770,8 @@ export default function AdminConsolidatedPage() {
                       <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                         <FiTool className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte técnico encontrado</h3>
-                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum suporte técnico com os filtros atuais.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum administrador encontrado</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum administrador com os filtros atuais.</p>
                         </div>
                       </div>
                     ) : (
@@ -1833,6 +1841,7 @@ export default function AdminConsolidatedPage() {
               qase_token: data.qaseToken || undefined,
               notifications_fanout_enabled: data.notificationsFanoutEnabled ?? true,
               admin_email: data.adminEmail || undefined,
+              responsible_leader_id: data.responsibleLeaderId || undefined,
               qase_project_codes: normalizedCodes,
               qase_project_code: legacyProjectCode ?? null,
               integrations: (() => {
@@ -1925,4 +1934,3 @@ export default function AdminConsolidatedPage() {
     </div>
   );
 }
-

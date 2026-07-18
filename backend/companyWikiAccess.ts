@@ -11,7 +11,7 @@ function isInternalWikiManager(access: AccessContext | null) {
 
   const role = normalize(access.role);
   const globalRole = normalize(access.globalRole);
-  return role === "leader_tc" || role === "technical_support" || globalRole === "leader_tc" || globalRole === "technical_support";
+  return access.projectScope === "unrestricted" || role === "technical_support" || globalRole === "technical_support";
 }
 
 function hasCompanyWikiScope(access: AccessContext | null, companySlug: string) {
@@ -49,4 +49,3 @@ function isCompanyWikiEditor(access: AccessContext | null) {
 export function canEditCompanyWiki(access: AccessContext | null, companySlug: string) {
   return isCompanyWikiEditor(access) && hasCompanyWikiScope(access, companySlug);
 }
-

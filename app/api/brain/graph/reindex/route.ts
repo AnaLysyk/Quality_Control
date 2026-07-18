@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/backend/brain/access";
-import { syncBrain } from "@/backend/brain-sync";
+import { syncBrain } from "@/backend/brain/sync";
 import { prisma } from "@/database/prismaClient";
 
 export async function POST(req: Request) {
@@ -37,4 +37,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao reindexar grafo do Brain" }, { status: 500 });
   }
 }
-

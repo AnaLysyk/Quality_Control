@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { generateRunPdf } from "@/backend/runPdfGenerator";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,14 @@ export async function GET(req: NextRequest) {
   const rawName = searchParams.get("fileName") ?? "relatorio";
   const fileName = sanitizeName(rawName);
   const companySlug = searchParams.get("company") ?? "demo";
+
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "runs",
+    action: "export",
+    companySlug,
+    requireCompany: true,
+  });
+  if (!contextResult.ok) return contextResult.response;
 
   // Try to generate a real PDF from the release slug
   const pdfBuffer = await generateRunPdf(companySlug, rawName).catch(() => null);
@@ -46,4 +55,3 @@ export async function GET(req: NextRequest) {
     },
   });
 }
-

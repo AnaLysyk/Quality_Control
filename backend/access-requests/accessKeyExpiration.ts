@@ -1,5 +1,6 @@
 ﻿const DEFAULT_ACCESS_REQUEST_LOOKUP_CODE_TTL_MINUTES = 15;
 
+/** Converte apenas configurações numéricas positivas. */
 function readPositiveNumber(value: string | undefined) {
   if (!value) return null;
 

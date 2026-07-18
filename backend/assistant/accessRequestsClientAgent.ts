@@ -1,4 +1,4 @@
-﻿function normalize(value: string) {
+function normalize(value: string) {
   return value
     .toLowerCase()
     .normalize("NFD")
@@ -99,7 +99,7 @@ function splitRequesterCell(value: string) {
   let name = value;
   if (email) name = name.replace(email, " ");
   name = name
-    .replace(/Analista de QA|Advogada|Suporte Tecnico|Suporte Técnico|Usuario TC|Usuário TC|Lider TC|Líder TC/gi, " ")
+    .replace(/Analista de QA|Advogada|Suporte Tecnico|Suporte Técnico|Administrador|Usuario TC|Usuário TC|Lider TC|Líder TC/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 

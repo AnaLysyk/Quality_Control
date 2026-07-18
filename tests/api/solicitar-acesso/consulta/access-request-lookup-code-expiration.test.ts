@@ -24,7 +24,7 @@ describe("codigo de consulta da solicitacao de acesso", () => {
 
   it("usa 15 minutos como tempo padrao de expiracao", async () => {
     const { createAccessRequestLookupCodeExpiresAt } = await import(
-      "../../../../backend/accessRequestsV2/accessKeyExpiration"
+      "../../../../backend/access-requests/accessKeyExpiration"
     );
 
     const expiresAt = createAccessRequestLookupCodeExpiresAt();
@@ -36,7 +36,7 @@ describe("codigo de consulta da solicitacao de acesso", () => {
     process.env.ACCESS_REQUEST_LOOKUP_CODE_TTL_MINUTES = "1";
 
     const { createAccessRequestLookupCodeExpiresAt } = await import(
-      "../../../../backend/accessRequestsV2/accessKeyExpiration"
+      "../../../../backend/access-requests/accessKeyExpiration"
     );
 
     const expiresAt = createAccessRequestLookupCodeExpiresAt();
@@ -46,7 +46,7 @@ describe("codigo de consulta da solicitacao de acesso", () => {
 
   it("identifica codigo expirado pelo horario configurado", async () => {
     const { isAccessRequestLookupCodeExpired } = await import(
-      "../../../../backend/accessRequestsV2/accessKeyExpiration"
+      "../../../../backend/access-requests/accessKeyExpiration"
     );
 
     const expiresAt = "2026-06-23T12:01:00.000Z";
@@ -58,4 +58,3 @@ describe("codigo de consulta da solicitacao de acesso", () => {
     expect(isAccessRequestLookupCodeExpired(expiresAt)).toBe(true);
   });
 });
-

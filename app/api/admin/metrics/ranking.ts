@@ -38,6 +38,10 @@ export async function GET(req: Request) {
   if (!clients || clients.length === 0) {
     clients = MOCK_CLIENTS;
   }
+  if (role === "leader_tc" && !access?.isGlobalAdmin && access?.projectScope !== "unrestricted") {
+    const allowedSlugs = new Set((access?.companySlugs ?? []).map((slug) => slug.toLowerCase()));
+    clients = clients.filter((client) => allowedSlugs.has(client.slug.toLowerCase()));
+  }
   const results = await Promise.all(
     clients.map(async (c) => {
       const summary = await fetchSummary(c.slug);
@@ -52,4 +56,3 @@ export async function GET(req: Request) {
   results.sort((a, b) => b.score - a.score);
   return NextResponse.json({ companies: results }, { status: 200 });
 }
-

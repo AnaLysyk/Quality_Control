@@ -50,7 +50,7 @@ function normalizeCompanySlug(value: string) {
 }
 
 function generatePlanId() {
-  return `plan_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  return `plan_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; // NOSONAR: record id, not a security token
 }
 
 async function readManualTestPlanStore(): Promise<ManualTestPlanStore> {

@@ -1,10 +1,10 @@
-﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
+import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 
 import { randomUUID } from "crypto";
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
 import { emailService } from "@/backend/email";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hashPassword } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 
 loadEnv({ path: path.resolve(process.cwd(), ".env.local"), override: true });
@@ -66,7 +66,7 @@ async function upsertSupportUsersAndSendWelcomeEmails() {
     const fullName = seed.full_name.trim();
     const login = seed.name.trim().toLowerCase();
     const tempPassword = generateTempPassword();
-    const passwordHash = hashPasswordSha256(tempPassword);
+    const passwordHash = hashPassword(tempPassword);
 
     const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
 

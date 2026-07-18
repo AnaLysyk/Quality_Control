@@ -5,7 +5,7 @@ import { authenticateRequest } from "@/backend/jwtAuth";
 import { canCreateRun, canDeleteRun, getRunMockRole, resolveRunRole } from "@/backend/rbac/runs";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { notifyIntegrationRunCreated } from "@/backend/notificationService";
-import { syncReleaseToBrain } from "@/backend/brain-sync";
+import { syncReleaseToBrain } from "@/backend/brain/sync";
 import { canAccessCompanyDefects, hasGlobalCompanyVisibility, resolveAllowedCompanySlugs } from "@/backend/companyDefectsAccess";
 
 // Garantir ambiente Node para fs
@@ -205,4 +205,3 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Erro ao remover run." }, { status: 500 });
   }
 }
-

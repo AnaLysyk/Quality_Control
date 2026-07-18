@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import { authenticateRequest } from "@/backend/jwtAuth";
-import { getAccessRequestForUser } from "@/backend/accessRequestsV2/service";
+import { getAccessRequestForUser } from "@/backend/access-requests/service";
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const authUser = await authenticateRequest(req);
@@ -20,4 +20,3 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 
   return NextResponse.json({ item: result }, { status: 200 });
 }
-

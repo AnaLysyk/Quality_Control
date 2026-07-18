@@ -377,7 +377,7 @@ export async function PATCH(req: Request) {
     );
   } catch (error) {
     const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível atualizar os dados";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
@@ -396,7 +396,7 @@ export async function DELETE(req: Request) {
       normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
       normalizedCompanyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
     if (!canDeleteDirectly) {
-      return NextResponse.json({ error: "Somente lider TC ou suporte técnico podem deletar o perfil diretamente" }, { status: 403 });
+      return NextResponse.json({ error: "Somente lider TC ou administrador podem deletar o perfil diretamente" }, { status: 403 });
     }
 
     const user = await getLocalUserById(access.userId);
@@ -416,6 +416,6 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível deletar o usuário";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

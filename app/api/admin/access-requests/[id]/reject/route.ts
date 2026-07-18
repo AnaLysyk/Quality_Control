@@ -1,18 +1,18 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/database/prismaClient";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/requestReviewAccess";
-import { parseAccessRequestMessage } from "@/backend/accessRequestMessage";
+import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/access-requests/reviewAccess";
+import { parseAccessRequestMessage } from "@/backend/access-requests/message";
 import { notifyAccessRequestRejected } from "@/backend/notificationService";
-import { resolveReviewQueue } from "@/backend/requestRouting";
+import { resolveReviewQueue } from "@/backend/access-requests/routing";
 import { shouldUseJsonStore } from "@/backend/storeMode";
-import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
-import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
+import { getAccessRequestById, updateAccessRequest } from "@/data/access-requests/store";
+import { createAccessRequestComment } from "@/data/access-requests/commentsStore";
 import { extractPasswordResetRequestId } from "@/backend/passwordResetAccessQueue";
 import { reviewPasswordResetRequest } from "@/backend/passwordResetReview";
-import { getAccessRequestV2ById } from "@/backend/accessRequestsV2/repository";
-import { transitionAccessRequest } from "@/backend/accessRequestsV2/service";
+import { getAccessRequestV2ById } from "@/backend/access-requests/repository";
+import { transitionAccessRequest } from "@/backend/access-requests/service";
 
 function applyAdminNotes(message: string, notes: string | null) {
   if (!notes || !notes.trim()) return message;
@@ -253,4 +253,3 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     });
   }
 }
-

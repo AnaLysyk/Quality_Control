@@ -1,4 +1,4 @@
-﻿import nodemailer from 'nodemailer';
+import nodemailer from 'nodemailer';
 import { appendFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 
@@ -56,6 +56,8 @@ class EmailService {
         host: config.host,
         port: config.port,
         secure: config.secure,
+        disableFileAccess: true,
+        disableUrlAccess: true,
         auth: {
           user: config.user,
           pass: config.pass,
@@ -261,6 +263,8 @@ class EmailService {
         subject: options.subject,
         html: options.html,
         text: options.text,
+        disableFileAccess: true,
+        disableUrlAccess: true,
         // Evita quoted-printable: com acentos, o nodemailer insere quebras de
         // linha "soft break" que, em certos clientes/parsers, corrompem links
         // longos (ex.: "?key=ABC..." vira "?key<byte inválido>C..." quando a
@@ -454,7 +458,7 @@ Equipe Testing Company
       company_user: companyName ? `Acesso vinculado à ${companyName}` : "Acesso vinculado à empresa",
       testing_company_user: "Usuário Testing Company",
       leader_tc: "Líder TC",
-      technical_support: "Suporte técnico",
+      technical_support: "Administrador",
       company_access: "Empresa",
     };
 
@@ -731,25 +735,25 @@ Guarde este código para acompanhar o andamento da sua solicitação.`;
         badge: "Líder TC aprovado",
       },
       technical_support: {
-        label: "Suporte técnico",
-        subject: "Solicitação de acesso como suporte técnico aprovada",
-        title: "Solicitação de acesso como suporte técnico aprovada",
-        intro: "Seu acesso como suporte técnico foi aprovado na plataforma Quality Control.",
+        label: "Administrador",
+        subject: "Solicitação de acesso como administrador aprovada",
+        title: "Solicitação de acesso como administrador aprovada",
+        intro: "Seu acesso como administrador foi aprovado na plataforma Quality Control.",
         accessContext: "Este perfil permite atuar nos fluxos operacionais e de suporte conforme as permissões liberadas.",
         permissionsTitle: "Com este perfil, você pode:",
         permissions: [
           "Acompanhar solicitações e atendimentos",
           "Apoiar usuários e empresas vinculadas",
-          "Atuar em revisões permitidas para suporte técnico",
+          "Atuar em revisões permitidas para administrador",
           "Utilizar recursos técnicos liberados para seu perfil",
         ],
         nextSteps: [
           "Acesse a plataforma",
           "Confira as filas e solicitações disponíveis",
-          "Atue apenas nos fluxos liberados para suporte técnico",
+          "Atue apenas nos fluxos liberados para administrador",
           "Altere sua senha após o primeiro acesso",
         ],
-        badge: "Suporte técnico aprovado",
+        badge: "Administrador aprovado",
       },
     };
 

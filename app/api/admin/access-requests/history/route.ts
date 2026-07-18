@@ -1,6 +1,6 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { listAccessRequestRemovalHistory } from "@/backend/accessRequestRemovalHistory";
+import { listAccessRequestRemovalHistory } from "@/backend/access-requests/removalHistory";
 import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
 
 export async function GET(req: Request) {

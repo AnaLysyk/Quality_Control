@@ -1,5 +1,5 @@
-﻿import { NextRequest, NextResponse } from "next/server";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { NextRequest, NextResponse } from "next/server";
+import { hashPassword } from "@/backend/passwordHash";
 import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/backend/auth/localStore";
 import { isUserScopeLockedError } from "@/backend/companyUserScope";
 import { readSyncedUserProfileFields } from "@/backend/userProfileData";
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
   }
 
-  const hash = hashPasswordSha256(password);
+  const hash = hashPassword(password);
   let user = null;
   try {
     user = await createLocalUser({

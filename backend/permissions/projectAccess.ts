@@ -7,7 +7,7 @@ export type CompanyProjectVisibility = {
   projectIds: string[];
 };
 
-type ProjectAccessContext = {
+type ProjectAccessContext = CompanyIdentity & {
   projectScope: ProjectScope;
   assignments: AccessAssignment[];
 };

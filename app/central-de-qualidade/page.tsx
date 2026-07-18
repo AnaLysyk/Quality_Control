@@ -203,7 +203,7 @@ export default function CentralDeQualidadePage() {
               </span>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-(--tc-text,#0b1a3c)">Qualidade por empresa, projeto e visão executiva</h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                Consolida runs, releases, gates, score e riscos para apoiar decisão de QA, liderança e suporte técnico.
+                Consolida runs, releases, gates, score e riscos para apoiar decisão de QA, liderança e administrador.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

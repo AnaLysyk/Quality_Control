@@ -1,4 +1,4 @@
-﻿import type { Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { simularAutenticacao } from "./simular-autenticacao";
 
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
@@ -12,7 +12,7 @@ const USER_EMAIL = process.env.E2E_USER_EMAIL || (useJsonSeed ? "e2e-user-tc@tes
 const USER_PASSWORD = process.env.E2E_USER_PASSWORD || sharedPassword;
 
 function montarSenhasCandidatas(primary: string) {
-  return Array.from(new Set([primary, process.env.E2E_PROFILE_PASSWORD, "Griaule@123", "Demo@123", "senha"].filter(Boolean)));
+  return Array.from(new Set([primary, process.env.E2E_PROFILE_PASSWORD, process.env.E2E_ADMIN_PASSWORD, "Demo@123", "senha"].filter(Boolean)));
 }
 
 function montarEmailsCandidatos(primary: string, type: "admin" | "company" | "user") {
@@ -187,4 +187,3 @@ export async function autenticarUsuario(page: Page, email: string, password: str
     ? lastNavigationError
     : new Error("falha ao navegar apos autenticacao");
 }
-

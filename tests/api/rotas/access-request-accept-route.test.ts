@@ -1,4 +1,4 @@
-﻿process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
+process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 process.env.USE_JSON_STORE = "true";
 
 jest.mock("server-only", () => ({}));
@@ -22,9 +22,9 @@ jest.setTimeout(30000);
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 import { POST } from "@/api/admin/access-requests/[id]/accept/route";
-import { createAccessRequest, getAccessRequestById } from "@/data/accessRequestsStore";
+import { createAccessRequest, getAccessRequestById } from "@/data/access-requests/store";
 import { prisma } from "@/database/prismaClient";
-import { composeAccessRequestMessage } from "@/backend/accessRequestMessage";
+import { composeAccessRequestMessage } from "@/backend/access-requests/message";
 import { pgCreateLocalCompany, pgDeleteLocalCompany } from "@/backend/auth/pgStore";
 import { hashPasswordSha256 } from "@/backend/passwordHash";
 

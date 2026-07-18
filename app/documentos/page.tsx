@@ -24,7 +24,7 @@ function resolveScopePresentation(user: ReturnType<typeof useAuthUser>["user"], 
   const isCompany = roles.includes("empresa") || roles.includes("company_user") || (user?.userOrigin ?? user?.user_origin) === "client_company";
 
   if (isLeader) return { profile: "Lider TC", scope: "Todas as empresas" };
-  if (isSupport) return { profile: "Suporte tecnico", scope: "Todas as empresas" };
+  if (isSupport) return { profile: "Administrador", scope: "Todas as empresas" };
   if (isCompany) return { profile: "Empresa", scope: "Propria empresa" };
   return { profile: "Usuario TC", scope: "Empresas vinculadas" };
 }
@@ -307,4 +307,3 @@ export default function DocumentosPage() {
     </RequireAuth>
   );
 }
-

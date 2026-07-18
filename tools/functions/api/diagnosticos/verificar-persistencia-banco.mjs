@@ -8,7 +8,7 @@ const prisma = new PrismaClient({
 const uid = randomUUID().slice(0, 8);
 
 console.log("\n=== Verificação de Persistência no PostgreSQL ===");
-console.log("Banco:", process.env.DATABASE_URL?.replace(/:([^@]+)@/, ':***@') ?? '(não configurado)');
+console.log("Banco:", process.env.DATABASE_URL ? "configurado" : "não configurado");
 
 // 1) Conta usuários antes
 const antes = await prisma.user.count();

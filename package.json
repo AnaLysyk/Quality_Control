@@ -17,7 +17,8 @@
     "lint": "eslint --max-warnings 9999",
     "typecheck": "node tools/functions/infraestrutura/compilacao/limpar-cache-next.js && tsc --noEmit",
     "guard:permissions-catalog": "jest --config jest.config.ts --runInBand tests/api/geral/system-map.test.ts",
-    "test:permissions": "jest --config jest.config.ts --runInBand tests/api/geral/system-map.test.ts tests/api/permissoes/admin-user-permissions-route-security.test.ts tests/api/permissoes/permission-inheritance-overrides.test.ts tests/api/permissoes/permission-runtime.test.ts tests/api/permissoes/permissionMatrix-effective.test.ts tests/api/permissoes/sensitive-api-guard.test.ts tests/api/permissoes/user-permissions-store-json.test.ts tests/bd/sessao/session.store.test.ts tests/api/usuarios/usuarios-access.test.ts tests/api/usuarios/user-scope-policy.test.ts tests/api/unitarios/permissionMatrix.test.ts tests/api/unitarios/userScopePolicy.test.ts tests/api/unitarios/validateCompanyAccess.test.ts tests/api/unitarios/rbacTickets.test.ts tests/api/unitarios/supportAccess.test.ts",
+    "architecture:check": "jest --config jest.config.ts --runInBand tests/api/automacoes/execution-policy.test.ts tests/api/geral/domain-catalog.test.ts tests/api/geral/system-map.test.ts tests/api/permissoes/sensitive-api-guard.test.ts tests/api/permissoes/test-data-hub-security.test.ts tests/api/unitarios/passwordHash.test.ts",
+    "test:permissions": "jest --config jest.config.ts --runInBand tests/api/geral/system-map.test.ts tests/api/permissoes/admin-user-permissions-route-security.test.ts tests/api/permissoes/permission-inheritance-overrides.test.ts tests/api/permissoes/permission-runtime.test.ts tests/api/permissoes/permissionMatrix-effective.test.ts tests/api/permissoes/sensitive-api-guard.test.ts tests/api/permissoes/test-data-hub-security.test.ts tests/api/permissoes/user-permissions-store-json.test.ts tests/bd/sessao/session.store.test.ts tests/api/usuarios/usuarios-access.test.ts tests/api/usuarios/user-scope-policy.test.ts tests/api/unitarios/permissionMatrix.test.ts tests/api/unitarios/userScopePolicy.test.ts tests/api/unitarios/validateCompanyAccess.test.ts tests/api/unitarios/rbacTickets.test.ts tests/api/unitarios/supportAccess.test.ts",
     "email:preview:access-requests": "tsx tools/functions/api/email/gerar-preview-email-solicitacao-acesso.ts",
     "test": "jest --config jest.config.ts --passWithNoTests --testMatch \"**/tests/**/*.test.ts?(x)\"",
     "test:coverage": "jest --config jest.config.ts --coverage --coverageReporters=lcov --coverageReporters=text --passWithNoTests --testMatch \"**/tests/**/*.test.ts?(x)\"",
@@ -82,6 +83,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.61",
     "@aws-sdk/client-s3": "^3.975.0",
+    "@gsap/react": "^2.1.2",
     "@monaco-editor/react": "^4.7.0",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
@@ -99,12 +101,15 @@
     "ai": "^6.0.175",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
+    "exceljs": "^4.4.0",
     "framer-motion": "^12.23.26",
+    "gsap": "^3.15.0",
     "html2canvas": "^1.4.1",
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.0.0",
-    "next": "16.2.9",
-    "nodemailer": "^8.0.1",
+    "ldrs": "^1.1.9",
+    "next": "^16.2.10",
+    "nodemailer": "^9.0.3",
     "papaparse": "^5.5.3",
     "pg": "^8.20.0",
     "react": "19.2.0",
@@ -147,6 +152,8 @@
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "@hono/node-server": "1.19.13"
+    "@hono/node-server": "1.19.13",
+    "dompurify": "3.4.12",
+    "postcss": "8.5.19"
   }
 }

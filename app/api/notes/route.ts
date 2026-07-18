@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/backend/jwtAuth";
 import { createUserNote, listUserNotes } from "@/backend/userNotesStore";
-import { syncNoteToBrain } from "@/backend/brain-sync";
+import { syncNoteToBrain } from "@/backend/brain/sync";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
@@ -45,4 +45,3 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ item: note }, { status: 201 });
 }
-

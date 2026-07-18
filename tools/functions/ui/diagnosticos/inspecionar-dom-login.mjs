@@ -8,7 +8,7 @@ import { chromium } from 'playwright';
   try {
     await page.goto(`${base}/login`, { timeout: 30000, waitUntil: 'domcontentloaded' });
     await page.locator('#user').fill('admin@griaule.test');
-    await page.locator('#password').fill('Griaule@123');
+    await page.locator('#password').fill((process.env.E2E_ADMIN_PASSWORD || process.env.E2E_PROFILE_PASSWORD || "Demo@123"));
     await page.locator('button[type="submit"]').click().catch(() => {});
     await page.waitForURL('**/*', { timeout: 30000 }).catch(() => {});
     try { await page.goto(`${base}/admin/home`, { timeout: 15000, waitUntil: 'domcontentloaded' }); } catch (e) {}

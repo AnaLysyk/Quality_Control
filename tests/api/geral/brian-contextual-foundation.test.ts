@@ -78,7 +78,7 @@ describe("Brian contextual foundation", () => {
 
     expect(canSeeBrianNeuron(impulse.context, ticketNeuron!)).toBe(true);
     expect(canSeeBrianNeuron({ ...impulse.context, companySlug: "outra-empresa" }, ticketNeuron!)).toBe(false);
-    expect(canSeeBrianNeuron({ ...impulse.context, role: "leader_tc", companySlug: "outra-empresa" }, ticketNeuron!)).toBe(true);
+    expect(canSeeBrianNeuron({ ...impulse.context, role: "leader_tc", companySlug: "outra-empresa" }, ticketNeuron!)).toBe(false);
   });
 
   it("redacts sensitive payload data and flags prompt-injection-like text as evidence only", () => {
@@ -236,4 +236,3 @@ describe("Brian contextual foundation", () => {
     expect(workflow.telemetry.some((event) => event.name === "brian.workflow.failed")).toBe(true);
   });
 });
-

@@ -81,7 +81,7 @@ function normalizeLower(value?: string | null): string | null {
 }
 
 // unrestricted: só quando o chamador já determinou (fora deste helper, com
-// base em admin global real / Suporte Técnico com regra de acesso global
+// base em admin global real / Administrador com regra de acesso global
 // verdadeira) que o acesso é global — nunca inferido do conteúdo de
 // assignments nem de role textual. Ausência de assignments é sempre
 // fail-closed ("none"), nunca "unrestricted".

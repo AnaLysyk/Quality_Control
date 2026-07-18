@@ -3,17 +3,22 @@
 import {
   getPublicAccessRequestByKey,
   updateAccessRequestByKey,
-} from "@/backend/accessRequestsV2/service";
+} from "@/backend/access-requests/service";
+import { rateLimit } from "@/backend/rateLimit";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 
-export async function GET(_req: Request, context: { params: Promise<{ key: string }> }) {
+export async function GET(req: Request, context: { params: Promise<{ key: string }> }) {
   const { key } = await context.params;
-  if (!key || key.length < 10) {
-    return NextResponse.json({ message: "Chave invalida" }, { status: 400 });
+  if (!key || key.length < 10 || key.length > 160) {
+    return NextResponse.json({ message: "Chave invalida" }, { status: 400, headers: NO_STORE_HEADERS });
   }
+
+  const limiter = await rateLimit(req, `access-request-by-key:${key}`, 30, 60);
+  if (limiter.limited) return limiter.response;
 
   const result = await getPublicAccessRequestByKey(key);
   if (!result) {
-    return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
+    return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404, headers: NO_STORE_HEADERS });
   }
   const { request, comments } = result;
 
@@ -45,22 +50,25 @@ export async function GET(_req: Request, context: { params: Promise<{ key: strin
       body: comment.body,
       createdAt: comment.createdAt,
     })),
-  });
+  }, { headers: NO_STORE_HEADERS });
 }
 
 export async function PATCH(req: Request, context: { params: Promise<{ key: string }> }) {
   const { key } = await context.params;
-  if (!key || key.length < 10) {
-    return NextResponse.json({ message: "Chave invalida" }, { status: 400 });
+  if (!key || key.length < 10 || key.length > 160) {
+    return NextResponse.json({ message: "Chave invalida" }, { status: 400, headers: NO_STORE_HEADERS });
   }
+
+  const limiter = await rateLimit(req, `access-request-update-by-key:${key}`, 10, 60);
+  if (limiter.limited) return limiter.response;
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) {
-    return NextResponse.json({ message: "Payload invalido" }, { status: 400 });
+    return NextResponse.json({ message: "Payload invalido" }, { status: 400, headers: NO_STORE_HEADERS });
   }
 
   const result = await updateAccessRequestByKey(key, body);
-  if (!result) return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
+  if (!result) return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404, headers: NO_STORE_HEADERS });
   if (result === "not-adjustable" || result === "no-adjustment-fields") {
     return NextResponse.json({ message: "Esta solicitacao nao aceita correcao" }, { status: 409 });
   }
@@ -85,6 +93,5 @@ export async function PATCH(req: Request, context: { params: Promise<{ key: stri
       status: result.status,
       updatedAt: result.updatedAt,
     },
-  });
+  }, { headers: NO_STORE_HEADERS });
 }
-

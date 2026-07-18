@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { hashPasswordSha256 } from "../../../../../backend/passwordHash";
+import { hashPassword } from "../../../../../backend/passwordHash";
 
 const dataDir = process.env.LOCAL_AUTH_DATA_DIR?.trim();
 const password = process.env.E2E_PROFILE_PASSWORD;
@@ -10,7 +10,7 @@ if (!dataDir || !password) {
   throw new Error("LOCAL_AUTH_DATA_DIR e E2E_PROFILE_PASSWORD sao obrigatorios para a massa E2E.");
 }
 
-const passwordHash = hashPasswordSha256(password);
+const passwordHash = hashPassword(password);
 
 const companies = [
   {

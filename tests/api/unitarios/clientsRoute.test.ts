@@ -7,11 +7,13 @@ jest.mock("@/backend/auth/localStore", () => ({
 }));
 jest.mock("@/data/auditLogRepository", () => ({ addAuditLogSafe: jest.fn(async () => {}) }));
 jest.mock("@/backend/applicationsStore", () => ({ syncCompanyApplications: jest.fn(async () => {}) }));
+jest.mock("@/backend/auth/session", () => ({ getAccessContext: jest.fn() }));
 
 import { GET, POST } from "@/api/clients/route";
 import { GET as GET_BY_ID, PATCH as PATCH_BY_ID } from "@/api/clients/[id]/route";
 import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 import { createLocalCompany, listLocalCompanies, updateLocalCompany } from "@/backend/auth/localStore";
+import { getAccessContext } from "@/backend/auth/session";
 
 const mockedRequireGlobalAdminWithStatus = requireGlobalAdminWithStatus as jest.MockedFunction<
   typeof requireGlobalAdminWithStatus
@@ -34,6 +36,7 @@ function mockAuthorized() {
     admin: { id: "admin-1", email: "admin@x.com", token: "" } as any,
     status: 200,
   });
+  (getAccessContext as jest.Mock).mockResolvedValue({ projectScope: "unrestricted", assignments: [] });
 }
 
 function makeRequest(opts: { url?: string; method?: string; body?: any } = {}) {

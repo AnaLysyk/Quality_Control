@@ -47,10 +47,10 @@ const SCOPE_POLICIES: Record<ScopeRoleKey, Omit<UserScopePolicy, "roleKey">> = {
     usesPermissionMatrix: true,
   },
   [SYSTEM_ROLES.LEADER_TC]: {
-    companyAccessScope: "all_companies",
+    companyAccessScope: "linked_companies",
     visibleUserKinds: ["testing_company", "company"],
     creatableUserKinds: ["testing_company", "company"],
-    canLinkAcrossCompanies: true,
+    canLinkAcrossCompanies: false,
     usesPermissionMatrix: true,
   },
   [SYSTEM_ROLES.TECHNICAL_SUPPORT]: {
@@ -84,4 +84,3 @@ export function canCreateCompanyUsersByScope(policy: UserScopePolicy | null | un
   if (!policy) return false;
   return policy.creatableUserKinds.includes("company") && policy.companyAccessScope !== "none";
 }
-

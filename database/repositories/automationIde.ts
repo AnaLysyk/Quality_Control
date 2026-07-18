@@ -248,7 +248,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     method: "POST",
     pathTemplate: "/api/tokens",
     pathPreset: "/api/tokens",
-    bodyTemplate: { username: "{{smartUser}}", password: "{{smartPassword}}" },
+    bodyTemplate: { username: "{{smartUser}}", password: "{{smartPassword}}" }, // NOSONAR: form-field placeholder template, not a credential
     responseFocus: ["status", "headers", "json"],
     fields: [
       { id: "smartUser", label: "Usuário", type: "text", required: true, placeholder: "E-mail ou login" },

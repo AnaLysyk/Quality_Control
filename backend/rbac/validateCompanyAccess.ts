@@ -7,8 +7,14 @@ export async function assertCompanyAccess(user: AuthUser | null, companyId?: str
 
   const role = normalizeLegacyRole(user.role);
 
-  // Global profiles can select companies only in modules that separately grant that capability.
-  if (role === SYSTEM_ROLES.LEADER_TC || role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return;
+  // Apenas administrador real e suporte técnico têm alcance global. Líder TC
+  // precisa de um ProjectTeamAssignment ativo na empresa solicitada.
+  if (user.isGlobalAdmin || role === SYSTEM_ROLES.TECHNICAL_SUPPORT || user.projectScope === "unrestricted") return;
+
+  if (role === SYSTEM_ROLES.LEADER_TC) {
+    if (user.assignments?.some((assignment) => assignment.status === "active" && assignment.companyId === companyId)) return;
+    throw new Error("FORBIDDEN_COMPANY_ACCESS");
+  }
 
   // Company-scoped profiles only access their own tenant.
   if ((role === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.COMPANY_USER) && user.companyId === companyId) return;
@@ -26,4 +32,3 @@ export async function assertCompanyAccess(user: AuthUser | null, companyId?: str
 export function requireCompanyIdPresent(companyId?: string | null) {
   if (!companyId) throw new Error("MISSING_COMPANY_ID");
 }
-

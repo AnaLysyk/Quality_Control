@@ -22,11 +22,11 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
       invalid.forEach(role => expect(isTechnicalSupportUser({ role: role as string })).toBe(false));
     });
 
-    it("isSupportAdminUser: requer global flag OU role leader_tc explicitly", () => {
-      expect(isSupportAdminUser({ role: "leader_tc" })).toBe(true);
+    it("isSupportAdminUser: requer flag global explícita", () => {
+      expect(isSupportAdminUser({ role: "leader_tc" })).toBe(false);
       expect(isSupportAdminUser({ role: "testing_company_user", isGlobalAdmin: true })).toBe(true);
       expect(isSupportAdminUser({ role: "empresa", isGlobalAdmin: true })).toBe(true);
-      expect(isSupportAdminUser({ role: "admin", isGlobalAdmin: false })).toBe(true);
+      expect(isSupportAdminUser({ role: "admin", isGlobalAdmin: false })).toBe(false);
 
       const invalid = [{ role: "technical_support" }, { role: "empresa", isGlobalAdmin: false }];
       invalid.forEach(user => expect(isSupportAdminUser(user)).toBe(false));
@@ -75,7 +75,7 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
 
       // Um company user mesmo forçado n pode acessar Global Space do suporte vertical
       expect(canAccessGlobalSupportScope({ role: "company_user", permissions: { support: ["view", "edit"] } })).toBe(false);
-      expect(canAccessGlobalSupportScope({ role: "leader_tc" })).toBe(true);
+      expect(canAccessGlobalSupportScope({ role: "leader_tc" })).toBe(false);
     });
 
     it("canManageSupportWorkflow: exige ser Operator E ter permissões para assign/status", () => {
@@ -99,4 +99,3 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
     });
   });
 });
-

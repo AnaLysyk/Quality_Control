@@ -4,6 +4,7 @@ import { getAccessContext } from "@/backend/auth/session";
 import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 import { isE2eMockAllowed } from "@/backend/auth/e2eMockGate";
 import type { PermissionMatrix } from "@/backend/permissionMatrix";
+import type { AccessAssignment, ProjectScope } from "@/backend/auth/accessAssignment";
 
 export type AuthUser = {
   id: string;
@@ -21,6 +22,8 @@ export type AuthUser = {
   allowedProjectIds?: string[] | null;
   permissions?: PermissionMatrix;
   permissionRole?: string | null;
+  assignments?: AccessAssignment[];
+  projectScope?: ProjectScope;
 };
 
 type PlaywrightDecodedAuth = {
@@ -106,6 +109,8 @@ async function resolveAccessContextAuthUser(req: Request): Promise<AuthUser | nu
     allowedProjectIds: access.allowedProjectIds,
     permissions: permissionAccess.permissions,
     permissionRole: permissionAccess.roleKey,
+    assignments: access.assignments,
+    projectScope: access.projectScope,
   };
 }
 
@@ -115,4 +120,3 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
 
   return resolveAccessContextAuthUser(req);
 }
-

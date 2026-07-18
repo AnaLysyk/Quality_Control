@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 import { emailService } from "@/backend/email";
 import type { WikiDoc } from "@/data/platformDocsStore";
 import type { RequestRecord } from "@/data/requestsStore";
@@ -17,7 +17,7 @@ import {
   listLocalMemberships,
   getLocalUserById,
 } from "@/backend/auth/localStore";
-import { toRequestProfileTypeLabel, type RequestProfileType, type ReviewQueue } from "@/backend/requestRouting";
+import { toRequestProfileTypeLabel, type RequestProfileType, type ReviewQueue } from "@/backend/access-requests/routing";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import { hasPermissionAccess } from "@/backend/permissionMatrix";
 import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
@@ -25,8 +25,8 @@ import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null; role?: string | null }) {
   return (
     user.is_global_admin === true ||
-    normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.LEADER_TC ||
-    normalizeLegacyRole(user.role) === SYSTEM_ROLES.LEADER_TC
+    normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalizeLegacyRole(user.role) === SYSTEM_ROLES.TECHNICAL_SUPPORT
   );
 }
 
@@ -47,7 +47,7 @@ function isTechnicalSupportUser(user: { role?: string | null }) {
 function describePermissionRole(role?: string | null) {
   const normalized = normalizeLegacyRole(role);
   if (normalized === SYSTEM_ROLES.LEADER_TC) return "Lider TC";
-  if (normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "Suporte tecnico";
+  if (normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "Administrador";
   if (normalized === SYSTEM_ROLES.EMPRESA || normalized === SYSTEM_ROLES.COMPANY_USER) return "Empresa";
   return "Usuario";
 }
@@ -152,7 +152,7 @@ function isActiveNotificationUser(user: { active?: boolean; status?: string | nu
 
 function isPrivilegedWikiRole(role?: string | null) {
   const normalized = normalizeLegacyRole(role);
-  return normalized === SYSTEM_ROLES.LEADER_TC || normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  return normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT;
 }
 
 function matchesCompanyId(left?: string | null, right?: string | null) {
@@ -212,7 +212,7 @@ async function resolveCompanyWikiRecipientIds(companySlug?: string | null) {
     const linkedToCompany = linkedFanoutEnabled && userMemberships.some((membership) => membership.companyId === company.id);
     const hasPrivilegedAccess =
       user.is_global_admin === true ||
-      normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.LEADER_TC ||
+      normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
       isPrivilegedWikiRole(user.role) ||
       userMemberships.some((membership) => isPrivilegedWikiRole(membership.role));
     const directCompanyUser = isDirectCompanyWikiUser(user, company);
@@ -345,7 +345,7 @@ export async function notifyPasswordResetRequest(request: RequestRecord) {
   await createNotificationsForUsers(reviewerIds, {
     type: "PASSWORD_RESET_REQUEST",
     title: "Reset de senha solicitado",
-    description: `${userLabel} solicitou reset de senha para o Suporte tecnico.`,
+    description: `${userLabel} solicitou reset de senha para o Administrador.`,
     requestId: request.id,
     link: "/admin/access-requests",
     dedupeKey: `reset:reviewers:${request.id}`,
@@ -354,7 +354,7 @@ export async function notifyPasswordResetRequest(request: RequestRecord) {
   await createNotificationsForUsers([request.userId], {
     type: "PASSWORD_RESET_PENDING",
     title: "Solicitacao de reset enviada",
-    description: "Aguardando analise do Suporte tecnico.",
+    description: "Aguardando analise do Administrador.",
     requestId: request.id,
     dedupeKey: `reset:user:${request.id}`,
   });
@@ -1062,4 +1062,3 @@ export async function notifyTicketUpdated(input: {
     dedupeKey: `suporte:${suporte.id}:updated:${Date.now()}`,
   });
 }
-

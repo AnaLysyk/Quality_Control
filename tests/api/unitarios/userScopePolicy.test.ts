@@ -7,14 +7,14 @@
 
 describe("userScopePolicy - Matriz Rígida de Escopos de Usuários", () => {
   describe("resoveUserScopePolicy", () => {
-    it("deve mapear Leader TC com escopo total (all_companies, multi-link)", () => {
+    it("deve mapear Leader TC com escopo de empresas vinculadas", () => {
       const aliases = ["leader_tc", "testing_company_lead", "admin", "global_admin", "super-admin", "lider_tc", "tc_leader"];
       
       aliases.forEach(alias => {
         const policy = resolveUserScopePolicy(alias);
         expect(policy.roleKey).toBe("leader_tc");
-        expect(policy.companyAccessScope).toBe("all_companies");
-        expect(policy.canLinkAcrossCompanies).toBe(true);
+        expect(policy.companyAccessScope).toBe("linked_companies");
+        expect(policy.canLinkAcrossCompanies).toBe(false);
         expect(policy.visibleUserKinds).toContain("testing_company");
         expect(policy.creatableUserKinds).toContain("testing_company");
       });
@@ -86,4 +86,3 @@ describe("userScopePolicy - Matriz Rígida de Escopos de Usuários", () => {
     });
   });
 });
-

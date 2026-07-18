@@ -17,6 +17,7 @@ const ACCESS_REQUEST_SUBJECT_HINTS = [
   "lider tc",
   "suporte técnico",
   "suporte tecnico",
+  "gestor de plataforma",
 ];
 
 export type BrainEmailFlowKind =
@@ -90,7 +91,7 @@ function extractAccessKey(html: string, text?: string | null) {
     try {
       const parsed = lookupUrl.startsWith("http")
         ? new URL(lookupUrl)
-        : new URL(lookupUrl, "http://local.quality-control");
+        : new URL(lookupUrl, "http://local.quality-control"); // NOSONAR: parser-only placeholder base, no request is made
       const key = parsed.searchParams.get("key");
       if (key) return key;
     } catch {

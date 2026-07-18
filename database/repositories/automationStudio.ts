@@ -1,4 +1,4 @@
-﻿import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
+import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
 import type { AutomationCompanyScope } from "@/backend/automations/companyScope";
 
 export type AutomationStudioStepKind =
@@ -254,7 +254,7 @@ export const AUTOMATION_STUDIO_BLUEPRINTS: AutomationStudioBlueprint[] = [
     realRunnerId: "griaule-biometrics",
     defaultStatus: "active",
     defaultNotes:
-      "Fluxo principal da empresa para operação biométrica. Logs técnicos avançados ficam restritos a suporte técnico e líder TC.",
+      "Fluxo principal da empresa para operação biométrica. Logs técnicos avançados ficam restritos a administrador e líder TC.",
     defaultScript: `const reference = input.processId ?? input.protocol;\nconst fingerprint = assets.resolve(step.inputBinding || "anelar-esquerdo");\n\nawait http.get(\`/api/processos/\${reference}\`);\nawait control.retry(async () => {\n  await biometrics.attach({\n    companySlug: session.companySlug,\n    mode: input.mode ?? "below",\n    fingerprint,\n    face: input.includeFace ? assets.optional("face") : null,\n  });\n}, { attempts: 2, backoffMs: 800 });\n\nreturn assertions.expectBiometricSync();`,
     steps: [
       {

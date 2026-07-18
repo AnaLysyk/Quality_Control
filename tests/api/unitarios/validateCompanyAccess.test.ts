@@ -33,13 +33,34 @@ describe("validateCompanyAccess - Matriz Rígida de Isolamento Multitenant (Empr
       await expect(assertCompanyAccess(undefined as any, undefined)).rejects.toThrow("MISSING_COMPANY_ID");
     });
 
-    it("deve BYPASS global admins (Leader TC, Support) pois acessam visões root e modules cross-company", async () => {
-      const globals = ["leader_tc", "admin", "global_admin", "technical_support", "tech_support"];
+    it("deve permitir somente administradores globais e suporte em qualquer empresa", async () => {
+      const globals = ["technical_support", "tech_support"];
 
       for (const rawRole of globals) {
         // expect it NOT to throw
         await expect(assertCompanyAccess({ role: rawRole } as AuthUser, "any-company-id")).resolves.toBeUndefined();
       }
+
+      await expect(
+        assertCompanyAccess({ role: "leader_tc", isGlobalAdmin: true } as AuthUser, "any-company-id"),
+      ).resolves.toBeUndefined();
+    });
+
+    it("restringe Líder TC às empresas presentes em assignments ativos", async () => {
+      const leader = {
+        id: "leader-1",
+        role: "leader_tc",
+        isGlobalAdmin: false,
+        projectScope: "restricted",
+        assignments: [
+          { companyId: "tenant-a", status: "active" },
+          { companyId: "tenant-removido", status: "removed" },
+        ],
+      } as unknown as AuthUser;
+
+      await expect(assertCompanyAccess(leader, "tenant-a")).resolves.toBeUndefined();
+      await expect(assertCompanyAccess(leader, "tenant-b")).rejects.toThrow("FORBIDDEN_COMPANY_ACCESS");
+      await expect(assertCompanyAccess(leader, "tenant-removido")).rejects.toThrow("FORBIDDEN_COMPANY_ACCESS");
     });
 
     it("deve PERMITIR company users e empresa STRICTLY aprentando exatamente o seu companyId base", async () => {
@@ -93,4 +114,3 @@ describe("validateCompanyAccess - Matriz Rígida de Isolamento Multitenant (Empr
     });
   });
 });
-

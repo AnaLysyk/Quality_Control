@@ -1,5 +1,6 @@
 jest.mock("@/backend/rbac/requireGlobalAdmin", () => ({ requireGlobalAdminWithStatus: jest.fn() }));
 jest.mock("@/backend/auth/session", () => ({ getAccessContext: jest.fn() }));
+jest.mock("@/backend/jwtAuth", () => ({ authenticateRequest: jest.fn() }));
 jest.mock("@/backend/adminUsers", () => ({
   listAdminUserItems: jest.fn(),
   getAdminUserItem: jest.fn(),
@@ -16,6 +17,7 @@ jest.mock("@/backend/auth/localStore", () => ({
 import { GET, POST, PATCH, DELETE } from "@/api/users/route";
 import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 import { getAccessContext } from "@/backend/auth/session";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { listAdminUserItems, getAdminUserItem } from "@/backend/adminUsers";
 import { canDeleteUserByProfile } from "@/backend/adminUserDeleteAccess";
 import {
@@ -30,6 +32,7 @@ const mockedRequireGlobalAdminWithStatus = requireGlobalAdminWithStatus as jest.
   typeof requireGlobalAdminWithStatus
 >;
 const mockedGetAccessContext = getAccessContext as jest.MockedFunction<typeof getAccessContext>;
+const mockedAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
 const mockedListAdminUserItems = listAdminUserItems as jest.MockedFunction<typeof listAdminUserItems>;
 const mockedGetAdminUserItem = getAdminUserItem as jest.MockedFunction<typeof getAdminUserItem>;
 const mockedCanDeleteUserByProfile = canDeleteUserByProfile as jest.MockedFunction<typeof canDeleteUserByProfile>;
@@ -59,6 +62,14 @@ function mockAuthorized() {
   mockedRequireGlobalAdminWithStatus.mockResolvedValue({
     admin: { id: "admin-1", email: "admin@x.com", token: "" } as any,
     status: 200,
+  });
+  mockedAuthenticateRequest.mockResolvedValue({
+    id: "admin-1",
+    email: "admin@x.com",
+    role: "technical_support",
+    isGlobalAdmin: true,
+    projectScope: "unrestricted",
+    assignments: [],
   });
 }
 
@@ -172,7 +183,7 @@ describe("app/api/users/route.ts - autenticação (correção de vulnerabilidade
   it("DELETE autenticado como admin global e com permissão de perfil continua funcionando (200)", async () => {
     mockAuthorized();
     mockedGetAccessContext.mockResolvedValue({ role: "leader_tc" } as any);
-    mockedGetAdminUserItem.mockResolvedValue({ id: "user-1", permission_role: "company_user" } as any);
+    mockedGetAdminUserItem.mockResolvedValue({ id: "user-1", permission_role: "company_user", companyIds: ["cmp-a"] } as any);
     mockedCanDeleteUserByProfile.mockReturnValue(true);
     mockedUpdateLocalUser.mockResolvedValue({ id: "user-1", active: false, status: "blocked" } as any);
 

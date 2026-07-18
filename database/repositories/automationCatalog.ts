@@ -144,21 +144,21 @@ export const AUTOMATION_ENVIRONMENTS: AutomationEnvironment[] = [
   {
     id: "griaule-hml-api-146",
     title: "Griaule HML API (146)",
-    baseUrl: "http://172.16.1.146:8100",
+    baseUrl: "http://172.16.1.146:8100", // NOSONAR: private-network homologation host, no TLS available
     status: "ready",
     note: "Host homologação Griaule (API principal). Sem segredos por padrão.",
   },
   {
     id: "griaule-hml-smart-146",
     title: "Griaule HML Smart (146)",
-    baseUrl: "http://172.16.1.146:8128",
+    baseUrl: "http://172.16.1.146:8128", // NOSONAR: private-network homologation host, no TLS available
     status: "ready",
     note: "Host homologação Griaule (Smart UI). Sem segredos por padrão.",
   },
   {
     id: "griaule-hml-api-201",
     title: "Griaule HML API (201)",
-    baseUrl: "http://172.16.1.201:8100",
+    baseUrl: "http://172.16.1.201:8100", // NOSONAR: private-network homologation host, no TLS available
     status: "ready",
     note: "Host alternativo homologação Griaule. Sem segredos por padrão.",
   },
@@ -189,7 +189,7 @@ export const AUTOMATION_FLOWS: AutomationFlow[] = [
   {
     id: "griaule-biometrics",
     title: "Anexo biométrico Griaule",
-    audience: "Suporte técnico / Líder TC / Usuário TC",
+    audience: "Administrador / Líder TC / Usuário TC",
     objective: "Executar a cadeia real de biometria com digital e face, controlando o limite Base64 antes do PUT.",
     steps: ["Escolher empresa visível", "Selecionar fixture", "Resolver processo", "Executar GET/PUT/GET e salvar evidência"],
     stack: "HTTP runner + fixtures locais",
@@ -197,7 +197,7 @@ export const AUTOMATION_FLOWS: AutomationFlow[] = [
   {
     id: "cpf-rfb",
     title: "Consulta CPF na RFB",
-    audience: "Suporte técnico / Líder TC",
+    audience: "Administrador / Líder TC",
     objective: "Transformar a consulta de CPF em um fluxo visual, validando payload, resposta e erros frequentes.",
     steps: ["Selecionar ambiente", "Informar CPF", "Executar endpoint", "Exibir resultado e histórico"],
     stack: "HTTP runner",
@@ -262,4 +262,3 @@ export const AUTOMATION_PILLARS: AutomationPillar[] = [
     bullets: ["Objetivo", "Pré-condições", "Exemplos", "Restrições de ambiente"],
   },
 ];
-

@@ -4,6 +4,8 @@ import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAdminUserItem } from "@/backend/adminUsers";
 import { findLocalCompanyById, removeLocalLink } from "@/backend/auth/localStore";
 import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { assertCompanyAccess } from "@/backend/rbac/validateCompanyAccess";
 
 export async function DELETE(
   req: NextRequest,
@@ -15,6 +17,12 @@ export async function DELETE(
   }
 
   const { id: companyId, userId } = await params;
+  const actor = await authenticateRequest(req);
+  try {
+    await assertCompanyAccess(actor, companyId);
+  } catch {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  }
   const company = await findLocalCompanyById(companyId);
   if (!company) {
     return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
@@ -46,4 +54,3 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

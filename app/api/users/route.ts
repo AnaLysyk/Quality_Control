@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 
 import { canDeleteUserByProfile } from "@/backend/adminUserDeleteAccess";
@@ -12,8 +12,10 @@ import {
 } from "@/backend/auth/localStore";
 import { getAccessContext } from "@/backend/auth/session";
 import { isUserScopeLockedError } from "@/backend/companyUserScope";
-import { generateTempPassword, hashPasswordSha256 } from "@/backend/passwordHash";
+import { generateTempPassword, hashPassword } from "@/backend/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { assertCompanyAccess } from "@/backend/rbac/validateCompanyAccess";
 
 export const revalidate = 0;
 
@@ -42,7 +44,18 @@ function normalizeMembershipRole(input?: string | null) {
 }
 
 function buildTempPasswordHash() {
-  return hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
+  return hashPassword(`${Date.now()}-${randomUUID()}`);
+}
+
+async function hasRequestedCompanyAccess(req: Request, companyId: string) {
+  const user = await authenticateRequest(req);
+  if (!user) return false;
+  try {
+    await assertCompanyAccess(user, companyId);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function GET(req: Request) {
@@ -55,6 +68,9 @@ export async function GET(req: Request) {
   const companyId = searchParams.get("companyId");
   if (!companyId) {
     return NextResponse.json({ error: "companyId obrigatório" }, { status: 400 });
+  }
+  if (!(await hasRequestedCompanyAccess(req, companyId))) {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const users = await listAdminUserItems({ companyId });
@@ -82,14 +98,17 @@ export async function POST(req: Request) {
   let tempPassword: string | undefined;
   const passwordHash =
     typeof body?.password === "string" && body.password
-      ? hashPasswordSha256(body.password)
+      ? hashPassword(body.password)
       : (() => {
           tempPassword = generateTempPassword();
-          return hashPasswordSha256(tempPassword);
+          return hashPassword(tempPassword);
         })();
 
   if (!companyId || !name || !email || !login) {
     return NextResponse.json({ error: "Campos obrigatorios" }, { status: 400 });
+  }
+  if (!(await hasRequestedCompanyAccess(req, companyId))) {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const companies = await listLocalCompanies();
@@ -157,6 +176,9 @@ export async function PATCH(req: Request) {
 
   if (!companyId || !userId || !updates) {
     return NextResponse.json({ error: "Campos obrigatorios" }, { status: 400 });
+  }
+  if (!(await hasRequestedCompanyAccess(req, companyId))) {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const email = typeof updates.email === "string" ? updates.email.trim().toLowerCase() : null;
@@ -236,9 +258,16 @@ export async function DELETE(req: Request) {
   if (!companyId || !userId) {
     return NextResponse.json({ error: "Campos obrigatorios" }, { status: 400 });
   }
+  if (!(await hasRequestedCompanyAccess(req, companyId))) {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  }
 
   const target = await getAdminUserItem(userId);
   if (!target) {
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+  }
+  const targetCompanyIds = target.companyIds ?? target.company_ids ?? [];
+  if (!targetCompanyIds.includes(companyId)) {
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
@@ -258,4 +287,3 @@ export async function DELETE(req: Request) {
   const item = await getAdminUserItem(userId);
   return NextResponse.json(item ?? updated);
 }
-

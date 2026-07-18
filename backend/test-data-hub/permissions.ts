@@ -1,6 +1,7 @@
 ﻿import "server-only";
 
 import type { AuthUser } from "@/backend/jwtAuth";
+import { resolveCompanyProjectVisibility } from "@/backend/permissions/projectAccess";
 
 /**
  * Test Data Hub Permissions
@@ -39,24 +40,87 @@ export class PermissionError extends Error {
   }
 }
 
+export type CompanyProjectAccess = {
+  companyAllowed: boolean;
+  allProjects: boolean;
+  projectIds: string[];
+};
+
+function normalizedRoles(user: AuthUser) {
+  return new Set(
+    [user.role, user.companyRole, user.globalRole, user.permissionRole]
+      .filter((role): role is string => typeof role === "string" && role.trim().length > 0)
+      .map((role) => role.trim().toLowerCase()),
+  );
+}
+
+function hasAnyRole(user: AuthUser, roles: readonly string[]) {
+  const actualRoles = normalizedRoles(user);
+  return roles.some((role) => actualRoles.has(role));
+}
+
+/**
+ * Resolve o escopo relacional sem achatar empresas e projetos. `allProjects`
+ * distingue acesso total de uma lista vazia, que libera somente ativos de
+ * nível da empresa (`projectId=null`).
+ */
+export function getCompanyProjectAccess(user: AuthUser | null, companySlug: string): CompanyProjectAccess {
+  if (!user) return { companyAllowed: false, allProjects: false, projectIds: [] };
+  if (user.isGlobalAdmin || user.projectScope === "unrestricted") {
+    return { companyAllowed: true, allProjects: true, projectIds: [] };
+  }
+
+  if (user.projectScope && Array.isArray(user.assignments)) {
+    const companyAllowed = user.assignments.some(
+      (assignment) =>
+        assignment.status === "active" &&
+        assignment.companySlug.trim().toLowerCase() === companySlug.trim().toLowerCase(),
+    );
+    if (!companyAllowed) return { companyAllowed: false, allProjects: false, projectIds: [] };
+
+    const visibility = resolveCompanyProjectVisibility(
+      { projectScope: user.projectScope, assignments: user.assignments },
+      { companySlug },
+    );
+    return {
+      companyAllowed: true,
+      allProjects: visibility.mode === "all",
+      projectIds: visibility.mode === "selected" ? visibility.projectIds : [],
+    };
+  }
+
+  // Compatibilidade exclusiva para sessões E2E/legadas sem o contrato novo.
+  const companySlugs = Array.isArray(user.companySlugs)
+    ? user.companySlugs
+    : [user.companySlug].filter((slug): slug is string => typeof slug === "string");
+  const companyAllowed = companySlugs.some(
+    (slug) => slug.trim().toLowerCase() === companySlug.trim().toLowerCase(),
+  );
+  if (!companyAllowed) return { companyAllowed: false, allProjects: false, projectIds: [] };
+
+  if (Array.isArray(user.allowedProjectIds)) {
+    return { companyAllowed: true, allProjects: false, projectIds: [...new Set(user.allowedProjectIds)] };
+  }
+  return { companyAllowed: true, allProjects: true, projectIds: [] };
+}
+
 /**
  * Check if user can access company
  */
 export function canAccessCompany(user: AuthUser | null, companySlug: string): boolean {
-  if (!user) return false;
-  if (user.isGlobalAdmin) return true;
-
-  const companySlugs = Array.isArray(user.companySlugs) ? user.companySlugs : [user.companySlug].filter(Boolean);
-  return companySlugs.includes(companySlug);
+  return getCompanyProjectAccess(user, companySlug).companyAllowed;
 }
 
 /**
  * Check if user can access project within company
- * (All users in company can currently access all projects; can be refined per-project)
+ * O par empresa+projeto é preservado; projetos de outra empresa nunca são
+ * liberados por arrays achatados.
  */
 export function canAccessProject(user: AuthUser | null, companySlug: string, projectId?: string | null): boolean {
-  if (!projectId) return true; // No project filter = company-level access
-  return canAccessCompany(user, companySlug);
+  const access = getCompanyProjectAccess(user, companySlug);
+  if (!access.companyAllowed) return false;
+  if (!projectId) return true;
+  return access.allProjects || access.projectIds.includes(projectId);
 }
 
 /**
@@ -72,18 +136,20 @@ export function getMaxSensitivityForUser(user: AuthUser | null): SensitivityLeve
   if (!user) return "public";
   if (user.isGlobalAdmin) return "sensitive";
 
-  const role = user.role || user.companyRole || user.globalRole || "";
-
-  if (["admin", "company_admin", "leader_tc", "technical_support"].includes(role)) {
+  if (hasAnyRole(user, ["admin", "global_admin", "company_admin", "empresa", "leader_tc", "technical_support"])) {
     return "restricted";
   }
 
-  if (["support", "it_dev", "dev"].includes(role)) {
+  if (hasAnyRole(user, ["viewer", "read_only"])) {
+    return "public";
+  }
+
+  if (hasAnyRole(user, ["support", "it_dev", "dev", "qa_tc", "testing_company_user", "company_user"])) {
     return "internal";
   }
 
-  // Default: public
-  return "public";
+  // Usuário autenticado e vinculado recebe, no máximo, dados internos.
+  return "internal";
 }
 
 /**
@@ -109,8 +175,7 @@ export function canCreateAsset(user: AuthUser | null, companySlug: string): bool
   }
 
   // Only admin, company_admin, leader_tc, and technical_support can create assets
-  const role = user.role || user.companyRole || user.globalRole || "";
-  return ["admin", "company_admin", "leader_tc", "technical_support"].includes(role) || user.isGlobalAdmin;
+  return user.isGlobalAdmin || hasAnyRole(user, ["admin", "company_admin", "empresa", "leader_tc", "technical_support"]);
 }
 
 /**
@@ -127,12 +192,11 @@ export function canDeleteAsset(user: AuthUser | null, companySlug: string, sensi
 
   // Only high-privilege users can delete sensitive assets
   if (sensitivity === "sensitive") {
-    return user.isGlobalAdmin || user.role === "admin" || user.companyRole === "company_admin";
+    return user.isGlobalAdmin || hasAnyRole(user, ["admin", "company_admin", "empresa"]);
   }
 
   // Others need at least leader_tc or technical_support
-  const role = user.role || user.companyRole || user.globalRole || "";
-  return ["admin", "company_admin", "leader_tc", "technical_support"].includes(role) || user.isGlobalAdmin;
+  return user.isGlobalAdmin || hasAnyRole(user, ["admin", "company_admin", "empresa", "leader_tc", "technical_support"]);
 }
 
 /**
@@ -152,13 +216,12 @@ export function canViewBase64(user: AuthUser | null, companySlug: string, sensit
 
   // For "sensitive" assets, only global admin, admin, or company_admin
   if (sensitivity === "sensitive") {
-    return user.isGlobalAdmin || user.role === "admin" || user.companyRole === "company_admin";
+    return user.isGlobalAdmin || hasAnyRole(user, ["admin", "company_admin", "empresa"]);
   }
 
   // For "restricted", exclude viewers
   if (sensitivity === "restricted") {
-    const role = user.role || user.companyRole || user.globalRole || "";
-    return role !== "viewer";
+    return !hasAnyRole(user, ["viewer", "read_only"]);
   }
 
   return true;
@@ -173,8 +236,7 @@ export function canLinkAssetToCase(user: AuthUser | null, companySlug: string): 
   }
 
   // Need at least QA lead or automation roles
-  const role = user.role || user.companyRole || user.globalRole || "";
-  return ["admin", "company_admin", "leader_tc", "technical_support", "it_dev", "dev"].includes(role) || user.isGlobalAdmin;
+  return user.isGlobalAdmin || hasAnyRole(user, ["admin", "company_admin", "empresa", "leader_tc", "technical_support", "it_dev", "dev", "qa_tc"]);
 }
 
 /**
@@ -193,4 +255,3 @@ export function permissionDenied(reason: PermissionDenialReason, details?: strin
 
   return new PermissionError(reason, details || messages[reason]);
 }
-

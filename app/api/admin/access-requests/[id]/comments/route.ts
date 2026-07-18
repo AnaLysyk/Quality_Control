@@ -1,13 +1,13 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAccessRequestById } from "@/data/accessRequestsStore";
+import { getAccessRequestById } from "@/data/access-requests/store";
 import {
   createAccessRequestComment,
   listAccessRequestComments,
-} from "@/data/accessRequestCommentsStore";
-import { getAccessRequestV2ById } from "@/backend/accessRequestsV2/repository";
-import type { AccessRequestV2 } from "@/backend/accessRequestsV2/domain";
+} from "@/data/access-requests/commentsStore";
+import { getAccessRequestV2ById } from "@/backend/access-requests/repository";
+import type { AccessRequestV2 } from "@/backend/access-requests/domain";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 import { notifyAccessRequestComment } from "@/backend/notificationService";
@@ -17,7 +17,7 @@ import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAc
 import {
   canReviewerAccessQueue,
   resolveAccessRequestQueue,
-} from "@/backend/requestReviewAccess";
+} from "@/backend/access-requests/reviewAccess";
 import { shouldUseJsonStore } from "@/backend/storeMode";
 
 export const runtime = "nodejs";
@@ -261,4 +261,3 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
   return NextResponse.json({ item: record }, { status: 200 });
 }
-

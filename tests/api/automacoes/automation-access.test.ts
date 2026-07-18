@@ -8,8 +8,8 @@ describe("resolveAutomationAccess", () => {
     expect(access.canConfigure).toBe(true);
     expect(access.canManageFlows).toBe(true);
     expect(access.canViewTechnicalLogs).toBe(true);
-    expect(access.hasGlobalCompanyVisibility).toBe(true);
-    expect(access.scopeLabel).toBe("Todas as empresas");
+    expect(access.hasGlobalCompanyVisibility).toBe(false);
+    expect(access.scopeLabel).toBe("2 empresas vinculadas");
   });
 
   it("mantém usuário TC na mesma tela, porém sem configuração global", () => {
@@ -71,4 +71,3 @@ describe("resolveAutomationAllowedCompanySlugs", () => {
     expect(slugs).toEqual(["griaule", "acme", "beta"]);
   });
 });
-

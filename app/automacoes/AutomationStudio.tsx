@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -2928,7 +2928,7 @@ export default function AutomationStudio({
                 <div className="mt-3 space-y-2">
                   {(runPreview?.technicalLines || [
                     "Aguardando preview para gerar log técnico detalhado.",
-                    "Suporte técnico e líder TC recebem selectors, bindings, timeout e retries por etapa.",
+                    "Administrador e líder TC recebem selectors, bindings, timeout e retries por etapa.",
                   ]).map((line) => (
                     <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
                       <FiZap className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
@@ -2939,7 +2939,7 @@ export default function AutomationStudio({
               </div>
             ) : (
               <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
-                <p className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Logs técnicos, selectors internos e brain operacional ficam restritos a suporte técnico e líder TC.</p>
+                <p className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Logs técnicos, selectors internos e brain operacional ficam restritos a administrador e líder TC.</p>
                 <p className="mt-2 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
                   A identidade do studio permanece igual, mas a telemetria avançada não é exibida fora do escopo técnico.
                 </p>
@@ -2954,4 +2954,3 @@ export default function AutomationStudio({
     </section>
   );
 }
-

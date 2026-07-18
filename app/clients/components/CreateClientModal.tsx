@@ -27,6 +27,7 @@ export type ClientFormValues = {
   notes?: string;
   description?: string;
   adminEmail?: string;
+  responsibleLeaderId?: string;
   active: boolean;
   integrationMode: ClientIntegrationMode;
   qaseToken?: string;
@@ -47,6 +48,8 @@ type QaseProjectOption = {
   status?: ProjectStatus;
   imageUrl?: string | null;
 };
+
+type LeaderCandidate = { id: string; name: string; email: string };
 
 type Props = {
   open: boolean;
@@ -126,6 +129,9 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const [generatingUsername, setGeneratingUsername] = useState(false);
   const [active, setActive] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
+  const [responsibleLeaderId, setResponsibleLeaderId] = useState("");
+  const [leaderCandidates, setLeaderCandidates] = useState<LeaderCandidate[]>([]);
+  const [leadersLoading, setLeadersLoading] = useState(false);
   // integrationMode removed: Qase fields are always visible
   const [qaseToken, setQaseToken] = useState("");
   const [showQaseToken, setShowQaseToken] = useState(false);
@@ -165,6 +171,21 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const logoKind = useMemo(() => resolveCompanyLogoLibraryKind(logoUrl), [logoUrl]);
   const companyLogoPreviewName = name || companyUsername || adminEmail || "Empresa";
   const companyLogoPreviewSrc = logoPreviewObjectUrl ?? (logoUrl.trim() || null);
+
+  useEffect(() => {
+    if (!open || mode !== "create") return;
+    let mounted = true;
+    setLeadersLoading(true);
+    void fetch("/api/clients/leader-candidates", { credentials: "include", cache: "no-store" })
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (mounted) setLeaderCandidates(Array.isArray(data?.items) ? data.items : []);
+      })
+      .finally(() => {
+        if (mounted) setLeadersLoading(false);
+      });
+    return () => { mounted = false; };
+  }, [open, mode]);
 
   function clearCompanyLogoObjectPreview() {
     if (logoPreviewObjectUrl) {
@@ -600,6 +621,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     setNotificationsFanoutEnabled(false);
     setCompanyUsername("");
     setActive(false);
+    setResponsibleLeaderId("");
     setQaseToken("");
     resetQaseSelection();
     if (logoPreviewObjectUrl) {
@@ -843,6 +865,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
         active,
         integrationMode: selectedCodes.length || qaseToken.trim() ? "qase" : "manual",
         adminEmail: adminEmail.trim() || undefined,
+        responsibleLeaderId: responsibleLeaderId || undefined,
         qaseToken: qaseToken.trim() || undefined,
         qaseProjectCode: selectedCodes.length ? (selectedCodes[0] || "").trim().toUpperCase() : undefined,
         qaseProjectCodes: Array.isArray(selectedCodes) ? selectedCodes : [],
@@ -1005,6 +1028,24 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               <span className="text-sm text-(--tc-text)">{active ? 'Ativa' : 'Inativa'}</span>
             </div>
           </label>
+
+          {mode === "create" ? (
+            <label className="block text-sm">
+              Líder TC responsável <span className="text-xs text-(--tc-text-muted)">(opcional)</span>
+              <select
+                className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                value={responsibleLeaderId}
+                onChange={(event) => setResponsibleLeaderId(event.target.value)}
+                disabled={leadersLoading}
+              >
+                <option value="">{leadersLoading ? "Carregando líderes..." : "Definir depois"}</option>
+                {leaderCandidates.map((leader) => (
+                  <option key={leader.id} value={leader.id}>{leader.name} — {leader.email}</option>
+                ))}
+              </select>
+              <span className="mt-1 block text-xs text-(--tc-text-muted)">Cria o projeto Geral e concede acesso imediato à empresa.</span>
+            </label>
+          ) : null}
 
           <label className="block text-sm">
             CNPJ
@@ -1493,4 +1534,3 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     </div>
   );
 }
-

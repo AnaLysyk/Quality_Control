@@ -1,4 +1,4 @@
-﻿export type Locale = "pt-BR" | "en-US";
+export type Locale = "pt-BR" | "en-US";
 export type TranslateParams = Record<string, string | number>;
 export type TranslateFn = (key: string, params?: TranslateParams) => string;
 
@@ -21,7 +21,7 @@ const DICTIONARY: Record<Locale, Dictionary> = {
       leaderTc: "Líder TC",
       userTc: "Usuário TC",
       company: "Empresa",
-      technicalSupport: "Suporte Técnico",
+      technicalSupport: "Administrador",
       companyUser: "Usuário da Empresa",
       systemAdmin: "Admin do Sistema",
       admin: "Administrador",
@@ -450,7 +450,7 @@ const DICTIONARY: Record<Locale, Dictionary> = {
       companyRequired: "Selecione uma empresa para realizar a solicitação.",
       validCompanyRequired: "Selecione uma empresa cadastrada válida para continuar.",
       companyNameRequired: "Preencha o nome ou razão social da empresa.",
-      supportLoginRequired: "Informe o usuário/login para o perfil Suporte Técnico.",
+      supportLoginRequired: "Informe o usuário/login para o perfil Administrador.",
       minPassword: "A senha precisa ter pelo menos 8 caracteres.",
       submitFailed: "Erro ao registrar solicitação.",
       submitted: "Solicitação enviada",
@@ -485,7 +485,7 @@ const DICTIONARY: Record<Locale, Dictionary> = {
       centerAll: "Central de solicitações",
       userRequests: "Solicitações do usuário",
       title: "Ajustes de conta",
-      allDescription: "Suporte técnico acompanha toda a fila e os demais perfis continuam vendo apenas os próprios registros.",
+      allDescription: "Administrador acompanha toda a fila e os demais perfis continuam vendo apenas os próprios registros.",
       userDescription: "Abra pedidos de troca de e-mail ou empresa e acompanhe o retorno no mesmo fluxo.",
       totalRequests: "Solicitações",
       totalQueue: "Total da fila visível.",
@@ -1183,4 +1183,3 @@ export function translate(locale: Locale, key: string, params?: TranslateParams)
     return acc.replace(new RegExp(`\\{${paramKey}\\}`, "g"), String(paramValue));
   }, value);
 }
-

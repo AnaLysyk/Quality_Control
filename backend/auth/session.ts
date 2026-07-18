@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 import jwt from "jsonwebtoken";
 
 import { getRedis } from "@/backend/redis";
@@ -388,7 +388,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   // projectAccess explícito. Fonte por perfil, sem misturar: Líder
   // TC/Usuário TC usam só ProjectTeamAssignment ativo (nunca Membership
   // para completar escopo); todo mundo mais (inclusive admin global e
-  // Suporte Técnico) usa só Membership/link real — sem nenhuma entrada
+  // Administrador) usa só Membership/link real — sem nenhuma entrada
   // sintética. Para acesso global o escopo real vem de
   // projectScope="unrestricted" (decidido pela flag
   // `hasUnrestrictedCompanyAccess`), nunca do conteúdo de `assignments`.
@@ -415,7 +415,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     });
   } else {
     // Empresa / usuário empresarial / company_user sem papel líder /
-    // admin global / Suporte Técnico: processa TODOS os Memberships/links
+    // admin global / Administrador: processa TODOS os Memberships/links
     // reais do usuário (Correção 3 — não só o primário). Para cada
     // vínculo:
     //   - papel não escopado por projeto (ex.: "empresa") -> company_only;

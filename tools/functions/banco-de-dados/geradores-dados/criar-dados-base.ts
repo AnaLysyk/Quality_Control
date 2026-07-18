@@ -1,7 +1,7 @@
-﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
+import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hashPassword } from "@/backend/passwordHash";
 
 type QualityAlertType =
   | "quality_score"
@@ -82,7 +82,7 @@ export async function criarAlertaQualidade(alert: {
 export async function criarUsuarioBanco({ email = "teste@example.com", name = "Usuario Teste", password = "senha123" } = {}) {
   if (isJsonMode) return;
   // Se nenhum id for passado, o Prisma gera um UUID valido automaticamente
-  const passwordHash = hashPasswordSha256(password);
+  const passwordHash = hashPassword(password);
   const prisma = getPrisma();
   if (!prisma) return;
   await prisma.user.upsert({

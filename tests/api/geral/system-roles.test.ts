@@ -1,6 +1,6 @@
-﻿import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import { ROLE_DEFAULTS } from "@/backend/permissions/roleDefaults";
-import { canReviewAccessRequests, canReviewerAccessQueue } from "@/backend/requestReviewAccess";
+import { canReviewAccessRequests, canReviewerAccessQueue } from "@/backend/access-requests/reviewAccess";
 
 const compareText = (left: string, right: string) => left.localeCompare(right);
 

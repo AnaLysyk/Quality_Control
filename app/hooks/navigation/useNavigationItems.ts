@@ -577,7 +577,7 @@ function buildManagementModule(effectiveRole: SystemRole | null): NavModuleDef |
       {
         id: "management-users-create-support",
         routeId: "usuarios.criar-suporte",
-        label: "Criar suporte técnico",
+        label: "Criar administrador",
         iconKey: "tool",
         module: "management",
         href: "/admin/users?tab=support&modal=create&role=technical_support",

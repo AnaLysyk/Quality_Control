@@ -24,7 +24,7 @@ describe("supportAccess", () => {
     expect(canManageSupportWorkflow(user)).toBe(false);
   });
 
-  it("libera lider tc para o fluxo global de suporte", () => {
+  it("libera lider tc para operar suporte sem conceder escopo global", () => {
     const user = {
       role: "user",
       permissionRole: "leader_tc",
@@ -33,7 +33,7 @@ describe("supportAccess", () => {
     };
 
     expect(canViewSupportBoard(user)).toBe(true);
-    expect(canAccessGlobalSupportScope(user)).toBe(true);
+    expect(canAccessGlobalSupportScope(user)).toBe(false);
     expect(canManageSupportWorkflow(user)).toBe(true);
   });
 
@@ -83,4 +83,3 @@ describe("supportAccess", () => {
     expect(canManageSupportWorkflow(user)).toBe(true);
   });
 });
-

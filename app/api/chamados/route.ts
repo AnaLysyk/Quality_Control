@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createSuporte, listAllSuportes, listSuportesForUser } from "@/backend/ticketsStore";
 import { appendSuporteEvent } from "@/backend/ticketEventsStore";
 import { notifySuporteCreated } from "@/backend/notificationService";
@@ -25,7 +25,15 @@ export async function GET(req: Request) {
   }
   const url = new URL(req.url);
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
-  let items = canAccessGlobalTicketWorkspace(user) ? await listAllSuportes() : await listSuportesForUser(user.id);
+  let items;
+  if (canAccessGlobalTicketWorkspace(user)) {
+    items = await listAllSuportes();
+  } else if (user.assignments?.length) {
+    const allowedCompanyIds = new Set(user.assignments.filter((item) => item.status === "active").map((item) => item.companyId));
+    items = (await listAllSuportes()).filter((item) => item.companyId && allowedCompanyIds.has(item.companyId));
+  } else {
+    items = await listSuportesForUser(user.id);
+  }
   items = items.slice(0, limit);
   const enriched = await attachAssigneeInfo(items);
   return NextResponse.json({ items: enriched }, { status: 200 });
@@ -56,7 +64,8 @@ export async function POST(req: Request) {
     const normalizedCompanySlug = resolvePrimaryCompanySlug(user);
 
     const assignedToUserId =
-      canAccessGlobalTicketWorkspace(user) &&
+      (canAccessGlobalTicketWorkspace(user) ||
+        Boolean(targetCompanyId && user.assignments?.some((item) => item.status === "active" && item.companyId === targetCompanyId))) &&
       typeof body?.assignedToUserId === "string"
         ? body?.assignedToUserId
         : null;
@@ -108,7 +117,6 @@ export async function POST(req: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao criar chamado";
     console.error("[chamados] Falha ao criar chamado:", err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
-

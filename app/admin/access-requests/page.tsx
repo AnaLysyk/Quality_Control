@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -17,17 +17,17 @@ import type {
   AccessRequestAdjustmentRound,
   AccessRequestSnapshot,
   AccessType,
-} from "@/backend/accessRequestMessage";
-import { parseAccessRequestMessage } from "@/backend/accessRequestMessage";
+} from "@/backend/access-requests/message";
+import { parseAccessRequestMessage } from "@/backend/access-requests/message";
 import {
   normalizeRequestProfileType,
   requestProfileTypeNeedsCompany,
   toInternalAccessType,
   toRequestProfileTypeLabel,
   type RequestProfileTypeLabel,
-} from "@/backend/requestRouting";
+} from "@/backend/access-requests/routing";
 import { parsePasswordResetAccessRequestMessage } from "@/backend/passwordResetAccessQueue";
-import { ACCESS_REQUEST_REJECTION_REASONS } from "@/backend/accessRequestsV2/domain";
+import { ACCESS_REQUEST_REJECTION_REASONS } from "@/backend/access-requests/domain";
 
 type ClientOption = { id: string; name: string };
 
@@ -243,7 +243,7 @@ function statusBadgeClass(status: string) {
 }
 
 function accessTypeBadgeClass(accessType: AccessTypeLabel) {
-  if (accessType === "Suporte Tecnico") return "border border-violet-300 bg-violet-100 text-violet-800";
+  if (accessType === "Administrador") return "border border-violet-300 bg-violet-100 text-violet-800";
   if (accessType === "Lider TC") return "border border-rose-300 bg-rose-100 text-rose-800";
   if (accessType === "Usuario da empresa") return "border border-amber-300 bg-amber-100 text-amber-800";
   return "border border-slate-300 bg-slate-100 text-slate-800";
@@ -451,7 +451,7 @@ function resolveViewerProfileLabel(user: ReturnType<typeof useAuthUser>["user"])
     normalizeRequestProfileType(role) ??
     normalizeRequestProfileType(companyRole);
 
-  if (normalizedRole === "technical_support") return "Suporte técnico";
+  if (normalizedRole === "technical_support") return "Administrador";
   if (normalizedRole === "leader_tc") return "Lider TC";
   if (normalizedRole === "empresa") return "Empresa";
   if (normalizedRole === "company_user") return "Usuário da empresa";
@@ -1432,6 +1432,4 @@ export default function AccessRequestsPageWithGuard() {
     </RequireAccessRequestReviewer>
   );
 }
-
-
 

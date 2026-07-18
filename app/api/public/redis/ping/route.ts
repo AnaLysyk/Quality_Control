@@ -1,4 +1,5 @@
-﻿import { NextRequest } from "next/server";
+import { timingSafeEqual } from "crypto";
+import { NextRequest } from "next/server";
 
 import { apiFail, apiOk } from "@/backend/apiResponse";
 import { getRedis, isRedisConfigured } from "@/backend/redis";
@@ -7,11 +8,12 @@ function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.REDIS_PING_SECRET;
   if (!secret) return false;
 
-  const url = new URL(req.url);
-  const q = url.searchParams.get("secret") ?? "";
-  const header = req.headers.get("x-redis-ping-secret") ?? "";
-
-  return q === secret || header === secret;
+  // Segredos em query string vazam em históricos e logs; aceite apenas header.
+  const candidate = req.headers.get("x-redis-ping-secret") ?? "";
+  const expected = Buffer.from(secret, "utf8");
+  const actual = Buffer.from(candidate, "utf8");
+  if (expected.length !== actual.length) return false;
+  return timingSafeEqual(expected, actual);
 }
 
 export async function GET(req: NextRequest) {
@@ -23,10 +25,9 @@ export async function GET(req: NextRequest) {
   }
 
   if (!isRedisConfigured()) {
-    return apiFail(req, "Redis não configurado", {
+    return apiFail(req, "Serviço de sessão indisponível", {
       status: 503,
       code: "REDIS_NOT_CONFIGURED",
-      details: "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
     });
   }
 
@@ -35,21 +36,19 @@ export async function GET(req: NextRequest) {
     const key = `health:ping:${Date.now()}`;
     await redis.set(key, "pong", { ex: 30 });
     const value = await redis.get<string>(key);
-
     const ok = value === "pong";
+
     return apiOk(
       req,
       { ok },
-      ok ? "OK" : "Falha no ping do Redis",
+      ok ? "OK" : "Falha no serviço de sessão",
       { extra: { ok } },
     );
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Erro no Redis";
-    return apiFail(req, "Erro no Redis", {
+    console.error("[REDIS PING]", error);
+    return apiFail(req, "Erro no serviço de sessão", {
       status: 502,
       code: "REDIS_ERROR",
-      details: msg,
     });
   }
 }
-

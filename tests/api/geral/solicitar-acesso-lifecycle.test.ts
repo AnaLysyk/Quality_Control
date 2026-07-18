@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Fluxo completo de "Solicitar Acesso" — criação, aceitação e rejeição.
  *
  * Cenários (8):
@@ -26,12 +26,12 @@ import {
   createAccessRequest,
   getAccessRequestById,
   updateAccessRequest,
-} from "@/data/accessRequestsStore";
-import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
+} from "@/data/access-requests/store";
+import { createAccessRequestComment } from "@/data/access-requests/commentsStore";
 import {
   composeAccessRequestMessage,
   parseAccessRequestMessage,
-} from "@/backend/accessRequestMessage";
+} from "@/backend/access-requests/message";
 import {
   pgCreateLocalUser,
   pgCreateLocalCompany,

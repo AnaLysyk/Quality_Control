@@ -119,9 +119,9 @@ describe("rbac/tickets - Controles Rígidos do Repositório de Suporte (Tickets)
         // Intruder on other ticket sem Workflow powers -> blocked
         expect(canEditTicketContent(mockUser, otherTicket)).toBe(false);
 
-        // Support Op com powers sobre ticket alheio -> Liberado 
+        // Poder de workflow sem visibilidade global/escopo da empresa não libera ticket alheio.
         (supportAccess.canManageSupportWorkflow as jest.Mock).mockReturnValue(true);
-        expect(canEditTicketContent(mockUser, otherTicket)).toBe(true);
+        expect(canEditTicketContent(mockUser, otherTicket)).toBe(false);
       });
     });
 
@@ -146,4 +146,3 @@ describe("rbac/tickets - Controles Rígidos do Repositório de Suporte (Tickets)
     });
   });
 });
-

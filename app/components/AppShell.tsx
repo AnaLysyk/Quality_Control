@@ -111,7 +111,7 @@ const APP_SHELL_COPY = {
       companyProfile: "Perfil empresa • {name}",
       companyUser: "Vinculado a {name}",
       leader: "Lider TC • Testing Company",
-      support: "Suporte técnico • Testing Company",
+      support: "Administrador • Testing Company",
       tcUser: "Usuário TC • Testing Company",
     },
     profiles: {
@@ -119,7 +119,7 @@ const APP_SHELL_COPY = {
       company_user: "Acesso empresarial",
       testing_company_user: "Usuário TC",
       leader_tc: "Lider TC",
-      technical_support: "Suporte técnico",
+      technical_support: "Administrador",
     },
   },
   "en-US": {

@@ -1,11 +1,11 @@
-﻿import type { AccessType } from "@/backend/accessRequestMessage";
+import type { AccessType } from "@/backend/access-requests/message";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import {
   accessRequestProfileLabel,
   accessRequestProfileNeedsCompany,
   normalizeAccessRequestProfileType,
   type AccessRequestProfileType,
-} from "@/backend/accessRequestsV2/domain";
+} from "@/backend/access-requests/domain";
 
 export type RequestProfileType = AccessRequestProfileType;
 
@@ -14,7 +14,7 @@ export type RequestProfileTypeLabel =
   | "Usuario TC"
   | "Usuario da empresa"
   | "Lider TC"
-  | "Suporte Tecnico";
+  | "Administrador";
 
 export type ReviewQueue = "admin_and_global" | "global_only";
 
@@ -84,7 +84,9 @@ export function normalizeRequestProfileType(value: string | null | undefined): R
     normalized === "suporte tecnico" ||
     normalized === "suporte técnico" ||
     normalized === "technical support" ||
-    normalized === "technical_support"
+    normalized === "technical_support" ||
+    normalized === "administrador" ||
+    normalized === "gestor"
   ) {
     return "technical_support";
   }
@@ -138,4 +140,3 @@ export function deriveProfileTypeFromAccount(input: {
   }
   return "testing_company_user" as const;
 }
-

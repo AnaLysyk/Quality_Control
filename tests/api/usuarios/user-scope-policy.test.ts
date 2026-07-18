@@ -44,14 +44,14 @@ describe("user scope policy", () => {
     expect(policy.canLinkAcrossCompanies).toBe(false);
   });
 
-  it("keeps leader TC global for institutional administration", () => {
+  it("keeps leader TC restricted to linked companies", () => {
     const policy = resolveUserScopePolicy("leader_tc");
 
     expect(policy.roleKey).toBe("leader_tc");
-    expect(policy.companyAccessScope).toBe("all_companies");
+    expect(policy.companyAccessScope).toBe("linked_companies");
     expect(canViewCompanyUsersByScope(policy)).toBe(true);
     expect(canCreateCompanyUsersByScope(policy)).toBe(true);
-    expect(policy.canLinkAcrossCompanies).toBe(true);
+    expect(policy.canLinkAcrossCompanies).toBe(false);
   });
 
   it("keeps technical support global for maintenance without creation rights", () => {
@@ -64,14 +64,13 @@ describe("user scope policy", () => {
     expect(policy.canLinkAcrossCompanies).toBe(false);
   });
 
-  it("keeps leader TC global for institutional administration", () => {
+  it("keeps leader TC restricted to linked companies", () => {
     const policy = resolveUserScopePolicy("leader_tc");
 
     expect(policy.roleKey).toBe("leader_tc");
-    expect(policy.companyAccessScope).toBe("all_companies");
+    expect(policy.companyAccessScope).toBe("linked_companies");
     expect(canViewCompanyUsersByScope(policy)).toBe(true);
     expect(canCreateCompanyUsersByScope(policy)).toBe(true);
-    expect(policy.canLinkAcrossCompanies).toBe(true);
+    expect(policy.canLinkAcrossCompanies).toBe(false);
   });
 });
-

@@ -12,7 +12,7 @@ export function canUseGlobalTestCaseScope(user: AuthUser) {
   const roles = resolveRoles(user);
   return (
     user.isGlobalAdmin ||
-    roles.includes(SYSTEM_ROLES.LEADER_TC) ||
+    user.projectScope === "unrestricted" ||
     roles.includes(SYSTEM_ROLES.TECHNICAL_SUPPORT)
   );
 }
@@ -27,10 +27,13 @@ export function resolveAllowedTestCaseCompanies(user: AuthUser) {
   );
 }
 
-// null = sem restrição de projeto (empresa/leader_tc/technical_support/admin global);
+// null = sem restrição de projeto (empresa/technical_support/admin global);
 // array = usuário (company_user ou testing_company_user) restrito a esses projectIds.
 export function resolveAllowedProjectIds(user: AuthUser): string[] | null {
   if (canUseGlobalTestCaseScope(user)) return null;
+  if (resolveRoles(user).includes(SYSTEM_ROLES.LEADER_TC)) {
+    return Array.isArray(user.allowedProjectIds) ? user.allowedProjectIds : [];
+  }
   return Array.isArray(user.allowedProjectIds) && user.allowedProjectIds.length > 0
     ? user.allowedProjectIds
     : null;
@@ -71,4 +74,3 @@ export function canAccessTestCaseRecord(user: AuthUser, record: TestCaseRecord) 
   }
   return matchesProjectScope(user, record.testCase.projectId);
 }
-

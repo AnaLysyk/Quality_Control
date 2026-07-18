@@ -8,8 +8,8 @@ type Mod = Item & { items?: Item[] };
 type ModView = { id: string; label: string; href?: string; requiredPermission?: { moduleId: string; action: string }; items: Array<{ module: ModView; item: Item }> };
 
 const CORE_ID = "quality-control-core";
-const PROFILES = ["Líder TC", "Suporte técnico", "Usuário Test Company", "Usuário empresarial", "Empresas"];
-const USER_TYPES = ["Líder TC", "Suporte técnico", "Usuário Test Company", "Usuário empresarial"];
+const PROFILES = ["Líder TC", "Administrador", "Usuário Test Company", "Usuário empresarial", "Empresas"];
+const USER_TYPES = ["Líder TC", "Administrador", "Usuário Test Company", "Usuário empresarial"];
 const PENDING = ["pending", "missing", "warning", "error", "orphan"];
 const COLORS = ["#67e8f9", "#a78bfa", "#34d399", "#facc15", "#fb7185", "#60a5fa", "#f472b6", "#2dd4bf"];
 const LEADER_MODULES = ["home", "agenda", "overview", "companies", "requests", "support", "chat", "brain", "logs", "management"];
@@ -19,10 +19,10 @@ const ORDER = ["Home", "Agenda", "Visão Geral", "Gestão de Empresas", "Solicit
 function n(v: unknown) { return String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
 function id(prefix: string, value: unknown) { return `${prefix}:${n(value).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "sem-contexto"}`; }
 function uniq<T extends { id: string }>(items: T[]) { return Array.from(new Map(items.map((item) => [item.id, item])).values()); }
-function profileLabel(value: unknown) { const x = n(value); if (["leader", "lider", "leader_tc", "lider tc"].some((k) => x.includes(k))) return "Líder TC"; if (["technical", "suporte", "support"].some((k) => x.includes(k))) return "Suporte técnico"; if (["testing_company_user", "usuario tc", "tc user", "test company"].some((k) => x.includes(k))) return "Usuário Test Company"; if (["company_user", "usuario empresarial", "usuario empresa", "user company"].some((k) => x.includes(k))) return "Usuário empresarial"; if (["empresa", "company", "empresas"].some((k) => x === k || x.includes(k))) return "Empresas"; return String(value || "Usuário empresarial").trim(); }
-function leader(profile: string | null) { const p = profileLabel(profile); return p === "Líder TC" || p === "Suporte técnico"; }
+function profileLabel(value: unknown) { const x = n(value); if (["leader", "lider", "leader_tc", "lider tc"].some((k) => x.includes(k))) return "Líder TC"; if (["technical", "suporte", "support", "administrador"].some((k) => x.includes(k))) return "Administrador"; if (["testing_company_user", "usuario tc", "tc user", "test company"].some((k) => x.includes(k))) return "Usuário Test Company"; if (["company_user", "usuario empresarial", "usuario empresa", "user company"].some((k) => x.includes(k))) return "Usuário empresarial"; if (["empresa", "company", "empresas"].some((k) => x === k || x.includes(k))) return "Empresas"; return String(value || "Usuário empresarial").trim(); }
+function leader(profile: string | null) { const p = profileLabel(profile); return p === "Líder TC" || p === "Administrador"; }
 function companyProfile(profile: string | null) { const p = profileLabel(profile); return p === "Empresas" || p === "Usuário empresarial"; }
-function roles(profile: string | null) { const p = profileLabel(profile); if (p === "Líder TC") return ["leader_tc"]; if (p === "Suporte técnico") return ["technical_support"]; if (p === "Usuário Test Company") return ["testing_company_user"]; if (p === "Empresas") return ["empresa", "company_user"]; return ["company_user"]; }
+function roles(profile: string | null) { const p = profileLabel(profile); if (p === "Líder TC") return ["leader_tc"]; if (p === "Administrador") return ["technical_support"]; if (p === "Usuário Test Company") return ["testing_company_user"]; if (p === "Empresas") return ["empresa", "company_user"]; return ["company_user"]; }
 function roleAllowed(allowed: unknown, profile: string | null) { if (!Array.isArray(allowed) || !allowed.length) return true; const set = new Set(roles(profile).map(n)); return allowed.map(n).some((r) => set.has(r)); }
 function itemAllowed(item: Item | Mod, profile: string | null) { if (Array.isArray(item.onlyRoles) && item.onlyRoles.length && !roleAllowed(item.onlyRoles, profile)) return false; return roleAllowed(item.allowedRoles, profile); }
 function labelItem(item: Item) { if (item.id === "brain-graph") return "Brain visual"; if (item.id === "management-permissions") return "Gestão de permissões"; return item.label; }

@@ -13,7 +13,7 @@ export const notificationWorkflowExtensions: NotificationWorkflow[] = [
     mandatory: false,
     defaultChannels: ["in_app", "brain"],
     audienceScopes: ["company", "role", "user"],
-    recipientRules: ["Criador", "Responsavel", "Suporte tecnico", "Lider quando aplicavel"],
+    recipientRules: ["Criador", "Responsavel", "Administrador", "Lider quando aplicavel"],
     preferenceRules: ["Empresa pode configurar canal", "Usuario pode silenciar nao critico"],
   },
   {
@@ -26,7 +26,7 @@ export const notificationWorkflowExtensions: NotificationWorkflow[] = [
     mandatory: false,
     defaultChannels: ["in_app", "brain"],
     audienceScopes: ["company", "role", "user"],
-    recipientRules: ["Criador", "Responsavel", "Participantes", "Suporte tecnico"],
+    recipientRules: ["Criador", "Responsavel", "Participantes", "Administrador"],
     preferenceRules: ["Pode ser suprimido por empresa/perfil/usuario", "Brain mantem contexto"],
   },
   {
@@ -121,4 +121,3 @@ export const notificationWorkflowExtensions: NotificationWorkflow[] = [
     preferenceRules: ["Nao pode ser desativada", "Auditoria obrigatoria", "Brain recebe contexto"],
   },
 ];
-

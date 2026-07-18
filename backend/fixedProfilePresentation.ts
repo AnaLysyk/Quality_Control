@@ -1,4 +1,4 @@
-﻿import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 export type FixedProfileKind =
   | "empresa"
@@ -40,8 +40,8 @@ const FIXED_PROFILE_META: Record<FixedProfileKind, FixedProfileMeta> = {
     toneClass: "border-indigo-200 bg-indigo-50 text-indigo-700",
   },
   technical_support: {
-    label: "Suporte Tecnico",
-    shortLabel: "Suporte Tecnico",
+    label: "Administrador",
+    shortLabel: "Administrador",
     hint: "Atuacao tecnica e operacional da Testing Company.",
     toneClass: "border-cyan-200 bg-cyan-50 text-cyan-700",
   },

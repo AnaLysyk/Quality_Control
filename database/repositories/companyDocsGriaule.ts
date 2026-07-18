@@ -15,7 +15,7 @@
         {
           id: "smart-op-links",
           type: "table",
-          rows: [["Swagger SMART API", "http://172.16.1.146:8100/swagger-ui.html#/"]],
+          rows: [["Swagger SMART API", "http://172.16.1.146:8100/swagger-ui.html#/"]], // NOSONAR: documentation link to a private-network host, not a live request
         },
         {
           id: "smart-op-api-list",

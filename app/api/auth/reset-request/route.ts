@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/backend/auth/localStore";
@@ -7,7 +7,10 @@ import {
   deriveProfileTypeFromAccount,
   normalizeRequestProfileType,
   resolveReviewQueue,
-} from "@/backend/requestRouting";
+} from "@/backend/access-requests/routing";
+import { rateLimit } from "@/backend/rateLimit";
+
+const GENERIC_MESSAGE = "Se os dados informados estiverem cadastrados, a solicitação será encaminhada.";
 
 type ResetRequestBody = {
   login: string;
@@ -97,8 +100,19 @@ async function createPasswordResetRequest(user: ResetUser, login: string, rawPro
 
 export async function POST(req: Request) {
   const { login, email, rawProfileType } = await parseResetRequestBody(req);
+  if (!login || !email || login.length > 254 || email.length > 254) {
+    return NextResponse.json({ error: "Usuário e e-mail são obrigatórios" }, { status: 400 });
+  }
+
+  const limiter = await rateLimit(req, `password-reset-request:${email}`, 5, 60 * 10);
+  if (limiter.limited) {
+    return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
+  }
+
   const userOrResponse = await validateResetUser(login, email);
-  if (userOrResponse instanceof NextResponse) return userOrResponse;
+  if (userOrResponse instanceof NextResponse) {
+    return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
+  }
 
   const user = userOrResponse;
   const preferredCompany = await resolvePreferredCompany(user);
@@ -128,6 +142,5 @@ export async function POST(req: Request) {
     metadata: { method: "forgot_password", companyLabel: preferredCompanyName ?? null },
   });
 
-  return NextResponse.json({ ok: true, message: "Solicitação enviada. O Suporte técnico será notificado." });
+  return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
 }
-

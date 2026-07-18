@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
-import { FiMap, FiSearch, FiX } from "react-icons/fi";
+import { FiDatabase, FiLayers, FiMap, FiSearch, FiX } from "react-icons/fi";
 
 import Breadcrumb from "@/components/Breadcrumb";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import type { SystemRole } from "@/backend/auth/roles";
 import type {
@@ -14,11 +15,20 @@ import type {
   SystemRouteDefinition,
 } from "@/backend/navigation/navigation.types";
 import { canAccess } from "@/backend/permissions/can-access";
+import type { DomainCatalogEntry, DomainLayer } from "@/backend/architecture/domainCatalog";
 
 type SistemaMapaClientProps = {
   modules: readonly SystemModuleDefinition[];
   routes: readonly SystemRouteDefinition[];
+  domains: readonly DomainCatalogEntry[];
   unmappedPages: readonly string[];
+};
+
+const LAYER_LABELS: Record<DomainLayer, string> = {
+  frontend: "Frontend",
+  api: "API",
+  backend: "Backend",
+  database: "Banco",
 };
 
 const STATUS_OPTIONS: Array<{ value: SystemMapStatus; label: string }> = [
@@ -55,7 +65,7 @@ const STATUS_META: Record<SystemMapStatus, { label: string; className: string }>
 
 const PROFILE_LABELS: Record<SystemRole, string> = {
   leader_tc: "Líder TC",
-  technical_support: "Suporte Técnico",
+  technical_support: "Administrador",
   testing_company_user: "Usuário TC",
   empresa: "Empresa",
   company_user: "Usuário da Empresa",
@@ -82,7 +92,7 @@ function StatusBadge({ status }: { status: SystemMapStatus }) {
   );
 }
 
-export default function SistemaMapaClient({ modules, routes, unmappedPages }: SistemaMapaClientProps) {
+export default function SistemaMapaClient({ domains, modules, routes, unmappedPages }: SistemaMapaClientProps) {
   const { accessContext, loading: accessLoading } = usePermissionAccess();
   const [query, setQuery] = useState("");
   const [moduleFilter, setModuleFilter] = useState("todos");
@@ -118,6 +128,22 @@ export default function SistemaMapaClient({ modules, routes, unmappedPages }: Si
       return searchableContent.includes(normalizedQuery);
     });
   }, [moduleById, moduleFilter, query, routes, statusFilter]);
+
+  const filteredDomains = useMemo(() => {
+    const normalizedQuery = normalizeText(query);
+    if (!normalizedQuery) return domains;
+
+    return domains.filter((domain) =>
+      normalizeText([
+        domain.id,
+        domain.label,
+        domain.description,
+        ...domain.aliases,
+        ...domain.prismaModels,
+        ...Object.values(domain.locations).flat(),
+      ].join(" ")).includes(normalizedQuery),
+    );
+  }, [domains, query]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<SystemMapStatus, number> = {
@@ -185,7 +211,7 @@ export default function SistemaMapaClient({ modules, routes, unmappedPages }: Si
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <ScrollReveal className="grid grid-cols-2 gap-2 sm:grid-cols-4" stagger={0.06}>
               <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3">
                 <div className="text-xs font-semibold text-[var(--tc-text-muted,#64748b)]">Módulos</div>
                 <div className="mt-1 text-2xl font-black">{modules.length}</div>
@@ -208,7 +234,7 @@ export default function SistemaMapaClient({ modules, routes, unmappedPages }: Si
                 <div className="text-xs font-semibold">Fora da matriz</div>
                 <div className="mt-1 text-2xl font-black">{unmappedPages.length}</div>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -238,6 +264,66 @@ export default function SistemaMapaClient({ modules, routes, unmappedPages }: Si
             </div>
           </section>
         ) : null}
+
+        <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--tc-accent,#ef0001)]">
+                <FiLayers className="h-4 w-4" /> Arquitetura rastreável
+              </p>
+              <h2 className="mt-1 text-xl font-black tracking-[-0.02em]">Domínios canônicos</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
+                Localize a mesma funcionalidade no frontend, API, backend e banco. Nomes alternativos são mantidos apenas como compatibilidade.
+              </p>
+            </div>
+            <span className="text-sm font-semibold text-[var(--tc-text-muted,#64748b)]">
+              {filteredDomains.length} de {domains.length} domínios
+            </span>
+          </div>
+
+          <ScrollReveal className="mt-4 grid gap-3 lg:grid-cols-2" stagger={0.05} deps={[filteredDomains.length]}>
+            {filteredDomains.map((domain) => (
+              <details key={domain.id} className="group rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <code className="text-xs font-bold text-blue-700">{domain.id}</code>
+                      <h3 className="mt-1 font-black text-[var(--tc-text-primary,#0b1a3c)]">{domain.label}</h3>
+                      <p className="mt-1 text-sm leading-5 text-[var(--tc-text-secondary,#4b5563)]">{domain.description}</p>
+                    </div>
+                    <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2 py-1 text-xs font-bold text-[var(--tc-text-muted,#64748b)] group-open:bg-blue-50 group-open:text-blue-700">
+                      Detalhes
+                    </span>
+                  </div>
+                </summary>
+
+                <div className="mt-4 grid gap-3 border-t border-[var(--tc-border,#d7deea)] pt-4 sm:grid-cols-2">
+                  {(Object.entries(domain.locations) as Array<[DomainLayer, readonly string[]]>).map(([layer, locations]) => (
+                    <div key={layer}>
+                      <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--tc-text-muted,#64748b)]">
+                        {LAYER_LABELS[layer]}
+                      </div>
+                      <div className="mt-1 space-y-1">
+                        {locations.map((location) => (
+                          <code key={location} className="block break-all rounded-lg bg-white px-2 py-1 text-xs text-slate-700">
+                            {location}
+                          </code>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+                  <FiDatabase className="h-3.5 w-3.5 text-[var(--tc-text-muted,#64748b)]" />
+                  {domain.prismaModels.length > 0 ? domain.prismaModels.map((model) => (
+                    <code key={model} className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-800">{model}</code>
+                  )) : <span className="text-[var(--tc-text-muted,#64748b)]">Sem modelo Prisma exclusivo.</span>}
+                </div>
+              </details>
+            ))}
+          </ScrollReveal>
+        </section>
 
         <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-5">
           <div className="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_240px_200px_auto]">
@@ -401,4 +487,3 @@ export default function SistemaMapaClient({ modules, routes, unmappedPages }: Si
     </main>
   );
 }
-

@@ -1,4 +1,4 @@
-﻿import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
 import type { SystemRouteDefinition } from "./navigation.types";
 
 const ALL_PROFILES: SystemRole[] = [
@@ -251,7 +251,7 @@ const CORE_SYSTEM_ROUTES = [
     id: "usuarios.criar-suporte",
     moduleId: "usuarios",
     path: "/admin/users?tab=support&modal=create&role=technical_support",
-    label: "Criar Suporte Técnico",
+    label: "Criar Administrador",
     description: "Abre o cadastro de um usuário de suporte.",
     requiredPermission: { moduleId: "users", action: "create" },
     expectedProfiles: [SYSTEM_ROLES.LEADER_TC],
@@ -352,7 +352,7 @@ const CORE_SYSTEM_ROUTES = [
     moduleId: "testes-manuais",
     path: "/planos-de-teste",
     label: "Planos de teste",
-    description: "Mesma tela de testes-manuais.planos, sem empresa fixa na URL — resolve a empresa ativa via contexto de sessão (perfis internos como suporte técnico).",
+    description: "Mesma tela de testes-manuais.planos, sem empresa fixa na URL — resolve a empresa ativa via contexto de sessão (perfis internos como administrador).",
     requiredPermission: { moduleId: "test_plan", action: "read" },
     expectedProfiles: ALL_PROFILES,
     status: "ativo",

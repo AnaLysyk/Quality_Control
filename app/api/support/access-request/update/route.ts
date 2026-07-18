@@ -1,7 +1,7 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
-import { getAccessRequestById, listAccessRequests, updateAccessRequest } from "@/data/accessRequestsStore";
+import { createAccessRequestComment } from "@/data/access-requests/commentsStore";
+import { getAccessRequestById, updateAccessRequest } from "@/data/access-requests/store";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { findLocalCompanyById } from "@/backend/auth/localStore";
 import {
@@ -12,9 +12,9 @@ import {
   normalizeAccessType,
   parseAccessRequestMessage,
   type AccessType,
-} from "@/backend/accessRequestMessage";
+} from "@/backend/access-requests/message";
 import { notifyAccessRequestComment } from "@/backend/notificationService";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hashPassword } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 import {
   normalizeRequestProfileType,
@@ -22,9 +22,11 @@ import {
   resolveReviewQueue,
   toInternalAccessType,
   type RequestProfileType,
-} from "@/backend/requestRouting";
+} from "@/backend/access-requests/routing";
 import { shouldUseJsonStore } from "@/backend/storeMode";
-import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/backend/accessRequestLookup";
+import { matchesAccessRequestLookup } from "@/backend/access-requests/lookup";
+import { getPublicAccessRequestByKey } from "@/backend/access-requests/service";
+import { rateLimit } from "@/backend/rateLimit";
 
 type SupportRequestRow = {
   id: string;
@@ -36,6 +38,8 @@ type SupportRequestRow = {
 };
 
 type Payload = {
+  access_key?: string;
+  accessKey?: string;
   requestId?: string;
   lookup_name?: string;
   lookup_email?: string;
@@ -191,68 +195,6 @@ async function findRequestById(id: string): Promise<SupportRequestRow | null> {
   }
 }
 
-async function findRequestByLookup(email: string, name: string): Promise<SupportRequestRow | null> {
-  const normalizedEmail = normalizeAccessRequestLookup(email);
-  const normalizedName = normalizeAccessRequestLookup(name);
-  if (!normalizedEmail || !normalizedName) return null;
-
-  let items: SupportRequestRow[] = [];
-  if (shouldUseJsonStore()) {
-    const list = await listAccessRequests();
-    items = list.map((item) => ({
-      id: item.id,
-      email: item.email,
-      message: item.message,
-      status: item.status,
-      created_at: item.created_at,
-      user_id: item.user_id ?? null,
-    }));
-  } else {
-    try {
-      const list = (await prisma.supportRequest.findMany({
-        where: {
-          OR: [
-            { email: email.trim().toLowerCase() },
-            { message: { contains: email.trim().toLowerCase(), mode: "insensitive" } },
-          ],
-        },
-        orderBy: { created_at: "desc" },
-      })) as SupportRequestRow[];
-      items = list.map((item) => ({
-        id: item.id,
-        email: item.email,
-        message: item.message,
-        status: item.status,
-        created_at: item.created_at,
-        user_id: (item as { user_id?: string | null }).user_id ?? null,
-      }));
-    } catch (error) {
-      console.error("[ACCESS-REQUESTS][UPDATE][FIND_BY_LOOKUP][PRISMA_FALLBACK]", error);
-      const list = await listAccessRequests();
-      items = list.map((item) => ({
-        id: item.id,
-        email: item.email,
-        message: item.message,
-        status: item.status,
-        created_at: item.created_at,
-        user_id: item.user_id ?? null,
-      }));
-    }
-  }
-
-  return (
-    items.find((item) => {
-      const parsed = parseAccessRequestMessage(String(item.message ?? ""), String(item.email ?? ""));
-      return matchesAccessRequestLookup({
-        lookupEmail: normalizedEmail,
-        lookupName: normalizedName,
-        parsed,
-        storedEmail: item.email,
-      });
-    }) ?? null
-  );
-}
-
 export async function PATCH(req: Request) {
   const body = (await req.json().catch(() => null)) as Payload | null;
   if (!body) {
@@ -260,14 +202,23 @@ export async function PATCH(req: Request) {
   }
 
   const requestId = sanitize(body.requestId, 120);
+  const accessKey = sanitize(body.access_key ?? body.accessKey, 160);
   const lookupName = sanitize(body.lookup_name, 255);
   const lookupEmail = sanitize(body.lookup_email, 255).toLowerCase();
 
-  if (!lookupName || !lookupEmail) {
+  if (!accessKey || !lookupName || !lookupEmail) {
     return NextResponse.json({ error: "Informe nome e e-mail usados na consulta." }, { status: 400 });
   }
 
-  const request = requestId ? await findRequestById(requestId) : await findRequestByLookup(lookupEmail, lookupName);
+  const limiter = await rateLimit(req, `legacy-access-request-update:${accessKey}`, 8, 60 * 10);
+  if (limiter.limited) return limiter.response;
+
+  const keyedRequest = await getPublicAccessRequestByKey(accessKey);
+  if (!keyedRequest || (requestId && keyedRequest.request.id !== requestId)) {
+    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
+  }
+
+  const request = await findRequestById(keyedRequest.request.id);
   if (!request) {
     return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
   }
@@ -321,7 +272,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Campos obrigatorios ausentes para atualizar a solicitação." }, { status: 400 });
   }
 
-  const nextPasswordHash = password ? hashPasswordSha256(password) : parsed.passwordHash;
+  const nextPasswordHash = password ? hashPassword(password) : parsed.passwordHash;
   if (!nextPasswordHash) {
     return NextResponse.json({ error: "Defina uma senha para prosseguir com a solicitação." }, { status: 400 });
   }
@@ -536,4 +487,3 @@ export async function PATCH(req: Request) {
     });
   }
 }
-

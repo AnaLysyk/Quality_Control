@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ReactNode, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -44,7 +44,7 @@ export function RequireGlobalSupportOperator({ children, fallback }: RequireGlob
   const deniedFallback =
     fallback ?? (
       <div className="p-8 text-center text-lg">
-        <p>Acesso restrito ao suporte tecnico.</p>
+        <p>Acesso restrito ao administrador.</p>
       </div>
     );
 

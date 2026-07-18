@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateRequest } from "@/backend/jwtAuth";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
@@ -62,7 +62,7 @@ Always write in the same language as the input. If input is in Portuguese, respo
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     await failTask(taskId, msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

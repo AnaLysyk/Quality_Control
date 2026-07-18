@@ -1,4 +1,4 @@
-﻿import { randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -143,7 +143,7 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível enviar a foto";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

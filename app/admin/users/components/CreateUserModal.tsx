@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -59,7 +59,7 @@ const ROLE_OPTIONS: Array<{ value: FixedProfileKind; label: string }> = [
   { value: "company_user", label: "Usuário da empresa" },
   { value: "testing_company_user", label: "Usuário TC" },
   { value: "leader_tc", label: "Líder TC" },
-  { value: "technical_support", label: "Suporte Técnico" },
+  { value: "technical_support", label: "Administrador" },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 type RoleValue = FixedProfileKind;

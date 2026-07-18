@@ -4,8 +4,8 @@ import { listAllRequests } from "@/data/requestsStore";
 import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 import { mapPasswordResetRequestToAccessQueueItem } from "@/backend/passwordResetAccessQueue";
 import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
-import { listAccessRequestsV2 } from "@/backend/accessRequestsV2/repository";
-import { mapV2ToLegacySupportRow } from "@/backend/accessRequestsV2/service";
+import { listAccessRequestsV2 } from "@/backend/access-requests/repository";
+import { mapV2ToLegacySupportRow } from "@/backend/access-requests/service";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 export const runtime = "nodejs";
@@ -57,4 +57,3 @@ export async function GET(req: NextRequest) {
     { headers: NO_STORE_HEADERS },
   );
 }
-

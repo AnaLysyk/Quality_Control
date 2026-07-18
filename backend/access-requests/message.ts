@@ -1,17 +1,17 @@
-﻿import {
+import {
   normalizeRequestProfileType,
   resolveReviewQueue,
   toRequestProfileTypeLabel,
   type RequestProfileType,
   type ReviewQueue,
-} from "@/backend/requestRouting";
+} from "@/backend/access-requests/routing";
 
 export type AccessType = "testing_company_user" | "leader_tc" | "empresa" | "technical_support";
 export type AccessTypeLabel =
   | "Usuarios Testing Company"
   | "Usuarios da empresa"
   | "Lider TC"
-  | "Suporte Tecnico";
+  | "Administrador";
 
 export type AccessRequestAdjustmentField =
   | "profileType"
@@ -279,7 +279,7 @@ function normalizeAdjustmentHistory(input: unknown): AccessRequestAdjustmentRoun
 export function toAccessTypeLabel(accessType: AccessType): AccessTypeLabel {
   if (accessType === "leader_tc") return "Lider TC";
   if (accessType === "empresa") return "Usuarios da empresa";
-  if (accessType === "technical_support") return "Suporte Tecnico";
+  if (accessType === "technical_support") return "Administrador";
   return "Usuarios Testing Company";
 }
 
@@ -301,7 +301,15 @@ export function normalizeAccessType(value: string | null | undefined): AccessTyp
   if (v === "admin da empresa" || v === "administrador da empresa" || v === "empresa" || v === "company") {
     return "empresa";
   }
-  if (v === "global" || v === "desenvolvedor global" || v === "perfil global" || v === "technical_support" || v === "suporte tecnico") {
+  if (
+    v === "global" ||
+    v === "desenvolvedor global" ||
+    v === "perfil global" ||
+    v === "technical_support" ||
+    v === "suporte tecnico" ||
+    v === "administrador" ||
+    v === "gestor"
+  ) {
     return "technical_support";
   }
   return null;
@@ -604,4 +612,3 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
 }
 
 export { toRequestProfileTypeLabel };
-

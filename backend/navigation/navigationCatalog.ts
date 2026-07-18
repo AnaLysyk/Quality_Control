@@ -1,4 +1,4 @@
-﻿import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
 
 export type NavModule =
   | "home"
@@ -609,7 +609,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
           {
             id: "management-users-create-support",
             routeId: "usuarios.criar-suporte",
-            label: "Criar suporte técnico",
+            label: "Criar administrador",
             iconKey: "tool",
             module: "management",
             href: "/admin/users?tab=support&modal=create&role=technical_support",

@@ -77,4 +77,3 @@ export function isLeaderRole(input?: string | null) {
 export function isCompanyRole(input?: string | null) {
   return normalizeLegacyRole(input) === SYSTEM_ROLES.EMPRESA;
 }
-

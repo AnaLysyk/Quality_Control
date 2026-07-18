@@ -3,8 +3,23 @@ import fs from 'fs';
 import path from 'path';
 
 const BASE = process.env.BASE || 'http://localhost:3002';
-const adminUser = { user: 'admin@griaule.test', password: 'Griaule@123' };
+const adminUser = { user: 'admin@griaule.test', password: (process.env.E2E_ADMIN_PASSWORD || process.env.E2E_PROFILE_PASSWORD || "Demo@123") };
 const outDir = path.resolve(process.cwd(), 'debug', 'diagnose-browser-login');
+
+function redactHeaders(headers) {
+  return Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => [
+      key,
+      /^(authorization|cookie|set-cookie|x-api-key)$/i.test(key) ? '[REDACTED]' : value,
+    ]),
+  );
+}
+
+function redactPostData(url, postData) {
+  if (!postData) return null;
+  if (/\/api\/(?:auth\/)?login(?:\?|$)/i.test(url)) return '[REDACTED LOGIN PAYLOAD]';
+  return postData;
+}
 
 function ensureDir(d) {
   if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
@@ -28,12 +43,24 @@ function ensureDir(d) {
   });
 
   page.on('request', (req) => {
-    network.push({ type: 'request', url: req.url(), method: req.method(), headers: req.headers(), postData: req.postData() });
+    network.push({
+      type: 'request',
+      url: req.url(),
+      method: req.method(),
+      headers: redactHeaders(req.headers()),
+      postData: redactPostData(req.url(), req.postData()),
+    });
   });
 
   page.on('response', async (res) => {
     try {
-      network.push({ type: 'response', url: res.url(), status: res.status(), headers: res.headers(), fromCache: res.fromCache() });
+      network.push({
+        type: 'response',
+        url: res.url(),
+        status: res.status(),
+        headers: redactHeaders(res.headers()),
+        fromCache: res.fromCache(),
+      });
     } catch (e) {
       network.push({ type: 'response', url: res.url(), error: String(e) });
     }

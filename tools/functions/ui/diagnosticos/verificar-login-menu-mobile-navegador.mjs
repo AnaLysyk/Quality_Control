@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 const ports = [3000, 3001];
-const adminUser = { user: 'admin@griaule.test', password: 'Griaule@123' };
+const adminUser = { user: 'admin@griaule.test', password: (process.env.E2E_ADMIN_PASSWORD || process.env.E2E_PROFILE_PASSWORD || "Demo@123") };
 
 async function tryPort(port) {
   const base = `http://localhost:${port}`;

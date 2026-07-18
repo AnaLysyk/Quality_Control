@@ -207,10 +207,15 @@ export async function buildLocalSessionForUser(
       ? "qa_tc"
       : normalizeLocalRole(activeLink?.role ?? user.role ?? null);
   const companyRole = canonicalCompanyRole ?? "company_user";
+  // `qa_tc` descreve a função relacional no projeto, não um perfil global.
+  // A matriz de capacidades recebe o perfil canônico equivalente; o papel de
+  // projeto continua preservado em `companyRole`/`permissionRole` na sessão.
+  const capabilityProfile =
+    companyRole === "qa_tc" ? "testing_company_user" : companyRole;
 
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
-    companyRole,
+    companyRole: capabilityProfile,
     membershipCapabilities: activeLink?.capabilities ?? null,
   });
 

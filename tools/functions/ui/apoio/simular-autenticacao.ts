@@ -1,4 +1,4 @@
-﻿import type { BrowserContext } from "@playwright/test";
+import type { BrowserContext } from "@playwright/test";
 
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
@@ -14,7 +14,7 @@ const NO_COMPANY_EMAIL = process.env.E2E_NO_COMPANY_EMAIL || (useJsonSeed ? "e2e
 const NO_COMPANY_PASSWORD = process.env.E2E_NO_COMPANY_PASSWORD || sharedPassword;
 
 function montarSenhasCandidatas(primary: string) {
-  return Array.from(new Set([primary, process.env.E2E_PROFILE_PASSWORD, "Griaule@123", "Demo@123", "senha"].filter(Boolean)));
+  return Array.from(new Set([primary, process.env.E2E_PROFILE_PASSWORD, process.env.E2E_ADMIN_PASSWORD, "Demo@123", "senha"].filter(Boolean)));
 }
 
 function montarEmailsCandidatos(primary: string, role: OpcoesAutenticacaoSimulada["role"], wantsNoCompany: boolean) {
@@ -264,4 +264,3 @@ export async function simularAutenticacao(context: BrowserContext, options: Opco
     });
   });
 }
-

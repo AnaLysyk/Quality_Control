@@ -1,4 +1,4 @@
-﻿jest.mock("@/backend/userNotificationsStore", () => ({
+jest.mock("@/backend/userNotificationsStore", () => ({
   closeNotificationsByDedupeKey: jest.fn().mockResolvedValue(false),
   createNotificationsForUsers: jest.fn().mockResolvedValue([]),
 }));
@@ -11,7 +11,7 @@ jest.mock("@/backend/auth/localStore", () => ({
   getLocalUserById: jest.fn().mockResolvedValue(null),
 }));
 
-jest.mock("@/backend/requestRouting", () => ({
+jest.mock("@/backend/access-requests/routing", () => ({
   canAdminReviewQueue: jest.fn().mockReturnValue(false),
   resolveReviewQueue: jest.fn().mockReturnValue("global_only"),
   toRequestProfileTypeLabel: jest.fn().mockReturnValue("Usuario"),

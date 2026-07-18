@@ -38,6 +38,9 @@ function canManage(user: Awaited<ReturnType<typeof authenticateRequest>>) {
 function scopedCompanyIds(user: NonNullable<Awaited<ReturnType<typeof authenticateRequest>>>) {
   const ids = new Set<string>();
   if (user.companyId) ids.add(user.companyId);
+  user.assignments
+    ?.filter((assignment) => assignment.status === "active")
+    .forEach((assignment) => ids.add(assignment.companyId));
   return ids;
 }
 
@@ -54,7 +57,8 @@ export async function GET(req: Request) {
   const personId = url.searchParams.get("personId");
   const companyId = url.searchParams.get("companyId");
   const allowedCompanyIds = scopedCompanyIds(user);
-  const global = Boolean(user.isGlobalAdmin);
+  const normalizedRole = String(user.permissionRole ?? user.role ?? user.companyRole ?? "").trim().toLowerCase();
+  const global = Boolean(user.isGlobalAdmin || user.projectScope === "unrestricted" || normalizedRole === "technical_support");
 
   if (personId) {
     const person = await db.user.findFirst({
@@ -222,7 +226,7 @@ export async function POST(req: Request) {
       if (!target || !company || !project) throw new Error("Pessoa, empresa ou projeto não encontrado");
       if (project.companyId !== company.id) throw new Error("O projeto não pertence à empresa selecionada");
       if (["technical_support", "support"].includes(String(target.role))) {
-        throw new Error("Suporte Técnico não participa de vínculos de projeto");
+        throw new Error("Administrador não participa de vínculos de projeto");
       }
 
       if (assignmentRole === "qa_tc") {

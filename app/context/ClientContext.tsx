@@ -108,7 +108,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim().toLowerCase());
 
-  // Líder TC não é contexto global. Somente administrador global e suporte técnico
+  // Líder TC não é contexto global. Somente administrador global e administrador
   // podem operar sem uma empresa vinculada ativa.
   const hasGlobalCompanyContext =
     user?.isGlobalAdmin === true ||

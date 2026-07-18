@@ -91,7 +91,7 @@ const PROFILE_DETAILS: Partial<
     tone: "border-blue-200 bg-blue-50 text-blue-900",
   },
   [SYSTEM_ROLES.TECHNICAL_SUPPORT]: {
-    title: "Suporte Técnico",
+    title: "Administrador",
     scope: "Suporte e atendimento",
     description: "Perfil para suporte, chamados, leitura operacional e apoio técnico entre empresas e projetos.",
     tone: "border-cyan-200 bg-cyan-50 text-cyan-900",
@@ -329,7 +329,7 @@ export default function AdminPermissionsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("module");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  const pageSize = 12;
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -433,7 +433,7 @@ export default function AdminPermissionsPage() {
           visibleModules,
         };
       }),
-    [effectivePermissions, selectedRole],
+    [effectivePermissions, permissionModules, selectedRole],
   );
 
   const moduleRows = useMemo<ModuleRow[]>(() => {
@@ -1163,7 +1163,7 @@ export default function AdminPermissionsPage() {
                                               checked ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500",
                                             ].join(" ")}
                                           >
-                                            {checked ? "Ativo" : "Off"}
+                                            {checked ? "Ativo" : "Desativado"}
                                           </span>
                                         </button>
                                       );

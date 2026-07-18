@@ -1,4 +1,4 @@
-﻿import { test, expect } from "../../../fixtures/test";
+import { test, expect } from "../../../fixtures/test";
 import {
   autenticarUsuario,
   configurarUsuarioSimulado,
@@ -33,7 +33,7 @@ async function createAccessRequest(
       company,
       company_name: company,
       phone: "(11) 99999-9999",
-      password: "Griaule@123",
+      password: (process.env.E2E_ADMIN_PASSWORD || process.env.E2E_PROFILE_PASSWORD || "Demo@123"),
       title: `Solicitação ${name}`,
       description: notes ?? "Solicitação criada pelo E2E.",
       access_type: accessType,

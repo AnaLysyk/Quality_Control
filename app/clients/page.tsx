@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -126,7 +126,7 @@ function ClientsPage() {
                 : role === "client_admin" || role === "empresa"
                   ? "Admin"
                   : role === "it_dev" || role === "technical_support"
-                    ? "Suporte Técnico"
+                    ? "Administrador"
                     : role === "company_user"
                       ? "Usuário da empresa"
                       : "Usuário",

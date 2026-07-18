@@ -2,7 +2,7 @@
 
 import { getAccessContext } from "@/backend/auth/session";
 import { getLocalUserById, updateLocalUser } from "@/backend/auth/localStore";
-import { hashPasswordSha256, safeEqualHex } from "@/backend/passwordHash";
+import { hashPassword, verifyPassword } from "@/backend/passwordHash";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -43,12 +43,11 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
-  const currentHash = hashPasswordSha256(currentPassword);
-  if (!safeEqualHex(currentHash, user.password_hash)) {
+  if (!verifyPassword(currentPassword, user.password_hash)) {
     return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
   }
 
-  const newHash = hashPasswordSha256(newPassword);
+  const newHash = hashPassword(newPassword);
   await updateLocalUser(user.id, { password_hash: newHash });
 
   addAuditLogSafe({
@@ -62,4 +61,3 @@ export async function PATCH(req: Request) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

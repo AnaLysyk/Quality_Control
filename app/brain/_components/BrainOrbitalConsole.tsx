@@ -246,8 +246,8 @@ export function BrainOrbitalConsole() {
       if (!stage) continue;
       const cx = stage.clientWidth / 2;
       const cy = stage.clientHeight / 2;
-      let x = cx + (Math.random() - 0.5) * 260;
-      let y = cy + (Math.random() - 0.5) * 200;
+      let x = cx + (Math.random() - 0.5) * 260; // NOSONAR: cosmetic particle jitter, not security-sensitive
+      let y = cy + (Math.random() - 0.5) * 200; // NOSONAR: cosmetic particle jitter, not security-sensitive
       if (node) {
         x = cx + Math.cos(node.angle) * node.radius;
         y = cy + Math.sin(node.angle) * node.radius * 0.62;

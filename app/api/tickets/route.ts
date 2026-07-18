@@ -176,6 +176,6 @@ export async function POST(req: Request) {
 
     const message = err instanceof Error ? err.message : "Erro ao criar chamado";
     console.error("[tickets] Falha ao criar chamado:", err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

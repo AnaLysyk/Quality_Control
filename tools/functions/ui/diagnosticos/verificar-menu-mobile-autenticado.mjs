@@ -1,6 +1,6 @@
 import { chromium, request as playwrightRequest } from 'playwright';
 
-const adminUser = { email: 'admin@griaule.test', password: 'Griaule@123' };
+const adminUser = { email: 'admin@griaule.test', password: (process.env.E2E_ADMIN_PASSWORD || process.env.E2E_PROFILE_PASSWORD || "Demo@123") };
 const ports = [3000, 3001];
 
 function parseSetCookie(setCookie) {

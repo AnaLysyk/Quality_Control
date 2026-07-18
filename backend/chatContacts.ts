@@ -45,18 +45,16 @@ function normalizeCompanyKey(value?: string | null) {
 }
 
 function isPrivilegedAccess(
-  access: Pick<AccessContext, "isGlobalAdmin" | "globalRole" | "role" | "companyRole">,
+  access: Pick<AccessContext, "isGlobalAdmin" | "globalRole" | "role" | "companyRole" | "projectScope">,
 ) {
   const role = normalizeLegacyRole(access.role);
   const companyRole = normalizeLegacyRole(access.companyRole);
   const globalRole = normalizeLegacyRole(access.globalRole);
   return (
     access.isGlobalAdmin === true ||
-    role === SYSTEM_ROLES.LEADER_TC ||
+    access.projectScope === "unrestricted" ||
     role === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
-    companyRole === SYSTEM_ROLES.LEADER_TC ||
     companyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
-    globalRole === SYSTEM_ROLES.LEADER_TC ||
     globalRole === SYSTEM_ROLES.TECHNICAL_SUPPORT
   );
 }
@@ -107,7 +105,7 @@ async function resolveCompanyIdsFromSlugs(slugs: string[]) {
 }
 
 async function resolveVisibleCompanyIds(
-  access: Pick<AccessContext, "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "globalRole" | "role" | "companyRole">,
+  access: Pick<AccessContext, "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "globalRole" | "role" | "companyRole" | "projectScope">,
   scope?: ChatContactScope,
 ) {
   const selectedSlug = normalizeCompanyKey(scope?.companySlug);
@@ -169,7 +167,7 @@ function contactMatches(contact: ChatContact, search: string) {
 export async function listChatContacts(
   access: Pick<
     AccessContext,
-    "userId" | "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "globalRole" | "role" | "companyRole"
+    "userId" | "companyId" | "companySlug" | "companySlugs" | "isGlobalAdmin" | "globalRole" | "role" | "companyRole" | "projectScope"
   >,
   search = "",
   scope?: ChatContactScope,

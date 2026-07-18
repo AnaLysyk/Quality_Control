@@ -75,7 +75,7 @@ export const releaseCalendarRules: ReleaseCalendarRule[] = [
     acceptanceCriteria: [
       "Release deve ter data de escopo, freeze, janela de QA, homologacao, entrega e pos-release quando aplicavel.",
       "Agenda deve permitir filtrar por empresa, projeto, status, criticidade, contexto e responsavel.",
-      "Lider TC e Suporte Tecnico enxergam a agenda consolidada sem precisar trocar de empresa manualmente.",
+      "Lider TC e Administrador enxergam a agenda consolidada sem precisar trocar de empresa manualmente.",
       "Brain deve conseguir responder o que entrega quando, quem esta responsavel e o que esta em risco.",
     ],
   },
@@ -92,7 +92,7 @@ export const releaseCalendarRules: ReleaseCalendarRule[] = [
   },
   {
     id: "leader-support-overview",
-    title: "Visao consolidada para Lider TC e Suporte Tecnico",
+    title: "Visao consolidada para Lider TC e Administrador",
     description: "Perfis internos da TC precisam ver marcacoes de empresas, projetos e usuarios em uma camada visual compacta.",
     acceptanceCriteria: [
       "Marcacoes devem informar contexto, responsavel e publico-alvo.",
@@ -212,7 +212,7 @@ export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
     endAt: "2026-07-03T18:00:00.000-03:00",
     ownerId: null,
     ownerName: "QA",
-    participantNames: ["QA", "Suporte Tecnico"],
+    participantNames: ["QA", "Administrador"],
     description: "Executar aceite, regressao e validacoes criticas antes da entrega.",
     checklist: ["Plano de teste criado", "Runs abertas", "Bugs criticos triados", "Evidencias anexadas"],
     notificationRules: ["Avisar inicio da janela", "Avisar bloqueios", "Avisar fim da janela"],
@@ -238,7 +238,7 @@ export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
     endAt: "2026-07-04T12:00:00.000-03:00",
     ownerId: null,
     ownerName: "Release Manager",
-    participantNames: ["Lider TC", "Suporte Tecnico", "Empresa"],
+    participantNames: ["Lider TC", "Administrador", "Empresa"],
     description: "Publicar a versao e acompanhar a estabilizacao inicial.",
     checklist: ["Go/no-go confirmado", "Plano de rollback revisado", "Comunicacao enviada", "Monitoramento ativo"],
     notificationRules: ["Avisar todos os envolvidos", "Avisar status final", "Avisar incidente pos-release"],

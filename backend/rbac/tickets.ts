@@ -36,6 +36,12 @@ export function canViewTicket(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
   if (!canViewSupportBoard(user)) return false;
   if (canAccessGlobalTicketWorkspace(user)) return true;
+  if (
+    ticket.companyId &&
+    user.assignments?.some(
+      (assignment) => assignment.status === "active" && assignment.companyId === ticket.companyId,
+    )
+  ) return true;
   return ticket.createdBy === user.id;
 }
 
@@ -45,19 +51,18 @@ export function canCommentTicket(user: AuthUser | null, ticket: TicketRecord) {
 
 export function canEditTicketContent(user: AuthUser | null, ticket: TicketRecord) {
   if (!user) return false;
-  if (canManageSupportWorkflow(user)) return true;
+  if (canManageSupportWorkflow(user) && (canAccessGlobalTicketWorkspace(user) || canViewTicket(user, ticket))) return true;
   return ticket.createdBy === user.id;
 }
 
 export function canAssignTicket(user: AuthUser | null, ticket?: TicketRecord) {
   if (!user) return false;
   if (!ticket) return false;
-  return canAccessGlobalTicketWorkspace(user) && canManageSupportWorkflow(user);
+  return (canAccessGlobalTicketWorkspace(user) || canViewTicket(user, ticket)) && canManageSupportWorkflow(user);
 }
 
 export function canMoveTicket(user: AuthUser | null, ticket?: TicketRecord) {
   if (!user) return false;
   if (!ticket) return false;
-  return canAccessGlobalTicketWorkspace(user) && canManageSupportWorkflow(user);
+  return (canAccessGlobalTicketWorkspace(user) || canViewTicket(user, ticket)) && canManageSupportWorkflow(user);
 }
-

@@ -7,19 +7,17 @@ import {
   FiActivity,
   FiAlertTriangle,
   FiArrowDownRight,
-  FiArrowLeft,
   FiArrowRight,
   FiArrowUpRight,
   FiDownload,
   FiFilter,
-  FiLayers,
   FiMinus,
   FiRefreshCw,
   FiTrendingDown,
   FiTrendingUp,
-  FiZap,
 } from "react-icons/fi";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAppMeta } from "@/backend/appMeta";
 import css from "./CompanyIntelligenceDashboard.module.css";
@@ -30,7 +28,6 @@ type GroupBy = "day" | "week" | "month" | "release" | "application";
 type ChartMetric = "passRate" | "failRate" | "runs" | "blocked" | "defects" | "logs" | "cycleTimeHours";
 type ChartView = "qualityTimeline" | "runsTimeline" | "applicationHealth" | "applicationDefects";
 type RiskLevel = "critical" | "warning" | "stable";
-type StatusFilter = string;
 type SourceFilter = "all" | "manual" | "integration";
 type DefectScope = "filtered" | "periodTotal";
 
@@ -83,16 +80,21 @@ type ExecutiveSummary = {
   bestRun: EnrichedRun | null;
 };
 
+type InsightTone = "positive" | "warning" | "critical" | "neutral";
+
 type InsightItem = {
   id: string;
   title: string;
   detail: string;
-  tone: "positive" | "warning" | "critical" | "neutral";
+  tone: InsightTone;
 };
+
+type DeltaTone = "positive" | "warning" | "neutral";
+type TrendDirection = "up" | "down" | "neutral";
 
 type MetricDelta = {
   label: string;
-  tone: "positive" | "warning" | "neutral";
+  tone: DeltaTone;
 };
 
 type Range = {
@@ -109,7 +111,7 @@ type DashboardFilterState = {
   defectScope: DefectScope;
   applicationFilter: string;
   runFilter: string;
-  statusFilter: StatusFilter;
+  statusFilter: string;
   environmentFilter: string;
   sourceFilter: SourceFilter;
   responsibleFilter: string;
@@ -201,28 +203,26 @@ let testingLogoPromise: Promise<string | null> | null = null;
 function blobToDataUrl(blob: Blob) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result?.toString() ?? "");
+    reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
 }
 
 async function getTestingLogoDataUrl() {
-  if (!testingLogoPromise) {
-    testingLogoPromise = fetch("/images/tc.png", { cache: "force-cache" })
-      .then(async (response) => {
-        if (!response.ok) return null;
-        const blob = await response.blob();
-        return blobToDataUrl(blob);
-      })
-      .catch(() => null);
-  }
+  testingLogoPromise ??= fetch("/images/tc.png", { cache: "force-cache" })
+    .then(async (response) => {
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      return blobToDataUrl(blob);
+    })
+    .catch(() => null);
 
   return testingLogoPromise;
 }
 
 function toTimestamp(value?: string | null) {
-  const parsed = value ? Date.parse(value) : NaN;
+  const parsed = value ? Date.parse(value) : Number.NaN;
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
@@ -287,13 +287,13 @@ function parseCommaList(value?: string | null) {
 }
 
 function normalizeFilterValue(value: unknown) {
-  return String(value ?? "")
+  return String(value ?? "") // NOSONAR: generic normalizer, intentionally stringifies any input
     .trim()
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, ""); // NOSONAR: anchored alternation on a single char class, verified no catastrophic backtracking
 }
 
 function resolveRunStatusValue(run: Pick<EnrichedRun, "statusLabel" | "statusRaw">) {
@@ -324,25 +324,85 @@ function buildStatusOptions(runs: EnrichedRun[]) {
   });
 }
 
-function matchesStatusFilter(run: EnrichedRun, statusFilter: StatusFilter) {
+function matchesStatusFilter(run: EnrichedRun, statusFilter: string) {
   return statusFilter === STATUS_FILTER_ALL || resolveRunStatusValue(run) === statusFilter;
 }
 
-function toneClasses(tone: "positive" | "warning" | "critical" | "neutral") {
+function toneClasses(tone: InsightTone) {
   if (tone === "positive") return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
   if (tone === "warning") return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300";
   if (tone === "critical") return "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300";
   return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
 }
 
-function softInsightClasses(tone: "positive" | "warning" | "critical" | "neutral") {
+function TrendIcon({ direction }: Readonly<{ direction: TrendDirection }>) {
+  if (direction === "up") return <FiArrowUpRight className="h-3.5 w-3.5" />;
+  if (direction === "down") return <FiArrowDownRight className="h-3.5 w-3.5" />;
+  return <FiMinus className="h-3.5 w-3.5" />;
+}
+
+function trendDirectionForTone(tone: DeltaTone, invert = false): TrendDirection {
+  if (tone === "neutral") return "neutral";
+  return (tone === "positive") !== invert ? "up" : "down";
+}
+
+function trendDirectionForDelta(delta: number, downThreshold: number, upThreshold: number): TrendDirection {
+  if (delta <= downThreshold) return "down";
+  if (delta >= upThreshold) return "up";
+  return "neutral";
+}
+
+function toneForDelta(delta: number, criticalThreshold: number, positiveThreshold: number): InsightTone {
+  if (delta <= criticalThreshold) return "critical";
+  if (delta >= positiveThreshold) return "positive";
+  return "neutral";
+}
+
+function computeMomentumTone(momentum: number | null, lowerIsBetter: boolean): DeltaTone {
+  if (momentum == null || Math.abs(momentum) < 0.01) return "neutral";
+  const improved = lowerIsBetter ? momentum < 0 : momentum > 0;
+  return improved ? "positive" : "warning";
+}
+
+function statCardToneClass(tone?: InsightTone) {
+  if (tone === "critical") return "text-rose-600 dark:text-rose-300";
+  if (tone === "warning") return "text-amber-600 dark:text-amber-300";
+  if (tone === "positive") return "text-emerald-600 dark:text-emerald-300";
+  return "text-[var(--tc-text,#0b1a3c)] dark:text-[var(--tc-text,#e2e8f0)]";
+}
+
+function formatMomentumLabel(momentum: number | null, options: { decimals?: boolean; suffix: string }) {
+  if (momentum == null) return "Sem referência";
+  const sign = momentum >= 0 ? "+" : "";
+  const value = options.decimals ? momentum.toFixed(1) : Math.round(momentum);
+  return `${sign}${value}${options.suffix}`;
+}
+
+function chartMetricUnit(metric: ChartMetric) {
+  if (metric === "cycleTimeHours") return "h";
+  if (metric === "passRate" || metric === "failRate") return "p.p.";
+  return "";
+}
+
+function formatCompareLabel(
+  previousAverage: number | null,
+  compareDelta: number | null,
+  options: { decimals?: boolean; unit: string },
+) {
+  if (previousAverage == null) return "Sem período anterior comparável";
+  const sign = compareDelta && compareDelta >= 0 ? "+" : "";
+  const value = options.decimals ? (compareDelta ?? 0).toFixed(1) : Math.round(compareDelta ?? 0);
+  return `${sign}${value} ${options.unit} vs período anterior`;
+}
+
+function softInsightClasses(tone: InsightTone) {
   if (tone === "positive") return "border-[rgba(16,185,129,0.16)] bg-[linear-gradient(180deg,rgba(236,253,245,0.72)_0%,rgba(255,255,255,0.98)_100%)] dark:border-emerald-800/40 dark:bg-[linear-gradient(180deg,rgba(6,78,59,0.32)_0%,rgba(15,23,42,0.98)_100%)]";
   if (tone === "warning") return "border-[rgba(245,158,11,0.16)] bg-[linear-gradient(180deg,rgba(255,251,235,0.84)_0%,rgba(255,255,255,0.98)_100%)] dark:border-amber-800/40 dark:bg-[linear-gradient(180deg,rgba(120,53,15,0.32)_0%,rgba(15,23,42,0.98)_100%)]";
   if (tone === "critical") return "border-[rgba(244,63,94,0.16)] bg-[linear-gradient(180deg,rgba(255,241,242,0.82)_0%,rgba(255,255,255,0.98)_100%)] dark:border-rose-800/40 dark:bg-[linear-gradient(180deg,rgba(136,19,55,0.32)_0%,rgba(15,23,42,0.98)_100%)]";
   return "border-[rgba(15,23,42,0.08)] bg-[linear-gradient(180deg,rgba(248,250,252,0.92)_0%,rgba(255,255,255,0.98)_100%)] dark:border-slate-700/40 dark:bg-[linear-gradient(180deg,rgba(30,41,59,0.72)_0%,rgba(15,23,42,0.98)_100%)]";
 }
 
-function softInsightAccent(tone: "positive" | "warning" | "critical" | "neutral") {
+function softInsightAccent(tone: InsightTone) {
   if (tone === "positive") return "bg-emerald-500";
   if (tone === "warning") return "bg-amber-500";
   if (tone === "critical") return "bg-rose-500";
@@ -355,33 +415,82 @@ function riskWeight(level: RiskLevel) {
   return 1;
 }
 
+function riskLabel(level: RiskLevel, critical: string, warning: string, stable: string) {
+  if (level === "critical") return critical;
+  if (level === "warning") return warning;
+  return stable;
+}
+
+function describeQualityTrend(delta: number) {
+  if (delta > 2) return "tendência ascendente";
+  if (delta < -2) return "tendência descendente";
+  return "estabilidade";
+}
+
+function describeQualityTrendTitle(delta: number) {
+  if (delta >= 2) return "A qualidade melhorou no período.";
+  if (delta <= -2) return "A qualidade piorou no período.";
+  return "A qualidade ficou estável no período.";
+}
+
+function pdfButtonLabel(exportingPdf: boolean, isApplyingFilters: boolean) {
+  if (exportingPdf) return "Gerando PDF...";
+  if (isApplyingFilters) return "Atualizando filtros...";
+  return "PDF do filtro";
+}
+
+function toneForTrendDelta(delta: number): InsightTone {
+  if (delta >= 2) return "positive";
+  if (delta <= -2) return "critical";
+  return "neutral";
+}
+
+function toneForFailRate(failRate: number): InsightTone {
+  if (failRate >= 15) return "critical";
+  if (failRate > 0) return "warning";
+  return "positive";
+}
+
+function chartScopeLabel(metric: ChartMetric, defectScopeLabel: string, logsScopeLabel: string, groupLabel: string) {
+  if (metric === "defects") return `Escopo: ${defectScopeLabel}`;
+  if (metric === "logs") return `Escopo: ${logsScopeLabel}`;
+  return `Agrupado por: ${groupLabel}`;
+}
+
+function riskColorFor(level: string): [number, number, number] {
+  if (level === "critical") return [220, 38, 38];
+  if (level === "warning") return [217, 119, 6];
+  return [34, 197, 94];
+}
+
 function riskTone(level: RiskLevel) {
   if (level === "critical") return "critical" as const;
   if (level === "warning") return "warning" as const;
   return "positive" as const;
 }
 
+function resolveCustomRange(from: string, to: string): Range {
+  const start = from ? startOfDay(Date.parse(from)) : null;
+  const end = to ? endOfDay(Date.parse(to)) : null;
+  if (start != null && !Number.isFinite(start)) return { start: null, end: null, durationMs: null };
+  if (end != null && !Number.isFinite(end)) return { start: null, end: null, durationMs: null };
+  if (start != null && end != null && start > end) {
+    return { start: null, end: null, durationMs: null };
+  }
+  return { start, end, durationMs: start != null && end != null ? end - start : null };
+}
+
 function resolveRange(periodPreset: PeriodPreset, from: string, to: string): Range {
   if (periodPreset === "all") {
     return { start: null, end: null, durationMs: null };
   }
-
-  const now = Date.now();
   if (periodPreset === "custom") {
-    const start = from ? startOfDay(Date.parse(from)) : null;
-    const end = to ? endOfDay(Date.parse(to)) : null;
-    if (start != null && !Number.isFinite(start)) return { start: null, end: null, durationMs: null };
-    if (end != null && !Number.isFinite(end)) return { start: null, end: null, durationMs: null };
-    if (start != null && end != null && start > end) {
-      return { start: null, end: null, durationMs: null };
-    }
-    return { start, end, durationMs: start != null && end != null ? end - start : null };
+    return resolveCustomRange(from, to);
   }
 
-  const days =
-    periodPreset === "7d" ? 7 :
-    periodPreset === "30d" ? 30 :
-    periodPreset === "90d" ? 90 : 180;
+  const now = Date.now();
+  const daysByPreset: Partial<Record<PeriodPreset, number>> = { "7d": 7, "30d": 30, "90d": 90 };
+  const days = daysByPreset[periodPreset] ?? 180;
   const end = endOfDay(now);
   const start = startOfDay(now - (days - 1) * 24 * 60 * 60 * 1000);
   return { start, end, durationMs: end - start };
@@ -406,6 +515,60 @@ function determineRunRisk(run: CompanyDashboardData["runs"][number], directDefec
   if (run.stats.fail >= 3 || passRate < 70 || directDefectCount >= 2) return "critical";
   if (run.stats.fail > 0 || run.stats.blocked > 0 || passRate < 85 || directDefectCount > 0) return "warning";
   return "stable";
+}
+
+function buildEnrichedRuns(
+  runs: CompanyDashboardData["runs"],
+  defects: CompanyDashboardData["defects"],
+): EnrichedRun[] {
+  const directDefects = new Map<string, number>();
+  const appDefects = new Map<string, number>();
+
+  for (const defect of defects) {
+    if (defect.runSlug) {
+      directDefects.set(defect.runSlug, (directDefects.get(defect.runSlug) ?? 0) + 1);
+    }
+    appDefects.set(defect.applicationKey, (appDefects.get(defect.applicationKey) ?? 0) + 1);
+  }
+
+  const sequenceByApp = new Map<string, EnrichedRun[]>();
+  const baseRuns = [...runs]
+    .map((run) => {
+      const time = Math.max(toTimestamp(run.updatedAt), toTimestamp(run.createdAt));
+      const total = Math.max(run.stats.total, 1);
+      const passRate = run.stats.passRate ?? (run.stats.pass / total) * 100;
+      const failRate = (run.stats.fail / total) * 100;
+      const directDefectCount = directDefects.get(run.slug) ?? 0;
+      const appDefectCount = appDefects.get(run.applicationKey) ?? 0;
+      return {
+        ...run,
+        time,
+        passRate,
+        failRate,
+        directDefectCount,
+        appDefectCount,
+        deltaPassRate: null,
+        deltaFailCount: null,
+        isRegression: false,
+        riskLevel: determineRunRisk(run, directDefectCount),
+      } as EnrichedRun;
+    })
+    .sort((left, right) => left.time - right.time);
+
+  for (const run of baseRuns) {
+    const list = sequenceByApp.get(run.applicationKey) ?? [];
+    const previous = list.at(-1) ?? null;
+    run.deltaPassRate = previous ? run.passRate - previous.passRate : null;
+    run.deltaFailCount = previous ? run.stats.fail - previous.stats.fail : null;
+    run.isRegression = Boolean(
+      previous &&
+      ((run.deltaPassRate ?? 0) <= -5 || (run.deltaFailCount ?? 0) >= 2 || run.directDefectCount > previous.directDefectCount),
+    );
+    list.push(run);
+    sequenceByApp.set(run.applicationKey, list);
+  }
+
+  return baseRuns.sort((left, right) => right.time - left.time);
 }
 
 function summarizeRuns(runs: EnrichedRun[], defects: CompanyDashboardData["defects"]) {
@@ -484,15 +647,13 @@ function formatDurationHours(value: number) {
 }
 
 function chartMetricValue(point: SeriesPoint, metric: ChartMetric) {
-  return (
-    metric === "passRate" ? point.passRate :
-    metric === "failRate" ? point.failRate :
-    metric === "runs" ? point.runs :
-    metric === "blocked" ? point.blocked :
-    metric === "defects" ? point.defects :
-    metric === "logs" ? point.logs :
-    point.cycleTimeHours
-  );
+  if (metric === "passRate") return point.passRate;
+  if (metric === "failRate") return point.failRate;
+  if (metric === "runs") return point.runs;
+  if (metric === "blocked") return point.blocked;
+  if (metric === "defects") return point.defects;
+  if (metric === "logs") return point.logs;
+  return point.cycleTimeHours;
 }
 
 function metricAverage(points: SeriesPoint[], metric: ChartMetric) {
@@ -577,6 +738,20 @@ function resolveChartMetricMeta(metric: ChartMetric) {
   };
 }
 
+function roundUpCycleTimeMax(peak: number) {
+  if (peak <= 2) return 2;
+  if (peak <= 8) return 8;
+  if (peak <= 24) return 24;
+  return Math.ceil(peak / 12) * 12;
+}
+
+function roundStepMultiplier(normalized: number) {
+  if (normalized <= 1) return 1;
+  if (normalized <= 2) return 2;
+  if (normalized <= 5) return 5;
+  return 10;
+}
+
 function buildChartScale(values: number[], metric: ChartMetric) {
   if (metric === "passRate" || metric === "failRate") {
     return { min: 0, max: 100, ticks: [100, 75, 50, 25, 0] };
@@ -584,7 +759,7 @@ function buildChartScale(values: number[], metric: ChartMetric) {
 
   if (metric === "cycleTimeHours") {
     const peak = Math.max(...values, 0);
-    const max = peak <= 2 ? 2 : peak <= 8 ? 8 : peak <= 24 ? 24 : Math.ceil(peak / 12) * 12;
+    const max = roundUpCycleTimeMax(peak);
     const step = max / 4;
     return { min: 0, max, ticks: [max, max - step, max - step * 2, max - step * 3, 0] };
   }
@@ -597,11 +772,7 @@ function buildChartScale(values: number[], metric: ChartMetric) {
   const roughStep = peak / 4;
   const magnitude = 10 ** Math.floor(Math.log10(roughStep));
   const normalized = roughStep / magnitude;
-  const step =
-    normalized <= 1 ? magnitude :
-    normalized <= 2 ? 2 * magnitude :
-    normalized <= 5 ? 5 * magnitude :
-    10 * magnitude;
+  const step = roundStepMultiplier(normalized) * magnitude;
   const max = Math.ceil(peak / step) * step;
 
   return {
@@ -647,6 +818,76 @@ function resolveChartPanelCopy(view: ChartView) {
   };
 }
 
+function formatWeekLabel(sortValue: number) {
+  const end = sortValue + 6 * 24 * 60 * 60 * 1000;
+  return `${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue)} - ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(end)}`;
+}
+
+function resolveGroupKeyForRun(run: EnrichedRun, groupBy: GroupBy): { key: string; label: string; sortValue: number } {
+  if (groupBy === "day") {
+    const sortValue = startOfDay(run.time);
+    return { key: String(sortValue), label: new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue), sortValue };
+  }
+  if (groupBy === "week") {
+    const sortValue = startOfWeek(run.time);
+    return { key: String(sortValue), label: formatWeekLabel(sortValue), sortValue };
+  }
+  if (groupBy === "month") {
+    const sortValue = startOfMonth(run.time);
+    return { key: String(sortValue), label: formatMonthLabel(sortValue), sortValue };
+  }
+  if (groupBy === "application") {
+    return { key: run.applicationKey, label: run.applicationName, sortValue: run.time };
+  }
+  return { key: run.slug, label: run.title, sortValue: run.time };
+}
+
+function resolveGroupKeyForDefect(
+  defect: CompanyDashboardData["defects"][number],
+  groupBy: GroupBy,
+): { key: string; label: string; sortValue: number } {
+  const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
+  if (groupBy === "day") {
+    const sortValue = startOfDay(time);
+    return { key: String(sortValue), label: new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue), sortValue };
+  }
+  if (groupBy === "week") {
+    const sortValue = startOfWeek(time);
+    return { key: String(sortValue), label: formatWeekLabel(sortValue), sortValue };
+  }
+  if (groupBy === "month") {
+    const sortValue = startOfMonth(time);
+    return { key: String(sortValue), label: formatMonthLabel(sortValue), sortValue };
+  }
+  if (groupBy === "application") {
+    return { key: defect.applicationKey, label: defect.applicationName, sortValue: time };
+  }
+  return { key: defect.runSlug || defect.slug, label: defect.title, sortValue: time };
+}
+
+function resolveGroupKeyForLog(
+  log: CompanyDashboardData["alerts"][number],
+  groupBy: GroupBy,
+): { key: string; label: string; sortValue: number } {
+  const time = toTimestamp(log.timestamp);
+  if (groupBy === "day") {
+    const sortValue = startOfDay(time);
+    return { key: String(sortValue), label: new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue), sortValue };
+  }
+  if (groupBy === "week") {
+    const sortValue = startOfWeek(time);
+    return { key: String(sortValue), label: formatWeekLabel(sortValue), sortValue };
+  }
+  if (groupBy === "month") {
+    const sortValue = startOfMonth(time);
+    return { key: String(sortValue), label: formatMonthLabel(sortValue), sortValue };
+  }
+  if (groupBy === "application") {
+    return { key: "company-logs", label: "Logs da empresa", sortValue: time };
+  }
+  return { key: log.type || log.message, label: log.message, sortValue: time };
+}
+
 function buildSeries(
   runs: EnrichedRun[],
   defects: CompanyDashboardData["defects"],
@@ -654,30 +895,9 @@ function buildSeries(
   groupBy: GroupBy,
 ) {
   const buckets = new Map<string, { label: string; runs: EnrichedRun[]; defects: number; logs: number; sortValue: number }>();
- 
+
   for (const run of runs) {
-    let key = run.slug;
-    let label = run.title;
-    let sortValue = run.time;
-
-    if (groupBy === "day") {
-      sortValue = startOfDay(run.time);
-      key = String(sortValue);
-      label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue);
-    } else if (groupBy === "week") {
-      sortValue = startOfWeek(run.time);
-      key = String(sortValue);
-      const end = sortValue + 6 * 24 * 60 * 60 * 1000;
-      label = `${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue)} - ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(end)}`;
-    } else if (groupBy === "month") {
-      sortValue = startOfMonth(run.time);
-      key = String(sortValue);
-      label = formatMonthLabel(sortValue);
-    } else if (groupBy === "application") {
-      key = run.applicationKey;
-      label = run.applicationName;
-    }
-
+    const { key, label, sortValue } = resolveGroupKeyForRun(run, groupBy);
     const current = buckets.get(key) ?? { label, runs: [], defects: 0, logs: 0, sortValue };
     current.runs.push(run);
     current.sortValue = groupBy === "application" ? Math.max(current.sortValue, sortValue) : sortValue;
@@ -685,59 +905,14 @@ function buildSeries(
   }
 
   for (const defect of defects) {
-    const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
-    let key = defect.runSlug || defect.slug;
-    let label = defect.title;
-    let sortValue = time;
-    if (groupBy === "day") key = String(startOfDay(time));
-    else if (groupBy === "week") key = String(startOfWeek(time));
-    else if (groupBy === "month") key = String(startOfMonth(time));
-    else if (groupBy === "application") key = defect.applicationKey;
-
-    if (groupBy === "day") {
-      sortValue = startOfDay(time);
-      label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue);
-    } else if (groupBy === "week") {
-      sortValue = startOfWeek(time);
-      const end = sortValue + 6 * 24 * 60 * 60 * 1000;
-      label = `${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue)} - ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(end)}`;
-    } else if (groupBy === "month") {
-      sortValue = startOfMonth(time);
-      label = formatMonthLabel(sortValue);
-    } else if (groupBy === "application") {
-      sortValue = time;
-      label = defect.applicationName;
-    }
-
+    const { key, label, sortValue } = resolveGroupKeyForDefect(defect, groupBy);
     const current = buckets.get(key) ?? { label, runs: [], defects: 0, logs: 0, sortValue };
     current.defects += 1;
     buckets.set(key, current);
   }
 
   for (const log of logs) {
-    const time = toTimestamp(log.timestamp);
-    let key = log.type || log.message;
-    let label = log.message;
-    let sortValue = time;
-
-    if (groupBy === "day") {
-      sortValue = startOfDay(time);
-      key = String(sortValue);
-      label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue);
-    } else if (groupBy === "week") {
-      sortValue = startOfWeek(time);
-      key = String(sortValue);
-      const end = sortValue + 6 * 24 * 60 * 60 * 1000;
-      label = `${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue)} - ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(end)}`;
-    } else if (groupBy === "month") {
-      sortValue = startOfMonth(time);
-      key = String(sortValue);
-      label = formatMonthLabel(sortValue);
-    } else if (groupBy === "application") {
-      key = "company-logs";
-      label = "Logs da empresa";
-    }
-
+    const { key, label, sortValue } = resolveGroupKeyForLog(log, groupBy);
     const current = buckets.get(key) ?? { label, runs: [], defects: 0, logs: 0, sortValue };
     current.logs += 1;
     buckets.set(key, current);
@@ -779,6 +954,17 @@ function buildSeries(
     }));
 }
 
+function selectXAxisLabels<T>(points: T[]): T[] {
+  return points
+    .filter((_, index) => {
+      if (points.length <= 5) return true;
+      if (index === 0 || index === points.length - 1) return true;
+      const stride = Math.max(1, Math.floor((points.length - 1) / 3));
+      return index % stride === 0;
+    })
+    .slice(0, 5);
+}
+
 function chartValueToY(value: number, min: number, max: number, height = 52, paddingY = 4) {
   const range = max - min || 1;
   const plotHeight = height - paddingY * 2;
@@ -811,6 +997,11 @@ function buildLinePath(values: number[], min: number, max: number, width = 100, 
   return { line, area, points };
 }
 
+function formatRunSource(run: Pick<EnrichedRun, "sourceType" | "integrationProvider">) {
+  if (run.sourceType === "manual") return "Manual";
+  return run.integrationProvider ? `Integração ${run.integrationProvider}` : "Integração";
+}
+
 function downloadCsv(rows: EnrichedRun[]) {
   const header = [
     "Run",
@@ -827,7 +1018,7 @@ function downloadCsv(rows: EnrichedRun[]) {
     row.title,
     row.applicationName,
     row.statusLabel,
-    row.sourceType === "manual" ? "Manual" : `Integração${row.integrationProvider ? ` ${row.integrationProvider}` : ""}`,
+    formatRunSource(row),
     row.passRate.toFixed(1),
     String(row.stats.fail),
     String(row.stats.blocked),
@@ -835,7 +1026,7 @@ function downloadCsv(rows: EnrichedRun[]) {
     formatDateTime(row.updatedAt ?? row.createdAt),
   ]);
   const csv = [header, ...body]
-    .map((columns) => columns.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(";"))
+    .map((columns) => columns.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(";"))
     .join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -846,7 +1037,7 @@ function downloadCsv(rows: EnrichedRun[]) {
   URL.revokeObjectURL(url);
 }
 
-function Panel(props: {
+function Panel(props: Readonly<{
   eyebrow: string;
   title: string;
   description?: string;
@@ -854,7 +1045,7 @@ function Panel(props: {
   children: ReactNode;
   className?: string;
   variant?: "default" | "softGradient";
-}) {
+}>) {
   const surfaceClassName =
     props.variant === "softGradient"
       ? "border-[rgba(1,24,72,0.08)] [background:radial-gradient(circle_at_top_left,rgba(1,24,72,0.09)_0%,transparent_26%),radial-gradient(circle_at_bottom_right,rgba(239,0,1,0.1)_0%,transparent_32%)] dark:border-[var(--tc-border,#334155)] dark:[background:radial-gradient(circle_at_top_left,rgba(100,160,255,0.1)_0%,transparent_26%),radial-gradient(circle_at_bottom_right,rgba(239,0,1,0.08)_0%,transparent_32%)]"
@@ -894,19 +1085,15 @@ function Panel(props: {
   );
 }
 
-function StatCard(props: {
+function StatCard(props: Readonly<{
   label: string;
   value: string;
   note: string;
-  tone?: "positive" | "warning" | "critical" | "neutral";
+  tone?: InsightTone;
   delta?: MetricDelta | null;
   icon: ReactNode;
-}) {
-  const tone =
-    props.tone === "critical" ? "text-rose-600 dark:text-rose-300" :
-    props.tone === "warning" ? "text-amber-600 dark:text-amber-300" :
-    props.tone === "positive" ? "text-emerald-600 dark:text-emerald-300" :
-    "text-[var(--tc-text,#0b1a3c)] dark:text-[var(--tc-text,#e2e8f0)]";
+}>) {
+  const tone = statCardToneClass(props.tone);
 
   return (
     <div className="h-full min-h-43 rounded-[20px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 py-4 shadow-[0_10px_30px_rgba(1,24,72,0.06)] transition hover:-translate-y-px hover:shadow-[0_16px_40px_rgba(1,24,72,0.08)] dark:border-[var(--tc-border,#334155)] dark:bg-[var(--tc-surface,#0f172a)] dark:shadow-none">
@@ -922,7 +1109,7 @@ function StatCard(props: {
       <p className="mt-3 text-xs leading-5 text-[var(--tc-text-muted,#6b7280)]">{props.note}</p>
       {props.delta ? (
         <div className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(props.delta.tone)}`}>
-          {props.delta.tone === "positive" ? <FiArrowUpRight className="h-3.5 w-3.5" /> : props.delta.tone === "warning" ? <FiArrowDownRight className="h-3.5 w-3.5" /> : <FiMinus className="h-3.5 w-3.5" />}
+          <TrendIcon direction={trendDirectionForTone(props.delta.tone)} />
           {props.delta.label}
         </div>
       ) : null}
@@ -930,12 +1117,125 @@ function StatCard(props: {
   );
 }
 
-function MiniLineChart(props: {
+function MiniLineChartSvg({
+  chartHeight,
+  chartPadding,
+  plotBottom,
+  scale,
+  meta,
+  displayTicks,
+  targetY,
+  points,
+  line,
+  chartGradientId,
+  chartShadowId,
+  barGradientId,
+}: Readonly<{
+  chartHeight: number;
+  chartPadding: number;
+  plotBottom: number;
+  scale: ReturnType<typeof buildChartScale>;
+  meta: ReturnType<typeof resolveChartMetricMeta>;
+  displayTicks: number[];
+  targetY: number | null;
+  points: Array<{ x: number; y: number }>;
+  line: string;
+  chartGradientId: string;
+  chartShadowId: string;
+  barGradientId: string;
+}>) {
+  return (
+    <svg viewBox={`0 0 100 ${chartHeight}`} className="h-64 w-full overflow-visible">
+      <defs>
+        <linearGradient id={chartGradientId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={meta.colors[0]} />
+          <stop offset="60%" stopColor={meta.colors[1]} />
+          <stop offset="100%" stopColor={meta.colors[2]} />
+        </linearGradient>
+        <linearGradient id={barGradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={meta.surface} />
+          <stop offset="100%" stopColor="rgba(15,23,42,0.03)" />
+        </linearGradient>
+        <filter id={chartShadowId} x="-20%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="1.25" stdDeviation="1.35" floodColor={meta.colors[1]} floodOpacity="0.18" />
+        </filter>
+      </defs>
+
+      <rect x="0" y={chartPadding} width="100" height={plotBottom - chartPadding} rx="3.5" className={css.chartBgRect} />
+
+      {displayTicks.map((tick) => {
+        const y = chartValueToY(tick, scale.min, scale.max, chartHeight, 5);
+        return (
+          <line
+            key={tick}
+            x1="0"
+            y1={y}
+            x2="100"
+            y2={y}
+            stroke={tick === 0 ? "rgba(148,163,184,0.18)" : "rgba(148,163,184,0.08)"}
+            strokeDasharray="2 6"
+          />
+        );
+      })}
+
+      {targetY != null ? (
+        <line
+          x1="0"
+          y1={targetY}
+          x2="100"
+          y2={targetY}
+          stroke="rgba(16,185,129,0.22)"
+          strokeDasharray="3 6"
+        />
+      ) : null}
+
+      {points.map((point, index) => {
+        const next = points[index + 1];
+        const prevX = index === 0 ? 0 : (points[index - 1]?.x ?? point.x);
+        const nextX = next ? next.x : 100;
+        const colWidth = Math.max(4, (nextX - prevX) / 2.2);
+        const x = Math.max(0, point.x - colWidth / 2);
+        const h = Math.max(0.8, plotBottom - point.y);
+        return (
+          <rect
+            key={`bar-${point.x}-${point.y}`}
+            x={x}
+            y={point.y}
+            width={colWidth}
+            height={h}
+            rx="1.6"
+            fill={`url(#${barGradientId})`}
+            opacity="0.9"
+          />
+        );
+      })}
+
+      <path d={line} fill="none" stroke={`url(#${chartGradientId})`} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${chartShadowId})`} />
+
+      {points.map((point, index) => (
+        <g key={`${point.x}-${point.y}`}>
+          {index === points.length - 1 ? <circle cx={point.x} cy={point.y} r="3.2" fill="rgba(36,82,149,0.12)" /> : null}
+          <circle
+            cx={point.x}
+            cy={point.y}
+            r={index === points.length - 1 ? "1.95" : "1.25"}
+            fill={index === points.length - 1 ? meta.colors[1] : undefined}
+            className={index === points.length - 1 ? undefined : css.chartDotFill}
+            stroke={meta.colors[1]}
+            strokeWidth={index === points.length - 1 ? "1.3" : "1.0"}
+          />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function MiniLineChart(props: Readonly<{
   points: SeriesPoint[];
   metric: ChartMetric;
   previousAverage?: number | null;
   compareEnabled?: boolean;
-}) {
+}>) {
   const shouldFallbackToRuns =
     props.metric === "passRate" &&
     props.points.length > 0 &&
@@ -951,15 +1251,12 @@ function MiniLineChart(props: {
   const plotBottom = chartHeight - chartPadding;
   const { line, points } = buildLinePath(values, scale.min, scale.max, 100, chartHeight, 5);
   const latest = values.at(-1) ?? 0;
-  const previous = values.length > 1 ? values[values.length - 2] : null;
+  const previous = values.length > 1 ? values.at(-2) : null;
   const momentum = previous == null ? null : latest - previous;
   const avg = values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
   const previousAverage = props.previousAverage ?? null;
   const compareDelta = previousAverage == null ? null : avg - previousAverage;
-  const compareLabel =
-    previousAverage == null
-      ? "Sem período anterior comparável"
-      : `${compareDelta && compareDelta >= 0 ? "+" : ""}${(compareDelta ?? 0).toFixed(1)} ${effectiveMetric === "cycleTimeHours" ? "h" : effectiveMetric === "passRate" || effectiveMetric === "failRate" ? "p.p." : ""} vs período anterior`;
+  const compareLabel = formatCompareLabel(previousAverage, compareDelta, { decimals: true, unit: chartMetricUnit(effectiveMetric) });
   const best = values.length > 0 ? Math.max(...values) : 0;
   const worst = values.length > 0 ? Math.min(...values) : 0;
   const targetY = meta.targetValue == null
@@ -968,23 +1265,11 @@ function MiniLineChart(props: {
   const displayTicks = scale.ticks.length <= 3
     ? scale.ticks
     : [scale.ticks[0], scale.ticks[Math.floor(scale.ticks.length / 2)] ?? scale.ticks[0], scale.ticks.at(-1) ?? scale.ticks[0]];
-  const xAxisLabels = props.points.filter((_, index) => {
-    if (props.points.length <= 5) return true;
-    if (index === 0 || index === props.points.length - 1) return true;
-    const stride = Math.max(1, Math.floor((props.points.length - 1) / 3));
-    return index % stride === 0;
-  }).slice(0, 5);
+  const xAxisLabels = selectXAxisLabels(props.points);
   const metricFormatter = (value: number) => formatChartMetricValue(effectiveMetric, value);
-  const momentumTone =
-    momentum == null || Math.abs(momentum) < 0.01
-      ? "neutral"
-      : effectiveMetric === "failRate" || effectiveMetric === "blocked"
-        ? (momentum < 0 ? "positive" : "warning")
-        : (momentum > 0 ? "positive" : "warning");
-  const momentumLabel =
-    momentum == null
-      ? "Sem referência"
-      : `${momentum >= 0 ? "+" : ""}${effectiveMetric === "passRate" || effectiveMetric === "failRate" ? momentum.toFixed(1) : Math.round(momentum)}${effectiveMetric === "passRate" || effectiveMetric === "failRate" ? " p.p." : ""}`;
+  const momentumTone = computeMomentumTone(momentum, effectiveMetric === "failRate" || effectiveMetric === "blocked");
+  const isPercentMetric = effectiveMetric === "passRate" || effectiveMetric === "failRate";
+  const momentumLabel = formatMomentumLabel(momentum, { decimals: isPercentMetric, suffix: isPercentMetric ? " p.p." : "" });
   const chartGradientId = `desktopboard-line-${effectiveMetric}`;
   const chartShadowId = `desktopboard-shadow-${effectiveMetric}`;
   const barGradientId = `desktopboard-bars-${effectiveMetric}`;
@@ -1003,7 +1288,7 @@ function MiniLineChart(props: {
               {metricFormatter(latest)}
             </div>
             <div className={`mb-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${toneClasses(momentumTone)}`}>
-              {momentumTone === "positive" ? <FiArrowUpRight className="h-3.5 w-3.5" /> : momentumTone === "warning" ? <FiArrowDownRight className="h-3.5 w-3.5" /> : <FiMinus className="h-3.5 w-3.5" />}
+              <TrendIcon direction={trendDirectionForTone(momentumTone)} />
               {momentumLabel}
             </div>
           </div>
@@ -1061,88 +1346,20 @@ function MiniLineChart(props: {
               </div>
             </div>
 
-            <svg viewBox={`0 0 100 ${chartHeight}`} className="h-64 w-full overflow-visible">
-              <defs>
-                <linearGradient id={chartGradientId} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor={meta.colors[0]} />
-                  <stop offset="60%" stopColor={meta.colors[1]} />
-                  <stop offset="100%" stopColor={meta.colors[2]} />
-                </linearGradient>
-                <linearGradient id={barGradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={meta.surface} />
-                  <stop offset="100%" stopColor="rgba(15,23,42,0.03)" />
-                </linearGradient>
-                <filter id={chartShadowId} x="-20%" y="-20%" width="140%" height="160%">
-                  <feDropShadow dx="0" dy="1.25" stdDeviation="1.35" floodColor={meta.colors[1]} floodOpacity="0.18" />
-                </filter>
-              </defs>
-
-              <rect x="0" y={chartPadding} width="100" height={plotBottom - chartPadding} rx="3.5" className={css.chartBgRect} />
-
-              {displayTicks.map((tick) => {
-                const y = chartValueToY(tick, scale.min, scale.max, chartHeight, 5);
-                return (
-                  <line
-                    key={tick}
-                    x1="0"
-                    y1={y}
-                    x2="100"
-                    y2={y}
-                    stroke={tick === 0 ? "rgba(148,163,184,0.18)" : "rgba(148,163,184,0.08)"}
-                    strokeDasharray="2 6"
-                  />
-                );
-              })}
-
-              {targetY != null ? (
-                <line
-                  x1="0"
-                  y1={targetY}
-                  x2="100"
-                  y2={targetY}
-                  stroke="rgba(16,185,129,0.22)"
-                  strokeDasharray="3 6"
-                />
-              ) : null}
-
-              {points.map((point, index) => {
-                const next = points[index + 1];
-                const prevX = index === 0 ? 0 : (points[index - 1]?.x ?? point.x);
-                const nextX = next ? next.x : 100;
-                const colWidth = Math.max(4, (nextX - prevX) / 2.2);
-                const x = Math.max(0, point.x - colWidth / 2);
-                const h = Math.max(0.8, plotBottom - point.y);
-                return (
-                  <rect
-                    key={`bar-${point.x}-${point.y}`}
-                    x={x}
-                    y={point.y}
-                    width={colWidth}
-                    height={h}
-                    rx="1.6"
-                    fill={`url(#${barGradientId})`}
-                    opacity="0.9"
-                  />
-                );
-              })}
-
-              <path d={line} fill="none" stroke={`url(#${chartGradientId})`} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${chartShadowId})`} />
-
-              {points.map((point, index) => (
-                <g key={`${point.x}-${point.y}`}>
-                  {index === points.length - 1 ? <circle cx={point.x} cy={point.y} r="3.2" fill="rgba(36,82,149,0.12)" /> : null}
-                  <circle
-                    cx={point.x}
-                    cy={point.y}
-                    r={index === points.length - 1 ? "1.95" : "1.25"}
-                    fill={index === points.length - 1 ? meta.colors[1] : undefined}
-                    className={index === points.length - 1 ? undefined : css.chartDotFill}
-                    stroke={meta.colors[1]}
-                    strokeWidth={index === points.length - 1 ? "1.3" : "1.0"}
-                  />
-                </g>
-              ))}
-            </svg>
+            <MiniLineChartSvg
+              chartHeight={chartHeight}
+              chartPadding={chartPadding}
+              plotBottom={plotBottom}
+              scale={scale}
+              meta={meta}
+              displayTicks={displayTicks}
+              targetY={targetY}
+              points={points}
+              line={line}
+              chartGradientId={chartGradientId}
+              chartShadowId={chartShadowId}
+              barGradientId={barGradientId}
+            />
 
             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] text-[rgba(8,32,77,0.56)] dark:text-slate-400 sm:grid-cols-3 lg:grid-cols-5">
               {xAxisLabels.map((point) => (
@@ -1167,11 +1384,107 @@ function MiniLineChart(props: {
   );
 }
 
-function LogsTimelineChart(props: {
+function LogsTimelineChartSvg({
+  chartHeight,
+  chartPadding,
+  plotBottom,
+  scale,
+  points,
+  line,
+  chartGradientId,
+  chartShadowId,
+  barGradientId,
+}: Readonly<{
+  chartHeight: number;
+  chartPadding: number;
+  plotBottom: number;
+  scale: ReturnType<typeof buildChartScale>;
+  points: Array<{ x: number; y: number }>;
+  line: string;
+  chartGradientId: string;
+  chartShadowId: string;
+  barGradientId: string;
+}>) {
+  return (
+    <svg viewBox={`0 0 100 ${chartHeight}`} className="h-64 w-full overflow-visible">
+      <defs>
+        <linearGradient id={chartGradientId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#f97316" />
+          <stop offset="60%" stopColor="#ea580c" />
+          <stop offset="100%" stopColor="#c2410c" />
+        </linearGradient>
+        <linearGradient id={barGradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="100%" stopColor="rgba(15,23,42,0.03)" />
+        </linearGradient>
+        <filter id={chartShadowId} x="-20%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="1.25" stdDeviation="1.35" floodColor="#ea580c" floodOpacity="0.18" />
+        </filter>
+      </defs>
+
+      <rect x="0" y={chartPadding} width="100" height={plotBottom - chartPadding} rx="3.5" className={css.chartBgRect} />
+
+      {scale.ticks.map((tick) => {
+        const y = chartValueToY(tick, scale.min, scale.max, chartHeight, 5);
+        return (
+          <line
+            key={tick}
+            x1="0"
+            y1={y}
+            x2="100"
+            y2={y}
+            stroke={tick === 0 ? "rgba(148,163,184,0.18)" : "rgba(148,163,184,0.08)"}
+            strokeDasharray="2 6"
+          />
+        );
+      })}
+
+      {points.map((point, index) => {
+        const next = points[index + 1];
+        const prevX = index === 0 ? 0 : (points[index - 1]?.x ?? point.x);
+        const nextX = next ? next.x : 100;
+        const colWidth = Math.max(4, (nextX - prevX) / 2.2);
+        const x = Math.max(0, point.x - colWidth / 2);
+        const h = Math.max(0.8, plotBottom - point.y);
+        return (
+          <rect
+            key={`bar-${point.x}-${point.y}`}
+            x={x}
+            y={point.y}
+            width={colWidth}
+            height={h}
+            rx="1.6"
+            fill={`url(#${barGradientId})`}
+            opacity="0.9"
+          />
+        );
+      })}
+
+      <path d={line} fill="none" stroke={`url(#${chartGradientId})`} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${chartShadowId})`} />
+
+      {points.map((point, index) => (
+        <g key={`${point.x}-${point.y}`}>
+          {index === points.length - 1 ? <circle cx={point.x} cy={point.y} r="3.2" fill="rgba(249,115,22,0.12)" /> : null}
+          <circle
+            cx={point.x}
+            cy={point.y}
+            r={index === points.length - 1 ? "1.95" : "1.25"}
+            fill={index === points.length - 1 ? "#ea580c" : undefined}
+            className={index === points.length - 1 ? undefined : "fill-[#fed7aa]"}
+            stroke="#ea580c"
+            strokeWidth={index === points.length - 1 ? "1.3" : "1.0"}
+          />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function LogsTimelineChart(props: Readonly<{
   points: SeriesPoint[];
   previousAverage?: number | null;
   compareEnabled?: boolean;
-}) {
+}>) {
   const values = props.points.map((point) => point.logs);
   const scale = buildChartScale(values, "logs");
   const chartHeight = 58;
@@ -1179,26 +1492,17 @@ function LogsTimelineChart(props: {
   const plotBottom = chartHeight - chartPadding;
   const { line, points } = buildLinePath(values, scale.min, scale.max, 100, chartHeight, 5);
   const latest = values.at(-1) ?? 0;
-  const previous = values.length > 1 ? values[values.length - 2] : null;
+  const previous = values.length > 1 ? values.at(-2) : null;
   const momentum = previous == null ? null : latest - previous;
   const avg = values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
   const previousAverage = props.previousAverage ?? null;
   const compareDelta = previousAverage == null ? null : avg - previousAverage;
-  const compareLabel =
-    previousAverage == null
-      ? "Sem período anterior comparável"
-      : `${compareDelta && compareDelta >= 0 ? "+" : ""}${Math.round(compareDelta ?? 0)} alertas vs período anterior`;
+  const compareLabel = formatCompareLabel(previousAverage, compareDelta, { unit: "alertas" });
   const best = values.length > 0 ? Math.max(...values) : 0;
   const worst = values.length > 0 ? Math.min(...values) : 0;
   
-  const momentumTone =
-    momentum == null || Math.abs(momentum) < 0.01
-      ? "neutral"
-      : (momentum < 0 ? "positive" : "warning");
-  const momentumLabel =
-    momentum == null
-      ? "Sem referência"
-      : `${momentum >= 0 ? "+" : ""}${Math.round(momentum)} alertas`;
+  const momentumTone = computeMomentumTone(momentum, true);
+  const momentumLabel = formatMomentumLabel(momentum, { suffix: " alertas" });
 
   const chartGradientId = `desktopboard-logs-line`;
   const chartShadowId = `desktopboard-logs-shadow`;
@@ -1218,7 +1522,7 @@ function LogsTimelineChart(props: {
               {Math.round(latest)}
             </div>
             <div className={`mb-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${toneClasses(momentumTone)}`}>
-              {momentumTone === "positive" ? <FiArrowDownRight className="h-3.5 w-3.5" /> : momentumTone === "warning" ? <FiArrowUpRight className="h-3.5 w-3.5" /> : <FiMinus className="h-3.5 w-3.5" />}
+              <TrendIcon direction={trendDirectionForTone(momentumTone, true)} />
               {momentumLabel}
             </div>
           </div>
@@ -1269,85 +1573,20 @@ function LogsTimelineChart(props: {
               </div>
             </div>
 
-            <svg viewBox={`0 0 100 ${chartHeight}`} className="h-64 w-full overflow-visible">
-              <defs>
-                <linearGradient id={chartGradientId} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#f97316" />
-                  <stop offset="60%" stopColor="#ea580c" />
-                  <stop offset="100%" stopColor="#c2410c" />
-                </linearGradient>
-                <linearGradient id={barGradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#fed7aa" />
-                  <stop offset="100%" stopColor="rgba(15,23,42,0.03)" />
-                </linearGradient>
-                <filter id={chartShadowId} x="-20%" y="-20%" width="140%" height="160%">
-                  <feDropShadow dx="0" dy="1.25" stdDeviation="1.35" floodColor="#ea580c" floodOpacity="0.18" />
-                </filter>
-              </defs>
-
-              <rect x="0" y={chartPadding} width="100" height={plotBottom - chartPadding} rx="3.5" className={css.chartBgRect} />
-
-              {scale.ticks.map((tick) => {
-                const y = chartValueToY(tick, scale.min, scale.max, chartHeight, 5);
-                return (
-                  <line
-                    key={tick}
-                    x1="0"
-                    y1={y}
-                    x2="100"
-                    y2={y}
-                    stroke={tick === 0 ? "rgba(148,163,184,0.18)" : "rgba(148,163,184,0.08)"}
-                    strokeDasharray="2 6"
-                  />
-                );
-              })}
-
-              {points.map((point, index) => {
-                const next = points[index + 1];
-                const prevX = index === 0 ? 0 : (points[index - 1]?.x ?? point.x);
-                const nextX = next ? next.x : 100;
-                const colWidth = Math.max(4, (nextX - prevX) / 2.2);
-                const x = Math.max(0, point.x - colWidth / 2);
-                const h = Math.max(0.8, plotBottom - point.y);
-                return (
-                  <rect
-                    key={`bar-${point.x}-${point.y}`}
-                    x={x}
-                    y={point.y}
-                    width={colWidth}
-                    height={h}
-                    rx="1.6"
-                    fill={`url(#${barGradientId})`}
-                    opacity="0.9"
-                  />
-                );
-              })}
-
-              <path d={line} fill="none" stroke={`url(#${chartGradientId})`} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${chartShadowId})`} />
-
-              {points.map((point, index) => (
-                <g key={`${point.x}-${point.y}`}>
-                  {index === points.length - 1 ? <circle cx={point.x} cy={point.y} r="3.2" fill="rgba(249,115,22,0.12)" /> : null}
-                  <circle
-                    cx={point.x}
-                    cy={point.y}
-                    r={index === points.length - 1 ? "1.95" : "1.25"}
-                    fill={index === points.length - 1 ? "#ea580c" : undefined}
-                    className={index === points.length - 1 ? undefined : "fill-[#fed7aa]"}
-                    stroke="#ea580c"
-                    strokeWidth={index === points.length - 1 ? "1.3" : "1.0"}
-                  />
-                </g>
-              ))}
-            </svg>
+            <LogsTimelineChartSvg
+              chartHeight={chartHeight}
+              chartPadding={chartPadding}
+              plotBottom={plotBottom}
+              scale={scale}
+              points={points}
+              line={line}
+              chartGradientId={chartGradientId}
+              chartShadowId={chartShadowId}
+              barGradientId={barGradientId}
+            />
 
             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] text-[rgba(8,32,77,0.56)] dark:text-slate-400 sm:grid-cols-3 lg:grid-cols-5">
-              {props.points.filter((_, index) => {
-                if (props.points.length <= 5) return true;
-                if (index === 0 || index === props.points.length - 1) return true;
-                const stride = Math.max(1, Math.floor((props.points.length - 1) / 3));
-                return index % stride === 0;
-              }).slice(0, 5).map((point) => (
+              {selectXAxisLabels(props.points).map((point) => (
                 <div key={point.key} className="truncate">
                   <span className="font-medium">{point.label}</span>
                 </div>
@@ -1369,7 +1608,7 @@ function LogsTimelineChart(props: {
   );
 }
 
-function RunsBarChart(props: { points: SeriesPoint[] }) {
+function RunsBarChart(props: Readonly<{ points: SeriesPoint[] }>) {
   const peak = Math.max(...props.points.map((point) => point.runs), 1);
   const totalRuns = props.points.reduce((sum, point) => sum + point.runs, 0);
   const periodStartLabel = props.points[0]?.label ?? "-";
@@ -1420,7 +1659,13 @@ function RunsBarChart(props: { points: SeriesPoint[] }) {
   );
 }
 
-function ApplicationHealthChart(props: { applications: ApplicationAggregate[] }) {
+function applicationHealthBarTone(level: RiskLevel) {
+  if (level === "critical") return "linear-gradient(90deg,rgba(239,68,68,0.92)_0%,rgba(220,38,38,0.98)_100%)";
+  if (level === "warning") return "linear-gradient(90deg,rgba(245,158,11,0.9)_0%,rgba(217,119,6,0.98)_100%)";
+  return "linear-gradient(90deg,rgba(36,82,149,0.9)_0%,rgba(1,24,72,0.98)_100%)";
+}
+
+function ApplicationHealthChart(props: Readonly<{ applications: ApplicationAggregate[] }>) {
   const items = [...props.applications]
     .sort((left, right) => {
       if (left.passRate !== right.passRate) return left.passRate - right.passRate;
@@ -1437,18 +1682,8 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
 
       <div className="space-y-4">
         {items.map((application) => {
-          const barTone =
-            application.riskLevel === "critical"
-              ? "linear-gradient(90deg,rgba(239,68,68,0.92)_0%,rgba(220,38,38,0.98)_100%)"
-              : application.riskLevel === "warning"
-                ? "linear-gradient(90deg,rgba(245,158,11,0.9)_0%,rgba(217,119,6,0.98)_100%)"
-                : "linear-gradient(90deg,rgba(36,82,149,0.9)_0%,rgba(1,24,72,0.98)_100%)";
-          const riskLabel =
-            application.riskLevel === "critical"
-              ? "Crítico"
-              : application.riskLevel === "warning"
-                ? "Atenção"
-                : "Estável";
+          const barTone = applicationHealthBarTone(application.riskLevel);
+          const riskLevelLabel = riskLabel(application.riskLevel, "Crítico", "Atenção", "Estável");
 
           return (
             <div key={application.key}>
@@ -1456,7 +1691,7 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{application.label}</div>
                   <div className="mt-1 text-[11px] text-[var(--tc-text-muted,#6b7280)]">
-                    {application.runs} run(s) • {application.defects} defeito(s) • {riskLabel}
+                    {application.runs} run(s) • {application.defects} defeito(s) • {riskLevelLabel}
                   </div>
                 </div>
                 <div className="shrink-0 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{formatPercent(application.passRate)}</div>
@@ -1475,7 +1710,7 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
   );
 }
 
-function ApplicationDefectsChart(props: { applications: ApplicationAggregate[] }) {
+function ApplicationDefectsChart(props: Readonly<{ applications: ApplicationAggregate[] }>) {
   const items = [...props.applications]
     .sort((left, right) => right.defects - left.defects || right.regressions - left.regressions)
     .slice(0, 8);
@@ -1517,14 +1752,14 @@ function ApplicationDefectsChart(props: { applications: ApplicationAggregate[] }
   );
 }
 
-function SelectField(props: {
+function SelectField(props: Readonly<{
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: Array<{ value: string; label: string }>;
   hint?: string;
   disabled?: boolean;
-}) {
+}>) {
   const selectedOption = props.options.find((option) => option.value === props.value);
 
   return (
@@ -1551,7 +1786,7 @@ function SelectField(props: {
   );
 }
 
-function ToggleChip(props: { active: boolean; onClick: () => void; label: string }) {
+function ToggleChip(props: Readonly<{ active: boolean; onClick: () => void; label: string }>) {
   return (
     <button
       type="button"
@@ -1560,6 +1795,142 @@ function ToggleChip(props: { active: boolean; onClick: () => void; label: string
     >
       {props.label}
     </button>
+  );
+}
+
+function RunsImpactPanel({
+  filteredRuns,
+  applicationRanking,
+  isApplyingFilters,
+  companySlug,
+}: Readonly<{
+  filteredRuns: EnrichedRun[];
+  applicationRanking: ApplicationAggregate[];
+  isApplyingFilters: boolean;
+  companySlug: string;
+}>) {
+  if (filteredRuns.length === 0) {
+    return (
+      <Panel eyebrow="Comparativo" title="Sem comparativos para exibir" description="Esse recorte não trouxe runs suficientes para comparação.">
+        <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
+          Ajuste o recorte para incluir runs consolidadas e liberar os comparativos.
+        </div>
+      </Panel>
+    );
+  }
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] 2xl:grid-cols-[minmax(0,1.2fr)_minmax(26rem,0.8fr)]">
+      <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href={`/${encodeURIComponent(companySlug)}/runs`} className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-[var(--tc-border,#e6ecf5)] text-left text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]">
+                <th className="px-2 py-3">Run</th><th className="px-2 py-3">Aplicação</th><th className="px-2 py-3">Pass rate</th><th className="px-2 py-3">Variação</th><th className="px-2 py-3">Defeitos</th><th className="px-2 py-3">Risco</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRuns.slice(0, 10).map((run) => (
+                <tr key={run.id} className="border-b border-[var(--tc-border,#eef2f7)] align-top">
+                  <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.title}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{formatDateTime(run.updatedAt ?? run.createdAt)}</div></td>
+                  <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationName}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{formatRunSource(run)}</div></td>
+                  <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{formatPercent(run.passRate)}</td>
+                  <td className="px-2 py-3">{run.deltaPassRate != null ? <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(toneForDelta(run.deltaPassRate, -5, 2))}`}><TrendIcon direction={trendDirectionForDelta(run.deltaPassRate, -5, 2)} />{`${run.deltaPassRate >= 0 ? "+" : ""}${run.deltaPassRate.toFixed(1)} p.p.`}</span> : <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">Primeira referência</span>}</td>
+                  <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.directDefectCount}</td>
+                  <td className="px-2 py-3"><span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(run.riskLevel))}`}>{riskLabel(run.riskLevel, "Crítico", "Atenção", "Estável")}</span></td>
+                </tr>
+              ))}
+              {filteredRuns.length === 0 ? <tr><td colSpan={6} className="px-2 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma run entrou no filtro atual.</td></tr> : null}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+
+      <Panel eyebrow="Aplicações" title="Saúde por aplicação" description={undefined}>
+        <ScrollReveal className="grid gap-3" stagger={0.06} deps={[isApplyingFilters]}>
+          {applicationRanking.length > 0 ? applicationRanking.slice(0, 6).map((aggregate) => {
+            const appMeta = getAppMeta(aggregate.key, aggregate.label);
+            return (
+              <div key={aggregate.key} className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 py-3 dark:border-[var(--tc-border,#334155)] dark:bg-[var(--tc-surface,#0f172a)]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${css.appPill}`} {...{ style: { '--app-color': appMeta.color, '--app-border': `${appMeta.color}35`, '--app-bg': `${appMeta.color}12` } as React.CSSProperties }}>{appMeta.label}</span>
+                      <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(aggregate.riskLevel))}`}>{riskLabel(aggregate.riskLevel, "Crítica", "Atenção", "Estável")}</span>
+                    </div>
+                    <div className="mt-2 text-base font-bold text-[var(--tc-text,#0b1a3c)]">{aggregate.label}</div>
+                    <div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{aggregate.runs} run(s) • {aggregate.defects} defeito(s) • {aggregate.regressions} regressão(ões)</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">{formatPercent(aggregate.passRate)}</div>
+                    <div className="text-xs text-[var(--tc-text-muted,#6b7280)]">pass rate</div>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]">
+                  <span className="rounded-full bg-[var(--tc-surface-2,#f1f5f9)] px-3 py-1 dark:bg-[var(--tc-surface-2,#1e293b)]">falha {formatPercent(aggregate.failRate)}</span>
+                  <span className="rounded-full bg-[var(--tc-surface-2,#f1f5f9)] px-3 py-1 dark:bg-[var(--tc-surface-2,#1e293b)]">bloqueios {aggregate.blocked}</span>
+                </div>
+              </div>
+            );
+          }) : <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Sem aplicações suficientes no recorte atual.</div>}
+        </ScrollReveal>
+      </Panel>
+    </div>
+  );
+}
+
+function RunsDetailPanel({
+  filteredRuns,
+  compactActiveChips,
+  hiddenActiveChipCount,
+}: Readonly<{
+  filteredRuns: EnrichedRun[];
+  compactActiveChips: string[];
+  hiddenActiveChipCount: number;
+}>) {
+  if (filteredRuns.length === 0) {
+    return (
+      <Panel eyebrow="Drilldown" title="Sem linhas detalhadas" description="Não há runs suficientes para abrir a grade detalhada neste recorte.">
+        <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
+          Ajuste os filtros para incluir runs e habilitar o drilldown.
+        </div>
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel eyebrow="Drilldown" title="Base detalhada" description={undefined}>
+      <div className="mb-4 flex flex-wrap gap-2">
+        {compactActiveChips.map((chip) => (
+          <span key={chip} className="inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f1f5f9)] px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text,#0b1a3c)]">
+            <FiFilter className="mr-1.5 h-3.5 w-3.5" />
+            {chip}
+          </span>
+        ))}
+        {hiddenActiveChipCount > 0 ? <span className="inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f1f5f9)] px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text,#0b1a3c)]">+{hiddenActiveChipCount}</span> : null}
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead><tr className="border-b border-[var(--tc-border,#e6ecf5)] text-left text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]"><th className="px-2 py-3">Run</th><th className="px-2 py-3">Aplicação</th><th className="px-2 py-3">Status</th><th className="px-2 py-3">Origem</th><th className="px-2 py-3">Pass</th><th className="px-2 py-3">Falhas</th><th className="px-2 py-3">Defeitos</th><th className="px-2 py-3">Atualização</th><th className="px-2 py-3">Abrir</th></tr></thead>
+          <tbody>
+            {filteredRuns.map((run) => (
+              <tr key={run.id} className="border-b border-[var(--tc-border,#eef2f7)]">
+                <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.title}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.releaseLabel ?? "Sem run vinculada"}</div></td>
+                <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationName}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.environments.length > 0 ? run.environments.join(", ") : "Sem ambiente"}</div></td>
+                <td className="px-2 py-3"><span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(run.riskLevel))}`}>{run.statusLabel}</span></td>
+                <td className="px-2 py-3 text-[var(--tc-text,#0b1a3c)]">{formatRunSource(run)}</td>
+                <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{formatPercent(run.passRate)}</td>
+                <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.stats.fail}</td>
+                <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.directDefectCount}</td>
+                <td className="px-2 py-3 text-[var(--tc-text-muted,#6b7280)]">{formatDateTime(run.updatedAt ?? run.createdAt)}</td>
+                <td className="px-2 py-3"><Link href={run.href} className="inline-flex items-center gap-2 font-semibold text-[var(--tc-accent,#ef0001)]">Drilldown<FiArrowRight className="h-4 w-4" /></Link></td>
+              </tr>
+            ))}
+            {filteredRuns.length === 0 ? <tr><td colSpan={9} className="px-2 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma linha disponível com o filtro atual.</td></tr> : null}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
   );
 }
 
@@ -1586,14 +1957,17 @@ function areFilterStatesEqual(left: DashboardFilterState | null, right: Dashboar
   );
 }
 
-function buildFilterChipList(
+type FilterChipOptions = {
+  applications: Array<{ key: string; label: string }>;
+  runs: Array<{ key: string; label: string }>;
+  environments: string[];
+  statuses?: Array<{ value: string; label: string }>;
+};
+
+function buildFilterChipListBase(
   filters: DashboardFilterState,
-  filterOptions: {
-    applications: Array<{ key: string; label: string }>;
-    runs: Array<{ key: string; label: string }>;
-    environments: string[];
-    statuses?: Array<{ value: string; label: string }>;
-  },
+  filterOptions: FilterChipOptions,
+  statusChip: string | null,
 ) {
   const chips: string[] = [];
   const periodLabel = PERIOD_OPTIONS.find((option) => option.value === filters.periodPreset)?.label ?? filters.periodPreset;
@@ -1609,18 +1983,8 @@ function buildFilterChipList(
   }
   if (filters.sourceFilter !== "all") chips.push(filters.sourceFilter === "manual" ? "Somente manual" : "Somente integração");
   if (filters.responsibleFilter !== "all") chips.push(`Responsável ${filters.responsibleFilter}`);
-  if (filters.riskFilter !== "all") chips.push(filters.riskFilter === "critical" ? "Risco crítico" : filters.riskFilter === "warning" ? "Em atenção" : "Estável");
-  if (filters.statusFilter !== "all") {
-    chips.push(
-      filters.statusFilter === "completed"
-        ? "Concluídas"
-        : filters.statusFilter === "in_progress"
-          ? "Em andamento"
-          : filters.statusFilter === "risk"
-            ? "Com risco"
-            : "Com bloqueio",
-    );
-  }
+  if (filters.riskFilter !== "all") chips.push(riskLabel(filters.riskFilter, "Risco crítico", "Em atenção", "Estável"));
+  if (statusChip) chips.push(statusChip);
   if (filters.onlyWithDefects) chips.push("Com defeitos");
   if (filters.onlyRegression) chips.push("Com regressão");
   if (filters.chartView === "qualityTimeline") {
@@ -1635,48 +1999,403 @@ function buildFilterChipList(
   return chips;
 }
 
-function buildResolvedFilterChipList(
+function buildResolvedFilterChipList(filters: DashboardFilterState, filterOptions: FilterChipOptions) {
+  const statusChip = filters.statusFilter !== STATUS_FILTER_ALL
+    ? filterOptions.statuses?.find((option) => option.value === filters.statusFilter)?.label ?? filters.statusFilter
+    : null;
+  return buildFilterChipListBase(filters, filterOptions, statusChip);
+}
+
+type DraftFilterInputs = {
+  ranges: Range;
+  applicationFilter: string;
+  runFilter: string;
+  sourceFilter: string;
+  environmentFilter: string;
+  responsibleFilter: string;
+  riskFilter: "all" | RiskLevel;
+  statusFilter: string;
+  onlyWithDefects: boolean;
+  onlyRegression: boolean;
+};
+
+function matchesActiveRunFilters(run: EnrichedRun, filters: DashboardFilterState, hasMultipleEnvironments: boolean): boolean {
+  if (filters.applicationFilter !== "all" && run.applicationKey !== filters.applicationFilter) return false;
+  if (filters.runFilter !== "all" && run.slug !== filters.runFilter) return false;
+  if (filters.sourceFilter !== "all" && run.sourceType !== filters.sourceFilter) return false;
+  if (hasMultipleEnvironments && filters.environmentFilter !== "all" && !run.environments.includes(filters.environmentFilter)) return false;
+  if (filters.responsibleFilter !== "all" && !parseCommaList(run.responsibleLabel).includes(filters.responsibleFilter)) return false;
+  if (filters.riskFilter !== "all" && run.riskLevel !== filters.riskFilter) return false;
+  if (!matchesStatusFilter(run, filters.statusFilter)) return false;
+  if (filters.onlyWithDefects && run.directDefectCount < 1) return false;
+  if (filters.onlyRegression && !run.isRegression) return false;
+  return true;
+}
+
+function filterEnrichedRuns(
+  enrichedRuns: EnrichedRun[],
+  range: Range,
   filters: DashboardFilterState,
-  filterOptions: {
-    applications: Array<{ key: string; label: string }>;
-    runs: Array<{ key: string; label: string }>;
-    environments: string[];
-    statuses?: Array<{ value: string; label: string }>;
-  },
-) {
-  const chips: string[] = [];
-  const periodLabel = PERIOD_OPTIONS.find((option) => option.value === filters.periodPreset)?.label ?? filters.periodPreset;
-  chips.push(periodLabel);
-  if (filters.applicationFilter !== "all") {
-    chips.push(filterOptions.applications.find((option) => option.key === filters.applicationFilter)?.label ?? filters.applicationFilter);
-  }
-  if (filters.runFilter !== "all") {
-    chips.push(filterOptions.runs.find((option) => option.key === filters.runFilter)?.label ?? filters.runFilter);
-  }
-  if (filters.environmentFilter !== "all" && filterOptions.environments.length > 1) {
-    chips.push(`Ambiente ${filters.environmentFilter}`);
-  }
-  if (filters.sourceFilter !== "all") chips.push(filters.sourceFilter === "manual" ? "Somente manual" : "Somente integração");
-  if (filters.responsibleFilter !== "all") chips.push(`Responsável ${filters.responsibleFilter}`);
-  if (filters.riskFilter !== "all") chips.push(filters.riskFilter === "critical" ? "Risco crítico" : filters.riskFilter === "warning" ? "Em atenção" : "Estável");
-  if (filters.statusFilter !== STATUS_FILTER_ALL) {
-    chips.push(filterOptions.statuses?.find((option) => option.value === filters.statusFilter)?.label ?? filters.statusFilter);
-  }
-  if (filters.onlyWithDefects) chips.push("Com defeitos");
-  if (filters.onlyRegression) chips.push("Com regressão");
-  if (filters.chartView === "qualityTimeline") {
-    chips.push(`Métrica ${CHART_METRIC_OPTIONS.find((option) => option.value === filters.chartMetric)?.label ?? filters.chartMetric}`);
-    if (filters.chartMetric === "defects") {
-      chips.push(filters.defectScope === "periodTotal" ? "Defeitos totais do período" : "Defeitos filtrados");
-    }
-  }
-  if (isTimeChartView(filters.chartView) && filters.groupBy !== "month") {
-    chips.push(`Agrupado por ${GROUP_OPTIONS.find((option) => option.value === filters.groupBy)?.label ?? filters.groupBy}`);
-  }
-  return chips;
+  hasMultipleEnvironments: boolean,
+): EnrichedRun[] {
+  return enrichedRuns.filter(
+    (run) => withinRange(run.time, range.start, range.end) && matchesActiveRunFilters(run, filters, hasMultipleEnvironments),
+  );
 }
 
-export default function CompanyIntelligenceDashboardClient(props: CompanyDashboardData) {
+function filterDefectsForRange(
+  defects: CompanyDashboardData["defects"],
+  scopedRuns: EnrichedRun[],
+  enrichedRuns: EnrichedRun[],
+  range: Range,
+  filters: Pick<DashboardFilterState, "applicationFilter" | "runFilter" | "environmentFilter" | "sourceFilter">,
+  hasMultipleEnvironments: boolean,
+): CompanyDashboardData["defects"] {
+  if (filters.sourceFilter === "integration") return [];
+  const runSlugs = new Set(scopedRuns.map((run) => run.slug));
+  const applicationKeys = new Set(
+    (scopedRuns.length > 0 ? scopedRuns : enrichedRuns).map((run) => run.applicationKey),
+  );
+
+  return defects.filter((defect) => {
+    const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
+    if (!withinRange(time, range.start, range.end)) return false;
+    if (filters.applicationFilter !== "all" && defect.applicationKey !== filters.applicationFilter) return false;
+    if (filters.runFilter !== "all" && defect.runSlug !== filters.runFilter) return false;
+    if (hasMultipleEnvironments && filters.environmentFilter !== "all" && !defect.environments.includes(filters.environmentFilter)) return false;
+    if (defect.runSlug) return runSlugs.has(defect.runSlug);
+    return applicationKeys.has(defect.applicationKey);
+  });
+}
+
+function filterDefectsByRangeOnly(
+  defects: CompanyDashboardData["defects"],
+  range: Range,
+  sourceFilter: string,
+): CompanyDashboardData["defects"] {
+  if (sourceFilter === "integration") return [];
+  return defects.filter((defect) => {
+    const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
+    return withinRange(time, range.start, range.end);
+  });
+}
+
+function filterAlertsByRange(alerts: CompanyDashboardData["alerts"], range: Range): CompanyDashboardData["alerts"] {
+  return alerts.filter((alert) => withinRange(toTimestamp(alert.timestamp), range.start, range.end));
+}
+
+function filterRelevantAlerts(alerts: CompanyDashboardData["alerts"], range: Range): CompanyDashboardData["alerts"] {
+  return alerts
+    .filter((alert) => {
+      if (range.start == null || range.end == null) return true;
+      return withinRange(toTimestamp(alert.timestamp), range.start, range.end);
+    })
+    .slice(0, 4);
+}
+
+function buildRiskRuns(filteredRuns: EnrichedRun[]): EnrichedRun[] {
+  return [...filteredRuns]
+    .filter((run) => run.riskLevel !== "stable")
+    .sort((left, right) => {
+      if (riskWeight(left.riskLevel) !== riskWeight(right.riskLevel)) {
+        return riskWeight(right.riskLevel) - riskWeight(left.riskLevel);
+      }
+      if ((right.deltaFailCount ?? 0) !== (left.deltaFailCount ?? 0)) {
+        return (right.deltaFailCount ?? 0) - (left.deltaFailCount ?? 0);
+      }
+      return left.passRate - right.passRate;
+    });
+}
+
+function findWorstRegression(filteredRuns: EnrichedRun[]): EnrichedRun | null {
+  return (
+    [...filteredRuns]
+      .filter((run) => run.isRegression)
+      .sort((left, right) => (left.deltaPassRate ?? 0) - (right.deltaPassRate ?? 0))[0] ?? null
+  );
+}
+
+function isRecurringProblem(topApplication: ApplicationAggregate | null, riskRuns: EnrichedRun[]): boolean {
+  if (!topApplication) return false;
+  return topApplication.regressions >= 2 || topApplication.defects >= 4 || riskRuns.filter((run) => run.applicationKey === topApplication.key).length >= 2;
+}
+
+function computeTrendSummary(
+  activeCompareEnabled: boolean,
+  executiveSummary: ExecutiveSummary,
+  previousSummary: ExecutiveSummary,
+): { label: string; tone: InsightTone } {
+  const delta = executiveSummary.passRate - previousSummary.passRate;
+  if (!activeCompareEnabled || previousSummary.totalRuns === 0) {
+    if (executiveSummary.passRate >= 92) return { label: "Saúde forte", tone: "positive" };
+    if (executiveSummary.passRate >= 80) return { label: "Atenção moderada", tone: "warning" };
+    return { label: "Risco elevado", tone: "critical" };
+  }
+  if (delta >= 2) return { label: "Melhorou", tone: "positive" };
+  if (delta <= -2) return { label: "Piorou", tone: "critical" };
+  return { label: "Estável", tone: "neutral" };
+}
+
+function buildInsights(input: {
+  activeCompareEnabled: boolean;
+  executiveSummary: ExecutiveSummary;
+  previousSummary: ExecutiveSummary;
+  topApplication: ApplicationAggregate | null;
+  worstRegression: EnrichedRun | null;
+  topRiskRun: EnrichedRun | null;
+  recurringProblem: boolean;
+  relevantAlerts: CompanyDashboardData["alerts"];
+}): InsightItem[] {
+  const {
+    activeCompareEnabled,
+    executiveSummary,
+    previousSummary,
+    topApplication,
+    worstRegression,
+    topRiskRun,
+    recurringProblem,
+    relevantAlerts,
+  } = input;
+  const items: InsightItem[] = [];
+
+  if (activeCompareEnabled && previousSummary.totalRuns > 0) {
+    const delta = executiveSummary.passRate - previousSummary.passRate;
+    items.push({
+      id: "trend",
+      title: describeQualityTrendTitle(delta),
+      detail: `Pass rate médio atual em ${formatPercent(executiveSummary.passRate)} contra ${formatPercent(previousSummary.passRate)} no período anterior comparável.`,
+      tone: toneForTrendDelta(delta),
+    });
+  }
+
+  if (topApplication) {
+    items.push({
+      id: "app",
+      title: `${topApplication.label} concentra a maior pressão de qualidade.`,
+      detail: `${topApplication.defects} defeito(s), ${topApplication.regressions} regressão(ões) e ${formatPercent(topApplication.failRate)} de taxa de falha no recorte filtrado.`,
+      tone: riskTone(topApplication.riskLevel),
+    });
+  }
+
+  if (worstRegression) {
+    items.push({
+      id: "regression",
+      title: `${worstRegression.title} foi a principal regressão observada.`,
+      detail: `A execução caiu ${Math.abs(worstRegression.deltaPassRate ?? 0).toFixed(1)} p.p. e gerou ${worstRegression.directDefectCount} defeito(s) direto(s).`,
+      tone: "critical",
+    });
+  }
+
+  if (topRiskRun) {
+    items.push({
+      id: "risk",
+      title: recurringProblem ? "O problema parece recorrente." : "O problema parece mais pontual.",
+      detail: recurringProblem
+        ? `${topRiskRun.applicationName} repete sinais de risco em mais de uma execução ou concentração de defeitos.`
+        : `O maior risco atual está concentrado em ${topRiskRun.title}, sem repetição forte em outras execuções filtradas.`,
+      tone: recurringProblem ? "warning" : "neutral",
+    });
+  }
+
+  if (relevantAlerts[0]) {
+    items.push({
+      id: "alerts",
+      title: "Alertas recentes reforçam o contexto do período.",
+      detail: `${relevantAlerts[0].message} (${formatDateTime(relevantAlerts[0].timestamp)}).`,
+      tone: relevantAlerts[0].severity === "critical" ? "critical" : "warning",
+    });
+  }
+
+  return items.slice(0, 5);
+}
+
+function buildOverviewAnswers(input: {
+  trendSummary: { label: string; tone: InsightTone };
+  activeCompareEnabled: boolean;
+  executiveSummary: ExecutiveSummary;
+  previousSummary: ExecutiveSummary;
+  topApplication: ApplicationAggregate | null;
+  worstRegression: EnrichedRun | null;
+  topRiskRun: EnrichedRun | null;
+}) {
+  const { trendSummary, activeCompareEnabled, executiveSummary, previousSummary, topApplication, worstRegression, topRiskRun } = input;
+  return [
+    {
+      label: "Empresa melhorou ou piorou?",
+      value: trendSummary.label,
+      detail:
+        activeCompareEnabled && previousSummary.totalRuns > 0
+          ? `${buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.").label}.`
+          : `Pass rate médio em ${formatPercent(executiveSummary.passRate)} no recorte atual.`,
+      tone: trendSummary.tone,
+    },
+    {
+      label: "Aplicação puxando para baixo",
+      value: topApplication ? topApplication.label : "Sem concentração clara",
+      detail: topApplication
+        ? `${formatPercent(topApplication.passRate)} de pass rate, ${topApplication.defects} defeitos e ${topApplication.regressions} regressão(ões).`
+        : "Não há massa suficiente para destacar uma aplicação dominante.",
+      tone: topApplication ? riskTone(topApplication.riskLevel) : "neutral",
+    },
+    {
+      label: "Run com regressão",
+      value: worstRegression ? worstRegression.title : "Sem regressão relevante",
+      detail: worstRegression
+        ? `${worstRegression.applicationName} caiu ${Math.abs(worstRegression.deltaPassRate ?? 0).toFixed(1)} p.p. em relação à execução anterior.`
+        : "O recorte atual não mostra regressão relevante frente às execuções anteriores.",
+      tone: worstRegression ? "critical" : "positive",
+    },
+    {
+      label: "Onde está o risco",
+      value: topRiskRun ? topRiskRun.applicationName : "Risco distribuído baixo",
+      detail: topRiskRun
+        ? `${topRiskRun.title} combina ${topRiskRun.stats.fail} falha(s), ${topRiskRun.stats.blocked} bloqueio(s) e ${topRiskRun.directDefectCount} defeito(s) direto(s).`
+        : "Nenhuma run entrou no bloco crítico ou de atenção com o filtro atual.",
+      tone: topRiskRun ? riskTone(topRiskRun.riskLevel) : "positive",
+    },
+  ];
+}
+
+function buildApplicationRanking(
+  filteredRuns: EnrichedRun[],
+  filteredDefects: CompanyDashboardData["defects"],
+): ApplicationAggregate[] {
+  const map = new Map<string, ApplicationAggregate>();
+
+  for (const run of filteredRuns) {
+    const current = map.get(run.applicationKey) ?? {
+      key: run.applicationKey,
+      label: run.applicationName,
+      runs: 0,
+      totalCases: 0,
+      passRate: 0,
+      failRate: 0,
+      blocked: 0,
+      defects: 0,
+      regressions: 0,
+      riskLevel: "stable" as RiskLevel,
+    };
+    current.runs += 1;
+    current.totalCases += run.stats.total;
+    current.blocked += run.stats.blocked;
+    if (run.isRegression) current.regressions += 1;
+    current.defects += run.directDefectCount;
+    map.set(run.applicationKey, current);
+  }
+
+  for (const defect of filteredDefects) {
+    const current = map.get(defect.applicationKey);
+    if (current) current.defects += defect.runSlug ? 0 : 1;
+  }
+
+  for (const [key, aggregate] of map.entries()) {
+    const appRuns = filteredRuns.filter((run) => run.applicationKey === key);
+    const totalCases = appRuns.reduce((sum, run) => sum + run.stats.total, 0);
+    const totalPass = appRuns.reduce((sum, run) => sum + run.stats.pass, 0);
+    const totalFail = appRuns.reduce((sum, run) => sum + run.stats.fail, 0);
+    aggregate.passRate = totalCases > 0 ? (totalPass / totalCases) * 100 : 0;
+    aggregate.failRate = totalCases > 0 ? (totalFail / totalCases) * 100 : 0;
+    if (aggregate.failRate >= 15 || aggregate.defects >= 4 || aggregate.regressions >= 2) aggregate.riskLevel = "critical";
+    else if (aggregate.failRate > 0 || aggregate.defects > 0 || aggregate.regressions > 0 || aggregate.blocked > 0) aggregate.riskLevel = "warning";
+    else aggregate.riskLevel = "stable";
+  }
+
+  return Array.from(map.values()).sort((left, right) => {
+    if (riskWeight(left.riskLevel) !== riskWeight(right.riskLevel)) {
+      return riskWeight(right.riskLevel) - riskWeight(left.riskLevel);
+    }
+    if (right.defects !== left.defects) return right.defects - left.defects;
+    if (right.failRate !== left.failRate) return right.failRate - left.failRate;
+    return left.passRate - right.passRate;
+  });
+}
+
+function buildFilterOptions(
+  enrichedRuns: EnrichedRun[],
+  applications: CompanyDashboardData["applications"] | undefined,
+  companyMembers: CompanyDashboardData["companyMembers"] | undefined,
+) {
+  const appMap = new Map<string, { key: string; label: string }>();
+  for (const run of enrichedRuns) {
+    appMap.set(run.applicationKey, { key: run.applicationKey, label: run.applicationName });
+  }
+  for (const app of applications ?? []) {
+    const key = app.slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); // NOSONAR: verified no catastrophic backtracking
+    if (!key || appMap.has(key)) continue;
+    appMap.set(key, { key, label: app.name });
+  }
+  const applicationsList = Array.from(appMap.values());
+  const runs = enrichedRuns.map((run) => ({ key: run.slug, label: run.title }));
+  const statuses = buildStatusOptions(enrichedRuns);
+  const environments = Array.from(new Set(enrichedRuns.flatMap((run) => run.environments))).sort((left, right) =>
+    left.localeCompare(right, "pt-BR", { sensitivity: "base" }),
+  );
+  const runResponsibles = enrichedRuns.flatMap((run) => parseCommaList(run.responsibleLabel));
+  const memberNames = (companyMembers ?? []).map((m) => m.name);
+  const responsibles = Array.from(new Set([...runResponsibles, ...memberNames])).sort((left, right) =>
+    left.localeCompare(right, "pt-BR", { sensitivity: "base" }),
+  );
+  return { applications: applicationsList, runs, statuses, environments, responsibles };
+}
+
+function buildDraftFilterOptions(
+  enrichedRuns: EnrichedRun[],
+  applications: CompanyDashboardData["applications"] | undefined,
+  filters: DraftFilterInputs,
+) {
+  const matchesDraftRun = (run: EnrichedRun, ignore?: ContextualFilterKey) => {
+    if (!withinRange(run.time, filters.ranges.start, filters.ranges.end)) return false;
+    if (ignore !== "applicationFilter" && filters.applicationFilter !== "all" && run.applicationKey !== filters.applicationFilter) return false;
+    if (ignore !== "runFilter" && filters.runFilter !== "all" && run.slug !== filters.runFilter) return false;
+    if (filters.sourceFilter !== "all" && run.sourceType !== filters.sourceFilter) return false;
+    if (ignore !== "environmentFilter" && filters.environmentFilter !== "all" && !run.environments.includes(filters.environmentFilter)) return false;
+    if (ignore !== "responsibleFilter" && filters.responsibleFilter !== "all" && !parseCommaList(run.responsibleLabel).includes(filters.responsibleFilter)) return false;
+    if (filters.riskFilter !== "all" && run.riskLevel !== filters.riskFilter) return false;
+    if (ignore !== "statusFilter" && !matchesStatusFilter(run, filters.statusFilter)) return false;
+    if (filters.onlyWithDefects && run.directDefectCount < 1) return false;
+    if (filters.onlyRegression && !run.isRegression) return false;
+    return true;
+  };
+
+  const appMap = new Map<string, { key: string; label: string }>();
+  for (const run of enrichedRuns) {
+    appMap.set(run.applicationKey, { key: run.applicationKey, label: run.applicationName });
+  }
+  const draftRunProjectCodes = new Set(
+    enrichedRuns.map((run) => run.projectCode?.trim().toUpperCase()).filter(Boolean),
+  );
+  for (const app of applications ?? []) {
+    const key = app.slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); // NOSONAR: verified no catastrophic backtracking
+    const code = app.qaseProjectCode?.trim().toUpperCase();
+    if (!key || appMap.has(key) || (code && draftRunProjectCodes.has(code))) continue;
+    appMap.set(key, { key, label: app.name });
+  }
+  const applicationsList = Array.from(appMap.values());
+  const runs = enrichedRuns
+    .filter((run) => matchesDraftRun(run, "runFilter"))
+    .map((run) => ({ key: run.slug, label: run.title }));
+  const statuses = buildStatusOptions(
+    enrichedRuns.filter((run) => matchesDraftRun(run, "statusFilter")),
+  );
+  const environments = Array.from(
+    new Set(
+      enrichedRuns
+        .filter((run) => matchesDraftRun(run, "environmentFilter"))
+        .flatMap((run) => run.environments),
+    ),
+  ).sort((left, right) => left.localeCompare(right, "pt-BR", { sensitivity: "base" }));
+  const responsibles = Array.from(
+    new Set(
+      enrichedRuns
+        .filter((run) => matchesDraftRun(run, "responsibleFilter"))
+        .flatMap((run) => parseCommaList(run.responsibleLabel)),
+    ),
+  ).sort((left, right) => left.localeCompare(right, "pt-BR", { sensitivity: "base" }));
+
+  return { applications: applicationsList, runs, statuses, environments, responsibles };
+}
+
+export default function CompanyIntelligenceDashboardClient(props: Readonly<CompanyDashboardData>) {
   const router = useRouter();
   const { user } = useAuthUser();
 
@@ -1695,13 +2414,11 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   
       // Executive Analysis via Agent API
       const [executiveAnalysis, setExecutiveAnalysis] = useState<any>(null);
-      const [analysisLoading, setAnalysisLoading] = useState(false);
 
       useEffect(() => {
         const loadExecutiveAnalysis = async () => {
           if (props.runs.length === 0) return;
-      
-          setAnalysisLoading(true);
+
           try {
             const response = await fetch("/api/dashboard/executive-analysis", {
               method: "POST",
@@ -1727,8 +2444,6 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             }
           } catch (error) {
             console.error("[executive-analysis] Failed to load:", error);
-          } finally {
-            setAnalysisLoading(false);
           }
         };
     
@@ -1752,7 +2467,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const [defectScope, setDefectScope] = useState<DefectScope>(DEFAULT_FILTERS.defectScope);
   const [applicationFilter, setApplicationFilter] = useState<string>(DEFAULT_FILTERS.applicationFilter);
   const [runFilter, setRunFilter] = useState<string>(DEFAULT_FILTERS.runFilter);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>(DEFAULT_FILTERS.statusFilter);
+  const [statusFilter, setStatusFilter] = useState<string>(DEFAULT_FILTERS.statusFilter);
   const [environmentFilter, setEnvironmentFilter] = useState<string>(DEFAULT_FILTERS.environmentFilter);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>(DEFAULT_FILTERS.sourceFilter);
   const [responsibleFilter, setResponsibleFilter] = useState<string>(DEFAULT_FILTERS.responsibleFilter);
@@ -1815,164 +2530,52 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const activeChartView = activeFilters.chartView;
   const activeChartMetric = activeFilters.chartMetric;
   const activeDefectScope = activeFilters.defectScope;
-  const activeApplicationFilter = activeFilters.applicationFilter;
-  const activeRunFilter = activeFilters.runFilter;
-  const activeStatusFilter = activeFilters.statusFilter;
-  const activeEnvironmentFilter = activeFilters.environmentFilter;
   const activeSourceFilter = activeFilters.sourceFilter;
-  const activeResponsibleFilter = activeFilters.responsibleFilter;
-  const activeRiskFilter = activeFilters.riskFilter;
   const activeCompareEnabled = activeFilters.compareEnabled;
-  const activeOnlyWithDefects = activeFilters.onlyWithDefects;
-  const activeOnlyRegression = activeFilters.onlyRegression;
   const activeDateFrom = activeFilters.dateFrom;
   const activeDateTo = activeFilters.dateTo;
 
   const ranges = useMemo(() => resolveRange(activePeriodPreset, activeDateFrom, activeDateTo), [activePeriodPreset, activeDateFrom, activeDateTo]);
   const previousRange = useMemo(() => (activeCompareEnabled ? buildPreviousRange(ranges) : null), [activeCompareEnabled, ranges]);
 
-  const enrichedRuns = useMemo<EnrichedRun[]>(() => {
-    const directDefects = new Map<string, number>();
-    const appDefects = new Map<string, number>();
+  const enrichedRuns = useMemo(
+    () => buildEnrichedRuns(props.runs, props.defects),
+    [props.defects, props.runs],
+  );
 
-    for (const defect of props.defects) {
-      if (defect.runSlug) {
-        directDefects.set(defect.runSlug, (directDefects.get(defect.runSlug) ?? 0) + 1);
-      }
-      appDefects.set(defect.applicationKey, (appDefects.get(defect.applicationKey) ?? 0) + 1);
-    }
+  const filterOptions = useMemo(
+    () => buildFilterOptions(enrichedRuns, props.applications, props.companyMembers),
+    [enrichedRuns, props.companyMembers, props.applications],
+  );
 
-    const sequenceByApp = new Map<string, EnrichedRun[]>();
-    const baseRuns = [...props.runs]
-      .map((run) => {
-        const time = Math.max(toTimestamp(run.updatedAt), toTimestamp(run.createdAt));
-        const total = Math.max(run.stats.total, 1);
-        const passRate = run.stats.passRate ?? (run.stats.pass / total) * 100;
-        const failRate = (run.stats.fail / total) * 100;
-        const directDefectCount = directDefects.get(run.slug) ?? 0;
-        const appDefectCount = appDefects.get(run.applicationKey) ?? 0;
-        return {
-          ...run,
-          time,
-          passRate,
-          failRate,
-          directDefectCount,
-          appDefectCount,
-          deltaPassRate: null,
-          deltaFailCount: null,
-          isRegression: false,
-          riskLevel: determineRunRisk(run, directDefectCount),
-        } as EnrichedRun;
-      })
-      .sort((left, right) => left.time - right.time);
-
-    for (const run of baseRuns) {
-      const list = sequenceByApp.get(run.applicationKey) ?? [];
-      const previous = list.at(-1) ?? null;
-      run.deltaPassRate = previous ? run.passRate - previous.passRate : null;
-      run.deltaFailCount = previous ? run.stats.fail - previous.stats.fail : null;
-      run.isRegression = Boolean(
-        previous &&
-        ((run.deltaPassRate ?? 0) <= -5 || (run.deltaFailCount ?? 0) >= 2 || run.directDefectCount > previous.directDefectCount),
-      );
-      list.push(run);
-      sequenceByApp.set(run.applicationKey, list);
-    }
-
-    return baseRuns.sort((left, right) => right.time - left.time);
-  }, [props.defects, props.runs]);
-
-  const filterOptions = useMemo(() => {
-    const appMap = new Map<string, { key: string; label: string }>();
-    // Start with run-derived applications (authoritative keys)
-    for (const run of enrichedRuns) {
-      appMap.set(run.applicationKey, { key: run.applicationKey, label: run.applicationName });
-    }
-    // Add all registered applications not already covered by a run-derived key
-    for (const app of props.applications ?? []) {
-      const key = app.slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-      if (!key || appMap.has(key)) continue;
-      appMap.set(key, { key, label: app.name });
-    }
-    const applications = Array.from(appMap.values());
-    const runs = enrichedRuns.map((run) => ({ key: run.slug, label: run.title }));
-    const statuses = buildStatusOptions(enrichedRuns);
-    const environments = Array.from(new Set(enrichedRuns.flatMap((run) => run.environments))).sort((left, right) =>
-      left.localeCompare(right, "pt-BR", { sensitivity: "base" }),
-    );
-    const runResponsibles = enrichedRuns.flatMap((run) => parseCommaList(run.responsibleLabel));
-    const memberNames = (props.companyMembers ?? []).map((m) => m.name);
-    const responsibles = Array.from(new Set([...runResponsibles, ...memberNames])).sort((left, right) =>
-      left.localeCompare(right, "pt-BR", { sensitivity: "base" }),
-    );
-    return { applications, runs, statuses, environments, responsibles };
-  }, [enrichedRuns, props.companyMembers, props.applications]);
-
-  const draftFilterOptions = useMemo(() => {
-    const matchesDraftRun = (run: EnrichedRun, ignore?: ContextualFilterKey) => {
-      if (!withinRange(run.time, draftRanges.start, draftRanges.end)) return false;
-      if (ignore !== "applicationFilter" && applicationFilter !== "all" && run.applicationKey !== applicationFilter) return false;
-      if (ignore !== "runFilter" && runFilter !== "all" && run.slug !== runFilter) return false;
-      if (sourceFilter !== "all" && run.sourceType !== sourceFilter) return false;
-      if (ignore !== "environmentFilter" && environmentFilter !== "all" && !run.environments.includes(environmentFilter)) return false;
-      if (ignore !== "responsibleFilter" && responsibleFilter !== "all" && !parseCommaList(run.responsibleLabel).includes(responsibleFilter)) return false;
-      if (riskFilter !== "all" && run.riskLevel !== riskFilter) return false;
-      if (ignore !== "statusFilter" && !matchesStatusFilter(run, statusFilter)) return false;
-      if (onlyWithDefects && run.directDefectCount < 1) return false;
-      if (onlyRegression && !run.isRegression) return false;
-      return true;
-    };
-
-    const appMap = new Map<string, { key: string; label: string }>();
-    for (const run of enrichedRuns) {
-      appMap.set(run.applicationKey, { key: run.applicationKey, label: run.applicationName });
-    }
-    const draftRunProjectCodes = new Set(
-      enrichedRuns.map((run) => run.projectCode?.trim().toUpperCase()).filter(Boolean),
-    );
-    for (const app of props.applications ?? []) {
-      const key = app.slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-      const code = app.qaseProjectCode?.trim().toUpperCase();
-      if (!key || appMap.has(key) || (code && draftRunProjectCodes.has(code))) continue;
-      appMap.set(key, { key, label: app.name });
-    }
-    const applications = Array.from(appMap.values());
-    const runs = enrichedRuns
-      .filter((run) => matchesDraftRun(run, "runFilter"))
-      .map((run) => ({ key: run.slug, label: run.title }));
-    const statuses = buildStatusOptions(
-      enrichedRuns.filter((run) => matchesDraftRun(run, "statusFilter")),
-    );
-    const environments = Array.from(
-      new Set(
-        enrichedRuns
-          .filter((run) => matchesDraftRun(run, "environmentFilter"))
-          .flatMap((run) => run.environments),
-      ),
-    ).sort((left, right) => left.localeCompare(right, "pt-BR", { sensitivity: "base" }));
-    const responsibles = Array.from(
-      new Set(
-        enrichedRuns
-          .filter((run) => matchesDraftRun(run, "responsibleFilter"))
-          .flatMap((run) => parseCommaList(run.responsibleLabel)),
-      ),
-    ).sort((left, right) => left.localeCompare(right, "pt-BR", { sensitivity: "base" }));
-
-    return { applications, runs, statuses, environments, responsibles };
-  }, [
-    enrichedRuns,
-    draftRanges,
-    applicationFilter,
-    runFilter,
-    sourceFilter,
-    environmentFilter,
-    responsibleFilter,
-    riskFilter,
-    statusFilter,
-    onlyWithDefects,
-    onlyRegression,
-    props.applications,
-  ]);
+  const draftFilterOptions = useMemo(
+    () => buildDraftFilterOptions(enrichedRuns, props.applications, {
+      ranges: draftRanges,
+      applicationFilter,
+      runFilter,
+      sourceFilter,
+      environmentFilter,
+      responsibleFilter,
+      riskFilter,
+      statusFilter,
+      onlyWithDefects,
+      onlyRegression,
+    }),
+    [
+      enrichedRuns,
+      draftRanges,
+      applicationFilter,
+      runFilter,
+      sourceFilter,
+      environmentFilter,
+      responsibleFilter,
+      riskFilter,
+      statusFilter,
+      onlyWithDefects,
+      onlyRegression,
+      props.applications,
+    ],
+  );
   const hasMultipleEnvironments = filterOptions.environments.length > 1;
 
   useEffect(() => {
@@ -2009,120 +2612,37 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   }, [statusFilter, draftFilterOptions.statuses]);
 
   const filteredRuns = useMemo(
-    () =>
-      enrichedRuns.filter((run) => {
-        if (ranges && !withinRange(run.time, ranges.start, ranges.end)) return false;
-        if (activeApplicationFilter !== "all" && run.applicationKey !== activeApplicationFilter) return false;
-        if (activeRunFilter !== "all" && run.slug !== activeRunFilter) return false;
-        if (activeSourceFilter !== "all" && run.sourceType !== activeSourceFilter) return false;
-        if (hasMultipleEnvironments && activeEnvironmentFilter !== "all" && !run.environments.includes(activeEnvironmentFilter)) return false;
-        if (activeResponsibleFilter !== "all" && !parseCommaList(run.responsibleLabel).includes(activeResponsibleFilter)) return false;
-        if (activeRiskFilter !== "all" && run.riskLevel !== activeRiskFilter) return false;
-        if (!matchesStatusFilter(run, activeStatusFilter)) return false;
-        if (activeOnlyWithDefects && run.directDefectCount < 1) return false;
-        if (activeOnlyRegression && !run.isRegression) return false;
-        return true;
-      }),
-    [
-      enrichedRuns,
-      ranges,
-      activeApplicationFilter,
-      activeRunFilter,
-      activeSourceFilter,
-      activeEnvironmentFilter,
-      hasMultipleEnvironments,
-      activeResponsibleFilter,
-      activeRiskFilter,
-      activeStatusFilter,
-      activeOnlyWithDefects,
-      activeOnlyRegression,
-    ],
+    () => filterEnrichedRuns(enrichedRuns, ranges, activeFilters, hasMultipleEnvironments),
+    [enrichedRuns, ranges, activeFilters, hasMultipleEnvironments],
   );
 
   const previousRuns = useMemo(
-    () =>
-      previousRange
-        ? enrichedRuns.filter((run) => {
-            if (!withinRange(run.time, previousRange.start, previousRange.end)) return false;
-            if (activeApplicationFilter !== "all" && run.applicationKey !== activeApplicationFilter) return false;
-            if (activeRunFilter !== "all" && run.slug !== activeRunFilter) return false;
-            if (activeSourceFilter !== "all" && run.sourceType !== activeSourceFilter) return false;
-            if (hasMultipleEnvironments && activeEnvironmentFilter !== "all" && !run.environments.includes(activeEnvironmentFilter)) return false;
-            if (activeResponsibleFilter !== "all" && !parseCommaList(run.responsibleLabel).includes(activeResponsibleFilter)) return false;
-            if (activeRiskFilter !== "all" && run.riskLevel !== activeRiskFilter) return false;
-            if (!matchesStatusFilter(run, activeStatusFilter)) return false;
-            if (activeOnlyWithDefects && run.directDefectCount < 1) return false;
-            if (activeOnlyRegression && !run.isRegression) return false;
-            return true;
-          })
-        : [],
-    [
-      enrichedRuns,
-      previousRange,
-      activeApplicationFilter,
-      activeRunFilter,
-      activeSourceFilter,
-      activeEnvironmentFilter,
-      hasMultipleEnvironments,
-      activeResponsibleFilter,
-      activeRiskFilter,
-      activeStatusFilter,
-      activeOnlyWithDefects,
-      activeOnlyRegression,
-    ],
+    () => (previousRange ? filterEnrichedRuns(enrichedRuns, previousRange, activeFilters, hasMultipleEnvironments) : []),
+    [enrichedRuns, previousRange, activeFilters, hasMultipleEnvironments],
   );
 
-  const filteredDefects = useMemo(() => {
-    if (activeSourceFilter === "integration") return [];
-    const runSlugs = new Set(filteredRuns.map((run) => run.slug));
-    const applicationKeys = new Set(
-      (filteredRuns.length > 0 ? filteredRuns : enrichedRuns).map((run) => run.applicationKey),
-    );
+  const filteredDefects = useMemo(
+    () => filterDefectsForRange(props.defects, filteredRuns, enrichedRuns, ranges, activeFilters, hasMultipleEnvironments),
+    [props.defects, filteredRuns, enrichedRuns, ranges, activeFilters, hasMultipleEnvironments],
+  );
 
-    return props.defects.filter((defect) => {
-      const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
-      if (!withinRange(time, ranges.start, ranges.end)) return false;
-      if (activeApplicationFilter !== "all" && defect.applicationKey !== activeApplicationFilter) return false;
-      if (activeRunFilter !== "all" && defect.runSlug !== activeRunFilter) return false;
-      if (hasMultipleEnvironments && activeEnvironmentFilter !== "all" && !defect.environments.includes(activeEnvironmentFilter)) return false;
-      if (defect.runSlug) return runSlugs.has(defect.runSlug);
-      return applicationKeys.has(defect.applicationKey);
-    });
-  }, [props.defects, filteredRuns, enrichedRuns, ranges, activeApplicationFilter, activeRunFilter, activeEnvironmentFilter, hasMultipleEnvironments, activeSourceFilter]);
+  const previousDefects = useMemo(
+    () =>
+      previousRange
+        ? filterDefectsForRange(props.defects, previousRuns, enrichedRuns, previousRange, activeFilters, hasMultipleEnvironments)
+        : [],
+    [props.defects, previousRuns, enrichedRuns, previousRange, activeFilters, hasMultipleEnvironments],
+  );
 
-  const previousDefects = useMemo(() => {
-    if (!previousRange || activeSourceFilter === "integration") return [];
-    const runSlugs = new Set(previousRuns.map((run) => run.slug));
-    const applicationKeys = new Set(
-      (previousRuns.length > 0 ? previousRuns : enrichedRuns).map((run) => run.applicationKey),
-    );
+  const periodDefects = useMemo(
+    () => filterDefectsByRangeOnly(props.defects, ranges, activeSourceFilter),
+    [props.defects, ranges, activeSourceFilter],
+  );
 
-    return props.defects.filter((defect) => {
-      const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
-      if (!withinRange(time, previousRange.start, previousRange.end)) return false;
-      if (activeApplicationFilter !== "all" && defect.applicationKey !== activeApplicationFilter) return false;
-      if (activeRunFilter !== "all" && defect.runSlug !== activeRunFilter) return false;
-      if (hasMultipleEnvironments && activeEnvironmentFilter !== "all" && !defect.environments.includes(activeEnvironmentFilter)) return false;
-      if (defect.runSlug) return runSlugs.has(defect.runSlug);
-      return applicationKeys.has(defect.applicationKey);
-    });
-  }, [props.defects, previousRuns, enrichedRuns, previousRange, activeApplicationFilter, activeRunFilter, activeEnvironmentFilter, hasMultipleEnvironments, activeSourceFilter]);
-
-  const periodDefects = useMemo(() => {
-    if (activeSourceFilter === "integration") return [];
-    return props.defects.filter((defect) => {
-      const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
-      return withinRange(time, ranges.start, ranges.end);
-    });
-  }, [props.defects, ranges, activeSourceFilter]);
-
-  const previousPeriodDefects = useMemo(() => {
-    if (!previousRange || activeSourceFilter === "integration") return [];
-    return props.defects.filter((defect) => {
-      const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
-      return withinRange(time, previousRange.start, previousRange.end);
-    });
-  }, [props.defects, previousRange, activeSourceFilter]);
+  const previousPeriodDefects = useMemo(
+    () => (previousRange ? filterDefectsByRangeOnly(props.defects, previousRange, activeSourceFilter) : []),
+    [props.defects, previousRange, activeSourceFilter],
+  );
 
   const executiveSummary = useMemo(
     () => summarizeRuns(filteredRuns, filteredDefects),
@@ -2138,22 +2658,12 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const chartDefectsPrevious = activeDefectScope === "periodTotal" ? previousPeriodDefects : previousDefects;
 
   const chartLogsCurrent = useMemo(
-    () =>
-      props.alerts.filter((alert) => {
-        const time = toTimestamp(alert.timestamp);
-        return withinRange(time, ranges.start, ranges.end);
-      }),
+    () => filterAlertsByRange(props.alerts, ranges),
     [props.alerts, ranges],
   );
 
   const chartLogsPrevious = useMemo(
-    () =>
-      previousRange
-        ? props.alerts.filter((alert) => {
-            const time = toTimestamp(alert.timestamp);
-            return withinRange(time, previousRange.start, previousRange.end);
-          })
-        : [],
+    () => (previousRange ? filterAlertsByRange(props.alerts, previousRange) : []),
     [props.alerts, previousRange],
   );
 
@@ -2173,111 +2683,31 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const chartLogsPoints = useMemo(() => series.slice(-12), [series]);
   const previousChartLogsPoints = useMemo(() => previousSeries.slice(-12), [previousSeries]);
 
-  const applicationRanking = useMemo<ApplicationAggregate[]>(() => {
-    const map = new Map<string, ApplicationAggregate>();
-
-    for (const run of filteredRuns) {
-      const current = map.get(run.applicationKey) ?? {
-        key: run.applicationKey,
-        label: run.applicationName,
-        runs: 0,
-        totalCases: 0,
-        passRate: 0,
-        failRate: 0,
-        blocked: 0,
-        defects: 0,
-        regressions: 0,
-        riskLevel: "stable" as RiskLevel,
-      };
-      current.runs += 1;
-      current.totalCases += run.stats.total;
-      current.blocked += run.stats.blocked;
-      if (run.isRegression) current.regressions += 1;
-      current.defects += run.directDefectCount;
-      map.set(run.applicationKey, current);
-    }
-
-    for (const defect of filteredDefects) {
-      const current = map.get(defect.applicationKey);
-      if (current) current.defects += defect.runSlug ? 0 : 1;
-    }
-
-    for (const [key, aggregate] of map.entries()) {
-      const appRuns = filteredRuns.filter((run) => run.applicationKey === key);
-      const totalCases = appRuns.reduce((sum, run) => sum + run.stats.total, 0);
-      const totalPass = appRuns.reduce((sum, run) => sum + run.stats.pass, 0);
-      const totalFail = appRuns.reduce((sum, run) => sum + run.stats.fail, 0);
-      aggregate.passRate = totalCases > 0 ? (totalPass / totalCases) * 100 : 0;
-      aggregate.failRate = totalCases > 0 ? (totalFail / totalCases) * 100 : 0;
-      if (aggregate.failRate >= 15 || aggregate.defects >= 4 || aggregate.regressions >= 2) aggregate.riskLevel = "critical";
-      else if (aggregate.failRate > 0 || aggregate.defects > 0 || aggregate.regressions > 0 || aggregate.blocked > 0) aggregate.riskLevel = "warning";
-      else aggregate.riskLevel = "stable";
-    }
-
-    return Array.from(map.values()).sort((left, right) => {
-      if (riskWeight(left.riskLevel) !== riskWeight(right.riskLevel)) {
-        return riskWeight(right.riskLevel) - riskWeight(left.riskLevel);
-      }
-      if (right.defects !== left.defects) return right.defects - left.defects;
-      if (right.failRate !== left.failRate) return right.failRate - left.failRate;
-      return left.passRate - right.passRate;
-    });
-  }, [filteredRuns, filteredDefects]);
-
-  const riskRuns = useMemo(
-    () =>
-      [...filteredRuns]
-        .filter((run) => run.riskLevel !== "stable")
-        .sort((left, right) => {
-          if (riskWeight(left.riskLevel) !== riskWeight(right.riskLevel)) {
-            return riskWeight(right.riskLevel) - riskWeight(left.riskLevel);
-          }
-          if ((right.deltaFailCount ?? 0) !== (left.deltaFailCount ?? 0)) {
-            return (right.deltaFailCount ?? 0) - (left.deltaFailCount ?? 0);
-          }
-          return left.passRate - right.passRate;
-        }),
-    [filteredRuns],
+  const applicationRanking = useMemo(
+    () => buildApplicationRanking(filteredRuns, filteredDefects),
+    [filteredRuns, filteredDefects],
   );
 
+  const riskRuns = useMemo(() => buildRiskRuns(filteredRuns), [filteredRuns]);
+
   const relevantAlerts = useMemo(
-    () =>
-      props.alerts
-        .filter((alert) => {
-          const time = toTimestamp(alert.timestamp);
-          if (ranges.start == null || ranges.end == null) return true;
-          return withinRange(time, ranges.start, ranges.end);
-        })
-        .slice(0, 4),
+    () => filterRelevantAlerts(props.alerts, ranges),
     [props.alerts, ranges],
   );
 
   const topApplication = applicationRanking[0] ?? null;
-  const worstRegression = useMemo(
-    () =>
-      [...filteredRuns]
-        .filter((run) => run.isRegression)
-        .sort((left, right) => (left.deltaPassRate ?? 0) - (right.deltaPassRate ?? 0))[0] ?? null,
-    [filteredRuns],
-  );
+  const worstRegression = useMemo(() => findWorstRegression(filteredRuns), [filteredRuns]);
 
   const topRiskRun = riskRuns[0] ?? null;
-  const recurringProblem = useMemo(() => {
-    if (!topApplication) return false;
-    return topApplication.regressions >= 2 || topApplication.defects >= 4 || riskRuns.filter((run) => run.applicationKey === topApplication.key).length >= 2;
-  }, [topApplication, riskRuns]);
+  const recurringProblem = useMemo(
+    () => isRecurringProblem(topApplication, riskRuns),
+    [topApplication, riskRuns],
+  );
 
-  const trendSummary = useMemo(() => {
-    const delta = executiveSummary.passRate - previousSummary.passRate;
-    if (!activeCompareEnabled || previousSummary.totalRuns === 0) {
-      if (executiveSummary.passRate >= 92) return { label: "Saúde forte", tone: "positive" as const };
-      if (executiveSummary.passRate >= 80) return { label: "Atenção moderada", tone: "warning" as const };
-      return { label: "Risco elevado", tone: "critical" as const };
-    }
-    if (delta >= 2) return { label: "Melhorou", tone: "positive" as const };
-    if (delta <= -2) return { label: "Piorou", tone: "critical" as const };
-    return { label: "Estável", tone: "neutral" as const };
-  }, [activeCompareEnabled, executiveSummary.passRate, previousSummary.passRate, previousSummary.totalRuns]);
+  const trendSummary = useMemo(
+    () => computeTrendSummary(activeCompareEnabled, executiveSummary, previousSummary),
+    [activeCompareEnabled, executiveSummary.passRate, previousSummary.passRate, previousSummary.totalRuns],
+  );
 
   const syncDraftFilters = (next: DashboardFilterState) => {
     setPeriodPreset(next.periodPreset);
@@ -2297,10 +2727,6 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     setOnlyRegression(next.onlyRegression);
     setDateFrom(next.dateFrom);
     setDateTo(next.dateTo);
-  };
-
-  const applyAnalysis = (next: DashboardFilterState = currentDraftFilters) => {
-    syncDraftFilters(next);
   };
 
   const resetFilters = () => {
@@ -2394,7 +2820,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               writeLine("Análise executiva avançada", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
         
               // Risk Assessment
-              const riskColor: [number, number, number] = executiveAnalysis.riskAssessment.level === "critical" ? [220, 38, 38] : executiveAnalysis.riskAssessment.level === "warning" ? [217, 119, 6] : [34, 197, 94];
+              const riskColor = riskColorFor(executiveAnalysis.riskAssessment.level);
               writeLine(`Nível de Risco: ${executiveAnalysis.riskAssessment.level.toUpperCase()}`, { size: 11, weight: "bold", color: riskColor, gapAfter: 4 });
               writeLine(executiveAnalysis.riskAssessment.description, { size: 10, color: [75, 85, 99], gapAfter: 8 });
         
@@ -2428,7 +2854,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       // Métrica 2: Variação de qualidade entre períodos
       if (activeCompareEnabled && previousSummary.totalRuns > 0) {
         const deltaPass = executiveSummary.passRate - previousSummary.passRate;
-        const trend = deltaPass > 2 ? "tendência ascendente" : deltaPass < -2 ? "tendência descendente" : "estabilidade";
+        const trend = describeQualityTrend(deltaPass);
         technicalInsights.push(`Qualidade em ${trend} (Î” ${deltaPass.toFixed(1)}p.p.))`);
       }
       
@@ -2487,7 +2913,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         filteredRuns.forEach((run, index) => {
           writeLine(`${index + 1}. ${run.title}`, { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
           writeLine(
-            `${run.applicationName} | ${run.sourceType === "manual" ? "Manual" : `Integração${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`} | status ${run.statusLabel} | pass ${formatPercent(run.passRate)} | falhas ${run.stats.fail} | bloqueios ${run.stats.blocked} | defeitos ${run.directDefectCount} | atualização ${formatDateTime(run.updatedAt ?? run.createdAt)}`,
+            `${run.applicationName} | ${formatRunSource(run)} | status ${run.statusLabel} | pass ${formatPercent(run.passRate)} | falhas ${run.stats.fail} | bloqueios ${run.stats.blocked} | defeitos ${run.directDefectCount} | atualização ${formatDateTime(run.updatedAt ?? run.createdAt)}`,
             { size: 10, color: [75, 85, 99], indent: 10, gapAfter: 8 },
           );
         });
@@ -2514,41 +2940,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   }
 
   const overviewAnswers = useMemo(
-    () => [
-      {
-        label: "Empresa melhorou ou piorou?",
-        value: trendSummary.label,
-        detail:
-          activeCompareEnabled && previousSummary.totalRuns > 0
-            ? `${buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.").label}.`
-            : `Pass rate médio em ${formatPercent(executiveSummary.passRate)} no recorte atual.`,
-        tone: trendSummary.tone,
-      },
-      {
-        label: "Aplicação puxando para baixo",
-        value: topApplication ? topApplication.label : "Sem concentração clara",
-        detail: topApplication
-          ? `${formatPercent(topApplication.passRate)} de pass rate, ${topApplication.defects} defeitos e ${topApplication.regressions} regressão(ões).`
-          : "Não há massa suficiente para destacar uma aplicação dominante.",
-        tone: topApplication ? riskTone(topApplication.riskLevel) : "neutral",
-      },
-      {
-        label: "Run com regressão",
-        value: worstRegression ? worstRegression.title : "Sem regressão relevante",
-        detail: worstRegression
-          ? `${worstRegression.applicationName} caiu ${Math.abs(worstRegression.deltaPassRate ?? 0).toFixed(1)} p.p. em relação à execução anterior.`
-          : "O recorte atual não mostra regressão relevante frente às execuções anteriores.",
-        tone: worstRegression ? "critical" : "positive",
-      },
-      {
-        label: "Onde está o risco",
-        value: topRiskRun ? topRiskRun.applicationName : "Risco distribuído baixo",
-        detail: topRiskRun
-          ? `${topRiskRun.title} combina ${topRiskRun.stats.fail} falha(s), ${topRiskRun.stats.blocked} bloqueio(s) e ${topRiskRun.directDefectCount} defeito(s) direto(s).`
-          : "Nenhuma run entrou no bloco crítico ou de atenção com o filtro atual.",
-        tone: topRiskRun ? riskTone(topRiskRun.riskLevel) : "positive",
-      },
-    ],
+    () => buildOverviewAnswers({ trendSummary, activeCompareEnabled, executiveSummary, previousSummary, topApplication, worstRegression, topRiskRun }),
     [
       trendSummary,
       activeCompareEnabled,
@@ -2561,76 +2953,20 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     ],
   );
 
-  const insights = useMemo<InsightItem[]>(() => {
-    const items: InsightItem[] = [];
-
-    if (activeCompareEnabled && previousSummary.totalRuns > 0) {
-      const delta = executiveSummary.passRate - previousSummary.passRate;
-      items.push({
-        id: "trend",
-        title: delta >= 2 ? "A qualidade melhorou no período." : delta <= -2 ? "A qualidade piorou no período." : "A qualidade ficou estável no período.",
-        detail: `Pass rate médio atual em ${formatPercent(executiveSummary.passRate)} contra ${formatPercent(previousSummary.passRate)} no período anterior comparável.`,
-        tone: delta >= 2 ? "positive" : delta <= -2 ? "critical" : "neutral",
-      });
-    }
-
-    if (topApplication) {
-      items.push({
-        id: "app",
-        title: `${topApplication.label} concentra a maior pressão de qualidade.`,
-        detail: `${topApplication.defects} defeito(s), ${topApplication.regressions} regressão(ões) e ${formatPercent(topApplication.failRate)} de taxa de falha no recorte filtrado.`,
-        tone: riskTone(topApplication.riskLevel),
-      });
-    }
-
-    if (worstRegression) {
-      items.push({
-        id: "regression",
-        title: `${worstRegression.title} foi a principal regressão observada.`,
-        detail: `A execução caiu ${Math.abs(worstRegression.deltaPassRate ?? 0).toFixed(1)} p.p. e gerou ${worstRegression.directDefectCount} defeito(s) direto(s).`,
-        tone: "critical",
-      });
-    }
-
-    if (topRiskRun) {
-      items.push({
-        id: "risk",
-        title: recurringProblem ? "O problema parece recorrente." : "O problema parece mais pontual.",
-        detail: recurringProblem
-          ? `${topRiskRun.applicationName} repete sinais de risco em mais de uma execução ou concentração de defeitos.`
-          : `O maior risco atual está concentrado em ${topRiskRun.title}, sem repetição forte em outras execuções filtradas.`,
-        tone: recurringProblem ? "warning" : "neutral",
-      });
-    }
-
-    if (relevantAlerts[0]) {
-      items.push({
-        id: "alerts",
-        title: "Alertas recentes reforçam o contexto do período.",
-        detail: `${relevantAlerts[0].message} (${formatDateTime(relevantAlerts[0].timestamp)}).`,
-        tone: relevantAlerts[0].severity === "critical" ? "critical" : "warning",
-      });
-    }
-
-    return items.slice(0, 5);
-  }, [
-    activeCompareEnabled,
-    executiveSummary.passRate,
-    previousSummary.passRate,
-    previousSummary.totalRuns,
-    topApplication,
-    worstRegression,
-    topRiskRun,
-    recurringProblem,
-    relevantAlerts,
-  ]);
-
-  const draftFilterChips = useMemo(
-    () => buildResolvedFilterChipList(currentDraftFilters, filterOptions),
-    [currentDraftFilters, filterOptions],
+  const insights = useMemo(
+    () => buildInsights({ activeCompareEnabled, executiveSummary, previousSummary, topApplication, worstRegression, topRiskRun, recurringProblem, relevantAlerts }),
+    [
+      activeCompareEnabled,
+      executiveSummary.passRate,
+      previousSummary.passRate,
+      previousSummary.totalRuns,
+      topApplication,
+      worstRegression,
+      topRiskRun,
+      recurringProblem,
+      relevantAlerts,
+    ],
   );
-
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
 
   const activeFilterChips = useMemo(
     () => buildResolvedFilterChipList(activeFilters, filterOptions),
@@ -2644,7 +2980,6 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const chartUsesGrouping = isTimeChartView(activeChartView);
   const chartMetricAverage = metricAverage(chartPoints, activeChartMetric);
   const previousChartMetricAverage = previousChartPoints.length > 0 ? metricAverage(previousChartPoints, activeChartMetric) : null;
-  const chartLogsAverage = metricAverage(chartLogsPoints, "logs");
   const previousChartLogsAverage = previousChartLogsPoints.length > 0 ? metricAverage(previousChartLogsPoints, "logs") : null;
   const defectScopeLabel = activeDefectScope === "periodTotal" ? "defeitos totais do período" : "defeitos filtrados";
   const logsScopeLabel = "logs técnicos por período filtrado";
@@ -2901,7 +3236,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                   className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] disabled:opacity-60"
                 >
                   <FiDownload className="h-4 w-4" />
-                  {exportingPdf ? "Gerando PDF..." : isApplyingFilters ? "Atualizando filtros..." : "PDF do filtro"}
+                  {pdfButtonLabel(exportingPdf, isApplyingFilters)}
                 </button>
                 <button
                   type="button"
@@ -2915,12 +3250,12 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
+            <ScrollReveal className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5" stagger={0.08} deps={[isApplyingFilters]}>
               <StatCard label="Runs" value={formatCompactNumber(executiveSummary.totalRuns)} note="Total no recorte aplicado." tone="neutral" delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.totalRuns, previousSummary.totalRuns, "neutral") : null} icon={<FiActivity className="h-5 w-5" />} />
               <StatCard label="Pass rate" value={formatPercent(executiveSummary.passRate)} note="Leitura consolidada." tone={trendSummary.tone} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.") : null} icon={<FiTrendingUp className="h-5 w-5" />} />
-              <StatCard label="Falhas" value={formatPercent(executiveSummary.failRate)} note="Falhas sobre o total executado." tone={executiveSummary.failRate >= 15 ? "critical" : executiveSummary.failRate > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.failRate, previousSummary.failRate, "lower_better", " p.p.") : null} icon={<FiTrendingDown className="h-5 w-5" />} />
+              <StatCard label="Falhas" value={formatPercent(executiveSummary.failRate)} note="Falhas sobre o total executado." tone={toneForFailRate(executiveSummary.failRate)} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.failRate, previousSummary.failRate, "lower_better", " p.p.") : null} icon={<FiTrendingDown className="h-5 w-5" />} />
               <StatCard label="Defeitos" value={formatCompactNumber(executiveSummary.defects)} note="Vinculados ao recorte." tone={executiveSummary.defects > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.defects, previousSummary.defects, "lower_better") : null} icon={<FiAlertTriangle className="h-5 w-5" />} />
-            </div>
+            </ScrollReveal>
           </>
         )}
 
@@ -2952,7 +3287,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 {activeChartView === "applicationDefects" ? <ApplicationDefectsChart applications={applicationRanking} /> : null}
                 <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
                   {chartUsesGrouping
-                    ? `Visualização: ${activeChartLabel} | Métrica: ${activeMetricLabel} | Média atual: ${formatChartMetricValue(activeChartMetric, chartMetricAverage)} | ${activeChartMetric === "defects" ? `Escopo: ${defectScopeLabel}` : activeChartMetric === "logs" ? `Escopo: ${logsScopeLabel}` : `Agrupado por: ${activeGroupLabel}`}`
+                    ? `Visualização: ${activeChartLabel} | Métrica: ${activeMetricLabel} | Média atual: ${formatChartMetricValue(activeChartMetric, chartMetricAverage)} | ${chartScopeLabel(activeChartMetric, defectScopeLabel, logsScopeLabel, activeGroupLabel)}`
                     : `Visualização: ${activeChartLabel} | Base: aplicações filtradas`}
                 </div>
               </Panel>
@@ -2964,8 +3299,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                   {insights[0] ? (
                     <div className={`rounded-[20px] border px-4 py-4 ${softInsightClasses(insights[0].tone)}`}>
                       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.52)] dark:text-slate-400">
-                        <span className={`h-2 w-2 rounded-full ${softInsightAccent(insights[0].tone)}`} />
-                        Principal
+                        <span className={`h-2 w-2 rounded-full ${softInsightAccent(insights[0].tone)}`} /> Principal
                       </div>
                       <div className="mt-2 text-base font-bold text-[var(--tc-text,#0b1a3c)] dark:text-[var(--tc-text,#e2e8f0)]">{insights[0].title}</div>
                       <p className="mt-2 text-sm leading-5 text-[rgba(8,32,77,0.72)] dark:text-slate-300">{insights[0].detail}</p>
@@ -2999,113 +3333,20 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         ) : null}
 
         {hasFilterResults ? (
-          filteredRuns.length > 0 ? (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] 2xl:grid-cols-[minmax(0,1.2fr)_minmax(26rem,0.8fr)]">
-          <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href={`/${encodeURIComponent(props.companySlug)}/runs`} className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--tc-border,#e6ecf5)] text-left text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]">
-                    <th className="px-2 py-3">Run</th><th className="px-2 py-3">Aplicação</th><th className="px-2 py-3">Pass rate</th><th className="px-2 py-3">Variação</th><th className="px-2 py-3">Defeitos</th><th className="px-2 py-3">Risco</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRuns.slice(0, 10).map((run) => (
-                    <tr key={run.id} className="border-b border-[var(--tc-border,#eef2f7)] align-top">
-                      <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.title}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{formatDateTime(run.updatedAt ?? run.createdAt)}</div></td>
-                      <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationName}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.sourceType === "manual" ? "Manual" : `Integração${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`}</div></td>
-                      <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{formatPercent(run.passRate)}</td>
-                      <td className="px-2 py-3">{run.deltaPassRate != null ? <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${run.deltaPassRate <= -5 ? toneClasses("critical") : run.deltaPassRate >= 2 ? toneClasses("positive") : toneClasses("neutral")}`}>{run.deltaPassRate <= -5 ? <FiArrowDownRight className="h-3.5 w-3.5" /> : run.deltaPassRate >= 2 ? <FiArrowUpRight className="h-3.5 w-3.5" /> : <FiMinus className="h-3.5 w-3.5" />}{`${run.deltaPassRate >= 0 ? "+" : ""}${run.deltaPassRate.toFixed(1)} p.p.`}</span> : <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">Primeira referência</span>}</td>
-                      <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.directDefectCount}</td>
-                      <td className="px-2 py-3"><span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(run.riskLevel))}`}>{run.riskLevel === "critical" ? "Crítico" : run.riskLevel === "warning" ? "Atenção" : "Estável"}</span></td>
-                    </tr>
-                  ))}
-                  {filteredRuns.length === 0 ? <tr><td colSpan={6} className="px-2 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma run entrou no filtro atual.</td></tr> : null}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-
-          <Panel eyebrow="Aplicações" title="Saúde por aplicação" description={undefined}>
-            <div className="grid gap-3">
-              {applicationRanking.length > 0 ? applicationRanking.slice(0, 6).map((aggregate) => {
-                const appMeta = getAppMeta(aggregate.key, aggregate.label);
-                return (
-                  <div key={aggregate.key} className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 py-3 dark:border-[var(--tc-border,#334155)] dark:bg-[var(--tc-surface,#0f172a)]">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${css.appPill}`} {...{ style: { '--app-color': appMeta.color, '--app-border': `${appMeta.color}35`, '--app-bg': `${appMeta.color}12` } as React.CSSProperties }}>{appMeta.label}</span>
-                          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(aggregate.riskLevel))}`}>{aggregate.riskLevel === "critical" ? "Crítica" : aggregate.riskLevel === "warning" ? "Atenção" : "Estável"}</span>
-                        </div>
-                        <div className="mt-2 text-base font-bold text-[var(--tc-text,#0b1a3c)]">{aggregate.label}</div>
-                        <div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{aggregate.runs} run(s) • {aggregate.defects} defeito(s) • {aggregate.regressions} regressão(ões)</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">{formatPercent(aggregate.passRate)}</div>
-                        <div className="text-xs text-[var(--tc-text-muted,#6b7280)]">pass rate</div>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]">
-                      <span className="rounded-full bg-[var(--tc-surface-2,#f1f5f9)] px-3 py-1 dark:bg-[var(--tc-surface-2,#1e293b)]">falha {formatPercent(aggregate.failRate)}</span>
-                      <span className="rounded-full bg-[var(--tc-surface-2,#f1f5f9)] px-3 py-1 dark:bg-[var(--tc-surface-2,#1e293b)]">bloqueios {aggregate.blocked}</span>
-                    </div>
-                  </div>
-                );
-              }) : <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Sem aplicações suficientes no recorte atual.</div>}
-            </div>
-          </Panel>
-        </div>
-          ) : (
-            <Panel eyebrow="Comparativo" title="Sem comparativos para exibir" description="Esse recorte não trouxe runs suficientes para comparação.">
-              <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
-                Ajuste o recorte para incluir runs consolidadas e liberar os comparativos.
-              </div>
-            </Panel>
-          )
+          <RunsImpactPanel
+            filteredRuns={filteredRuns}
+            applicationRanking={applicationRanking}
+            isApplyingFilters={isApplyingFilters}
+            companySlug={props.companySlug}
+          />
         ) : null}
 
         {hasFilterResults ? (
-          filteredRuns.length > 0 ? (
-        <Panel eyebrow="Drilldown" title="Base detalhada" description={undefined}>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {compactActiveChips.map((chip) => (
-              <span key={chip} className="inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f1f5f9)] px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text,#0b1a3c)]">
-                <FiFilter className="mr-1.5 h-3.5 w-3.5" />
-                {chip}
-              </span>
-            ))}
-            {hiddenActiveChipCount > 0 ? <span className="inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f1f5f9)] px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text,#0b1a3c)]">+{hiddenActiveChipCount}</span> : null}
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead><tr className="border-b border-[var(--tc-border,#e6ecf5)] text-left text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]"><th className="px-2 py-3">Run</th><th className="px-2 py-3">Aplicação</th><th className="px-2 py-3">Status</th><th className="px-2 py-3">Origem</th><th className="px-2 py-3">Pass</th><th className="px-2 py-3">Falhas</th><th className="px-2 py-3">Defeitos</th><th className="px-2 py-3">Atualização</th><th className="px-2 py-3">Abrir</th></tr></thead>
-              <tbody>
-                {filteredRuns.map((run) => (
-                  <tr key={run.id} className="border-b border-[var(--tc-border,#eef2f7)]">
-                    <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.title}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.releaseLabel ?? "Sem run vinculada"}</div></td>
-                    <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationName}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.environments.length > 0 ? run.environments.join(", ") : "Sem ambiente"}</div></td>
-                    <td className="px-2 py-3"><span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(run.riskLevel))}`}>{run.statusLabel}</span></td>
-                    <td className="px-2 py-3 text-[var(--tc-text,#0b1a3c)]">{run.sourceType === "manual" ? "Manual" : `Integração${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`}</td>
-                    <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{formatPercent(run.passRate)}</td>
-                    <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.stats.fail}</td>
-                    <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.directDefectCount}</td>
-                    <td className="px-2 py-3 text-[var(--tc-text-muted,#6b7280)]">{formatDateTime(run.updatedAt ?? run.createdAt)}</td>
-                    <td className="px-2 py-3"><Link href={run.href} className="inline-flex items-center gap-2 font-semibold text-[var(--tc-accent,#ef0001)]">Drilldown<FiArrowRight className="h-4 w-4" /></Link></td>
-                  </tr>
-                ))}
-                {filteredRuns.length === 0 ? <tr><td colSpan={9} className="px-2 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma linha disponível com o filtro atual.</td></tr> : null}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-          ) : (
-            <Panel eyebrow="Drilldown" title="Sem linhas detalhadas" description="Não há runs suficientes para abrir a grade detalhada neste recorte.">
-              <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
-                Ajuste os filtros para incluir runs e habilitar o drilldown.
-              </div>
-            </Panel>
-          )
+          <RunsDetailPanel
+            filteredRuns={filteredRuns}
+            compactActiveChips={compactActiveChips}
+            hiddenActiveChipCount={hiddenActiveChipCount}
+          />
         ) : null}
       </div>
     </div>

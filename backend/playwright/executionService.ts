@@ -7,6 +7,10 @@ import path from "path";
 import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 import { prepareWorkspace, cleanupWorkspace, getRunDir } from "./workspaceService";
 import type { PlaywrightConfigOptions, ScriptFile } from "./workspaceService";
+import {
+  assertEmbeddedAutomationExecutionEnabled,
+  buildAutomationRunnerEnvironment,
+} from "./executionPolicy";
 
 // â”€â”€ In-memory SSE bus keyed by runId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -236,6 +240,7 @@ function parseDuration(value: string, unit: string): number {
  * the DB on completion. Returns runId immediately (non-blocking).
  */
 export async function startPlaywrightRun(opts: StartRunOptions): Promise<string> {
+  assertEmbeddedAutomationExecutionEnabled();
   await ensureAutomationTables();
 
   const runMode = opts.runMode ?? "all";
@@ -324,17 +329,17 @@ async function executeRun(
       emit(`[system] Escopo da run: ${specArgs.length} spec(s) selecionado(s).`);
     }
 
+    const npxExecutable = process.platform === "win32" ? "npx.cmd" : "npx";
     const child = spawn(
-      "npx",
+      npxExecutable,
       ["playwright", "test", ...specArgs],
       {
         cwd: workDir,
-        env: {
-          ...process.env,
+        env: buildAutomationRunnerEnvironment({
           PLAYWRIGHT_BROWSERS_PATH: "0",       // use globally installed browsers
           CI: "false",
-        },
-        shell: process.platform === "win32",   // required on Windows
+        }),
+        shell: false,
       },
     );
 
@@ -441,6 +446,7 @@ const SCRIPT_CONFIG: PlaywrightConfigOptions = {
 };
 
 export async function startScriptRun(opts: StartScriptRunOptions): Promise<string> {
+  assertEmbeddedAutomationExecutionEnabled();
   await ensureAutomationTables();
 
   const runId = await createRunRecord({
@@ -484,10 +490,11 @@ async function executeScriptRun(
 
     await updateRunStatus(runId, "running");
 
-    const child = spawn("node", ["script.js"], {
+    const scriptPath = path.join(workDir, "script.js");
+    const child = spawn(process.execPath, [scriptPath], {
       cwd: workDir,
-      env: { ...process.env },
-      shell: process.platform === "win32",
+      env: buildAutomationRunnerEnvironment(),
+      shell: false,
     });
 
     let exitCode = 0;
@@ -539,4 +546,3 @@ async function executeScriptRun(
     await cleanupWorkspace(opts.companySlug, runId).catch(() => {});
   }
 }
-

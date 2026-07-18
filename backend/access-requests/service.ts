@@ -1,5 +1,5 @@
-﻿import { randomBytes } from "crypto";
-import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
+import { randomBytes } from "crypto";
+import { createAccessRequestComment, listAccessRequestComments } from "@/data/access-requests/commentsStore";
 import { addAuditLogSafe, listAuditLogs } from "@/data/auditLogRepository";
 import {
   createLocalCompany,
@@ -13,14 +13,14 @@ import {
   upsertLocalLink,
   updateLocalUser,
 } from "@/backend/auth/localStore";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
-import { createAccessRequestLookupCodeExpiresAt, isAccessRequestLookupCodeExpired } from "@/backend/accessRequestsV2/accessKeyExpiration";
+import { hashPassword } from "@/backend/passwordHash";
+import { createAccessRequestLookupCodeExpiresAt, isAccessRequestLookupCodeExpired } from "@/backend/access-requests/accessKeyExpiration";
 import { emailService } from "@/backend/email";
 import type { AuthUser } from "@/backend/jwtAuth";
 import { shouldUseJsonStore } from "@/backend/storeMode";
-import { composeAccessRequestMessage } from "@/backend/accessRequestMessage";
-import { normalizeAccessRequestLookup } from "@/backend/accessRequestLookup";
-import { resolveReviewQueue, toInternalAccessType } from "@/backend/requestRouting";
+import { composeAccessRequestMessage } from "@/backend/access-requests/message";
+import { normalizeAccessRequestLookup } from "@/backend/access-requests/lookup";
+import { resolveReviewQueue, toInternalAccessType } from "@/backend/access-requests/routing";
 import {
   notifyAccessRequestAccepted,
   notifyAccessRequestAdjustmentRequested,
@@ -323,7 +323,7 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     "requestPassword",
     "requestedPassword",
   ], 255);
-  const requestedPasswordHash = requestedPassword ? hashPasswordSha256(requestedPassword) : undefined;
+  const requestedPasswordHash = requestedPassword ? hashPassword(requestedPassword) : undefined;
   const requestedUser =
     asText(payload.user, 120) ||
     asText(payload.requestedUser, 120) ||
@@ -595,7 +595,7 @@ export async function updateAccessRequestDetailsForReviewer(
       accessRequestProfileUsesAutomaticCompany(profile) ? undefined : companyId,
     requestedCompanySlug:
       accessRequestProfileUsesAutomaticCompany(profile) ? undefined : companySlug,
-    requestedPasswordHash: password ? hashPasswordSha256(password) : request.requestedPasswordHash,
+    requestedPasswordHash: password ? hashPassword(password) : request.requestedPasswordHash,
     reason: details.description ?? request.reason,
     details: persistedDetails,
   });
@@ -1145,7 +1145,7 @@ export async function updateAccessRequestByKey(
 
     if (field === "password") {
       if (nextRaw.length < 8) return { error: "invalid-password" as const, field };
-      patch.requestedPasswordHash = hashPasswordSha256(nextRaw);
+      patch.requestedPasswordHash = hashPassword(nextRaw);
       next = "Definida";
     } else if (field === "fullName") {
       patch.requesterName = nextRaw;
@@ -1325,6 +1325,7 @@ export async function getPublicAccessRequestByKey(accessKey: string) {
 export async function cancelAccessRequestByKey(accessKey: string) {
   const request = await getAccessRequestV2ByKey(accessKey);
   if (!request) return null;
+  if (isAccessRequestLookupCodeExpired(request.accessKeyExpiresAt)) return null;
   if (!canTransitionAccessRequest(request.status, "cancelled")) {
     return "invalid-transition" as const;
   }
@@ -1550,4 +1551,3 @@ export function mapV2ToLegacySupportRow(request: AccessRequestV2) {
     admin_notes: request.reviewComment ?? null,
   };
 }
-

@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import {
   BASE_URL,
   EMPRESA_E2E,
@@ -97,7 +97,6 @@ export async function loginDiretoUsuarioCriado(
 ) {
   const login = await loginDiretoComTentativas(page, email, [
     password,
-    "Griaule@123",
     "Demo@123",
   ]);
 
@@ -145,4 +144,3 @@ export function temEmpresaE2E(me: {
     me.companies?.some((company) => company.slug === EMPRESA_E2E.slug || company.id === EMPRESA_E2E.id)
   );
 }
-

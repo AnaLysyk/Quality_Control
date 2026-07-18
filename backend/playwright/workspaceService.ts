@@ -51,11 +51,19 @@ export async function prepareWorkspace(
   // Write each script file, validating path safety
   for (const script of scripts) {
     const normalised = path.normalize(script.path).replace(/\\/g, "/");
-    // Reject absolute paths or parent-traversal
-    if (path.isAbsolute(normalised) || normalised.startsWith("..")) {
+    // Reject absolute paths, parent traversal and shell/control characters.
+    if (
+      path.isAbsolute(normalised) ||
+      normalised.startsWith("..") ||
+      !/^[a-zA-Z0-9_./-]+$/.test(normalised)
+    ) {
       throw new Error(`Unsafe script path: ${script.path}`);
     }
-    const target = path.join(runDir, normalised);
+    const target = path.resolve(runDir, normalised);
+    const relativeTarget = path.relative(runDir, target);
+    if (!relativeTarget || relativeTarget.startsWith("..") || path.isAbsolute(relativeTarget)) {
+      throw new Error(`Unsafe script path: ${script.path}`);
+    }
     await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.writeFile(target, script.content, "utf8");
   }
@@ -118,4 +126,3 @@ ${projects}
 });
 `;
 }
-

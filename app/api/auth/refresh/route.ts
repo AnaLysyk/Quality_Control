@@ -6,6 +6,7 @@ import { createRefreshToken, hashRefreshToken } from "@/backend/auth/refreshToke
 import { getRedis } from "@/backend/redis";
 import { shouldUseSecureCookies } from "@/backend/auth/cookies";
 import { getJwtSecret } from "@/backend/auth/jwtSecret";
+import { rateLimit } from "@/backend/rateLimit";
 
 const DEFAULT_ACCESS_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -47,6 +48,9 @@ type RefreshRecord = {
 };
 
 export async function POST(req: Request) {
+  const limiter = await rateLimit(req, "auth-refresh", 30, 60);
+  if (limiter.limited) return limiter.response;
+
   const secret = getJwtSecret();
   if (!secret) {
     return NextResponse.json({ error: "JWT_SECRET ausente; refresh desativado" }, { status: 501 });
@@ -118,4 +122,3 @@ export async function POST(req: Request) {
 
   return res;
 }
-

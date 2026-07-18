@@ -64,7 +64,11 @@ export function isSupportDeveloperUser(user: SupportAccessUser) {
 }
 
 export function isSupportAdminUser(user: SupportAccessUser) {
-  return Boolean(user?.isGlobalAdmin) || hasCanonicalRole(user, SYSTEM_ROLES.LEADER_TC);
+  return Boolean(user?.isGlobalAdmin);
+}
+
+function isScopedLeaderUser(user: SupportAccessUser) {
+  return hasCanonicalRole(user, SYSTEM_ROLES.LEADER_TC);
 }
 
 export function isSupportOperatorUser(user: SupportAccessUser) {
@@ -77,7 +81,7 @@ export function canAccessGlobalSupportScope(user: SupportAccessUser) {
 }
 
 export function canManageSupportWorkflow(user: SupportAccessUser) {
-  if (!(isSupportAdminUser(user) || isSupportOperatorUser(user))) return false;
+  if (!(isSupportAdminUser(user) || isSupportOperatorUser(user) || isScopedLeaderUser(user))) return false;
   return (
     hasSupportAccess(user, "tickets", "assign") ||
     hasSupportAccess(user, "tickets", "status") ||

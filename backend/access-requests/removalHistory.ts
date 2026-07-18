@@ -48,4 +48,3 @@ export async function listAccessRequestRemovalHistory() {
   const store = await readPersistentJson<RemovalHistoryStore>(STORE_KEY, { items: [] });
   return [...(Array.isArray(store.items) ? store.items : [])].sort((a, b) => b.removedAt.localeCompare(a.removedAt));
 }
-

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hashPassword } from "@/backend/passwordHash";
 import { brainOnUserCreated } from "@/backend/brain/autoSync";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { type AccessContext } from "@/backend/auth/session";
@@ -286,7 +286,7 @@ export async function POST(req: NextRequest) {
 
   const rawTemp = randomUUID().replace(/-/g, "");
   const plainTempPassword = rawTemp.charAt(0).toUpperCase() + rawTemp.slice(1, 9) + "!";
-  const passwordHash = hashPasswordSha256(plainTempPassword);
+  const passwordHash = hashPassword(plainTempPassword);
   let user = null;
   try {
     user = await createLocalUser({

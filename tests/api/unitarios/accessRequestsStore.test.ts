@@ -1,4 +1,4 @@
-﻿import { listAccessRequests, getAccessRequestById } from "../../../database/repositories/accessRequestsStore";
+import { listAccessRequests, getAccessRequestById } from "../../../database/repositories/access-requests/store";
 
 jest.mock("../../../database/persistenceMode", () => ({
   shouldUsePostgresPersistence: () => false,

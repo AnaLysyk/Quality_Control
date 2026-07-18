@@ -1,28 +1,28 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
-import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import { createAccessRequestComment } from "@/data/access-requests/commentsStore";
+import { getAccessRequestById, updateAccessRequest } from "@/data/access-requests/store";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { createLocalCompany, createLocalUser, findLocalCompanyById, findLocalCompanyBySlug, listLocalCompanies, listLocalUsers, upsertLocalLink } from "@/backend/auth/localStore";
 import {
   composeAccessRequestMessage,
   normalizeAccessType,
   parseAccessRequestMessage,
-} from "@/backend/accessRequestMessage";
+} from "@/backend/access-requests/message";
 import { prisma } from "@/database/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/requestReviewAccess";
+import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/access-requests/reviewAccess";
 import {
   normalizeRequestProfileType,
   toInternalAccessType,
-} from "@/backend/requestRouting";
+} from "@/backend/access-requests/routing";
 import { resolveEditableProfileUserState, type EditableProfileRole } from "@/backend/editableProfileRoles";
 import { notifyAccessRequestAccepted } from "@/backend/notificationService";
-import { resolveReviewQueue } from "@/backend/requestRouting";
+import { resolveReviewQueue } from "@/backend/access-requests/routing";
 import { shouldUseJsonStore } from "@/backend/storeMode";
 import { extractPasswordResetRequestId } from "@/backend/passwordResetAccessQueue";
-import { getAccessRequestV2ById } from "@/backend/accessRequestsV2/repository";
-import { transitionAccessRequest } from "@/backend/accessRequestsV2/service";
+import { getAccessRequestV2ById } from "@/backend/access-requests/repository";
+import { transitionAccessRequest } from "@/backend/access-requests/service";
 import { reviewPasswordResetRequest } from "@/backend/passwordResetReview";
 
 type AcceptBody = {
@@ -659,9 +659,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (createUserError) {
       return NextResponse.json({ error: createUserError.error }, { status: createUserError.status });
     }
-    const message = err instanceof Error ? err.message : String(err);
     console.error("[ACCESS-REQUESTS][ACCEPT][ERROR]", err);
-    return NextResponse.json({ error: "Internal Server Error", details: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
-

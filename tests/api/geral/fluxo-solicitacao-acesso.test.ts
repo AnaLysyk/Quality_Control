@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Fluxo completo de Solicitação de Acesso — perspectiva de quem manda e de quem recebe.
  * âœ… cleanup total em afterAll — nenhum dado permanece.
  *
@@ -42,11 +42,11 @@ import {
   listAccessRequests,
   getAccessRequestById,
   updateAccessRequest,
-} from "@/data/accessRequestsStore";
+} from "@/data/access-requests/store";
 import {
   listAccessRequestComments,
   createAccessRequestComment,
-} from "@/data/accessRequestCommentsStore";
+} from "@/data/access-requests/commentsStore";
 import { pgCreateLocalUser } from "@/backend/auth/pgStore";
 import { hashPasswordSha256 } from "@/backend/passwordHash";
 

@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 export type ConversationScopeKind = "global" | "company" | "project" | "direct" | "support";
 export type ConversationMemoryStatus = "candidate" | "approved" | "ignored";
@@ -45,7 +45,7 @@ export const unifiedConversationRules: UnifiedConversationRule[] = [
     description: "Perfis globais veem tudo; perfis de empresa veem somente empresas vinculadas; usuarios comuns veem escopo permitido.",
     required: true,
     acceptanceCriteria: [
-      "Leader TC, suporte tecnico e admin veem todos os contatos.",
+      "Leader TC, administrador e admin veem todos os contatos.",
       "Usuario de empresa ve apenas usuarios da empresa vinculada.",
       "Usuario TC respeita empresa/projeto ativo quando aplicavel.",
     ],

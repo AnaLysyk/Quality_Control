@@ -1,80 +1,95 @@
-﻿console.log("DATABASE_URL:", process.env.DATABASE_URL);
-
 import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+
+import { hashPassword } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 
+function requiredEnv(name: string) {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`${name} é obrigatória para executar este seed.`);
+  return value;
+}
+
 async function createAnaAdmin() {
-  const email = "ana.testing.company@gmail.com";
-  const password = "griaule4096PD$";
-  const hashedPassword = hashPasswordSha256(password);
+  const email = requiredEnv("SEED_ANA_ADMIN_EMAIL").toLowerCase();
+  const password = requiredEnv("SEED_ANA_ADMIN_PASSWORD");
+  const login = process.env.SEED_ANA_ADMIN_LOGIN?.trim().toLowerCase() || "ana.paula.lysyk";
+  const name = process.env.SEED_ANA_ADMIN_NAME?.trim() || "Ana Paula Lysyk";
+  const companySlug = process.env.SEED_ANA_ADMIN_COMPANY_SLUG?.trim().toLowerCase() || "testing-company";
+  const companyName = process.env.SEED_ANA_ADMIN_COMPANY_NAME?.trim() || "Testing Company";
+
+  if (password.length < 12) {
+    throw new Error("SEED_ANA_ADMIN_PASSWORD deve ter pelo menos 12 caracteres.");
+  }
 
   try {
     const company = await prisma.company.upsert({
-      where: { slug: "griaule" },
-      update: { name: "Griaule" },
-      create: {
-        name: "Griaule",
-        slug: "griaule",
-      },
+      where: { slug: companySlug },
+      update: { name: companyName, active: true, status: "active" },
+      create: { name: companyName, slug: companySlug, active: true, status: "active" },
     });
 
     const user = await prisma.user.upsert({
       where: { email },
       update: {
-        name: "Ana Testing Company",
-        password_hash: hashedPassword,
+        name,
+        full_name: name,
+        user: login,
+        password_hash: hashPassword(password),
         active: true,
-        role: "company_admin",
+        status: "active",
+        role: "leader_tc",
+        globalRole: "global_admin",
+        is_global_admin: true,
         default_company_slug: company.slug,
+        home_company_id: company.id,
+        user_origin: "testing_company",
+        user_scope: "shared",
+        allow_multi_company_link: true,
       },
       create: {
         email,
-        name: "Ana Testing Company",
-        password_hash: hashedPassword,
+        name,
+        full_name: name,
+        user: login,
+        password_hash: hashPassword(password),
         active: true,
-        role: "company_admin",
+        status: "active",
+        role: "leader_tc",
+        globalRole: "global_admin",
+        is_global_admin: true,
         default_company_slug: company.slug,
+        home_company_id: company.id,
+        user_origin: "testing_company",
+        user_scope: "shared",
+        allow_multi_company_link: true,
       },
     });
 
-    await prisma.membership.upsert({
-      where: {
-        userId_companyId: {
-          userId: user.id,
-          companyId: company.id,
-        },
-      },
-      update: { role: "company_admin" },
-      create: {
-        userId: user.id,
-        companyId: company.id,
-        role: "company_admin",
-      },
-    });
+    await Promise.all([
+      prisma.membership.upsert({
+        where: { userId_companyId: { userId: user.id, companyId: company.id } },
+        update: { role: "leader_tc", allowedProjectIds: [] },
+        create: { userId: user.id, companyId: company.id, role: "leader_tc", allowedProjectIds: [] },
+      }),
+      prisma.userCompany.upsert({
+        where: { user_id_company_id: { user_id: user.id, company_id: company.id } },
+        update: { role: "leader_tc" },
+        create: { user_id: user.id, company_id: company.id, role: "leader_tc" },
+      }),
+      prisma.userCompanyLink.upsert({
+        where: { userId_companyId: { userId: user.id, companyId: company.id } },
+        update: { role: "leader_tc", active: true, status: "active" },
+        create: { userId: user.id, companyId: company.id, role: "leader_tc", active: true, status: "active" },
+      }),
+    ]);
 
-    await prisma.userCompany.upsert({
-      where: {
-        user_id_company_id: {
-          user_id: user.id,
-          company_id: company.id,
-        },
-      },
-      update: { role: "admin" },
-      create: {
-        user_id: user.id,
-        company_id: company.id,
-        role: "admin",
-      },
-    });
-
-    console.log("Usuario admin criado ou atualizado:", { email, company: company.slug });
-  } catch (error) {
-    console.error("Erro ao criar admin:", error);
+    console.log("Administradora criada ou atualizada.", { userId: user.id, login, companySlug });
   } finally {
     await prisma.$disconnect();
   }
 }
 
-createAnaAdmin();
-
+createAnaAdmin().catch((error) => {
+  console.error("Falha ao criar administradora:", error instanceof Error ? error.message : "erro desconhecido");
+  process.exitCode = 1;
+});

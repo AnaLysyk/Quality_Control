@@ -1,7 +1,7 @@
 import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 
 import { Role } from "@prisma/client";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import { hashPassword } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 
 const TEST_PASSWORD = "Teste@12345";
@@ -109,7 +109,7 @@ async function ensureLeader(companyId: string, seed: (typeof leaders)[number]) {
       full_name: seed.name,
       email: seed.email,
       user: seed.login,
-      password_hash: hashPasswordSha256(TEST_PASSWORD),
+      password_hash: hashPassword(TEST_PASSWORD),
       role: Role.leader_tc,
       globalRole: "leader_tc",
       active: true,
@@ -149,7 +149,7 @@ async function ensureQaUser(companyId: string, seed: (typeof qaUsers)[number]) {
       full_name: seed.name,
       email: seed.email,
       user: seed.login,
-      password_hash: hashPasswordSha256(TEST_PASSWORD),
+      password_hash: hashPassword(TEST_PASSWORD),
       role: Role.user,
       globalRole: "testing_company_user",
       active: true,

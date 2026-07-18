@@ -7,7 +7,7 @@ export function getAiApiKey() {
     process.env.OPENAI_KEY ??
     "";
   const trimmed = key.trim();
-  return trimmed ? trimmed : null;
+  return trimmed || null;
 }
 
 export function requireAiApiKey() {

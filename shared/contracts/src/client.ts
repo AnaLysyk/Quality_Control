@@ -119,6 +119,7 @@ export const ClientCreateRequestSchema = z
     slug: OptionalStringSchema.optional(),
     active: z.boolean().optional(),
     admin_email: z.string().email().optional(),
+    responsible_leader_id: OptionalStringSchema.optional(),
     cep: OptionalStringSchema.optional(),
     address_number: OptionalStringSchema.optional(),
     address_detail: OptionalStringSchema.optional(),
@@ -130,4 +131,3 @@ export const ClientCreateRequestSchema = z
   .strip();
 
 export type ClientCreateRequest = z.infer<typeof ClientCreateRequestSchema>;
-

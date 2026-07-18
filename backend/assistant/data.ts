@@ -43,6 +43,11 @@ export function isAdminOperator(user: AuthUser) {
   return values.some((v) => v === "admin" || v === "company_admin" || v === "leader_tc" || v === "empresa");
 }
 
+function isScopedLeader(user: AuthUser) {
+  return !user.isGlobalAdmin && user.projectScope !== "unrestricted" &&
+    [user.permissionRole, user.role, user.companyRole].some((value) => normalizeSearch(value ?? "") === "leader_tc");
+}
+
 /**
  * Returns true for empresa/company-side users (not TC staff).
  * An empresa user has empresa or company_user role but is NOT a TC leader or support.
@@ -105,7 +110,15 @@ export function formatTicketCard(ticket: Awaited<ReturnType<typeof attachAssigne
 }
 
 export async function getVisibleTickets(user: AuthUser) {
-  const items = canAccessGlobalTicketWorkspace(user) ? await listAllTickets() : await listTicketsForUser(user.id);
+  let items: TicketRecord[];
+  if (canAccessGlobalTicketWorkspace(user)) {
+    items = await listAllTickets();
+  } else if (user.assignments?.length) {
+    const companyIds = new Set(user.assignments.filter((item) => item.status === "active").map((item) => item.companyId));
+    items = (await listAllTickets()).filter((ticket) => ticket.companyId && companyIds.has(ticket.companyId));
+  } else {
+    items = await listTicketsForUser(user.id);
+  }
   return attachAssigneeInfo(items);
 }
 
@@ -153,11 +166,13 @@ export async function getVisibleUsers(user: AuthUser): Promise<VisibleUsersConte
     };
   }
 
-  const scope = hasPermissionAccess(user.permissions, "users", "view_all") || isSupportOperator(user)
-    ? "all"
-    : hasPermissionAccess(user.permissions, "users", "view_company")
-      ? "company"
-      : "own";
+  const scope = isScopedLeader(user)
+    ? "company"
+    : hasPermissionAccess(user.permissions, "users", "view_all") || isSupportOperator(user)
+      ? "all"
+      : hasPermissionAccess(user.permissions, "users", "view_company")
+        ? "company"
+        : "own";
 
   const [users, companies, memberships] = await Promise.all([listLocalUsers(), listLocalCompanies(), listLocalMemberships()]);
 
@@ -239,4 +254,3 @@ export function getPriorityFilters(message: string) {
   if (n.includes("baixa")) return new Set(["low"]);
   return null;
 }
-

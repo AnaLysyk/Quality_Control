@@ -11,7 +11,7 @@ export function hasGlobalCompanyVisibility(user: AuthUser | null | undefined) {
   const roles = [user.role, user.companyRole, user.permissionRole]
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim().toLowerCase());
-  return roles.includes("leader_tc") || roles.includes("technical_support");
+  return roles.includes("technical_support");
 }
 
 export function resolveAllowedCompanySlugs(user: AuthUser) {
@@ -50,4 +50,3 @@ export function pickDefectNotificationShape(defect: CompanyDefectRecord) {
     assignedToUserId: defect.assignedToUserId,
   };
 }
-

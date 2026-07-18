@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
-import { parseAccessRequestMessage } from "@/backend/accessRequestMessage";
+import { parseAccessRequestMessage } from "@/backend/access-requests/message";
 import { parsePasswordResetAccessRequestMessage } from "@/backend/passwordResetAccessQueue";
-import { normalizeRequestProfileType, toRequestProfileTypeLabel } from "@/backend/requestRouting";
+import { normalizeRequestProfileType, toRequestProfileTypeLabel } from "@/backend/access-requests/routing";
 import { unwrapEnvelopeData } from "@/backend/apiEnvelope";
 import { normalizeBrainText, statusLabel } from "../_utils/brainGraphFormatters";
 import type {

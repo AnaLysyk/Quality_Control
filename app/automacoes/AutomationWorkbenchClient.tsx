@@ -280,7 +280,7 @@ export default function AutomationWorkbenchClient() {
               <div className="mt-4 space-y-3">
                 {[
                   "Líder TC: gestão completa de ambientes, presets e histórico.",
-                  "Suporte técnico: operação completa e leitura global.",
+                  "Administrador: operação completa e leitura global.",
                   "Usuário TC: leitura operacional apenas das empresas vinculadas.",
                   "Empresa e usuário da empresa: mesma visão operacional, restrita à própria empresa.",
                 ].map((item) => (
@@ -477,4 +477,3 @@ export default function AutomationWorkbenchClient() {
     </RequireAuth>
   );
 }
-

@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import { authenticateRequest } from "@/backend/jwtAuth";
-import { transitionAccessRequest } from "@/backend/accessRequestsV2/service";
+import { transitionAccessRequest } from "@/backend/access-requests/service";
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const authUser = await authenticateRequest(req);
@@ -21,4 +21,3 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
   return NextResponse.json({ item: result }, { status: 200 });
 }
-

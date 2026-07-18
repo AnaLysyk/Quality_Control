@@ -1,22 +1,22 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
-import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import { createAccessRequestComment } from "@/data/access-requests/commentsStore";
+import { getAccessRequestById, updateAccessRequest } from "@/data/access-requests/store";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import {
   composeAccessRequestMessage,
   parseAccessRequestMessage,
   type AccessRequestAdjustmentField,
   type AccessRequestAdjustmentRound,
-} from "@/backend/accessRequestMessage";
+} from "@/backend/access-requests/message";
 import { notifyAccessRequestAdjustmentRequested } from "@/backend/notificationService";
 import { prisma } from "@/database/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/requestReviewAccess";
-import { resolveReviewQueue } from "@/backend/requestRouting";
+import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/access-requests/reviewAccess";
+import { resolveReviewQueue } from "@/backend/access-requests/routing";
 import { shouldUseJsonStore } from "@/backend/storeMode";
-import { getAccessRequestV2ById } from "@/backend/accessRequestsV2/repository";
-import { transitionAccessRequest } from "@/backend/accessRequestsV2/service";
+import { getAccessRequestV2ById } from "@/backend/access-requests/repository";
+import { transitionAccessRequest } from "@/backend/access-requests/service";
 
 type AdjustmentBody = {
   comment?: string | null;
@@ -367,4 +367,3 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     });
   }
 }
-

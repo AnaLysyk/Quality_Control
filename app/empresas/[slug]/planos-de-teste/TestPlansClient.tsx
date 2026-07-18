@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -373,7 +373,7 @@ const EMPTY_DRAFT: PlanDraft = {
 
 const PROFILE_LABEL: Record<string, string> = {
   empresa: "Empresa",
-  technical_support: "Suporte Técnico",
+  technical_support: "Administrador",
   leader_tc: "Líder TC",
   testing_company_user: "Usuário TC",
   company_user: "Usuário da Empresa",

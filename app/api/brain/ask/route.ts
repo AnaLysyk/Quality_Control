@@ -17,7 +17,7 @@ type HomeSelectedAction = { id?: string | null; label?: string | null; href?: st
 function resolveBrainRoleLabel(context: BrainAccessContext) {
   const role = normalizeForBrain(String(context.userAccess.permissionRole ?? context.userAccess.role ?? context.user.permissionRole ?? context.user.role ?? context.user.companyRole ?? context.userAccess.profileKind ?? ""));
   if (role.includes("leader") || role.includes("lider")) return "Lider TC";
-  if (role.includes("support") || role.includes("suporte") || role.includes("technical")) return "Suporte Tecnico";
+  if (role.includes("support") || role.includes("suporte") || role.includes("technical")) return "Administrador";
   if (role.includes("testing") || role.includes("tc")) return "Usuario Testing Company";
   if (role.includes("empresa") || role.includes("company")) return "Empresa";
   return "seu perfil";

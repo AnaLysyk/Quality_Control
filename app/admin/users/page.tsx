@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -951,9 +951,9 @@ export default function AdminUsersPage() {
 
     if (activeTab === "support") {
       return {
-        title: "Criar Suporte Técnico",
+        title: "Criar Administrador",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte Técnico",
+        submitLabel: "Criar Administrador",
         initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
@@ -1011,10 +1011,10 @@ export default function AdminUsersPage() {
     }
     if (activeTab === "support") {
       return {
-        title: "Fila de suporte técnico",
+        title: "Fila de gestores de plataforma",
         description: "Listagem dos perfis técnicos internos da Testing Company.",
-        emptyTitle: "Nenhum suporte técnico encontrado",
-        emptyDescription: "Ajuste os filtros ou crie um novo suporte técnico direto nesta tela.",
+        emptyTitle: "Nenhum administrador encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo administrador direto nesta tela.",
       };
     }
     return {
@@ -1056,7 +1056,7 @@ export default function AdminUsersPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuários</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuários da plataforma</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                Gerencie usuários por contexto: usuários da empresa, usuários TC, liderança e suporte técnico.
+                Gerencie usuários por contexto: usuários da empresa, usuários TC, liderança e administrador.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
@@ -1073,7 +1073,7 @@ export default function AdminUsersPage() {
                 <FiShield className="h-4 w-4" /> {adminUsersCount} Líder TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiTool className="h-4 w-4" /> {supportUsersCount} Suporte Técnico
+                <FiTool className="h-4 w-4" /> {supportUsersCount} Administrador
               </span>
             </div>
           </div>
@@ -1111,7 +1111,7 @@ export default function AdminUsersPage() {
                     Líder TC
                   </TabsTrigger>
                   <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Suporte Técnico
+                    Administrador
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -1396,7 +1396,7 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                       <FiTool className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
-                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte técnico encontrado</h3>
+                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum administrador encontrado</h3>
                         <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual não encontrou usuários técnicos com esse status.</p>
                       </div>
                     </div>
@@ -1407,13 +1407,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: supportActiveUsers,
-                          emptyMessage: "Nenhum suporte técnico ativo neste recorte.",
+                          emptyMessage: "Nenhum administrador ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: supportInactiveUsers,
-                          emptyMessage: "Nenhum suporte técnico inativo neste recorte.",
+                          emptyMessage: "Nenhum administrador inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection

@@ -1,5 +1,5 @@
-﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
-import { hashPasswordSha256 } from "@/backend/passwordHash";
+import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
+import { hashPassword } from "@/backend/passwordHash";
 import { prisma } from "@/database/prismaClient";
 import type { TestCaseRecord } from "@/backend/test-cases/types";
 import type { Prisma } from "@prisma/client";
@@ -119,7 +119,7 @@ async function upsertLink(userId: string, companyId: string, role: string) {
 }
 
 async function main() {
-  const passwordHash = hashPasswordSha256(PASSWORD);
+  const passwordHash = hashPassword(PASSWORD);
 
   const company = await prisma.company.upsert({
     where: { slug: COMPANY.slug },

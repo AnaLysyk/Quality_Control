@@ -1,7 +1,7 @@
-﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
+import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 
 import { type Role } from "@prisma/client";
-import { hashPasswordSha256 } from "../../../../../backend/passwordHash";
+import { hashPassword } from "../../../../../backend/passwordHash";
 import { prisma } from "../../../../database/prismaClient";
 
 const senhaPadrao = process.env.QC_REVIEWER_PASSWORD ?? process.env.E2E_PROFILE_PASSWORD ?? "SenhaVisual@123";
@@ -55,7 +55,7 @@ const usuarios = [
 ];
 
 async function main() {
-  const password_hash = hashPasswordSha256(senhaPadrao);
+  const password_hash = hashPassword(senhaPadrao);
 
   for (const usuario of usuarios) {
     await prisma.user.upsert({

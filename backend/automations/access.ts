@@ -59,10 +59,8 @@ export function resolveAutomationAccess(
   const roles = [user?.permissionRole, user?.role, user?.companyRole]
     .map((value) => normalizeLegacyRole(value))
     .filter((value): value is NonNullable<ReturnType<typeof normalizeLegacyRole>> => Boolean(value));
-  const isLeader =
-    user?.isGlobalAdmin === true ||
-    user?.is_global_admin === true ||
-    roles.includes(SYSTEM_ROLES.LEADER_TC);
+  const isGlobalAdmin = user?.isGlobalAdmin === true || user?.is_global_admin === true;
+  const isLeader = roles.includes(SYSTEM_ROLES.LEADER_TC);
   const isSupport = roles.includes(SYSTEM_ROLES.TECHNICAL_SUPPORT);
   const isTcUser = roles.includes(SYSTEM_ROLES.TESTING_COMPANY_USER);
   const isCompanyRole = roles.includes(SYSTEM_ROLES.EMPRESA);
@@ -79,17 +77,31 @@ export function resolveAutomationAccess(
       ? `${companyCount} empresa${companyCount === 1 ? "" : "s"} da conta`
       : "Própria empresa";
 
-  if (isLeader) {
+  if (isGlobalAdmin) {
     return {
       canOpen: true,
       canConfigure: true,
       canManageFlows: true,
       canViewTechnicalLogs: true,
       hasGlobalCompanyVisibility: true,
-      profileLabel: "Líder TC",
+      profileLabel: "Administrador global",
       scopeLabel: "Todas as empresas",
       visibilityLabel: "Gestão completa",
       helperText: "Pode configurar ambientes, fluxos, segredos operacionais e histórico técnico.",
+    };
+  }
+
+  if (isLeader) {
+    return {
+      canOpen: true,
+      canConfigure: true,
+      canManageFlows: true,
+      canViewTechnicalLogs: true,
+      hasGlobalCompanyVisibility: false,
+      profileLabel: "Líder TC",
+      scopeLabel: linkedCompaniesLabel,
+      visibilityLabel: "Gestão das empresas vinculadas",
+      helperText: "Pode configurar e operar fluxos somente nas empresas e projetos vinculados.",
     };
   }
 
@@ -100,7 +112,7 @@ export function resolveAutomationAccess(
       canManageFlows: true,
       canViewTechnicalLogs: true,
       hasGlobalCompanyVisibility: true,
-      profileLabel: "Suporte técnico",
+      profileLabel: "Administrador",
       scopeLabel: "Todas as empresas",
       visibilityLabel: "Operação completa",
       helperText: "Pode operar e ajustar fluxos guiados, com leitura global de empresas e ambientes.",
@@ -148,4 +160,3 @@ export function resolveAutomationAccess(
     helperText: "Esse workspace é interno e foi pensado para operação técnica da Testing Company.",
   };
 }
-

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FiAlertTriangle, FiCheckCircle, FiCode, FiGitBranch, FiRefreshCcw, FiSearch } from "react-icons/fi";
 import { fetchApi } from "@/lib/api";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { useProjectContext } from "@/context/ProjectContext";
 import type { AutomationAccess } from "@/lib/automations/access";
 
 type CompanyOption = {

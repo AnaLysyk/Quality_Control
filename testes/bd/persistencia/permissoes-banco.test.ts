@@ -31,7 +31,7 @@ import { prisma } from "@/lib/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
 import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "@/lib/store/permissionsStore";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
-import { createLocalUser } from "@/lib/core/auth/localStore";
+import { createLocalUser } from "@/lib/auth/localStore";
 
 // Forçar uso do Postgres para estes testes
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";

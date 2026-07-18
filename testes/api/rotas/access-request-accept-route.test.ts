@@ -25,7 +25,7 @@ import { POST } from "@/api/admin/access-requests/[id]/accept/route";
 import { createAccessRequest, getAccessRequestById } from "@/data/accessRequestsStore";
 import { prisma } from "@/lib/prismaClient";
 import { composeAccessRequestMessage } from "@/lib/accessRequestMessage";
-import { pgCreateLocalCompany, pgDeleteLocalCompany } from "@/lib/core/auth/pgStore";
+import { pgCreateLocalCompany, pgDeleteLocalCompany } from "@/lib/auth/pgStore";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 const uid = Math.random().toString(36).slice(2, 10);

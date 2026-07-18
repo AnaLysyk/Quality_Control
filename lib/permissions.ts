@@ -1,2 +1,4 @@
-﻿export * from "@/core/permissions";
+﻿export * from "./permissions/permissions.types";
+export * from "./permissions/capabilities";
+export * from "./permissions/hasCapability";
 

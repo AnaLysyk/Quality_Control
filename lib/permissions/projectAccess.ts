@@ -1,4 +1,4 @@
-import type { AccessAssignment, ProjectScope } from "@/lib/core/session/accessAssignment";
+import type { AccessAssignment, ProjectScope } from "@/lib/auth/accessAssignment";
 
 export type CompanyProjectVisibilityMode = "all" | "selected" | "none";
 

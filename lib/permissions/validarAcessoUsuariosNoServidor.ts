@@ -1,6 +1,6 @@
 ﻿import "server-only";
 
-import type { AccessContext } from "@/core/session/session.store";
+import type { AccessContext } from "@/lib/auth/session";
 import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 

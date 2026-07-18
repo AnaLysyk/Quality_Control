@@ -36,9 +36,9 @@ import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgDeleteLocalCompany,
-} from "../../../../../lib/core/auth/pgStore";
+} from "../../../../../lib/auth/pgStore";
 import { hashPasswordSha256 } from "../../../../../lib/passwordHash";
-import { getLocalUserById, updateLocalUser } from "../../../../../lib/core/auth/localStore";
+import { getLocalUserById, updateLocalUser } from "../../../../../lib/auth/localStore";
 
 jest.setTimeout(30000);
 

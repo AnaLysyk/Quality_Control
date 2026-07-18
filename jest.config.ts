@@ -7,7 +7,6 @@ const config: JestConfigWithTsJest = {
     "^@/contracts/(.*)$": "<rootDir>/packages/contracts/src/$1",
     "^@/lib/prisma$": "<rootDir>/lib/prismaClient.ts",
     "^@/lib/(.*)$": "<rootDir>/lib/$1",
-    "^@/core/(.*)$": "<rootDir>/lib/core/$1",
     "^@/data/(.*)$": ["<rootDir>/data/$1", "<rootDir>/app/data/$1"],
     "^@/features/(.*)$": "<rootDir>/src/features/$1",
     "^@/backend/(.*)$": "<rootDir>/src/backend/$1",

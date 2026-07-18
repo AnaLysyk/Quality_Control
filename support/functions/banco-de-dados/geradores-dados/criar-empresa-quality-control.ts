@@ -1,5 +1,5 @@
 ﻿import { prisma } from "@/lib/prismaClient";
-import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "@/lib/core/auth/pgStore";
+import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "@/lib/auth/pgStore";
 import { syncCompanyApplications } from "@/lib/applicationsStore";
 
 const COMPANY_SLUG = "quality-control";

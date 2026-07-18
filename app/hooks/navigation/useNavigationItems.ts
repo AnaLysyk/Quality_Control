@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { useProjectContext } from "@/context/ProjectContext";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";

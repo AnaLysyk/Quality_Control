@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { useClientContext } from "@/context/ClientContext";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { useProjectContext } from "@/context/ProjectContext";
 
 export function RelationshipContextSync() {
   const { refreshClients } = useClientContext();

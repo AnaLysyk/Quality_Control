@@ -5,7 +5,7 @@ import {
   isCompanyAllowed,
   isCompanyProjectPairAllowed,
   type AccessAssignment,
-} from "@/lib/core/session/accessAssignment";
+} from "@/lib/auth/accessAssignment";
 
 // Massa: Empresa A (Projeto A1, Projeto A2), Empresa B (Projeto B1), Empresa C (Projeto C1).
 function assignment(
@@ -42,7 +42,7 @@ const A_ALL_PROJECTS = assignment({
   role: "company_user",
 });
 
-describe("lib/core/session/accessAssignment.ts - contrato relacional (Etapa 2.3A/2.3B)", () => {
+describe("lib/auth/accessAssignment.ts - contrato relacional (Etapa 2.3A/2.3B)", () => {
   describe("Cenário 1 — A+A1, B+B1: nenhum produto cartesiano", () => {
     const query = { projectScope: "restricted" as const, assignments: [A_A1, B_B1] };
 

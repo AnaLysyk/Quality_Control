@@ -29,7 +29,7 @@ import {
   FiX,
   FiZap,
 } from "react-icons/fi";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { useProjectContext } from "@/context/ProjectContext";
 
 // Monaco Editor is large — load dynamically to avoid SSR issues
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });

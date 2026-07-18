@@ -24,7 +24,7 @@ jest.mock('@/lib/prismaClient', () => ({
 }));
 
 // Import the module under test after setting up mocks
-import * as sessionStore from '@/lib/core/session/session.store';
+import * as sessionStore from '@/lib/auth/session';
 
 // Import the mocked implementations for assertions
 const { getRedis } = require("@/lib/redis");

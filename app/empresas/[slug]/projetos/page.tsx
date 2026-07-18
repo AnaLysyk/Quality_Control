@@ -21,7 +21,7 @@ import {
 } from "react-icons/fi";
 import Breadcrumb from "@/components/Breadcrumb";
 import { fetchApi } from "@/lib/api";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { useProjectContext } from "@/context/ProjectContext";
 
 type ProjectItem = {
   id: string;

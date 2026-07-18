@@ -20,7 +20,7 @@ import {
 } from "react-icons/fi";
 import { fetchApi } from "@/lib/api";
 import { useClientContext } from "@/context/ClientContext";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { useProjectContext } from "@/context/ProjectContext";
 import TestCaseRepositoryImportExportPanel from "./TestCaseRepositoryImportExportPanel";
 
 type TestCaseStep = {

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AccessRequests.module.css";
 import { AccessRequestProfileWorkspace, AccessRequestsTableExperience } from "./_components";
 import { FiCheckCircle, FiClock, FiRefreshCw, FiSearch, FiSlash } from "react-icons/fi";
-import { RequireAccessRequestReviewer } from "@/core/auth/RequireAccessRequestReviewer";
+import { RequireAccessRequestReviewer } from "@/components/RequireAccessRequestReviewer";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAccessToken } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";

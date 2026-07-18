@@ -5,7 +5,7 @@ import path from "node:path";
 import type { AuthCompany } from "@/../packages/contracts/src/auth";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
-import { buildCurrentUserResponse } from "@/lib/core/session/currentUserResponse";
+import { buildCurrentUserResponse } from "@/lib/auth/currentUserResponse";
 import {
   findLocalUserByEmailOrId,
   getLocalUserById,

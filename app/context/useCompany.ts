@@ -1,4 +1,4 @@
-﻿import { useClientContext } from "./CompanyContext";
+﻿import { useClientContext } from "./ClientContext";
 
 export function useCompany() {
   return useClientContext();

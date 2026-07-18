@@ -10,7 +10,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { useClientContext } from "@/lib/core/company/CompanyContext";
+import { useClientContext } from "@/context/ClientContext";
 import { useAuth } from "@/context/AuthContext";
 
 export type ProjectRecord = {

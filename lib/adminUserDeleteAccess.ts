@@ -1,4 +1,4 @@
-﻿import type { AccessContext } from "@/core/session/session.store";
+﻿import type { AccessContext } from "@/lib/auth/session";
 import { resolveEditableProfileRole, type EditableProfileRole } from "@/lib/editableProfileRoles";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 

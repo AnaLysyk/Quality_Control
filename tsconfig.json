@@ -23,9 +23,6 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/core/*": [
-        "./lib/core/*"
-      ],
       "@/utils/*": [
         "./app/utils/*"
       ],

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
-import { buildCurrentUserResponse } from "@/lib/core/session/currentUserResponse";
+import { buildCurrentUserResponse } from "@/lib/auth/currentUserResponse";
 import { getLocalUserById, findLocalCompanyById, findLocalCompanyBySlug } from "@/lib/auth/localStore";
 import { isAvatarKey } from "@/lib/avatarCatalog";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";

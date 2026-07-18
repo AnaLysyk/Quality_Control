@@ -43,7 +43,7 @@ import {
   createLocalUser,
   createLocalCompany,
   upsertLocalLink,
-} from "@/lib/core/auth/localStore";
+} from "@/lib/auth/localStore";
 
 // â”€â”€ Helper: retorna a matriz de permissões padrão para um perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function perm(role: string): Record<string, string[]> {

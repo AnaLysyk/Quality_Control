@@ -7,7 +7,7 @@ import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/r
 import {
   isCompanyAllowed,
   isCompanyProjectPairAllowed,
-} from "@/lib/core/session/accessAssignment";
+} from "@/lib/auth/accessAssignment";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 import { resolveOperationalProject } from "./operationalProjectResolver";

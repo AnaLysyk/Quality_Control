@@ -9,7 +9,7 @@
 
 import { randomUUID } from "crypto";
 import { prisma } from "../../../../lib/prismaClient";
-import { pgCreateLocalUser } from "../../../../lib/core/auth/pgStore";
+import { pgCreateLocalUser } from "../../../../lib/auth/pgStore";
 import { generateTempPassword, hashPasswordSha256, safeEqualHex } from "../../../../lib/passwordHash";
 
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;

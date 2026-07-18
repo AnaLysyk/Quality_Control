@@ -1,5 +1,5 @@
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
-import type { AccessContext } from "./session.store";
+import type { AccessContext } from "./session";
 import type { AccessAssignment } from "./accessAssignment";
 
 export type CurrentUserPublicInput = {

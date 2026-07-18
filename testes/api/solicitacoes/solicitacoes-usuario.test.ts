@@ -49,7 +49,7 @@ import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgDeleteLocalCompany,
-} from "@/lib/core/auth/pgStore";
+} from "@/lib/auth/pgStore";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 jest.setTimeout(30000);

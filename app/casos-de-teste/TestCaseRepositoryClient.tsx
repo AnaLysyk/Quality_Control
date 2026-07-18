@@ -28,7 +28,7 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { fetchApi } from "@/lib/api";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { useProjectContext } from "@/context/ProjectContext";
 import TestCaseRepositoryImportExportPanel from "./TestCaseRepositoryImportExportPanel";
 
 type TestCaseStep = {

@@ -116,11 +116,11 @@ function resolveRole(access: AccessContext) {
   );
 }
 
-// lib/core/session/session.store.ts (getAccessContext) já deriva
+// lib/auth/session.ts (getAccessContext) já deriva
 // access.companySlugs/companyId corretamente por perfil, inclusive para
 // Líder TC e Usuário TC: para esses dois, a partir de ProjectTeamAssignment
 // ativos (role leader_tc/qa_tc, status="active") — não de Membership/link
-// antigo. Confirmado lendo lib/core/session/session.store.ts:217-304: um
+// antigo. Confirmado lendo lib/auth/session.ts:217-304: um
 // vínculo antigo (Membership) sem assignment ativo correspondente NÃO entra
 // em companySlugs quando o usuário tem papel leader_tc/qa_tc. Por isso esta
 // rota confia diretamente em access.companySlugs/companyId, sem reconsultar

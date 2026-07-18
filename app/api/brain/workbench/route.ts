@@ -2,7 +2,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

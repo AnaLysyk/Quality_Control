@@ -8,7 +8,7 @@ import {
   parseAccessRequestMessage,
 } from "@/lib/accessRequestMessage";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { appendAccessRequestRemovalHistory } from "@/lib/accessRequestRemovalHistory";

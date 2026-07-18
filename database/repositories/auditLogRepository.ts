@@ -3,11 +3,11 @@ import "server-only";
 import * as path from "path";
 import { randomUUID } from "crypto";
 
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

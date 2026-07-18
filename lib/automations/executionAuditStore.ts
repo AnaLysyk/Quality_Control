@@ -1,6 +1,6 @@
 ﻿import "server-only";
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 const DEFAULT_RETENTION_DAYS = 30;
 const DEFAULT_PRUNE_INTERVAL_SECONDS = 600;

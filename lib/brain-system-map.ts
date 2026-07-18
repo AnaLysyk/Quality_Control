@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { connectNodes, upsertNode } from "@/lib/brain";
 import { ACTION_LABELS, PERMISSION_MODULES } from "@/lib/permissionCatalog";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import type { Prisma } from "@prisma/client";
 
 type SystemRouteKind = "page" | "api";

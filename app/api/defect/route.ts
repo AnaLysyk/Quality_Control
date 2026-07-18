@@ -1,7 +1,7 @@
 ﻿// Importa utilitários do Next.js para lidar com requisições e respostas
 import { NextRequest, NextResponse } from "next/server";
 // Importa o cliente Prisma para acesso ao banco de dados
-import { prisma } from "../../../lib/prismaClient";
+import { prisma } from "../../../database/prismaClient";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { brainOnDefectCreated } from "@/lib/brain/autoSync";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";

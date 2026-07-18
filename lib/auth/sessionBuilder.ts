@@ -75,7 +75,7 @@ async function listActiveAssignments(userId: string): Promise<ActiveAssignment[]
   if (process.env.E2E_USE_JSON === "1") return [];
 
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     return await prisma.projectTeamAssignment.findMany({
       where: { userId, status: "active" },
       select: { companyId: true, projectId: true, role: true },

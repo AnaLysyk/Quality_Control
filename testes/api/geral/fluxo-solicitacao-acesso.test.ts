@@ -36,7 +36,7 @@ jest.mock("../../../lib/redis", () => ({ isRedisConfigured: jest.fn(() => false)
 
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   createAccessRequest,
   listAccessRequests,

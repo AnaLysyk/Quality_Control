@@ -2,7 +2,7 @@
 
 import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 async function createAnaAdmin() {
   const email = "ana.testing.company@gmail.com";

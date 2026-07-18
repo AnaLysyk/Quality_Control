@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import { randomUUID } from "crypto";
-import { readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+import { readPersistentJson, writePersistentJson } from "@/database/persistentJsonStore";
 
 const STORE_KEY = "qc:access_requests:removal_history:v1";
 const MAX_HISTORY_ITEMS = 1000;

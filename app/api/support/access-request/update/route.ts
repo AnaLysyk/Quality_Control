@@ -15,7 +15,7 @@ import {
 } from "@/lib/accessRequestMessage";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   normalizeRequestProfileType,
   requestProfileTypeNeedsCompany,

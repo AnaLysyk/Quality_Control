@@ -3,7 +3,7 @@
 import { randomUUID } from "crypto";
 
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import {
   readLocalAuthStore,
   writeLocalAuthStore,

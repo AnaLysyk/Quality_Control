@@ -3,7 +3,7 @@
 import { getBrainGaps } from "@/lib/brain";
 import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
 import { resolveBrainAccess } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

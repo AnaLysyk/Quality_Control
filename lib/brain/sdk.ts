@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 export { publishBrianImpulse } from "@/lib/brain/contextual/publisher";
 export { buildBrianImpulseEnvelope } from "@/lib/brain/contextual/pipeline";
 export { runBrianWorkflow } from "@/lib/brain/contextual/runtime";

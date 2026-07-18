@@ -4,7 +4,7 @@ import Papa from "papaparse";
 import * as XLSX from "xlsx";
 
 import type { BrainAccessContext } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   BRAIN_SOURCE_MEMORY_TYPE,
   canConfigureBrainSources,

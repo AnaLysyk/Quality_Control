@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import { isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];

@@ -1,7 +1,7 @@
 ﻿import type { BrainAccessContext } from "@/lib/brain/access";
 import { getSubgraph, searchNodes } from "@/lib/brain";
 import { isBrainNodeVisible } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 type QueryMode = "local" | "global" | "hybrid";
 

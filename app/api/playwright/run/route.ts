@@ -4,7 +4,7 @@ import { createHash } from "crypto";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
 import { startPlaywrightRun } from "@/lib/playwright/executionService";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

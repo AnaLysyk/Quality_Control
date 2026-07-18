@@ -16,7 +16,7 @@ jest.mock('../../../lib/permissions', () => ({
 jest.mock('jsonwebtoken', () => ({
   verify: jest.fn(),
 }));
-jest.mock('@/lib/prismaClient', () => ({
+jest.mock('@/database/prismaClient', () => ({
   prisma: {
     projectTeamAssignment: { findMany: jest.fn().mockResolvedValue([]) },
     project: { findMany: jest.fn().mockResolvedValue([]) },
@@ -38,7 +38,7 @@ const {
 } = require("@/lib/auth/localStore");
 const { resolveCapabilities } = require("@/lib/permissions");
 const jwt = require('jsonwebtoken');
-const { prisma } = require('@/lib/prismaClient');
+const { prisma } = require('@/database/prismaClient');
 
 describe('session.store', () => {
   beforeEach(() => {

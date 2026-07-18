@@ -36,7 +36,7 @@ const prismaMock = {
   $transaction: jest.fn(async (callback: any) => callback({ storedTestCase: storedTestCaseDelegate })),
 };
 
-jest.mock("@/lib/prismaClient", () => ({
+jest.mock("@/database/prismaClient", () => ({
   prisma: prismaMock,
 }));
 

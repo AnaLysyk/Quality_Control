@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
 import { canAccess } from "@/lib/permissions/can-access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 const VALID_MEMORY_TYPES = new Set(["RULE", "DECISION", "PATTERN", "CONTEXT", "EXCEPTION", "TECHNICAL_NOTE", "QA_NOTE", "SYSTEM_EVENT"]);
 

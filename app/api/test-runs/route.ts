@@ -39,7 +39,7 @@ function normalizeRunStatus(value: unknown) {
 }
 
 async function getPrisma() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

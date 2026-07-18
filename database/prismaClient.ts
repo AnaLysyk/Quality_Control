@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { getPrismaClientOptions, resetPrismaAdapter } from "@/lib/prismaClientOptions";
+import { getPrismaClientOptions, resetPrismaAdapter } from "@/database/prismaClientOptions";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;

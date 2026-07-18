@@ -1,13 +1,13 @@
 ﻿import "server-only";
 
 import { randomUUID } from "crypto";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { LEGACY_SUPORTE_STATUS_MAP, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

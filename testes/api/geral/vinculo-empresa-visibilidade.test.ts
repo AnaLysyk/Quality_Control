@@ -19,7 +19,7 @@
 jest.setTimeout(30000);
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
 import {
   upsertLocalLink,

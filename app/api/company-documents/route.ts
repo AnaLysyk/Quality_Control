@@ -7,8 +7,8 @@ import jwt from "jsonwebtoken";
 import { listLocalCompanies, listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
-import { prisma } from "@/lib/prismaClient";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { prisma } from "@/database/prismaClient";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { getRedis } from "@/lib/redis";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();

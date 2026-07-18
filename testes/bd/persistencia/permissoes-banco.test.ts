@@ -27,7 +27,7 @@ jest.mock("../../../lib/redis", () => ({
 }));
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
 import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "@/lib/store/permissionsStore";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";

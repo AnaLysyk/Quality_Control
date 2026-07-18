@@ -1,4 +1,4 @@
-﻿import { AUTOMATION_DOMAINS } from "../../../data/automationCatalog";
+﻿import { AUTOMATION_DOMAINS } from "../../../database/repositories/automationCatalog";
 
 describe("automationCatalog", () => {
   it("should have valid catalog", () => {

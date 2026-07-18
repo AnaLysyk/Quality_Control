@@ -2,7 +2,7 @@
 
 import { resolveBrainAccess } from "@/lib/brain/access";
 import { syncBrain } from "@/lib/brain-sync";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 export async function POST(req: Request) {
   const accessResult = await resolveBrainAccess(req, { requireManage: true });

@@ -137,7 +137,7 @@ async function persistConversationMemory(args: {
   brainContext?: AssistantOpenEventDetail | null;
 }) {
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     const userInput = compactText(getLatestUserMessage(args.body), 1500);
     const assistantReply = compactText(args.reply, 1500);
     if (!userInput && !assistantReply) return;

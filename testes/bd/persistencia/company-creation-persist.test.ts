@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "@/lib/auth/pgStore";
 
 const uid = randomUUID().slice(0, 8);

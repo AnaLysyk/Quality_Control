@@ -110,7 +110,7 @@ const nextConfig = {
     if (dev) {
       const ignored = new Set<string>([
         ...(Array.isArray(config.watchOptions?.ignored) ? config.watchOptions.ignored : []),
-        "**/data/**",
+        "**/database/**",
         "**/test-results/**",
         "**/.tmp/**",
       ]);

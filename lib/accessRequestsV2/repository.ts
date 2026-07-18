@@ -9,7 +9,7 @@ import {
   type AccessRequestStatus,
 } from "@/data/accessRequestsStore";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import {
   type AccessRequestV2,

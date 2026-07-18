@@ -9,7 +9,7 @@ import {
 } from "@/lib/accessRequestMessage";
 import { notifyAccessRequestCreated } from "@/lib/notificationService";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { isSupportAdminUser, isTechnicalSupportUser } from "@/lib/supportAccess";
 import {
   normalizeRequestProfileType,

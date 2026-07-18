@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prismaClient'
+﻿import { prisma } from '@/database/prismaClient'
 import { BrainNode, BrainEdge, BrainMemory, Prisma } from '@prisma/client'
 import { normalizeEdgeContract, normalizeNodeContract, toRecord } from '@/lib/brain/ontology'
 

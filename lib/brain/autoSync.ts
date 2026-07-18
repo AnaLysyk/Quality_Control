@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import { upsertNode, connectNodes, addMemory } from "@/lib/brain";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 
 /**

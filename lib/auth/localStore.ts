@@ -4,8 +4,8 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { randomUUID } from "crypto";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
-import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
+import { resolveDatabaseUrlFromEnv } from "@/database/databaseUrl";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import {

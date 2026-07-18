@@ -13,7 +13,7 @@ const ALL_MODES: RelationshipMode[] = ["companies", "leaders", "qa_users", "busi
 const COMPANY_MODES: RelationshipMode[] = ["qa_users", "business_users"];
 
 async function getDb() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

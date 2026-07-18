@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/database/prismaClient";
 
 async function main() {
   const company = await prisma.company.findFirst();

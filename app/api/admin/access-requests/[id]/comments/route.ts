@@ -12,7 +12,7 @@ import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
 import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import {
   canReviewerAccessQueue,

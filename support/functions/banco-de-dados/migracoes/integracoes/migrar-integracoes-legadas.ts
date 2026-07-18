@@ -1,6 +1,6 @@
 ﻿import dotenv from "dotenv";
 import { IntegrationType } from "@prisma/client";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 dotenv.config();
 

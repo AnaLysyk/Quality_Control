@@ -3,7 +3,7 @@ import "server-only";
 import type { BrainAccessContext } from "@/lib/brain/access";
 import type { FreeProvider } from "@/lib/brain/freeApiGuard";
 import { canAccess } from "@/lib/permissions/can-access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 type JsonRecord = Record<string, unknown>;
 

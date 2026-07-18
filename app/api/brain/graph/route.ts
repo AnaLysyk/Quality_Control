@@ -5,7 +5,7 @@ import { filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess, type 
 import { getExecutiveBrainContextGraph } from "@/lib/brain/executiveContext";
 import { sanitizeBrainMetadata, sanitizeBrainText } from "@/lib/brain/security";
 import { canAccess } from "@/lib/permissions/can-access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 function isE2eJsonMode() {
   return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true";

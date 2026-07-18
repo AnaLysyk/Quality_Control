@@ -1,4 +1,4 @@
-﻿import { listClients } from "../../../data/clientsRepository";
+﻿import { listClients } from "../../../database/repositories/clientsRepository";
 
 jest.mock("../../../lib/auth/localStore", () => ({
   listLocalCompanies: jest.fn().mockResolvedValue([

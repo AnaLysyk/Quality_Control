@@ -1,7 +1,7 @@
 import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 
 import { Role } from "@prisma/client";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 async function main() {
   const user = await prisma.user.findUnique({

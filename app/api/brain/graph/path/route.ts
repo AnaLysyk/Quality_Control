@@ -3,7 +3,7 @@
 import { findPathBetweenNodes } from "@/lib/brain";
 import { assertBrainNodeAccess, isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
 import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 async function allPathNodesVisible(nodeIds: string[], access: BrainAccessContext) {
   const uniqueNodeIds = Array.from(new Set(nodeIds));

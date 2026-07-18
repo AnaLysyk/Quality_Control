@@ -1,6 +1,6 @@
 ﻿import "server-only";
 import { randomUUID } from "crypto";
-import { prisma, reconnectPrisma } from "@/lib/prismaClient";
+import { prisma, reconnectPrisma } from "@/database/prismaClient";
 import {
   assertUserCanLinkToCompany,
   normalizeUserOrigin,

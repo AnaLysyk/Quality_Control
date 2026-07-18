@@ -1,5 +1,5 @@
 ﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
 async function createAdmin() {

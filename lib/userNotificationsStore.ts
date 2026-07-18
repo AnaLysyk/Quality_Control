@@ -3,12 +3,12 @@
 import { randomUUID } from "crypto";
 import { createNotificationEvent, type NotificationEventSourceType } from "@/lib/notificationEventsStore";
 import { buildNotificationOperationalMetadata } from "@/lib/notificationOperationalMetadata";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

@@ -1,4 +1,4 @@
-﻿import { getUserById, updateUserEmail, updateUserCompany } from "../../../data/usersStore";
+﻿import { getUserById, updateUserEmail, updateUserCompany } from "../../../database/repositories/usersStore";
 
 describe("usersStore", () => {
   it("should get user by id", () => {

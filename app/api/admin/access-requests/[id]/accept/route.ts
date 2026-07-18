@@ -9,7 +9,7 @@ import {
   normalizeAccessType,
   parseAccessRequestMessage,
 } from "@/lib/accessRequestMessage";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import {

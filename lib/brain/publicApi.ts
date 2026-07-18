@@ -2,7 +2,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { getSubgraph, traceImpact, searchNodes } from "@/lib/brain";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 export async function brainGetContext(entity: string) {
   const node = (await searchNodes({ query: entity, limit: 1 }))[0];

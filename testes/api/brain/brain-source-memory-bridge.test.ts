@@ -1,4 +1,4 @@
-jest.mock("@/lib/prismaClient", () => ({
+jest.mock("@/database/prismaClient", () => ({
   prisma: {
     brainSourceConfig: {
       findMany: jest.fn(),
@@ -13,7 +13,7 @@ jest.mock("@/lib/prismaClient", () => ({
 }));
 
 import { listBrainSources, BRAIN_SOURCE_MEMORY_TYPE } from "@/lib/brain/sourceSettings";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import type { BrainAccessContext } from "@/lib/brain/access";
 
 function fakeAccess(overrides: Partial<BrainAccessContext> = {}): BrainAccessContext {

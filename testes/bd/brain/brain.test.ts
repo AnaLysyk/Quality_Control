@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
-import { prisma } from '@/lib/prismaClient'
+import { prisma } from '@/database/prismaClient'
 import {
   upsertNode,
   connectNodes,

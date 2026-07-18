@@ -37,7 +37,7 @@ type OperationResult = {
 };
 
 async function getDb() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

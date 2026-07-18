@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/database/prismaClient";
 
 async function run() {
   console.log("Starting backfill: company integrations");

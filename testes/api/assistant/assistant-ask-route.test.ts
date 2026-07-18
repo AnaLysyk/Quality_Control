@@ -28,7 +28,7 @@ jest.mock("@/lib/assistant/service", () => ({
   runAssistantRequest: jest.fn(),
 }));
 
-jest.mock("@/lib/prismaClient", () => ({
+jest.mock("@/database/prismaClient", () => ({
   prisma: {
     brainMemory: {
       create: jest.fn().mockResolvedValue({ id: "m1" }),

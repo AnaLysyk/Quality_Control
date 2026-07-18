@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import { randomUUID } from "crypto";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 
@@ -10,7 +10,7 @@ function shouldUsePostgresStore() {
   return USE_POSTGRES && !shouldUseJsonStore();
 }
 async function getPrisma() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

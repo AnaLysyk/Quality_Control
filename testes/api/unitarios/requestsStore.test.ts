@@ -1,6 +1,6 @@
-﻿import { listUserRequests, listAllRequests, getRequestById, addRequest, updateRequestStatus, RequestRecord } from "../../../data/requestsStore";
+﻿import { listUserRequests, listAllRequests, getRequestById, addRequest, updateRequestStatus, RequestRecord } from "../../../database/repositories/requestsStore";
 
-jest.mock("../../../lib/persistenceMode", () => ({
+jest.mock("../../../database/persistenceMode", () => ({
   shouldUsePostgresPersistence: () => false,
 }));
 jest.mock("../../../lib/storeMode", () => ({

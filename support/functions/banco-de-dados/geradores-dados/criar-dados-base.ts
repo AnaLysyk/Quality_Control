@@ -28,12 +28,12 @@ const isJsonMode =
   process.env.SKIP_DB_SETUP === "1" ||
   process.env.SKIP_DB_SETUP === "true";
 
-let prismaClient: typeof import("@/lib/prismaClient").prisma | null = null;
+let prismaClient: typeof import("@/database/prismaClient").prisma | null = null;
 
 function getPrisma() {
   if (isJsonMode) return null;
   if (!prismaClient) {
-    prismaClient = require("@/lib/prismaClient").prisma;
+    prismaClient = require("@/database/prismaClient").prisma;
   }
   return prismaClient;
 }

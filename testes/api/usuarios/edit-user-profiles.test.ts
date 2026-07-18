@@ -15,7 +15,7 @@
  * 10. Editar múltiplos campos em uma operação
  */
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   pgCreateLocalUser,
   pgUpdateLocalUser,

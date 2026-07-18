@@ -2,8 +2,8 @@
 
 import { Redis } from "@upstash/redis";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prismaClient";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { prisma } from "@/database/prismaClient";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 
 type RedisValue = {
   value: string;

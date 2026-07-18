@@ -4,7 +4,7 @@ import EventEmitter from "events";
 import { createHash } from "crypto";
 import fs from "fs/promises";
 import path from "path";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 import { prepareWorkspace, cleanupWorkspace, getRunDir } from "./workspaceService";
 import type { PlaywrightConfigOptions, ScriptFile } from "./workspaceService";
 
@@ -254,7 +254,7 @@ export async function startPlaywrightRun(opts: StartRunOptions): Promise<string>
 
   // Also create a Prisma TestRun for cross-module traceability
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     await prisma.testRun.create({
       data: {
         companyId: opts.companySlug,

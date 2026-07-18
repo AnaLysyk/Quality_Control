@@ -10,7 +10,7 @@
  *   (ou via workflow GitHub Actions agendado)
  */
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 /** Domínios de e-mail usados exclusivamente pelos testes */
 const TEST_EMAIL_DOMAINS = ["@test-profile.local", "@test-del.local"];

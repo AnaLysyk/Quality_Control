@@ -1,5 +1,5 @@
 ﻿import "server-only";
-import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/database/persistentJsonStore";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import type { ReleaseStatus } from "@/types/release";
 

@@ -1,5 +1,5 @@
 ﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 async function main() {
   const demo = await prisma.company.upsert({

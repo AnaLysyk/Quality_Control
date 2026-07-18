@@ -23,7 +23,7 @@ const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 import { POST } from "@/api/admin/access-requests/[id]/accept/route";
 import { createAccessRequest, getAccessRequestById } from "@/data/accessRequestsStore";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { composeAccessRequestMessage } from "@/lib/accessRequestMessage";
 import { pgCreateLocalCompany, pgDeleteLocalCompany } from "@/lib/auth/pgStore";
 import { hashPasswordSha256 } from "@/lib/passwordHash";

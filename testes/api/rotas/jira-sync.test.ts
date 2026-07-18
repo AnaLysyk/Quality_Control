@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
 import * as jiraSync from "@/lib/jiraSync";
 

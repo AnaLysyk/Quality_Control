@@ -2,8 +2,8 @@
 
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import { dirname, resolve } from "path";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
-import { getPrismaClientOptions } from "@/lib/prismaClientOptions";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
+import { getPrismaClientOptions } from "@/database/prismaClientOptions";
 import { isRedisConfigured } from "@/lib/redis";
 import { normalizePermissionMatrix } from "@/lib/permissionMatrix";
 import { getJson, setJson, deleteKey } from "./redisClient";

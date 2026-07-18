@@ -2,7 +2,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { upsertNode, connectNodes } from "@/lib/brain";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { processBrianImpulse } from "./pipeline";
 import type { BrianImpulseEnvelope, BrianProcessingResult } from "./types";
 

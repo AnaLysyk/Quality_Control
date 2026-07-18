@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 /**
  * Rota leve de audit: registra quando o assistente é aberto com contexto.

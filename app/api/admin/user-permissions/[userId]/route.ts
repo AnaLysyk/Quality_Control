@@ -8,7 +8,7 @@ import {
   normalizePermissionMatrix,
   type PermissionMatrix,
 } from "@/lib/permissionMatrix";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { resolveProfilePermissionDefaults } from "@/lib/store/profilePermissionsStore";

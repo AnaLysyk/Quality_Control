@@ -5,7 +5,7 @@ import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@
 import { requireAiApiKey } from "@/lib/ai/apiKey";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

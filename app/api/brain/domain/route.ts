@@ -2,7 +2,7 @@
 
 import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 type DomainNode = {
   id: string;

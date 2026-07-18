@@ -10,7 +10,7 @@
  *  - Suporte Técnico:     suporte.tecnico@testing-company.local   (it_dev / global_admin)
  */
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   pgCreateLocalCompany,
   pgCreateLocalUser,

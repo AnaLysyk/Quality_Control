@@ -3,7 +3,7 @@
 import { SYSTEM_MODULE_BY_ID } from "@/lib/navigation/module-map";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
 import type { SystemModuleId, SystemPermission, SystemRouteDefinition } from "@/lib/navigation/navigation.types";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { canAccess, canAccessRoute } from "@/lib/permissions/can-access";
 import { getUserAccessContext, type UserAccessContext } from "@/lib/permissions/get-user-access-context";

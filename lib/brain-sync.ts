@@ -8,7 +8,7 @@
  *   syncTicketToBrain(ticket).catch(() => {});
  */
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { upsertNode, connectNodes } from "@/lib/brain";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";

@@ -1,6 +1,6 @@
 ﻿import { NextRequest } from "next/server";
 import { getAllReleases, type ReleaseEntry } from "@/release/data";
-import { getAllManualReleases } from "@/release/manualData";
+import { getAllManualReleases } from "@/data/manualData";
 import type { Release as ManualRelease } from "@/types/release";
 import {
   buildCompanyRows,

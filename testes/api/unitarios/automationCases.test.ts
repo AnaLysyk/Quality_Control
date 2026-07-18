@@ -1,4 +1,4 @@
-﻿import { AUTOMATION_CASES } from "../../../data/automationCases";
+﻿import { AUTOMATION_CASES } from "../../../database/repositories/automationCases";
 
 describe("automationCases", () => {
   it("should have valid export or data", () => {

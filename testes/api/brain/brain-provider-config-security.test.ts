@@ -1,7 +1,7 @@
 const mockFindMany = jest.fn();
 const mockUpsert = jest.fn();
 
-jest.mock("@/lib/prismaClient", () => ({
+jest.mock("@/database/prismaClient", () => ({
   prisma: {
     brainProviderConfig: {
       findMany: mockFindMany,

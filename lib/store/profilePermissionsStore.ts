@@ -14,7 +14,7 @@ import {
   canUsePersistentJsonStore,
   readPersistentJson,
   writePersistentJson,
-} from "@/lib/persistentJsonStore";
+} from "@/database/persistentJsonStore";
 
 export type ProfilePermissionsOverride = PermissionOverride & {
   role: SystemRole;

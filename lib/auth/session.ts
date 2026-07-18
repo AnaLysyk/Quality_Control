@@ -163,7 +163,7 @@ async function listActiveProjectAssignments(userId: string): Promise<ActiveProje
   if (process.env.E2E_USE_JSON === "1") return [];
 
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     const rows = await prisma.projectTeamAssignment.findMany({
       where: { userId, status: "active" },
       select: {
@@ -209,7 +209,7 @@ async function resolveMembershipProjectsByIds(projectIds: string[]): Promise<Map
   if (process.env.E2E_USE_JSON === "1") return new Map();
 
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     const rows = await prisma.project.findMany({
       where: { id: { in: uniqueIds } },
       select: { id: true, companyId: true, slug: true, name: true },

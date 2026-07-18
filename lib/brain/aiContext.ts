@@ -1,6 +1,6 @@
 ﻿import "server-only";
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { getSubgraph, getNodeMemories, searchNodes } from "@/lib/brain";
 import { filterBrainGraphByAccess, isBrainNodeVisible, type BrainAccessContext } from "@/lib/brain/access";
 import { buildBrainRuntimeContext } from "@/lib/brain/runtime";

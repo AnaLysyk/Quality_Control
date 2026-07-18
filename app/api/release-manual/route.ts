@@ -2,7 +2,7 @@
 import { randomUUID } from "crypto";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { hasCapability, type Capability } from "@/lib/permissions";
-import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/database/persistentJsonStore";
 import { syncReleaseManualToBrain } from "@/lib/brain-sync";
 
 type ManualRelease = {

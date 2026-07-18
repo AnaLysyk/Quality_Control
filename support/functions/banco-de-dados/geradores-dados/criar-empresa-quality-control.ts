@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/database/prismaClient";
 import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "@/lib/auth/pgStore";
 import { syncCompanyApplications } from "@/lib/applicationsStore";
 

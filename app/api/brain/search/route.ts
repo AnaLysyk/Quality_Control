@@ -4,7 +4,7 @@ import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
 import { canAccessBrainModule, filterBrainDomainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
 import { sanitizeBrainMetadata } from "@/lib/brain/security";
 import { buildBrainSearchIndex, normalizeBrainSearchText, searchBrainIndex } from "@/lib/brain/searchIndex";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 function readString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;

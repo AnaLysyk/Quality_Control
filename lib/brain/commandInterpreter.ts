@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/database/prismaClient";
 import { getBrainGaps, getSubgraph, searchNodes, traceImpact } from "@/lib/brain";
 import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
 import type { BrainAccessContext } from "@/lib/brain/access";

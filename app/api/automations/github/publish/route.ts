@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 import { ingestSystemEventIntoBrain } from "@/lib/brain/systemIngest";
 import { parseRepository, publishFilesToRepo } from "@/lib/github/publishToRepo";
 

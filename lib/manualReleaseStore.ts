@@ -3,14 +3,14 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Release } from "@/types/release";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 const USE_JSON_STORE = shouldUseJsonStore();
 async function getPrisma() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

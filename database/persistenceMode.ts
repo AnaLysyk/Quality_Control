@@ -1,5 +1,5 @@
-﻿import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
-import type { DatabaseScope } from "@/lib/databaseUrl";
+﻿import { resolveDatabaseUrlFromEnv } from "@/database/databaseUrl";
+import type { DatabaseScope } from "@/database/databaseUrl";
 
 function normalizeEnv(value?: string | null) {
   return (value ?? "").trim().replace(/^['"]|['"]$/g, "").toLowerCase();

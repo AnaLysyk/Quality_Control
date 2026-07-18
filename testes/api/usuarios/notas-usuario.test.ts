@@ -12,7 +12,7 @@
  *  7. Confirma edição persistida no banco
  */
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   createUserNote,
   updateUserNote,

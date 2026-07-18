@@ -3,7 +3,7 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
 import { getAllReleases, type ReleaseEntry } from "@/release/data";
-import { getAllManualReleases } from "@/release/manualData";
+import { getAllManualReleases } from "@/data/manualData";
 import type { Release as ManualRelease } from "@/types/release";
 import { buildCompanyRows, buildReleaseWithStats, sumStats, toPercent, type Stats } from "@/lib/quality";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";

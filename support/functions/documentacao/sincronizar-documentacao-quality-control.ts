@@ -21,7 +21,7 @@ function hasDatabaseUrl() {
   return Boolean(process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL);
 }
 
-type PrismaClientLike = typeof import("../../../lib/prismaClient")["prisma"];
+type PrismaClientLike = typeof import("../../../database/prismaClient")["prisma"];
 
 async function resolveTestingCompany(prisma: PrismaClientLike) {
   const exact = await prisma.company.findUnique({
@@ -194,7 +194,7 @@ async function main() {
     );
   }
 
-  const { prisma } = await import("../../../lib/prismaClient");
+  const { prisma } = await import("../../../database/prismaClient");
   const { company, created } = await resolveTestingCompany(prisma);
   const project = await ensureQualityControlProject(prisma, company.id);
   const store = await writeCompanyDocs(prisma, company.slug);
@@ -213,6 +213,6 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    const { prisma } = await import("../../../lib/prismaClient").catch(() => ({ prisma: null }));
+    const { prisma } = await import("../../../database/prismaClient").catch(() => ({ prisma: null }));
     await prisma?.$disconnect().catch(() => {});
   });

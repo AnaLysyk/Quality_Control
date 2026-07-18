@@ -1,4 +1,4 @@
-jest.mock("@/lib/prismaClient", () => ({
+jest.mock("@/database/prismaClient", () => ({
   prisma: {
     brainBehaviorProfile: {
       findMany: jest.fn(),
@@ -25,7 +25,7 @@ import {
   updateBehaviorProfile,
   deleteBehaviorProfile,
 } from "@/lib/brain/behaviorProfiles";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import type { BrainAccessContext } from "@/lib/brain/access";
 
 function fakeAccess(overrides: Partial<BrainAccessContext> = {}): BrainAccessContext {

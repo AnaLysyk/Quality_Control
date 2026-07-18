@@ -9,7 +9,7 @@ type BrainModule = typeof import('@/lib/brain')
 type NodeInput = Parameters<BrainModule['upsertNode']>[0]
 type CompanyScope = { companyId: string | null; companySlug: string | null }
 type BrainSyncDeps = {
-  prisma: typeof import('@/lib/prismaClient')['prisma']
+  prisma: typeof import('@/database/prismaClient')['prisma']
   upsertNode: BrainModule['upsertNode']
   connectNodes: BrainModule['connectNodes']
   validateBrainIntegrity: BrainModule['validateBrainIntegrity']
@@ -28,7 +28,7 @@ async function loadDependencies(): Promise<BrainSyncDeps> {
   if (dependencies) return dependencies
   loadLocalEnv()
 
-  const prismaModule = await import('@/lib/prismaClient')
+  const prismaModule = await import('@/database/prismaClient')
   const brainModule = await import('@/lib/brain')
 
   dependencies = {

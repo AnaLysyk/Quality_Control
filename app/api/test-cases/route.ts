@@ -150,7 +150,7 @@ export async function POST(req: Request) {
   }
 
   if (payload.projectId) {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     const project = await prisma.project.findUnique({
       where: { id: payload.projectId },
       select: { manualCreationDisabled: true },

@@ -6,7 +6,7 @@ import { jiraBrainSource } from "@/lib/brain/integrations/jiraSource";
 import type { BrainGraphSourceHealth } from "@/lib/brain/sources";
 import { PERMISSION_MODULES } from "@/lib/permissionCatalog";
 import { canAccess } from "@/lib/permissions/can-access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
 
 function sourceStatusByPermission(access: BrainAccessContext | null, moduleId: string, action = "view") {

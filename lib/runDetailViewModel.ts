@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import { getReleaseBySlug, type ReleaseEntry } from "@/release/data";
-import { readManualReleaseStore } from "@/release/manualData";
+import { readManualReleaseStore } from "@/data/manualData";
 import { getRunDetails } from "@/integrations/qase";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { getAppMeta, getAppColorClass } from "@/lib/appMeta";

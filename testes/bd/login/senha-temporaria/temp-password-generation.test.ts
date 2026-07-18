@@ -8,7 +8,7 @@
  */
 
 import { randomUUID } from "crypto";
-import { prisma } from "../../../../lib/prismaClient";
+import { prisma } from "../../../../database/prismaClient";
 import { pgCreateLocalUser } from "../../../../lib/auth/pgStore";
 import { generateTempPassword, hashPasswordSha256, safeEqualHex } from "../../../../lib/passwordHash";
 

@@ -11,7 +11,7 @@ import {
   sanitizeBrainText,
 } from "@/lib/brain/security";
 import { buildBrainSearchIndex, searchBrainIndex } from "@/lib/brain/searchIndex";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 type FindManyDelegate = {
   findMany: (args?: Record<string, unknown>) => Promise<unknown[]>;

@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

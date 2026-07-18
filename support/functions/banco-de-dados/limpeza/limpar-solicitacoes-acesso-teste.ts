@@ -19,7 +19,7 @@ const where = {
 };
 
 async function main() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
 
   const encontrados = await prisma.accessRequest.findMany({
     where,

@@ -16,7 +16,7 @@
  */
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   pgCreateLocalUser,
   pgCreateLocalCompany,

@@ -13,7 +13,7 @@ export type AuditLogInput = {
 export function writeAuditLog(input: AuditLogInput): void {
   (async () => {
     try {
-      const { prisma } = await import("@/lib/prismaClient");
+      const { prisma } = await import("@/database/prismaClient");
       await prisma.auditLog.create({
         data: {
           actor_user_id: input.actorUserId ?? null,

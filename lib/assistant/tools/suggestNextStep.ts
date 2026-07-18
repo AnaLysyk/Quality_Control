@@ -2,7 +2,7 @@
 
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import type { AssistantScreenContext } from "../types";
 import { isEmpresaUser } from "../data";
 import type { AssistantExecutorResult } from "./types";

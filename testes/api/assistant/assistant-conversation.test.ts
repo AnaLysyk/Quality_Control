@@ -1,4 +1,4 @@
-﻿jest.mock("@/lib/prismaClient", () => ({
+﻿jest.mock("@/database/prismaClient", () => ({
   prisma: {
     brainNode: {
       findUnique: jest.fn(),

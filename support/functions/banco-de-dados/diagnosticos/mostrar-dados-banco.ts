@@ -1,4 +1,4 @@
-﻿import { prisma as p } from "@/lib/prismaClient";
+﻿import { prisma as p } from "@/database/prismaClient";
 
 async function main() {
 const companies = await p.company.findMany({

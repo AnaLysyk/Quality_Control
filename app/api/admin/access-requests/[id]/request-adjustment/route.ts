@@ -10,7 +10,7 @@ import {
   type AccessRequestAdjustmentRound,
 } from "@/lib/accessRequestMessage";
 import { notifyAccessRequestAdjustmentRequested } from "@/lib/notificationService";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { resolveReviewQueue } from "@/lib/requestRouting";

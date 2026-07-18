@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";

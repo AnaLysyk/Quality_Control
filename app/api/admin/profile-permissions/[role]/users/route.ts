@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { applyPermissionOverride, normalizePermissionMatrix } from "@/lib/permissionMatrix";
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { resolveProfilePermissionDefaults } from "@/lib/store/profilePermissionsStore";

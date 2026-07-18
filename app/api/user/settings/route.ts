@@ -7,7 +7,7 @@ import {
 } from "@/lib/appSettingsCookies";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
-import { readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+import { readPersistentJson, writePersistentJson } from "@/database/persistentJsonStore";
 
 export const revalidate = 0;
 

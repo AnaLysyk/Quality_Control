@@ -2,7 +2,7 @@
 import {
   getPrismaClientOptions,
   resetPrismaAdapter,
-} from "@/lib/prismaClientOptions";
+} from "@/database/prismaClientOptions";
 
 const globalForAutomationPrisma = globalThis as unknown as {
   automationPrisma?: PrismaClient;

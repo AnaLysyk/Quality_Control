@@ -78,7 +78,7 @@ export async function resolveOperationalProject(input: {
   if (!canResolveAnyCompanyProject) return { kind: "not_found" };
 
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     const requestedCompanyId = normalize(input.companyId);
     const requestedCompanySlug = normalize(input.companySlug);
     const projects = await prisma.project.findMany({

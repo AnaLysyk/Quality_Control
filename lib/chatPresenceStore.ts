@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 export type ChatPresenceStatus = "online" | "busy" | "offline";
 export type ChatScheduleType = "meeting" | "internal_appointment" | "task" | "run_delivery" | "follow_up";

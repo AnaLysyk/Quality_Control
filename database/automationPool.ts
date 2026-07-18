@@ -1,6 +1,6 @@
 ﻿import "server-only";
 import pg from "pg";
-import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
+import { resolveDatabaseUrlFromEnv } from "@/database/databaseUrl";
 
 const { Pool } = pg;
 

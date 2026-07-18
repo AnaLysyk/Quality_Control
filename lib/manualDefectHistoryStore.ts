@@ -1,9 +1,9 @@
 ﻿import "server-only";
 
 import crypto from "node:crypto";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 

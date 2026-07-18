@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 // Importa prisma só em ambiente Node/server
-let prisma: typeof import("@/lib/prismaClient").prisma | undefined;
+let prisma: typeof import("@/database/prismaClient").prisma | undefined;
 if (typeof process !== "undefined" && process.release?.name === "node") {
-  prisma = require("@/lib/prismaClient").prisma;
+  prisma = require("@/database/prismaClient").prisma;
 }
 import { authenticateRequest } from "@/lib/jwtAuth";
 

@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 
 import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
 import { resolveEdgeConfidence, toRecord } from "@/lib/brain/ontology";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 export async function GET(
   req: Request,

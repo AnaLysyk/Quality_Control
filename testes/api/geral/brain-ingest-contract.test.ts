@@ -12,7 +12,7 @@ jest.mock("@/lib/brain", () => ({
   addMemory: jest.fn(),
 }));
 
-jest.mock("@/lib/prismaClient", () => ({
+jest.mock("@/database/prismaClient", () => ({
   prisma: {
     brainAuditLog: {
       create: jest.fn().mockResolvedValue({ id: "audit-1" }),

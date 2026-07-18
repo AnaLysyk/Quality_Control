@@ -8,7 +8,7 @@ import {
 } from "@/lib/brain";
 import { AGENT_REGISTRY, detectAgentMode } from "@/lib/brain/agents";
 import type { AgentMode } from "@/lib/brain/agents";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 export type OrchestratorInput = {
   messages: Array<{ role: "user" | "assistant"; content: string }>;

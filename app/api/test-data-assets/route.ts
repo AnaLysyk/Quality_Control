@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   canAccessCompany,
   canAccessSensitivity,

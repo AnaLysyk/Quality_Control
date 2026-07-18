@@ -1,6 +1,6 @@
 jest.mock("@/lib/context/operationalContext", () => ({ resolveOperationalContext: jest.fn() }));
 jest.mock("@/lib/audit/writeAuditLog", () => ({ writeAuditLog: jest.fn() }));
-jest.mock("@/lib/prismaClient", () => ({
+jest.mock("@/database/prismaClient", () => ({
   prisma: {
     company: { findUnique: jest.fn() },
     project: {
@@ -13,7 +13,7 @@ jest.mock("@/lib/prismaClient", () => ({
 
 import { GET } from "@/api/projects/route";
 import { resolveOperationalContext } from "@/lib/context/operationalContext";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 const mockedResolveOperationalContext = resolveOperationalContext as jest.MockedFunction<
   typeof resolveOperationalContext

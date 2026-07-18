@@ -4,7 +4,7 @@ import crypto from "crypto";
 
 import type { BrainAccessContext } from "@/lib/brain/access";
 import { canAccess } from "@/lib/permissions/can-access";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { guardOutboundUrl } from "@/lib/brain/ssrfGuard";
 
 type JsonRecord = Record<string, unknown>;

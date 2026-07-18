@@ -22,7 +22,7 @@
  * 15.  Listar chamados por usuário criador
  */
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
 
 jest.setTimeout(120000);

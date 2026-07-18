@@ -1,6 +1,6 @@
 ﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import type { TestCaseRecord } from "@/lib/test-cases/types";
 import type { Prisma } from "@prisma/client";
 

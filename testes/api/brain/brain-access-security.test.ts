@@ -8,7 +8,7 @@ jest.mock("@/lib/serverPermissionAccess", () => ({
   resolvePermissionAccessForUser: jest.fn(),
 }));
 
-jest.mock("@/lib/prismaClient", () => ({
+jest.mock("@/database/prismaClient", () => ({
   prisma: {
     company: { findMany: jest.fn() },
     project: { findMany: jest.fn() },
@@ -27,7 +27,7 @@ import {
 } from "@/lib/brain/access";
 import { mergeBrainGraphs } from "../../../app/brain/_utils/brainGraphBuilder";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 
 type MockAuthUser = {

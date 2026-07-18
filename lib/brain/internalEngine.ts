@@ -1,6 +1,6 @@
 ﻿import "server-only";
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import {
   searchNodes,
   getNodeMemories,

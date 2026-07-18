@@ -1,5 +1,5 @@
 ﻿import "server-only";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { info, warn, error } from "@/lib/logger";
 
 function buildBasicAuth(email: string, token: string) {

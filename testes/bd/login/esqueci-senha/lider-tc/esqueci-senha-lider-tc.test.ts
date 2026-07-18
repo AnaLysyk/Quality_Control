@@ -23,7 +23,7 @@ jest.mock("@/lib/email", () => ({
   },
 }));
 
-import { prisma } from "../../../../../lib/prismaClient";
+import { prisma } from "../../../../../database/prismaClient";
 import { getRedis } from "../../../../../lib/redis";
 import {
   addRequest,
@@ -31,7 +31,7 @@ import {
   getRequestById,
   updateRequestStatus,
   type RequestUser,
-} from "../../../../../data/requestsStore";
+} from "../../../../../database/repositories/requestsStore";
 import {
   pgCreateLocalUser,
   pgCreateLocalCompany,

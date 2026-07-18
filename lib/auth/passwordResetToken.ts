@@ -2,7 +2,7 @@
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import { dirname, resolve } from "path";
 
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 const RESET_TOKEN_TTL_SECONDS = 15 * 60;

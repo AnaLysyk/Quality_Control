@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
 
 export const runtime = "nodejs";

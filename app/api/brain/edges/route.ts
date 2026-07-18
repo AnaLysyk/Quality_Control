@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import { connectNodes } from "@/lib/brain";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {

@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { listAccessRequests } from "@/data/accessRequestsStore";
 import { listAccessRequestComments } from "@/data/accessRequestCommentsStore";

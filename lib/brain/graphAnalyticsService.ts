@@ -1,6 +1,6 @@
 ﻿import type { BrainEdge, BrainNode } from "@prisma/client";
 
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 
 type GraphNode = Pick<BrainNode, "id" | "type" | "label" | "metadata">;
 type GraphEdge = Pick<BrainEdge, "id" | "fromId" | "toId" | "type" | "weight" | "metadata">;

@@ -2,7 +2,7 @@
 
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { listTicketComments } from "@/lib/ticketCommentsStore";
-import { prisma } from "@/lib/prismaClient";
+import { prisma } from "@/database/prismaClient";
 import type { AuthUser } from "@/lib/jwtAuth";
 import type { AssistantScreenContext } from "../types";
 import { compactMultiline, formatDateTime, normalizeSearch } from "../helpers";

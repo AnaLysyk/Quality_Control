@@ -156,7 +156,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
         description: `Projeto criado a partir da integração ${input.provider === "qase" ? "Qase" : "Jira"}.`,
         qaseProjectCode: input.provider === "qase" ? input.externalKey.toUpperCase() : null,
         jiraProjectKey: input.provider === "jira" ? input.externalKey.toUpperCase() : null,
-        manualCreationDisabled: input.provider === "qase",
+        manualCreationDisabled: false,
         createdById: context.context.access.userId,
       },
       select: { id: true },
@@ -168,7 +168,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     await prisma.project.update({
       where: { id: projectId },
       data: input.provider === "qase"
-        ? { qaseProjectCode: input.externalKey.toUpperCase(), manualCreationDisabled: true }
+        ? { qaseProjectCode: input.externalKey.toUpperCase(), manualCreationDisabled: false }
         : { jiraProjectKey: input.externalKey.toUpperCase() },
     });
   }

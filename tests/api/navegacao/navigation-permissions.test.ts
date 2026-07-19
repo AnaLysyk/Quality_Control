@@ -2,6 +2,7 @@
 import { NAV_CATALOG, type NavModuleDef } from "@/backend/navigation/navigationCatalog";
 import { buildNavigationForUser } from "@/backend/navigation/navigationPermissions";
 import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
+import { applyPermissionOverride } from "@/backend/permissionMatrix";
 
 const CLIENT_MODULES = new Set(["home", "quality", "support", "brain", "documents"]);
 
@@ -66,6 +67,27 @@ describe("navigation permission filtering", () => {
     expect(items).toContain("management-users");
     expect(items).not.toContain("users-create-company-user");
     expect(items).not.toContain("users-create-leader-tc");
+  });
+
+  // Regressão: "Operações" (routeId operacao.*) ficava numa lista fixa de
+  // rotas escondidas do menu, checada antes de qualquer permissão — nenhuma
+  // liberação de operations.view fazia o módulo aparecer. Agora a
+  // visibilidade segue só a permissão, como qualquer outro módulo.
+  it("hides the Operations module when operations.view is not granted, shows it when granted", () => {
+    const role = SYSTEM_ROLES.TECHNICAL_SUPPORT;
+    const defaults = resolveRoleDefaults(role);
+
+    const withoutPermission = buildNavigationForUser(NAV_CATALOG, role, defaults);
+    expect(moduleIds(withoutPermission)).not.toContain("operations");
+
+    const grantedPermissions = applyPermissionOverride(defaults, {
+      allow: { operations: ["view", "dashboard", "metrics", "search"] },
+    });
+    const withPermission = buildNavigationForUser(NAV_CATALOG, role, grantedPermissions);
+    expect(moduleIds(withPermission)).toContain("operations");
+    expect(itemIds(withPermission)).toEqual(
+      expect.arrayContaining(["operations-dashboard", "operations-metrics", "operations-search"]),
+    );
   });
 });
 

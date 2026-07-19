@@ -19,4 +19,13 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
-      - run: npx jest --config jest.config.ts --runInBand tests/api/assistant/accessRequestsClientAgent.test.ts
+      - name: Run targeted test
+        id: targeted
+        continue-on-error: true
+        run: npx jest --config jest.config.ts --runInBand tests/api/assistant/accessRequestsClientAgent.test.ts > /tmp/targeted-test.log 2>&1
+      - name: Print targeted test result
+        if: always()
+        run: tail -120 /tmp/targeted-test.log
+      - name: Preserve targeted test failure
+        if: steps.targeted.outcome == 'failure'
+        run: exit 1

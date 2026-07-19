@@ -57,12 +57,14 @@ function canOpenAdminPath(pathname: string, permissions: PermissionMatrix) {
     return hasPermissionAccess(permissions, "brain", "view");
   }
 
-  if (
-    pathname === "/admin" ||
-    pathname.startsWith("/admin/home") ||
-    pathname.startsWith("/admin/visao-geral") ||
-    pathname.startsWith("/admin/dashboard")
-  ) {
+  if (pathname === "/admin" || pathname.startsWith("/admin/home")) {
+    // Home é a entrada principal (assistente Brain) e deve ficar disponível para
+    // qualquer usuário autenticado da área admin, independente da permissão de
+    // "dashboard" (que controla apenas a Visão Geral/relatório legado).
+    return true;
+  }
+
+  if (pathname.startsWith("/admin/visao-geral") || pathname.startsWith("/admin/dashboard")) {
     return hasPermissionAccess(permissions, "dashboard", "view");
   }
 

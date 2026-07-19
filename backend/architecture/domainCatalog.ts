@@ -208,7 +208,13 @@ export const DOMAIN_CATALOG = [
     locations: {
       frontend: ["app/admin/permissions", "app/admin/users/permissions", "app/usuarios/vinculos"],
       api: ["app/api/admin/modules", "app/api/admin/profile-permissions", "app/api/admin/user-permissions", "app/api/usuarios/vinculos"],
-      backend: ["backend/permissions", "backend/rbac", "backend/store/permissionsStore.ts", "backend/userScopePolicy.ts"],
+      backend: [
+        "backend/permissions",
+        "backend/rbac",
+        "backend/store/profilePermissionsStore.ts",
+        "backend/store/userPermissionsStore.ts",
+        "backend/userScopePolicy.ts",
+      ],
       database: ["database/prisma/schema.prisma"],
     },
     prismaModels: ["Membership", "ProjectTeamAssignment", "UserCompanyLink", "UserPermissionOverride"],

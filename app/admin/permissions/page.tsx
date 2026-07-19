@@ -688,7 +688,9 @@ export default function AdminPermissionsPage() {
   async function handleReset() {
     if (!canReset) return;
 
-    const confirmed = window.confirm("Restaurar este perfil para o padrão do sistema?");
+    const confirmed = window.confirm(
+      "Restaurar este perfil para o padrão do sistema? Isso também remove os overrides individuais de todos os usuários deste perfil.",
+    );
     if (!confirmed) return;
 
     setSaving(true);

@@ -154,6 +154,23 @@ export async function deleteUserPermissionOverride(userId: string | null | undef
   await prisma.userPermissionOverride.deleteMany({ where: { userId } });
 }
 
+export async function deleteUserPermissionOverridesForUserIds(userIds: string[]) {
+  const ids = Array.from(new Set(userIds.filter((id): id is string => Boolean(id))));
+  if (!ids.length) return 0;
+
+  if (shouldUseJsonFallback()) {
+    const idSet = new Set(ids);
+    const store = await readJsonFallbackStore();
+    const remaining = store.items.filter((item) => !idSet.has(item.userId));
+    const removed = store.items.length - remaining.length;
+    await writeJsonFallbackStore({ items: remaining });
+    return removed;
+  }
+
+  const result = await prisma.userPermissionOverride.deleteMany({ where: { userId: { in: ids } } });
+  return result.count;
+}
+
 export async function resolveUserPermissionsFromProfile(
   userId: string | null | undefined,
   role: string | null | undefined,

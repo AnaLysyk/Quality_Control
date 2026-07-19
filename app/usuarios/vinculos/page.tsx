@@ -1,7 +1,19 @@
-import RelationshipManagementClient from "./RelationshipManagementClient";
+import RelationshipManagementWorkspace from "./RelationshipManagementWorkspace";
 
 export const dynamic = "force-dynamic";
 
 export default function RelationshipManagementPage() {
-  return <RelationshipManagementClient />;
+  return (
+    <>
+      <link rel="stylesheet" href="/relationship-management.css" />
+      <link rel="stylesheet" href="/relationship-management-context.css" />
+      <link rel="stylesheet" href="/relationship-management-leadership.css" />
+      <link rel="stylesheet" href="/relationship-management-business.css" />
+      <link rel="stylesheet" href="/relationship-management-v4.css" />
+      <link rel="stylesheet" href="/relationship-management-fullscreen.css" />
+      <link rel="stylesheet" href="/relationship-management-wallpaper-fix.css" />
+      <link rel="stylesheet" href="/relationship-sidebar-context-fix.css" />
+      <RelationshipManagementWorkspace />
+    </>
+  );
 }

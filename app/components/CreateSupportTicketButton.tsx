@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 type CreateSupportTicketButtonProps = {
   hiddenTrigger?: boolean;
@@ -188,10 +188,10 @@ export default function CreateSupportTicketButton({ hiddenTrigger = false }: Cre
               </div>
               {supportOperators.length > 0 && (
                 <div>
-                  <label className={labelClassName}>Atribuir ao suporte técnico</label>
+                  <label className={labelClassName}>Atribuir ao administrador</label>
                   <select
                     id="create-support-assignee"
-                    aria-label="Atribuir ao suporte técnico"
+                    aria-label="Atribuir ao administrador"
                     className={fieldClassName}
                     value={assignedTo ?? ""}
                     onChange={(e) => setAssignedTo(e.target.value || null)}

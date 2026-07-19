@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { BrainModuleEvents, isAllowedBrainEvent } from "@/lib/brain/contracts";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { BrainModuleEvents, isAllowedBrainEvent } from "@/backend/brain/contracts";
 
 const SUPPORTED_EVENTS = new Set([
   ...Object.values(BrainModuleEvents).flatMap((group) => Object.values(group)),

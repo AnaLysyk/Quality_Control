@@ -11,7 +11,7 @@ Arquivos gerados via `npx playwright init-agents --loop=vscode`:
 - `.github/agents/playwright-test-generator.agent.md`
 - `.github/agents/playwright-test-healer.agent.md`
 - `.vscode/mcp.json`
-- `specs/README.md`
+- `docs/specs/README.md`
 - `tests-e2e/seed.spec.ts`
 
 ## Pré-requisitos
@@ -38,18 +38,18 @@ Config MCP esperada (já incluída em `.vscode/mcp.json`):
 ## Fluxo recomendado
 
 1. Planner
-- Objetivo: gerar plano em `specs/*.md`.
+- Objetivo: gerar plano em `docs/specs/*.md`.
 - Entrada mínima: pedido claro + `tests-e2e/seed.spec.ts`.
 
 Prompt exemplo:
-- "Use `tests-e2e/seed.spec.ts` e gere plano para fluxo de criação de run com plano manual e validação de status em `specs/runs-basic-operations.md`."
+- "Use `tests-e2e/seed.spec.ts` e gere plano para fluxo de criação de run com plano manual e validação de status em `docs/specs/runs-basic-operations.md`."
 
 2. Generator
 - Objetivo: transformar plano em specs executáveis.
 - Saída esperada: arquivos em `tests-e2e/` seguindo convenções locais.
 
 Prompt exemplo:
-- "Gere testes Playwright a partir de `specs/runs-basic-operations.md` em `tests-e2e/` com tags `@case` e seletores por `data-testid` quando possível."
+- "Gere testes Playwright a partir de `docs/specs/runs-basic-operations.md` em `tests-e2e/` com tags `@case` e seletores por `data-testid` quando possível."
 
 3. Healer
 - Objetivo: reparar falhas reais de execução.

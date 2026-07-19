@@ -1,7 +1,7 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
+import { getAccessContext } from "@/backend/auth/session";
 import { readPlatformDocs } from "@/data/platformDocsStore";
-import { filterWikiCategoriesForDocs, filterWikiDocsForUser } from "@/lib/wikiDocsStatus";
+import { filterWikiCategoriesForDocs, filterWikiDocsForUser } from "@/backend/wikiDocsStatus";
 
 function canEditWiki(access: Awaited<ReturnType<typeof getAccessContext>> | null): boolean {
   if (!access) return false;

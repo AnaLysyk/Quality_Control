@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 export async function GET(req: Request) {
   const guard = await requirePermission(req, "documents", "view");

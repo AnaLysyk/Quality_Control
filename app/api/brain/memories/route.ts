@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
-import { isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
-import { canAccess } from "@/lib/permissions/can-access";
-import { prisma } from "@/lib/prismaClient";
+import { isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
+import { canAccess } from "@/backend/permissions/can-access";
+import { prisma } from "@/database/prismaClient";
 
 const VALID_MEMORY_TYPES = new Set([
   "RULE",

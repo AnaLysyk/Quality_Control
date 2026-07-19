@@ -6,9 +6,9 @@ import {
   purgeAuditLogs,
   searchAuditLogs,
 } from "@/data/auditLogRepository";
-import { apiFail, apiOk } from "@/lib/apiResponse";
-import { prisma } from "@/lib/prismaClient";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { apiFail, apiOk } from "@/backend/apiResponse";
+import { prisma } from "@/database/prismaClient";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export const revalidate = 0;
 

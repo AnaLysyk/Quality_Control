@@ -1,6 +1,6 @@
 ﻿import StatusChart from "@/components/StatusChart";
 import { ManualStatsForm } from "@/components/ManualStatsForm";
-import type { RunDetailViewModel } from "@/lib/runDetailViewModel";
+import type { RunDetailViewModel } from "@/backend/runDetailViewModel";
 import type { ReleaseEntry } from "../data";
 import styles from "./RunChartSection.module.css";
 

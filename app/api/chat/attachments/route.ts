@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import type { ChatAttachment } from "@/lib/chatStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import type { ChatAttachment } from "@/backend/chatStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

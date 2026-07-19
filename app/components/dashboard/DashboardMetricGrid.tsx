@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import type { DashboardMetricCard } from "@/lib/dashboard/types";
+import type { DashboardMetricCard } from "@/backend/dashboard/types";
 
 type DashboardMetricGridProps = {
   metrics: DashboardMetricCard[];

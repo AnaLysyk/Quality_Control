@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getNodeWithContext } from "@/lib/brain";
-import { assertBrainNodeAccess, filterBrainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
-import { getExecutiveBrainContextGraph } from "@/lib/brain/executiveContext";
+import { getNodeWithContext } from "@/backend/brain";
+import { assertBrainNodeAccess, filterBrainGraphByAccess, resolveBrainAccess } from "@/backend/brain/access";
+import { getExecutiveBrainContextGraph } from "@/backend/brain/executiveContext";
 
 export async function GET(
   req: Request,

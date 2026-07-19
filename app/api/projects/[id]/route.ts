@@ -1,13 +1,24 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import { checkPermission } from "@/lib/permissions/checkPermission";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import { checkPermission } from "@/backend/permissions/checkPermission";
+import { assertCompanyAccess } from "@/backend/rbac/validateCompanyAccess";
+
+async function hasCompanyAccessToProject(user: Parameters<typeof assertCompanyAccess>[0], companyId: string | null) {
+  if (!companyId) return false;
+  try {
+    await assertCompanyAccess(user, companyId);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getDb() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 
@@ -42,6 +53,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   });
 
   if (!project) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+  if (!(await hasCompanyAccessToProject(user, project.companyId))) {
+    return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+  }
   return NextResponse.json(project);
 }
 
@@ -60,6 +74,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const db = await getDb();
   const existing = await db.project.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+  if (!(await hasCompanyAccessToProject(user, existing.companyId))) {
+    return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+  }
 
   const patch: Record<string, unknown> = {};
   if (typeof body.name === "string") patch.name = body.name.trim() || existing.name;

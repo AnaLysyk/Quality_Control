@@ -1,20 +1,20 @@
 ﻿import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { slugifyRelease } from "@/lib/slugifyRelease";
-import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
-import { syncReleaseManualToBrain } from "@/lib/brain-sync";
+import { slugifyRelease } from "@/backend/slugifyRelease";
+import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/backend/rbac/defects";
+import { syncReleaseManualToBrain } from "@/backend/brain/sync";
 import type { Release, Stats } from "@/types/release";
-import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
-import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
-import { resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
-import { readManualReleases, readManualReleaseCases, writeManualReleases, writeManualReleaseCases } from "@/lib/manualReleaseStore";
-import { notifyManualRunCreated } from "@/lib/notificationService";
-import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
-import { resolveAllowedProjectIds } from "@/lib/test-cases/testCasePermissions";
+import { normalizeDefectStatus, resolveClosedAt } from "@/backend/defectNormalization";
+import { resolveManualReleaseKind } from "@/backend/manualReleaseKind";
+import { resolveLocalUserDisplayName } from "@/backend/manualReleaseResponsible";
+import { readManualReleases, readManualReleaseCases, writeManualReleases, writeManualReleaseCases } from "@/backend/manualReleaseStore";
+import { notifyManualRunCreated } from "@/backend/notificationService";
+import { appendDefectHistory } from "@/backend/manualDefectHistoryStore";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { invalidateCompanyDefectsDataset } from "@/backend/companyDefectsDataset";
+import { resolveAllowedProjectIds } from "@/backend/test-cases/testCasePermissions";
 
 async function resolveActor(authUser: AuthUser | null) {
   if (!authUser) return { actorId: null, actorName: null };
@@ -248,4 +248,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Erro ao salvar run manual" }, { status: 500 });
   }
 }
-

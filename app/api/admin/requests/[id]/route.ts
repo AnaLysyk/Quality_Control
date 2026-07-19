@@ -2,12 +2,12 @@
 import { NextResponse } from "next/server";
 
 import { getRequestById, updateRequestStatus, type RequestStatus } from "@/data/requestsStore";
-import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
-import { emailService } from "@/lib/email";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { notifyPasswordResetStatus, notifyProfileDeletionStatus } from "@/lib/notificationService";
-import { storePasswordResetToken } from "@/lib/auth/passwordResetToken";
-import { canAccessSelfServiceRequest, canReviewSelfServiceRequests } from "@/lib/selfServiceRequestAccess";
+import { getLocalUserById, updateLocalUser } from "@/backend/auth/localStore";
+import { emailService } from "@/backend/email";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { notifyPasswordResetStatus, notifyProfileDeletionStatus } from "@/backend/notificationService";
+import { storePasswordResetToken } from "@/backend/auth/passwordResetToken";
+import { canAccessSelfServiceRequest, canReviewSelfServiceRequests } from "@/backend/selfServiceRequestAccess";
 
 function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING" | "NEEDS_REVISION"> {
   return value === "APPROVED" || value === "REJECTED";

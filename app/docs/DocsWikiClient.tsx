@@ -7,7 +7,7 @@ import {
   FiTrash2, FiX, FiAlertTriangle, FiCheckCircle, FiInfo, FiAlertCircle,
   FiZap, FiArrowUp, FiArrowDown, FiCopy, FiCheck, FiFileText, FiImage,
 } from "react-icons/fi";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import styles from "./DocsWikiClient.module.css";
 
 // â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

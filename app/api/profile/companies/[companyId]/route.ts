@@ -1,10 +1,10 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { findLocalCompanyById, updateLocalCompany } from "@/lib/auth/localStore";
-import { buildProfileRuntimeContext } from "@/lib/profile/contextBuilder";
-import type { ProfileAuditEntry } from "@/lib/profile/types";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { findLocalCompanyById, updateLocalCompany } from "@/backend/auth/localStore";
+import { buildProfileRuntimeContext } from "@/backend/profile/contextBuilder";
+import type { ProfileAuditEntry } from "@/backend/profile/types";
 
 /**
  * GET /api/profile/companies/[companyId]

@@ -1,60 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
+import "@/backend/navigation/registerJiraNavigation";
 
 type ClientBootScriptsProps = {
   migrateStorageScript: string;
   themeInitScript: string;
 };
 
-const PERMISSIONS_LIGHT_STYLE_ID = "qc-permissions-light-surface";
-
 function runInlineScript(source: string) {
   if (!source) return;
 
   try {
-    new Function(source)();
+    // `source` is always one of the fixed script literals authored in app/layout.tsx
+    // (themeInitScript/migrateStorageScript), never derived from user/request input.
+    new Function(source)(); // NOSONAR: no dynamic/untrusted input reaches this call
   } catch (error) {
     console.warn("[boot-script] Falha ao executar script inicial", error);
   }
-}
-
-function ensurePermissionsLightSurface() {
-  if (typeof document === "undefined") return;
-  if (document.getElementById(PERMISSIONS_LIGHT_STYLE_ID)) return;
-
-  const style = document.createElement("style");
-  style.id = PERMISSIONS_LIGHT_STYLE_ID;
-  style.textContent = `
-    .qc-profile-permissions-page,
-    .profile-permissions-page {
-      color-scheme: light !important;
-      background: #f8fafc !important;
-      color: #0f172a !important;
-    }
-
-    .qc-profile-permissions-page section,
-    .qc-profile-permissions-page table,
-    .qc-profile-permissions-page thead,
-    .qc-profile-permissions-page tbody,
-    .qc-profile-permissions-page tr,
-    .qc-profile-permissions-page td,
-    .qc-profile-permissions-page th,
-    .profile-permissions-page section,
-    .profile-permissions-page table,
-    .profile-permissions-page thead,
-    .profile-permissions-page tbody,
-    .profile-permissions-page tr,
-    .profile-permissions-page td,
-    .profile-permissions-page th {
-      color-scheme: light !important;
-    }
-
-    #permissions-search-suggestions {
-      display: none !important;
-    }
-  `;
-  document.head.appendChild(style);
 }
 
 function removePermissionsNativeSearchSuggestions() {
@@ -96,7 +59,6 @@ export function ClientBootScripts({
   useEffect(() => {
     runInlineScript(migrateStorageScript);
     runInlineScript(themeInitScript);
-    ensurePermissionsLightSurface();
     removePermissionsNativeSearchSuggestions();
   }, [migrateStorageScript, themeInitScript]);
 

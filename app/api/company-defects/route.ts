@@ -1,16 +1,16 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import {
   canAccessCompanyDefects,
   resolveAllowedCompanySlugs,
-} from "@/lib/companyDefectsAccess";
+} from "@/backend/companyDefectsAccess";
 import {
   canCreateManualDefect,
   canDeleteManualDefect,
   canEditManualDefect,
   resolveDefectRole,
-} from "@/lib/rbac/defects";
-import { getCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
+} from "@/backend/rbac/defects";
+import { getCompanyDefectsDataset } from "@/backend/companyDefectsDataset";
 
 function normalizeString(value: unknown) {
   if (typeof value !== "string") return null;

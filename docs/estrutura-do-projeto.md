@@ -1,76 +1,87 @@
 # Estrutura do projeto
 
-## Estrutura que vale para código novo
+> Reescrito na branch `refactor/estrutura-de-pastas` (2026-07-18) para
+> refletir a reorganização física concluída nessa branch. A versão anterior
+> deste documento descrevia um plano (manter `lib/`, `data/`, `prisma/`,
+> `packages/`, `types/`, dividir testes em `tests/`+`tests-e2e/`) que foi
+> **substituído** pela reorganização abaixo, não seguido à risca — não
+> confie em cópias antigas deste arquivo.
+
+## Estrutura atual
 
 ```text
-app/          páginas, layouts, componentes locais e rotas HTTP
-lib/          regras, permissões, servidor, integrações e código compartilhado
-data/         seeds, mocks, fixtures e dados locais de desenvolvimento
-prisma/       schema e migrações
-public/       arquivos públicos
-tests/        testes Jest
-tests-e2e/    testes Playwright
-support/functions/  funções de UI, API, banco de dados e infraestrutura
-docs/         documentação
+app/            páginas, layouts e rotas HTTP (App Router do Next.js — o nome
+                da pasta é a URL, por isso não foi renomeado)
+backend/        regras de negócio, permissões, autenticação, integrações
+                (era lib/; lib/core/{auth,session,permissions,company,project}
+                foi fundido de volta às pastas correspondentes, sem duplicar)
+database/       tudo que é "banco de dados": repositories/ (era data/ +
+                app/data/, fundidos), prisma/ (schema + migrations, era
+                prisma/ na raiz) e o cimento do Prisma (prismaClient.ts,
+                databaseUrl.ts, persistenceMode.ts etc., que eram soltos em
+                lib/)
+shared/         código compartilhado entre front e back: contracts/ (era
+                packages/contracts) e types/ (era types/ na raiz + app/types/)
+src/            design system (src/design-system/) e menu lateral
+                (src/features/menu-lateral/) — área pequena, não expandir
+tests/          toda a suíte de testes: Jest (**/*.test.ts(x)) e Playwright
+                (**/*.spec.ts) no mesmo lugar, distinguidos só pela extensão
+                (era testes/ na raiz)
+tools/          scripts e ferramentas de desenvolvimento/infraestrutura (era
+                support/ — cuidado: "support" também é uma feature de
+                negócio dentro de app/, não confundir os dois)
+docs/           documentação, incluindo docs/specs/ (planos de teste em
+                Markdown, era specs/ na raiz)
+public/         arquivos estáticos públicos
 ```
 
-Não serão criadas pastas vazias como `lib/modules`, `lib/server` ou `lib/integrations`. Elas só devem existir quando uma responsabilidade real justificar a separação.
+Os aliases correspondentes (`tsconfig.json` `compilerOptions.paths` e
+`jest.config.ts` `moduleNameMapper`, que precisam ser mantidos em sincronia
+manualmente — são dois sistemas independentes):
 
-## Auditoria das pastas da raiz
+| Alias | Aponta para |
+| --- | --- |
+| `@/backend/*` | `./backend/*` |
+| `@/database/*` | `./database/*` |
+| `@/data/*` | `./database/repositories/*` |
+| `@/shared/*` | `./shared/*` |
+| `@/contracts/*` | `./shared/contracts/src/*` |
+| `@/types/*` | `./shared/types/*` |
+| `@/features/*` | `./src/features/*` |
+| `@/design-system/*` | `./src/design-system/*` |
+| `@/*` (padrão) | `./app/*` |
 
-| Item | Classificação | Decisão |
-| --- | --- | --- |
-| `.git/` | infraestrutura local | manter |
-| `.github/` | automação oficial | manter |
-| `.next/` | build/cache | ignorado; pode ser apagado e recriado |
-| `.pytest_cache/` | cache | ignorado; pode ser apagado |
-| `.scannerwork/` | relatório/cache do Sonar | ignorado; pode ser apagado |
-| `.tmp/` | temporário legado | ignorado; há um PID antigo rastreado que deve ser retirado em revisão separada |
-| `.vscode/` | configuração de editor | ignorado para novos arquivos; `launch.json` e `tasks.json` já rastreados ficam para decisão da equipe |
-| `__tests__/` | testes Jest legados | migrar aos poucos para `tests/` |
-| `app/` | código oficial | manter; é a raiz do App Router |
-| `coverage/` | relatório gerado | ignorado; pode ser apagado |
-| `data/` | área mista/legada | manter por compatibilidade; direcionar código executável para `lib/` gradualmente |
-| `docs/` | documentação oficial | manter |
-| `lib/` | código oficial compartilhado | manter |
-| `node_modules/` | dependências geradas | ignorado; pode ser recriado |
-| `packages/` | contratos compartilhados | manter |
-| `playwright-report/` | relatório gerado | ignorado; pode ser apagado |
-| `prisma/` | banco oficial | manter |
-| `public/` | estáticos oficiais | manter |
-| `support/functions/` | automações e funções oficiais organizadas por área | manter |
-| `specs/` | planos de teste em Markdown | manter por enquanto; avaliar futura união com `docs/` |
-| `src/` | área pequena já existente | manter sem expandir; contém design system e menu lateral |
-| `test-results/` | resultado gerado | ignorado; pode ser apagado |
-| `tests/` | testes Jest oficiais | manter |
-| `tests-e2e/` | testes Playwright oficiais | manter |
-| `tmp/` | código e amostras legadas | ignorado para novos temporários; conteúdo rastreado exige triagem antes de mover ou excluir |
-| `types/` | declarações TypeScript globais | manter |
+Pastas que **não existem mais** na raiz (conteúdo movido, não há mais nada
+lá): `lib/`, `data/`, `prisma/`, `packages/`, `types/`, `specs/`, `testes/`,
+`support/`, `tests-e2e/`, `__tests__/`.
 
-## Auditoria dos arquivos da raiz
+## Por que essa reorganização
 
-| Grupo | Itens | Decisão |
-| --- | --- | --- |
-| Configuração oficial | `.env.example`, `.gitattributes`, `.gitignore`, `.hintrc`, `.npmrc`, `Dockerfile`, `eslint.config.mjs`, `jest.config.ts`, `next.config.ts`, `package.json`, `package-lock.json`, `playwright*.ts`, `postcss.config.mjs`, `prisma.config.ts`, `proxy.ts`, `render.yaml`, `seccomp_profile.json`, `sonar-project.properties`, `tailwind.config.ts`, `tsconfig.json` | manter |
-| Documentação atual | `README*.md`, `ARCHITECTURE.md`, `INSTALL*.md`, `QUICK_START*.md` | manter; consolidar somente quando o conteúdo for revisado |
-| Diagnóstico legado | `support/functions/banco-de-dados/diagnosticos/test-pg.js`, `test-pg2.js` | manter isolado em diagnósticos de banco |
-| Inventário legado | `estrutura-repo.txt` | candidato a remoção; a documentação em `docs/` passa a ser a referência |
-| Ambiente local | `.env`, `.env.local` | ignorados; nunca versionar segredos |
-| Gerados/temporários | `.dev.pid`, `.tmp-*`, `__localstore_snapshot.tmp`, `next-env.d.ts`, `tsconfig.tsbuildinfo`, `*.log` | ignorados; podem ser recriados ou apagados |
+Pedido original: as pastas devem dizer sozinhas o que são — API, backend,
+banco de dados, front — com o mesmo nome de conceito repetido em
+backend/API/banco de dados, para facilitar manutenção. Antes da
+reorganização, `lib/` tinha 348 arquivos (127 soltos direto nela, sem
+subpasta), havia duas tentativas paralelas e incompletas de organização
+(`lib/` vs `lib/core/`, `data/` vs `app/data/`), e `src/backend`/`src/shared`
+já existiam como alias configurados mas vazios — sinal de que essa mesma
+reorganização já tinha começado a ser planejada antes.
 
-## Por que existe src
+## O que ficou fora desta reorganização (decisão de produto, não de pasta)
 
-`src/` possui poucos arquivos rastreados, concentrados em:
+`app/` tem uma quantidade grande de nomes duplicados em inglês/português
+(user/users/usuarios, company/companies/empresas, support/suportes/
+chamados/tickets, releases em 4 variantes, docs/documentacao/documentos,
+kanban, assistant/assistente, admin/permissions/permissoes, casos-de-teste/
+test-cases). Investigação completa de cada um, incluindo 3 vazamentos de
+segredo corrigidos e um arquivo morto removido, está em
+[`docs/architecture/duplicacoes-app-encontradas.md`](architecture/duplicacoes-app-encontradas.md).
+Não foram unificados nesta branch porque a maioria exige decidir qual API/
+página vira a oficial (permissão, auditoria, efeitos colaterais divergentes
+entre as variantes) — risco de produto, não simples renomeação.
 
-- `src/design-system/`;
-- `src/features/menu-lateral/`.
+## src/ continua pequeno de propósito
 
-Isso não torna `src/` a raiz oficial do projeto. `app/` e `lib/` concentram quase todo o sistema e não serão movidos. Novas features devem seguir a estrutura simples já usada; os arquivos atuais de `src/` serão tratados apenas quando houver trabalho funcional nessas áreas.
-
-## Pendências sem remoção automática
-
-1. Verificar se `_test_pg.js` e `_test_pg2.js` ainda são usados.
-2. Triar o conteúdo rastreado de `tmp/` e `.tmp/`.
-3. Migrar stores e regras de `data/` para `lib/` por módulo.
-4. Unificar os testes Jest conforme `docs/plano-unificacao-testes.md`.
-5. Avaliar se os planos em `specs/` devem virar `docs/specs/`.
+`src/design-system/` e `src/features/menu-lateral/` são as únicas áreas
+ativas em `src/`. Novas features seguem a estrutura acima (`app/`,
+`backend/`, `database/`, `shared/`); `src/` não é a raiz do projeto e não
+deve crescer além dessas duas áreas sem necessidade concreta.

@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 export const runtime = "nodejs";
 

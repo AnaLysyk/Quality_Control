@@ -1,8 +1,8 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
-import { canEditCompanyWiki, canReadCompanyWiki } from "@/lib/companyWikiAccess";
+import { getAccessContext } from "@/backend/auth/session";
+import { canEditCompanyWiki, canReadCompanyWiki } from "@/backend/companyWikiAccess";
 import { readCompanyDocs } from "@/data/platformDocsStore";
-import { filterWikiCategoriesForDocs, filterWikiDocsForUser } from "@/lib/wikiDocsStatus";
+import { filterWikiCategoriesForDocs, filterWikiDocsForUser } from "@/backend/wikiDocsStatus";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ companySlug: string }> }) {
   try {

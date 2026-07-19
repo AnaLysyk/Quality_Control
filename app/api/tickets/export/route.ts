@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { exportTickets, type TicketRecord } from "@/lib/ticketsStore";
-import { isItDev } from "@/lib/rbac/tickets";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { exportTickets, type TicketRecord } from "@/backend/ticketsStore";
+import { isItDev } from "@/backend/rbac/tickets";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 export async function GET(req: Request) {

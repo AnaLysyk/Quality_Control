@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { getAccessContext } from "@/backend/auth/session";
+import { hasPermissionAccess, type PermissionMatrix } from "@/backend/permissionMatrix";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 
 function hasAnyPermission(
   permissions: PermissionMatrix,
@@ -15,6 +15,10 @@ function hasAnyPermission(
 }
 
 function canOpenAdminPath(pathname: string, permissions: PermissionMatrix) {
+  if (pathname.startsWith("/admin/users/vinculos")) {
+    return hasPermissionAccess(permissions, "relationships", "view");
+  }
+
   if (
     pathname.startsWith("/admin/permissions") ||
     pathname.startsWith("/admin/users/permissions") ||
@@ -53,12 +57,14 @@ function canOpenAdminPath(pathname: string, permissions: PermissionMatrix) {
     return hasPermissionAccess(permissions, "brain", "view");
   }
 
-  if (
-    pathname === "/admin" ||
-    pathname.startsWith("/admin/home") ||
-    pathname.startsWith("/admin/visao-geral") ||
-    pathname.startsWith("/admin/dashboard")
-  ) {
+  if (pathname === "/admin" || pathname.startsWith("/admin/home")) {
+    // Home é a entrada principal (assistente Brain) e deve ficar disponível para
+    // qualquer usuário autenticado da área admin, independente da permissão de
+    // "dashboard" (que controla apenas a Visão Geral/relatório legado).
+    return true;
+  }
+
+  if (pathname.startsWith("/admin/visao-geral") || pathname.startsWith("/admin/dashboard")) {
     return hasPermissionAccess(permissions, "dashboard", "view");
   }
 

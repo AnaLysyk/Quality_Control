@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 import { useSWRReleases } from "./useSWRReleases";
 
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
-import { getAppMeta } from "@/lib/appMeta";
-import { formatRunText, formatRunTitle } from "@/lib/runPresentation";
+import { getAppMeta } from "@/backend/appMeta";
+import { formatRunText, formatRunTitle } from "@/backend/runPresentation";
 
 type ReleaseCard = {
   slug: string;

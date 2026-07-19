@@ -1,6 +1,6 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
-import { canEditCompanyWiki } from "@/lib/companyWikiAccess";
+import { getAccessContext } from "@/backend/auth/session";
+import { canEditCompanyWiki } from "@/backend/companyWikiAccess";
 import { readCompanyDocs, writeCompanyDocs, newId, nowIso, sanitizeSlug } from "@/data/platformDocsStore";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ companySlug: string }> }) {

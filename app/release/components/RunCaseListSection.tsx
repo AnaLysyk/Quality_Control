@@ -7,8 +7,8 @@ import {
   FiClock,
   FiExternalLink,
 } from "react-icons/fi";
-import { fetchApi } from "@/lib/api";
-import type { RunDetailViewModel } from "@/lib/runDetailViewModel";
+import { fetchApi } from "@/backend/api";
+import type { RunDetailViewModel } from "@/backend/runDetailViewModel";
 import { RunKanbanStream } from "../RunKanbanStream";
 import type { ReleaseEntry } from "../data";
 import styles from "./RunCaseListSection.module.css";

@@ -1,10 +1,10 @@
 ﻿import { NextResponse } from "next/server";
 import { getAllReleases } from "@/release/data";
 import { readManualReleaseStore } from "@/data/manualData";
-import { appendQualityGateHistory } from "@/lib/qualityGateHistory";
-import { sendQualityAlert } from "@/lib/qualityAlert";
-import { calculateQualityScore } from "@/lib/qualityScore";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { appendQualityGateHistory } from "@/backend/qualityGateHistory";
+import { sendQualityAlert } from "@/backend/qualityAlert";
+import { calculateQualityScore } from "@/backend/qualityScore";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 import { randomUUID } from "crypto";
 
 // Helper: get all runs for a release (manual + Qase)

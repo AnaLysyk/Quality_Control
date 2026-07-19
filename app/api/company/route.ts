@@ -1,10 +1,13 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { createLocalCompany, findLocalCompanyById, listLocalCompanies } from "@/lib/auth/localStore";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getAccessContext } from "@/backend/auth/session";
+import { createLocalCompany, findLocalCompanyById, listLocalCompanies } from "@/backend/auth/localStore";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { mapCompanyRecord } from "@/backend/companyRecord";
 
 export const revalidate = 0;
+
+const MASK_SECRETS = { maskQaseToken: true, maskJiraToken: true } as const;
 
 // GET: Lista empresas
 export async function GET(req: NextRequest) {
@@ -17,7 +20,10 @@ export async function GET(req: NextRequest) {
 
   if (isGlobalAdmin) {
     const companies = await listLocalCompanies();
-    return NextResponse.json({ items: companies }, { status: 200 });
+    return NextResponse.json(
+      { items: companies.map((company) => mapCompanyRecord(company, MASK_SECRETS)) },
+      { status: 200 },
+    );
   }
 
   if (!access.companyId) {
@@ -28,7 +34,7 @@ export async function GET(req: NextRequest) {
   if (!company) {
     return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
-  return NextResponse.json({ items: [company] }, { status: 200 });
+  return NextResponse.json({ items: [mapCompanyRecord(company, MASK_SECRETS)] }, { status: 200 });
 }
 
 // POST: Cria uma nova empresa
@@ -57,7 +63,7 @@ export async function POST(req: NextRequest) {
       phone: str(data?.phone),
       cep: str(data?.cep),
     });
-    return NextResponse.json(company, { status: 201 });
+    return NextResponse.json(mapCompanyRecord(company, MASK_SECRETS), { status: 201 });
   } catch {
     return NextResponse.json({ error: "Erro ao criar empresa" }, { status: 500 });
   }

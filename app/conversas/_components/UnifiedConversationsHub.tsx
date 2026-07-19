@@ -5,7 +5,7 @@ import Link from "next/link";
 import useSWR from "swr";
 import { FiBarChart2, FiCpu, FiMessageCircle, FiRefreshCw, FiShield, FiUsers } from "react-icons/fi";
 
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type ConversationSignal = {
   id: string;

@@ -1,19 +1,19 @@
 ﻿import { NextResponse } from "next/server";
-import { slugifyRelease } from "@/lib/slugifyRelease";
-import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { canDeleteManualDefect, canEditManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
+import { slugifyRelease } from "@/backend/slugifyRelease";
+import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { canDeleteManualDefect, canEditManualDefect, getMockRole, resolveDefectRole } from "@/backend/rbac/defects";
 import type { Release, Stats, ReleaseStatus } from "@/types/release";
-import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
-import { evaluateQualityGate } from "@/lib/quality";
-import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
-import { listManualReleaseResponsibleOptions, resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
-import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
-import { notifyDefectAssigned, notifyDefectStatusChanged, notifyManualRunFailure } from "@/lib/notificationService";
-import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
-import { resolveAllowedProjectIds } from "@/lib/test-cases/testCasePermissions";
+import { normalizeDefectStatus, resolveClosedAt } from "@/backend/defectNormalization";
+import { evaluateQualityGate } from "@/backend/quality";
+import { resolveManualReleaseKind } from "@/backend/manualReleaseKind";
+import { listManualReleaseResponsibleOptions, resolveLocalUserDisplayName } from "@/backend/manualReleaseResponsible";
+import { readManualReleases, writeManualReleases } from "@/backend/manualReleaseStore";
+import { notifyDefectAssigned, notifyDefectStatusChanged, notifyManualRunFailure } from "@/backend/notificationService";
+import { appendDefectHistory } from "@/backend/manualDefectHistoryStore";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { invalidateCompanyDefectsDataset } from "@/backend/companyDefectsDataset";
+import { resolveAllowedProjectIds } from "@/backend/test-cases/testCasePermissions";
 
 function isRunOutOfProjectScope(user: AuthUser, release: Release) {
   if (resolveManualReleaseKind(release) !== "run") return false;

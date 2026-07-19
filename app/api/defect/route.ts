@@ -1,13 +1,13 @@
 ﻿// Importa utilitários do Next.js para lidar com requisições e respostas
 import { NextRequest, NextResponse } from "next/server";
 // Importa o cliente Prisma para acesso ao banco de dados
-import { prisma } from "../../../lib/prismaClient";
+import { prisma } from "../../../database/prismaClient";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { brainOnDefectCreated } from "@/lib/brain/autoSync";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
-import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { brainOnDefectCreated } from "@/backend/brain/autoSync";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { hasGlobalCompanyVisibility } from "@/backend/companyDefectsAccess";
+import { assertCompanyAccess } from "@/backend/rbac/validateCompanyAccess";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 function hasGlobalDefectWriteAccess(user: AuthUser) {
   if (user.isGlobalAdmin) return true;

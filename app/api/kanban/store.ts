@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
-import { prisma } from "@/lib/prismaClient";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+import { prisma } from "@/database/prismaClient";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
 import { type Card } from "./types";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();

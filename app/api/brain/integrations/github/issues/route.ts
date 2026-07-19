@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { createGithubIssueFromSource } from "@/lib/brain/integrations/githubIssues";
-import { isBrainSourceStorageUnavailable } from "@/lib/brain/sourceSettings";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { createGithubIssueFromSource } from "@/backend/brain/integrations/githubIssues";
+import { isBrainSourceStorageUnavailable } from "@/backend/brain/sourceSettings";
 
 export async function POST(req: NextRequest) {
   const accessResult = await resolveBrainAccess(req);

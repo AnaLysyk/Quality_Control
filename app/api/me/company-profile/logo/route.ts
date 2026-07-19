@@ -1,13 +1,13 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
-import { getAccessContext } from "@/lib/auth/session";
+import { getAccessContext } from "@/backend/auth/session";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import {
   canManageInstitutionalCompanyAccess,
   resolveCurrentCompanyFromAccess,
-} from "@/lib/companyProfileAccess";
-import { uploadAndPersistCompanyLogo } from "@/lib/companyLogoUpload";
+} from "@/backend/companyProfileAccess";
+import { uploadAndPersistCompanyLogo } from "@/backend/companyLogoUpload";
 
 export const runtime = "nodejs";
 
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       error instanceof Error && error.message.trim()
         ? error.message.trim()
         : "Não foi possível enviar o logo";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

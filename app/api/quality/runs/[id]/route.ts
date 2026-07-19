@@ -1,6 +1,6 @@
-﻿import { apiFail, apiOk } from "@/lib/apiResponse";
-import { getQualityRun, updateQualityRunStatus } from "@/lib/runOperationStore";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+﻿import { apiFail, apiOk } from "@/backend/apiResponse";
+import { getQualityRun, updateQualityRunStatus } from "@/backend/runOperationStore";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 import type { TestRunStatus } from "@/data/runOperationModel";
 
 export const dynamic = "force-dynamic";

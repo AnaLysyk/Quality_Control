@@ -1,9 +1,9 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { getConversationBrainFeedSummary, listConversationBrainSignals } from "@/lib/conversationBrainFeed";
+import { getAccessContext } from "@/backend/auth/session";
+import { getConversationBrainFeedSummary, listConversationBrainSignals } from "@/backend/conversationBrainFeed";
 import { getUnifiedConversationModel } from "@/data/unifiedConversationModel";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

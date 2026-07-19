@@ -10,9 +10,9 @@ import {
   canCreateSupportTickets,
   canManageSupportWorkflow,
   canViewSupportBoard,
-} from "@/lib/supportAccess";
-import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
-import type { TicketType, TicketPriority } from "@/lib/ticketsStore";
+} from "@/backend/supportAccess";
+import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/backend/ticketsStatus";
+import type { TicketType, TicketPriority } from "@/backend/ticketsStore";
 
 type TicketItem = {
   id: string;

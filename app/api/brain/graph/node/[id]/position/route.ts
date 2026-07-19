@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { updateNodeMetadata } from "@/lib/brain";
-import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
+import { updateNodeMetadata } from "@/backend/brain";
+import { assertBrainNodeAccess, resolveBrainAccess } from "@/backend/brain/access";
 
 function toRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === "object" && !Array.isArray(value)) {

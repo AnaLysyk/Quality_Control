@@ -8,7 +8,7 @@ import { FiCheckCircle, FiClock, FiFilter, FiRefreshCw, FiSearch, FiXCircle } fr
 
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 
 type OperationSignal = {
   id: string;

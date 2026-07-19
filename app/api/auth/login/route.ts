@@ -2,18 +2,24 @@
 import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
-import { hashPasswordSha256, safeEqualHex } from "@/lib/passwordHash";
-import { shouldUseSecureCookies } from "@/lib/auth/cookies";
-import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
-import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
-import { getRedis } from "@/lib/redis";
-import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
-import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { hashPassword, passwordHashNeedsUpgrade, verifyPassword } from "@/backend/passwordHash";
+import { shouldUseSecureCookies } from "@/backend/auth/cookies";
+import { createRefreshToken, hashRefreshToken } from "@/backend/auth/refreshToken";
+import { buildLocalSessionForUser } from "@/backend/auth/sessionBuilder";
+import { getRedis } from "@/backend/redis";
+import { findLocalUserByEmailOrId, updateLocalUser } from "@/backend/auth/localStore";
+import { getJwtSecret } from "@/backend/auth/jwtSecret";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
+import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/backend/companyRoutes";
+import { rateLimit } from "@/backend/rateLimit";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
+// Mitigação enquanto não há revogação de JWT por sessão/JTI (depende do Redis
+// estar estável): access token curto reduz a janela de uso indevido de um
+// token copiado antes do logout. O refresh token (rotativo, revogável) cobre
+// a renovação sem exigir novo login.
+const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 60 * 15;
 
 function readPositiveIntEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -51,6 +57,14 @@ export async function POST(req: Request) {
     if (!identifier || !password) {
       return NextResponse.json({ error: "usuario e senha obrigatorios" }, { status: 400 });
     }
+    if (identifier.length > 254 || password.length > 128) {
+      return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
+    }
+
+    const originLimit = await rateLimit(req, "auth-login-origin", 50, 60 * 10);
+    if (originLimit.limited) return originLimit.response;
+    const accountLimit = await rateLimit(req, `auth-login-account:${identifier.toLowerCase()}`, 10, 60 * 10);
+    if (accountLimit.limited) return accountLimit.response;
 
     const user = await findLocalUserByEmailOrId(identifier);
     if (!user || user.active === false || user.status === "blocked") {
@@ -64,8 +78,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
-    const hashedInput = hashPasswordSha256(password);
-    if (!safeEqualHex(hashedInput, user.password_hash)) {
+    if (!verifyPassword(password, user.password_hash)) {
       addAuditLogSafe({
         actorEmail: user.email ?? identifier,
         actorUserId: user.id,
@@ -78,6 +91,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
+    if (passwordHashNeedsUpgrade(user.password_hash)) {
+      try {
+        await updateLocalUser(user.id, { password_hash: hashPassword(password) });
+      } catch (upgradeError) {
+        // A migração não deve impedir um login válido; o próximo login tentará novamente.
+        console.error("[LOGIN PASSWORD MIGRATION ERROR]", upgradeError);
+      }
+    }
+
     const requestedSlug =
       (typeof body?.clientSlug === "string" && body.clientSlug.trim()) ||
       (typeof body?.companySlug === "string" && body.companySlug.trim()) ||
@@ -88,7 +110,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
-    const accessTtlSeconds = readPositiveIntEnv("ACCESS_TOKEN_TTL_SECONDS", SESSION_TTL_SECONDS);
+    const accessTtlSeconds = readPositiveIntEnv("ACCESS_TOKEN_TTL_SECONDS", DEFAULT_ACCESS_TOKEN_TTL_SECONDS);
     const refreshTtlSeconds = readPositiveIntEnv("REFRESH_TOKEN_TTL_SECONDS", DEFAULT_REFRESH_TTL_SECONDS);
 
     const sessionId = randomUUID();
@@ -179,10 +201,8 @@ export async function POST(req: Request) {
 
     return res;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
     console.error("[LOGIN ERROR]", err);
-    return NextResponse.json({ error: "Erro interno: " + message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
-
 

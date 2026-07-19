@@ -1,10 +1,12 @@
 ﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createHash } from "crypto";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { startPlaywrightRun } from "@/lib/playwright/executionService";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
+import { startPlaywrightRun } from "@/backend/playwright/executionService";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
+import { isEmbeddedAutomationExecutionEnabled } from "@/backend/playwright/executionPolicy";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,15 +19,18 @@ const RunSchema = z.object({
   runMode: z.enum(["all", "changed", "failed"]).default("all"),
   sourceRunId: z.string().trim().optional(),
   /** Array of { path, content } – scripts to include in the run */
-  scripts: z.array(z.object({ path: z.string(), content: z.string() })).default([]),
+  scripts: z.array(z.object({
+    path: z.string().trim().min(1).max(300),
+    content: z.string().max(1_000_000),
+  })).max(100).default([]),
   config: z.object({
     baseURL: z.string().default("http://localhost:3000"),
     browser: z.enum(["chromium", "firefox", "webkit"]).default("chromium"),
     browsers: z.array(z.enum(["chromium", "firefox", "webkit"])).optional(),
     headless: z.boolean().default(true),
-    timeoutMs: z.number().int().positive().default(30000),
-    workers: z.number().int().positive().default(2),
-    retries: z.number().int().min(0).default(0),
+    timeoutMs: z.number().int().positive().max(300_000).default(30000),
+    workers: z.number().int().positive().max(10).default(2),
+    retries: z.number().int().min(0).max(5).default(0),
     screenshotOn: z.string().default("only-on-failure"),
     videoOn: z.string().default("retain-on-failure"),
     traceOn: z.string().default("off"),
@@ -112,8 +117,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
   const { companySlug, projectId, planId, title, scripts, config, runMode, sourceRunId } = parsed.data;
-  if (!assertAccess(user, companySlug))
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  const contextResult = await resolveOperationalContext(request, {
+    moduleId: "playwright",
+    action: "execute",
+    companySlug,
+    projectId,
+    requireCompany: true,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
+  if (!user.isGlobalAdmin) {
+    return NextResponse.json({ error: "Somente administrador global pode executar código local." }, { status: 403 });
+  }
+  if (!isEmbeddedAutomationExecutionEnabled()) {
+    return NextResponse.json({
+      error: "Runner embutido desativado. Configure um worker isolado para executar código.",
+    }, { status: 503 });
+  }
 
   await ensureAutomationTables();
   const selectedSpecs = await resolveSelectedSpecs({
@@ -181,4 +201,3 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ runs: rows });
 }
-

@@ -1,9 +1,9 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
-import { canEditCompanyWiki } from "@/lib/companyWikiAccess";
-import { notifyCompanyWikiDocPublished } from "@/lib/notificationService";
+import { getAccessContext } from "@/backend/auth/session";
+import { canEditCompanyWiki } from "@/backend/companyWikiAccess";
+import { notifyCompanyWikiDocPublished } from "@/backend/notificationService";
 import { readCompanyDocs, writeCompanyDocs, newId, nowIso, sanitizeSlug, type DocBlock } from "@/data/platformDocsStore";
-import { normalizeWikiDocStatus, shouldNotifyWikiDocPublished } from "@/lib/wikiDocsStatus";
+import { normalizeWikiDocStatus, shouldNotifyWikiDocPublished } from "@/backend/wikiDocsStatus";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ companySlug: string }> }) {
   try {

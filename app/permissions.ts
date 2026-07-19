@@ -1,4 +1,4 @@
-﻿import { SYSTEM_ROLES } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES } from "@/backend/auth/roles";
 
 type RoleKey = "leader_tc" | "empresa" | "testing_company_user";
 type ResourceKey = "defect" | "run";

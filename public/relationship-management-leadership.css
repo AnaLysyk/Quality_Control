@@ -1,0 +1,299 @@
+.relationship-eyebrow {
+  margin-top: 2px;
+  color: #0b4f7a;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.34em;
+}
+
+.dark .relationship-eyebrow,
+[data-theme="dark"] .relationship-eyebrow {
+  color: #8fd8ff;
+}
+
+.relationship-row-icon {
+  color: #0b4f7a;
+}
+
+.dark .relationship-row-icon,
+[data-theme="dark"] .relationship-row-icon {
+  color: #8fd8ff;
+}
+
+.relationship-count-badge {
+  display: inline-flex;
+  min-width: 30px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(181, 22, 38, 0.18);
+  border-radius: 999px;
+  background: rgba(181, 22, 38, 0.08);
+  color: #7a0b1b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.dark .relationship-count-badge,
+[data-theme="dark"] .relationship-count-badge {
+  border-color: rgba(255, 82, 99, 0.28);
+  background: rgba(181, 22, 38, 0.18);
+  color: #ffb4bd;
+}
+
+.relationship-empty-state {
+  display: flex;
+  min-height: 150px;
+  align-items: center;
+  justify-content: center;
+  color: var(--rel-muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.relationship-leader-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.relationship-section-heading,
+.relationship-team-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.relationship-leader-add-form {
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.2fr) auto;
+}
+
+.relationship-primary-action,
+.relationship-operation-row button,
+.relationship-transfer-form button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: #061225;
+  color: #fff;
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.relationship-primary-action:disabled,
+.relationship-operation-row button:disabled,
+.relationship-transfer-form button:disabled,
+.relationship-danger-action:disabled {
+  opacity: 0.42;
+}
+
+.dark .relationship-primary-action,
+.dark .relationship-operation-row button,
+.dark .relationship-transfer-form button,
+[data-theme="dark"] .relationship-primary-action,
+[data-theme="dark"] .relationship-operation-row button,
+[data-theme="dark"] .relationship-transfer-form button {
+  background: #d9efff;
+  color: #061225;
+}
+
+.relationship-project-block {
+  border-bottom: 1px solid var(--rel-line);
+}
+
+.relationship-project-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--rel-text);
+  padding: 12px 0;
+}
+
+.relationship-project-trigger small,
+.relationship-team-member small {
+  color: var(--rel-muted);
+}
+
+.relationship-project-action-label {
+  color: #7a0b1b;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.dark .relationship-project-action-label,
+[data-theme="dark"] .relationship-project-action-label {
+  color: #ff9eaa;
+}
+
+.relationship-project-detail {
+  border-left: 2px solid rgba(181, 22, 38, 0.35);
+  padding: 4px 0 14px 16px;
+}
+
+.relationship-team-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.relationship-team-actions button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--rel-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rel-text);
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.relationship-team-actions button:hover {
+  border-color: rgba(181, 22, 38, 0.35);
+  color: #7a0b1b;
+}
+
+.dark .relationship-team-actions button:hover,
+[data-theme="dark"] .relationship-team-actions button:hover {
+  color: #ff9eaa;
+}
+
+.relationship-operation-row,
+.relationship-transfer-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.relationship-transfer-form {
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto;
+}
+
+.relationship-operation-row select,
+.relationship-transfer-form select,
+.relationship-transfer-form input,
+.relationship-inline-dialog input,
+.relationship-dialog textarea {
+  min-height: 40px;
+  border: 1px solid var(--rel-line);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--rel-text);
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  outline: none;
+}
+
+.relationship-team-list {
+  margin-top: 10px;
+}
+
+.relationship-team-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--rel-line);
+  padding: 10px 0;
+}
+
+.relationship-team-member > button {
+  border: 0;
+  background: transparent;
+  color: #b51626;
+}
+
+.relationship-inline-dialog {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--rel-line);
+  padding-top: 14px;
+}
+
+.relationship-inline-dialog button,
+.relationship-dialog button {
+  min-height: 38px;
+  border: 1px solid var(--rel-line);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--rel-text);
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.relationship-danger-action {
+  border-color: #b51626 !important;
+  background: #b51626 !important;
+  color: #fff !important;
+}
+
+.relationship-history-panel {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(430px, 92vw);
+  overflow-y: auto;
+  border-left: 1px solid var(--rel-line);
+  background: #f4f8fc;
+  color: var(--rel-text);
+  padding: 24px;
+  box-shadow: -18px 0 50px rgba(6, 18, 37, 0.18);
+}
+
+.dark .relationship-history-panel,
+[data-theme="dark"] .relationship-history-panel {
+  background: #061225;
+}
+
+.relationship-dialog {
+  width: min(520px, calc(100vw - 32px));
+  border: 1px solid var(--rel-line);
+  border-radius: 24px;
+  background: #f4f8fc;
+  color: var(--rel-text);
+  padding: 24px;
+  box-shadow: 0 24px 80px rgba(6, 18, 37, 0.24);
+}
+
+.dark .relationship-dialog,
+[data-theme="dark"] .relationship-dialog {
+  background: #061225;
+}
+
+.relationship-dialog textarea {
+  width: 100%;
+  min-height: 112px;
+  margin-top: 18px;
+  padding: 14px;
+  resize: vertical;
+}
+
+@media (max-width: 900px) {
+  .relationship-section-heading,
+  .relationship-team-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .relationship-leader-add-form,
+  .relationship-operation-row,
+  .relationship-transfer-form {
+    grid-template-columns: 1fr;
+  }
+
+  .relationship-team-actions {
+    justify-content: flex-start;
+  }
+
+  .relationship-project-action-label {
+    display: none;
+  }
+}

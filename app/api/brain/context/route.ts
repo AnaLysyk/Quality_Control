@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { canAccessBrainModule, resolveBrainAccess } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { canAccessBrainModule, resolveBrainAccess } from "@/backend/brain/access";
+import { prisma } from "@/database/prismaClient";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

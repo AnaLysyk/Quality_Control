@@ -1,9 +1,17 @@
 ﻿import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { prisma } from "@/lib/prismaClient";
-import { canAccessCompany, canDeleteAsset, PermissionError } from "@/lib/test-data-hub/permissions";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { prisma } from "@/database/prismaClient";
+import {
+  canAccessCompany,
+  canAccessProject,
+  canAccessSensitivity,
+  canCreateAsset,
+  canDeleteAsset,
+  isSensitivityLevel,
+  PermissionError,
+} from "@/backend/test-data-hub/permissions";
 
 /**
  * GET /api/test-data-assets/:id
@@ -22,7 +30,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const asset = await prisma.testDataAsset.findUnique({
       where: { id: assetId },
-      include: {
+      select: {
+        id: true,
+        companySlug: true,
+        projectId: true,
+        documentId: true,
+        fragmentId: true,
+        key: true,
+        label: true,
+        assetType: true,
+        mimeType: true,
+        encoding: true,
+        sizeBytes: true,
+        checksum: true,
+        sensitivity: true,
+        status: true,
+        metadata: true,
+        createdBy: true,
+        createdAt: true,
+        updatedAt: true,
         usagePolicy: true,
         caseLinks: {
           select: {
@@ -49,7 +75,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Verify user has permission to view this asset
-    if (!canAccessCompany(user, asset.companySlug)) {
+    if (
+      !canAccessCompany(user, asset.companySlug) ||
+      !canAccessProject(user, asset.companySlug, asset.projectId) ||
+      !canAccessSensitivity(user, asset.sensitivity)
+    ) {
       return NextResponse.json({ error: "No access to this asset" }, { status: 403 });
     }
 
@@ -88,7 +118,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // Find existing asset
     const existing = await prisma.testDataAsset.findUnique({
       where: { id: assetId },
-      select: { id: true, companySlug: true, sensitivity: true },
+      select: { id: true, companySlug: true, projectId: true, sensitivity: true },
     });
 
     if (!existing) {
@@ -96,8 +126,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Verify user has permission to update this asset
-    if (!canAccessCompany(user, existing.companySlug)) {
+    if (
+      !canCreateAsset(user, existing.companySlug) ||
+      !canAccessProject(user, existing.companySlug, existing.projectId) ||
+      !canAccessSensitivity(user, existing.sensitivity)
+    ) {
       return NextResponse.json({ error: "No permission to update this asset" }, { status: 403 });
+    }
+
+    if (sensitivity !== undefined && (!isSensitivityLevel(sensitivity) || !canAccessSensitivity(user, sensitivity))) {
+      return NextResponse.json({ error: "Invalid or unauthorized sensitivity level" }, { status: 403 });
+    }
+
+    if (status !== undefined && !["active", "outdated", "deprecated", "archived"].includes(status)) {
+      return NextResponse.json({ error: "Invalid asset status" }, { status: 400 });
     }
 
     // Update asset
@@ -167,7 +209,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     // Find existing asset
     const existing = await prisma.testDataAsset.findUnique({
       where: { id: assetId },
-      select: { id: true, companySlug: true, sensitivity: true },
+      select: { id: true, companySlug: true, projectId: true, sensitivity: true },
     });
 
     if (!existing) {
@@ -175,7 +217,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     // Verify user has permission to delete this asset
-    if (!canDeleteAsset(user, existing.companySlug, existing.sensitivity)) {
+    if (
+      !canAccessProject(user, existing.companySlug, existing.projectId) ||
+      !canDeleteAsset(user, existing.companySlug, existing.sensitivity)
+    ) {
       return NextResponse.json(
         { error: "No permission to delete this asset" },
         { status: 403 },
@@ -224,4 +269,3 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

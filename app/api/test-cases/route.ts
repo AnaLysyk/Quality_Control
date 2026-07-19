@@ -1,46 +1,30 @@
-﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { NextResponse } from "next/server";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import {
   buildTestCaseMetrics,
   createManualTestCaseRecord,
   listTestCaseRecords,
   updateTestCaseRecord,
   archiveTestCaseRecord,
-} from "@/lib/test-cases/testCaseRepository";
+} from "@/backend/test-cases/testCaseRepository";
 import {
   canCreateTestCaseForCompany,
   canAccessTestCaseRecord,
   filterTestCasesByPermission,
-} from "@/lib/test-cases/testCasePermissions";
-import { listIntegratedQaseTestCaseRecords } from "@/lib/test-projects/testProjectsRepository";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import type { CreateTestCaseInput, TestCaseFilters } from "@/lib/test-cases/types";
+} from "@/backend/test-cases/testCasePermissions";
+import { listIntegratedQaseTestCaseRecords } from "@/backend/test-projects/testProjectsRepository";
+import { syncTestCaseWithLinkedQaseProject } from "@/backend/integrations/qaseProjectCaseSync";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import type { CreateTestCaseInput, TestCaseFilters, TestCaseRecord } from "@/backend/test-cases/types";
 
 function mapTestCaseError(error: unknown) {
   if (!(error instanceof Error)) return null;
-
-  if (error.message === "TITLE_REQUIRED") {
-    return NextResponse.json({ message: "Título é obrigatório" }, { status: 400 });
-  }
-
-  if (error.message === "STEP_ACTION_REQUIRED") {
-    return NextResponse.json({ message: "Cada passo precisa de ação" }, { status: 400 });
-  }
-
-  if (error.message === "STEP_EXPECTED_RESULT_REQUIRED") {
-    return NextResponse.json({ message: "Cada passo precisa de resultado esperado" }, { status: 400 });
-  }
-
-  if (
-    error.message === "INVALID_TEST_CASE_SOURCE" ||
-    error.message === "INVALID_TEST_CASE_TYPE" ||
-    error.message === "INVALID_TEST_CASE_STATUS" ||
-    error.message === "INVALID_TEST_CASE_PRIORITY" ||
-    error.message === "INVALID_TEST_CASE_AUTOMATION_STATUS"
-  ) {
+  if (error.message === "TITLE_REQUIRED") return NextResponse.json({ message: "Título é obrigatório" }, { status: 400 });
+  if (error.message === "STEP_ACTION_REQUIRED") return NextResponse.json({ message: "Cada passo precisa de ação" }, { status: 400 });
+  if (error.message === "STEP_EXPECTED_RESULT_REQUIRED") return NextResponse.json({ message: "Cada passo precisa de resultado esperado" }, { status: 400 });
+  if (["INVALID_TEST_CASE_SOURCE", "INVALID_TEST_CASE_TYPE", "INVALID_TEST_CASE_STATUS", "INVALID_TEST_CASE_PRIORITY", "INVALID_TEST_CASE_AUTOMATION_STATUS"].includes(error.message)) {
     return NextResponse.json({ message: "Campos de classificação inválidos" }, { status: 400 });
   }
-
   return null;
 }
 
@@ -71,23 +55,7 @@ function matchesTestCaseFilters(record: Awaited<ReturnType<typeof listTestCaseRe
   const testCase = record.testCase;
   const query = String(filters.query ?? "").trim().toLowerCase();
   if (query) {
-    const haystack = [
-      testCase.key,
-      testCase.externalKey,
-      testCase.externalUrl,
-      testCase.title,
-      testCase.description,
-      testCase.applicationId,
-      testCase.moduleId,
-      testCase.testProjectCode,
-      testCase.testProjectName,
-      testCase.suiteId,
-      testCase.suiteName,
-      testCase.tags.join(" "),
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+    const haystack = [testCase.key, testCase.externalKey, testCase.externalUrl, testCase.title, testCase.description, testCase.applicationId, testCase.moduleId, testCase.testProjectCode, testCase.testProjectName, testCase.suiteId, testCase.suiteName, testCase.tags.join(" ")].filter(Boolean).join(" ").toLowerCase();
     if (!haystack.includes(query)) return false;
   }
   if (!matchesFilterValue(testCase.companyId, filters.companyId)) return false;
@@ -109,6 +77,30 @@ function matchesTestCaseFilters(record: Awaited<ReturnType<typeof listTestCaseRe
   return true;
 }
 
+function externalIdentity(record: TestCaseRecord) {
+  return String(record.testCase.externalKey ?? record.testCase.externalId ?? "").trim().toUpperCase();
+}
+
+async function persistQaseIdentity(record: TestCaseRecord) {
+  try {
+    const sync = await syncTestCaseWithLinkedQaseProject(record);
+    if (!sync.integrated) return { record, sync: null, warning: null };
+    const persisted = await updateTestCaseRecord(record.testCase.id, {
+      source: "qase",
+      externalKey: sync.externalKey,
+      externalUrl: sync.externalUrl,
+      testProjectCode: sync.projectCode,
+    }, record.testCase.updatedBy ?? record.testCase.createdBy);
+    return { record: persisted ?? record, sync, warning: null };
+  } catch (error) {
+    return {
+      record,
+      sync: null,
+      warning: error instanceof Error ? `Caso salvo localmente, mas a sincronização com o Qase falhou: ${error.message}` : "Caso salvo localmente, mas a sincronização com o Qase falhou.",
+    };
+  }
+}
+
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
@@ -117,25 +109,26 @@ export async function GET(req: Request) {
   const filters = filtersFromUrl(url);
   const includeIntegrated = String(url.searchParams.get("includeIntegrated") ?? "true").toLowerCase() !== "false";
   const localRecords = await listTestCaseRecords(filters);
-  const integratedRecords =
-    includeIntegrated && filters.companyId
-      ? await listIntegratedQaseTestCaseRecords({
-          companySlug: filters.companyId,
-          applicationId: filters.applicationId,
-          projectCode: filters.projectCode,
-        })
-      : [];
+  const integratedRecords = includeIntegrated && filters.companyId
+    ? await listIntegratedQaseTestCaseRecords({ companySlug: filters.companyId, applicationId: filters.applicationId, projectCode: filters.projectCode })
+    : [];
+
   const recordsById = new Map<string, (typeof localRecords)[number]>();
-  for (const record of localRecords.filter((item) => matchesTestCaseFilters(item, filters))) recordsById.set(record.testCase.id, record);
-  for (const record of integratedRecords.filter((item) => matchesTestCaseFilters(item, filters))) recordsById.set(record.testCase.id, record);
+  const identities = new Set<string>();
+  for (const record of localRecords.filter((item) => matchesTestCaseFilters(item, filters))) {
+    recordsById.set(record.testCase.id, record);
+    const identity = externalIdentity(record);
+    if (identity) identities.add(identity);
+  }
+  for (const record of integratedRecords.filter((item) => matchesTestCaseFilters(item, filters))) {
+    const identity = externalIdentity(record);
+    if (identity && identities.has(identity)) continue;
+    recordsById.set(record.testCase.id, record);
+  }
+
   const records = Array.from(recordsById.values());
   const visibleRecords = filterTestCasesByPermission(records, user);
-
-  return NextResponse.json({
-    items: visibleRecords,
-    total: visibleRecords.length,
-    metrics: buildTestCaseMetrics(visibleRecords),
-  });
+  return NextResponse.json({ items: visibleRecords, total: visibleRecords.length, metrics: buildTestCaseMetrics(visibleRecords) });
 }
 
 export async function POST(req: Request) {
@@ -144,49 +137,31 @@ export async function POST(req: Request) {
 
   const payload = (await req.json()) as CreateTestCaseInput & { companySlug?: string | null };
   const companySlug = payload.companySlug ?? payload.companyId ?? null;
-
   if (!canCreateTestCaseForCompany(user, companySlug, payload.projectId)) {
     return NextResponse.json({ message: "Sem permissão para criar caso neste contexto" }, { status: 403 });
   }
 
-  if (payload.projectId) {
-    const { prisma } = await import("@/lib/prismaClient");
-    const project = await prisma.project.findUnique({
-      where: { id: payload.projectId },
-      select: { manualCreationDisabled: true },
-    });
-    if (project?.manualCreationDisabled) {
-      return NextResponse.json(
-        { message: "Este projeto está configurado para usar só integração (Qase/Jira); criação manual está desabilitada." },
-        { status: 403 },
-      );
-    }
-  }
-
   try {
-    const record = await createManualTestCaseRecord(
-      {
-        ...payload,
-        companyId: companySlug,
-        testProjectCode:
-          typeof payload.testProjectCode === "string"
-            ? payload.testProjectCode
-            : typeof (payload as Record<string, unknown>).projectCode === "string"
-              ? String((payload as Record<string, unknown>).projectCode)
-              : undefined,
-      },
-      user.id,
-    );
+    const localRecord = await createManualTestCaseRecord({
+      ...payload,
+      companyId: companySlug,
+      testProjectCode: typeof payload.testProjectCode === "string"
+        ? payload.testProjectCode
+        : typeof (payload as Record<string, unknown>).projectCode === "string"
+          ? String((payload as Record<string, unknown>).projectCode)
+          : undefined,
+    }, user.id);
+    const result = await persistQaseIdentity(localRecord);
     writeAuditLog({
       actorUserId: user.id,
       actorEmail: user.email,
       action: "create",
       entityType: "TestCase",
-      entityId: record.testCase.id,
-      entityLabel: record.testCase.title,
-      metadata: { companyId: companySlug, projectId: payload.projectId ?? null },
+      entityId: result.record.testCase.id,
+      entityLabel: result.record.testCase.title,
+      metadata: { companyId: companySlug, projectId: payload.projectId ?? null, qaseSynced: Boolean(result.sync), syncWarning: result.warning },
     });
-    return NextResponse.json(record, { status: 201 });
+    return NextResponse.json({ ...result.record, sync: result.sync, syncWarning: result.warning }, { status: result.warning ? 202 : 201 });
   } catch (error) {
     const mapped = mapTestCaseError(error);
     if (mapped) return mapped;
@@ -199,44 +174,34 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const payload = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!payload || !payload.id) {
-    return NextResponse.json({ message: "id obrigatório" }, { status: 400 });
-  }
+  if (!payload || !payload.id) return NextResponse.json({ message: "id obrigatório" }, { status: 400 });
 
   const id = String(payload.id);
   const archive = payload.archive === true;
-
-  // Verify record exists + check access
-  const existing = (await listTestCaseRecords()).find(
-    (r) => r.testCase.id === id || r.testCase.key === id,
-  );
+  const existing = (await listTestCaseRecords()).find((record) => record.testCase.id === id || record.testCase.key === id);
   if (!existing) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
-  if (!canAccessTestCaseRecord(user, existing)) {
-    return NextResponse.json({ message: "Sem permissão para editar este caso" }, { status: 403 });
-  }
+  if (!canAccessTestCaseRecord(user, existing)) return NextResponse.json({ message: "Sem permissão para editar este caso" }, { status: 403 });
 
   try {
-    const record = archive
+    const localRecord = archive
       ? await archiveTestCaseRecord(id, user.id)
       : await updateTestCaseRecord(id, payload as Parameters<typeof updateTestCaseRecord>[1], user.id);
+    if (!localRecord) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
 
-    if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
-
+    const result = archive ? { record: localRecord, sync: null, warning: null } : await persistQaseIdentity(localRecord);
     writeAuditLog({
       actorUserId: user.id,
       actorEmail: user.email,
       action: archive ? "archive" : "update",
       entityType: "TestCase",
-      entityId: record.testCase.id,
-      entityLabel: record.testCase.title,
-      metadata: { companyId: record.testCase.companyId ?? null },
+      entityId: result.record.testCase.id,
+      entityLabel: result.record.testCase.title,
+      metadata: { companyId: result.record.testCase.companyId ?? null, qaseSynced: Boolean(result.sync), syncWarning: result.warning },
     });
-
-    return NextResponse.json(record);
+    return NextResponse.json({ ...result.record, sync: result.sync, syncWarning: result.warning }, { status: result.warning ? 202 : 200 });
   } catch (error) {
     const mapped = mapTestCaseError(error);
     if (mapped) return mapped;
     throw error;
   }
 }
-

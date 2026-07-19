@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { FiBarChart2, FiCheckCircle, FiClock, FiPlayCircle, FiPlus, FiRefreshCcw, FiSearch } from "react-icons/fi";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type RunStatus = "draft" | "scheduled" | "in_progress" | "paused" | "completed" | "cancelled" | "aborted";
 

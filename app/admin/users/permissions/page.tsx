@@ -1,38 +1,27 @@
 "use client";
 
-async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 12000) {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(input, {
-      ...init,
-      signal: controller.signal,
-    });
-  } finally {
-    window.clearTimeout(timeout);
-  }
-}
 export const dynamic = "force-dynamic";
 
-import { getPermissionModulesWithScreens } from "@/lib/navigation/screenPermissions";
+import { getPermissionModulesWithScreens } from "@/backend/navigation/screenPermissions";
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiRefreshCw, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, FiX, } from "react-icons/fi";
+  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiHelpCircle, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, FiX, } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
+import { getActionLabel, type PermissionModule } from "@/backend/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
   normalizePermissionMatrix,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+} from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 type ProfileUserSummary = {
   id: string;
@@ -122,7 +111,7 @@ type SortDirection = "asc" | "desc";
 
 const PROFILE_OPTIONS: Array<{ role: SystemRole; label: string }> = [
   { role: SYSTEM_ROLES.LEADER_TC, label: "Líder TC" },
-  { role: SYSTEM_ROLES.TECHNICAL_SUPPORT, label: "Suporte Técnico" },
+  { role: SYSTEM_ROLES.TECHNICAL_SUPPORT, label: "Administrador" },
   { role: SYSTEM_ROLES.TESTING_COMPANY_USER, label: "Usuário TC" },
   { role: SYSTEM_ROLES.EMPRESA, label: "Empresa" },
   { role: SYSTEM_ROLES.COMPANY_USER, label: "Usuário da Empresa" },
@@ -518,7 +507,9 @@ export default function UsersPermissionsPage() {
   }, [allowedCompanyKeys, canSeeAllUsers]);
 
   useEffect(() => {
-    if (canView) void loadUsers();
+    if (!canView) return;
+    const timer = window.setTimeout(() => void loadUsers(), 0);
+    return () => window.clearTimeout(timer);
   }, [canView, loadUsers]);
 
   async function loadUserPermissions(profileUser: UserPermissionRow) {
@@ -573,6 +564,31 @@ export default function UsersPermissionsPage() {
 
   function getUserEffectivePermissions(profileUser: UserPermissionRow) {
     return applyPermissionOverride(getUserSystemDefaults(profileUser), getUserDraft(profileUser));
+  }
+
+  function hasUserDraftChanges(profileUser: UserPermissionRow) {
+    const saved = detailsByUserId[profileUser.id]?.override;
+    const draft = draftsByUserId[profileUser.id];
+    if (!draft) return false;
+
+    const savedKey = JSON.stringify({
+      allow: normalizePermissionMatrix(saved?.allow),
+      deny: normalizePermissionMatrix(saved?.deny),
+    });
+    const draftKey = JSON.stringify({
+      allow: normalizePermissionMatrix(draft.allow),
+      deny: normalizePermissionMatrix(draft.deny),
+    });
+
+    return savedKey !== draftKey;
+  }
+
+  function handleDiscardUserDraft(profileUser: UserPermissionRow) {
+    const saved = detailsByUserId[profileUser.id]?.override;
+    setDraftsByUserId((current) => ({
+      ...current,
+      [profileUser.id]: saved ?? { role: profileUser.role, allow: {}, deny: {} },
+    }));
   }
 
   function handleUserModuleToggle(profileUser: UserPermissionRow, module: PermissionModule, shouldAllow: boolean) {
@@ -857,16 +873,6 @@ export default function UsersPermissionsPage() {
     setPage(1);
   }
 
-  function toggleSort(nextKey: UserSortKey) {
-    if (sortKey === nextKey) {
-      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
-      return;
-    }
-
-    setSortKey(nextKey);
-    setSortDirection("asc");
-  }
-
   if (loading) return <AccessDeniedState state="loading" />;
 
   if (!canView) {
@@ -880,36 +886,41 @@ export default function UsersPermissionsPage() {
     );
   }
 
-  const sortMark = sortDirection === "asc" ? "?" : "?";
-
   return (
     <main className="qc-users-permissions-page min-h-screen px-4 py-4 text-[#0f172a] lg:px-6">
-      {notice.type !== "idle" ? (
-        <div
-          className={[
-            "fixed right-5 top-5 z-50 flex max-w-md items-start gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold shadow-xl",
-            notice.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-rose-200 bg-rose-50 text-rose-800",
-          ].join(" ")}
-        >
-          {notice.type === "success" ? (
-            <FiCheck className="mt-0.5 h-4 w-4 shrink-0" />
-          ) : (
-            <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          )}
-          <span className="min-w-0 flex-1">{notice.message}</span>
-          <button
-            type="button"
-            onClick={() => setNotice({ type: "idle" })}
-            aria-label="Fechar mensagem"
-            title="Fechar mensagem"
-            className="rounded-lg p-1 opacity-70 transition hover:bg-white/70 hover:opacity-100"
+      <AnimatePresence>
+        {notice.type !== "idle" ? (
+          <motion.div
+            key={notice.type + notice.message}
+            initial={{ opacity: 0, y: -12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className={[
+              "fixed right-5 top-5 z-50 flex max-w-md items-start gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold shadow-xl",
+              notice.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-rose-200 bg-rose-50 text-rose-800",
+            ].join(" ")}
           >
-            <FiX className="h-4 w-4" />
-          </button>
-        </div>
-      ) : null}
+            {notice.type === "success" ? (
+              <FiCheck className="mt-0.5 h-4 w-4 shrink-0" />
+            ) : (
+              <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            )}
+            <span className="min-w-0 flex-1">{notice.message}</span>
+            <button
+              type="button"
+              onClick={() => setNotice({ type: "idle" })}
+              aria-label="Fechar mensagem"
+              title="Fechar mensagem"
+              className="rounded-lg p-1 opacity-70 transition hover:bg-white/70 hover:opacity-100"
+            >
+              <FiX className="h-4 w-4" />
+            </button>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <div className="flex w-full max-w-none flex-col gap-4">
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -964,34 +975,29 @@ export default function UsersPermissionsPage() {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#011848]">
-                <FiSliders className="h-4 w-4" />
-                Modo guiado para usuário
+        <Accordion type="single" collapsible className="rounded-2xl shadow-sm">
+          <AccordionItem value="guide" className="rounded-2xl border-slate-200 bg-white">
+            <AccordionTrigger className="px-4 py-2.5 text-xs font-black uppercase tracking-wide text-[#011848] hover:no-underline">
+              <span className="flex items-center gap-2">
+                <FiHelpCircle className="h-4 w-4" />
+                Como funciona: encontre o usuário → abra o controle → ajuste o módulo → salve a exceção
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-3">
+              <div className="grid gap-3 border-t border-slate-100 pt-3 md:grid-cols-2 xl:grid-cols-4">
+                {USER_GUIDE_STEPS.map((step) => (
+                  <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs font-black text-[#011848]">{step.title}</p>
+                    <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500">{step.description}</p>
+                  </div>
+                ))}
               </div>
-              <p className="mt-1 text-sm font-semibold text-slate-500">
-                Este fluxo ativa ou desativa permissões para um usuário específico, sem alterar o padrão do perfil.
-              </p>
-            </div>
-            <span className="w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black uppercase text-emerald-700">
-              Ativar / Desativar individual
-            </span>
-          </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {USER_GUIDE_STEPS.map((step) => (
-              <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs font-black text-[#011848]">{step.title}</p>
-                <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-[#011848]">
-          Empresas visualizam apenas usuários vinculados ao próprio escopo. Liderança e suporte técnico visualizam todos.
+        <section className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs font-semibold text-[#011848]">
+          Empresas visualizam apenas usuários vinculados ao próprio escopo. Liderança e administrador visualizam todos.
         </section>
 
         <section className="sticky top-3 z-30 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -1299,7 +1305,12 @@ export default function UsersPermissionsPage() {
                                   Carregando permissões...
                                 </div>
                               ) : (
-                                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+                                <motion.div
+                                  initial={{ opacity: 0, y: -6 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.18, ease: "easeOut" }}
+                                  className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]"
+                                >
                                   <section className="rounded-2xl border border-slate-200 bg-white">
                                     <div className="flex flex-col gap-2 border-b border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                                       <div>
@@ -1309,7 +1320,21 @@ export default function UsersPermissionsPage() {
                                         </p>
                                       </div>
 
-                                      <div className="flex flex-wrap gap-2">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <AnimatePresence>
+                                          {hasUserDraftChanges(profileUser) ? (
+                                            <motion.span
+                                              initial={{ opacity: 0, scale: 0.9 }}
+                                              animate={{ opacity: 1, scale: 1 }}
+                                              exit={{ opacity: 0, scale: 0.9 }}
+                                              transition={{ duration: 0.15 }}
+                                              className="rounded-full border border-[#011848]/20 bg-[#011848]/5 px-2.5 py-1 text-[11px] font-black uppercase text-[#011848]"
+                                            >
+                                              Não salvo
+                                            </motion.span>
+                                          ) : null}
+                                        </AnimatePresence>
+
                                         <button
                                           type="button"
                                           onClick={() => handleResetUser(profileUser)}
@@ -1321,10 +1346,22 @@ export default function UsersPermissionsPage() {
                                           <FiRotateCcw className="h-3.5 w-3.5" />
                                         </button>
 
+                                        {hasUserDraftChanges(profileUser) ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDiscardUserDraft(profileUser)}
+                                            disabled={savingThisUser}
+                                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-rose-300 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                          >
+                                            <FiX className="h-3.5 w-3.5" />
+                                            Descartar
+                                          </button>
+                                        ) : null}
+
                                         <button
                                           type="button"
                                           onClick={() => handleSaveUser(profileUser)}
-                                          disabled={!canEditUser || savingThisUser}
+                                          disabled={!canEditUser || savingThisUser || !hasUserDraftChanges(profileUser)}
                                           className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#011848] px-3 text-xs font-black text-white transition hover:bg-[#0b245f] disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                           <FiSave className="h-3.5 w-3.5" />
@@ -1384,7 +1421,7 @@ export default function UsersPermissionsPage() {
                                                     disabled={!canEditUser || savingThisUser}
                                                     className="h-8 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-black text-emerald-800 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
                                                   >
-                                                    Ativar tudo
+                                                    Ativar
                                                   </button>
 
                                                   <button
@@ -1393,7 +1430,7 @@ export default function UsersPermissionsPage() {
                                                     disabled={!canEditUser || savingThisUser}
                                                     className="h-8 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-black text-rose-800 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
                                                   >
-                                                    Ocultar tudo
+                                                    Desativar
                                                   </button>
                                                 </div>
                                               </div>
@@ -1451,7 +1488,7 @@ export default function UsersPermissionsPage() {
                                       </div>
                                     )}
                                   </aside>
-                                </div>
+                                </motion.div>
                               )}
                             </td>
                           </tr>
@@ -1523,5 +1560,3 @@ export default function UsersPermissionsPage() {
     </main>
   );
 }
-
-

@@ -1,14 +1,14 @@
-﻿import { randomBytes } from "crypto";
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { addRequest } from "@/data/requestsStore";
-import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
-import { storePasswordResetToken } from "@/lib/auth/passwordResetToken";
-import { emailService } from "@/lib/email";
-import { notifyPasswordResetRequest } from "@/lib/notificationService";
-import { rateLimit } from "@/lib/rateLimit";
-import { deriveProfileTypeFromAccount, normalizeRequestProfileType, resolveReviewQueue } from "@/lib/requestRouting";
+import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/backend/auth/localStore";
+import { storePasswordResetToken } from "@/backend/auth/passwordResetToken";
+import { emailService } from "@/backend/email";
+import { notifyPasswordResetRequest } from "@/backend/notificationService";
+import { rateLimit } from "@/backend/rateLimit";
+import { deriveProfileTypeFromAccount, normalizeRequestProfileType, resolveReviewQueue } from "@/backend/access-requests/routing";
 
 const GENERIC_MESSAGE = "Se o e-mail informado estiver cadastrado, enviaremos as instruções para redefinir sua senha.";
 

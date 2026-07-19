@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { prisma } from "@/lib/prismaClient";
-import { applyPermissionOverride, normalizePermissionMatrix } from "@/lib/permissionMatrix";
-import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { resolveProfilePermissionDefaults } from "@/lib/store/profilePermissionsStore";
-import { countPermissionActions } from "@/lib/store/userPermissionsStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { normalizeLegacyRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
+import { prisma } from "@/database/prismaClient";
+import { applyPermissionOverride, normalizePermissionMatrix } from "@/backend/permissionMatrix";
+import { validarAcessoUsuariosNoServidor } from "@/backend/permissions/validarAcessoUsuariosNoServidor";
+import { resolveUserProfileRole } from "@/backend/permissions/resolveUserProfileRole";
+import { resolveProfilePermissionDefaults } from "@/backend/store/profilePermissionsStore";
+import { countPermissionActions } from "@/backend/store/userPermissionsStore";
 
 export const revalidate = 0;
 
@@ -38,31 +39,6 @@ async function requirePermissionManager(req: NextRequest) {
   }
 
   return { admin: accessContext, access, response: null };
-}
-
-function resolveUserRole(user: {
-  role: unknown;
-  globalRole: string | null;
-  user_origin: string | null;
-  user_scope: string | null;
-  default_company_slug: string | null;
-  home_company_id: string | null;
-  created_by_company_id: string | null;
-}): SystemRole | null {
-  const globalRole = normalizeLegacyRole(user.globalRole ?? null);
-  if (globalRole) return globalRole;
-
-  const role = normalizeLegacyRole(typeof user.role === "string" ? user.role : String(user.role ?? ""));
-  const looksCompanyUser =
-    user.user_origin === "company" ||
-    user.user_origin === "client" ||
-    Boolean(user.home_company_id || user.created_by_company_id || user.default_company_slug);
-
-  if (role === SYSTEM_ROLES.TESTING_COMPANY_USER && looksCompanyUser) {
-    return SYSTEM_ROLES.COMPANY_USER;
-  }
-
-  return role ?? (looksCompanyUser ? SYSTEM_ROLES.COMPANY_USER : SYSTEM_ROLES.TESTING_COMPANY_USER);
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ role: string }> }) {
@@ -121,7 +97,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
 
     const filtered = users
       .map((user) => {
-        const userRole = resolveUserRole(user);
+        const userRole = resolveUserProfileRole(user);
         const override = user.permissionOverride
           ? {
               allow: normalizePermissionMatrix(user.permissionOverride.allow),

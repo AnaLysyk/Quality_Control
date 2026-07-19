@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useClientContext, type ClientAccess } from "@/lib/core/company/CompanyContext";
-import { useProjectContext, type ProjectRecord } from "@/lib/core/project/ProjectContext";
+import { useClientContext, type ClientAccess } from "@/context/ClientContext";
+import { useProjectContext, type ProjectRecord } from "@/context/ProjectContext";
 
 /**
  * Granular permission strings used by PermissionGate and `can()`.

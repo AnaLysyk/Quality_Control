@@ -1,12 +1,12 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import {
   disableTestCaseAutomationLink,
   getTestCaseRecord,
   saveTestCaseAutomationLink,
-} from "@/lib/test-cases/testCaseRepository";
-import { canAccessTestCaseRecord } from "@/lib/test-cases/testCasePermissions";
-import type { CreateTestAutomationLinkInput } from "@/lib/test-cases/types";
+} from "@/backend/test-cases/testCaseRepository";
+import { canAccessTestCaseRecord } from "@/backend/test-cases/testCasePermissions";
+import type { CreateTestAutomationLinkInput } from "@/backend/test-cases/types";
 
 function normalizeBody(body: Record<string, unknown>): Partial<CreateTestAutomationLinkInput> {
   return {

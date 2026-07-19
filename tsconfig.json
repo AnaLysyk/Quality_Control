@@ -23,21 +23,17 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/core/*": [
-        "./lib/core/*"
-      ],
       "@/utils/*": [
         "./app/utils/*"
       ],
       "@/data/*": [
-        "./app/data/*",
-        "./data/*"
+        "./database/repositories/*"
+      ],
+      "@/database/*": [
+        "./database/*"
       ],
       "@/hooks/*": [
         "./app/hooks/*"
-      ],
-      "@/lib/*": [
-        "./lib/*"
       ],
       "@/components/*": [
         "./app/components/*"
@@ -46,19 +42,19 @@
         "./src/features/*"
       ],
       "@/backend/*": [
-        "./src/backend/*"
+        "./backend/*"
       ],
       "@/shared/*": [
-        "./src/shared/*"
+        "./shared/*"
       ],
       "@/design-system/*": [
         "./src/design-system/*"
       ],
       "@/contracts/*": [
-        "./packages/contracts/src/*"
+        "./shared/contracts/src/*"
       ],
       "@/types/*": [
-        "./app/types/*"
+        "./shared/types/*"
       ],
       "@/*": [
         "./app/*"
@@ -86,13 +82,10 @@
   ],
   "exclude": [
     "node_modules",
-    "backend",
     "tests",
-    "tests-e2e",
-    "testes",
-    "testes/**/*",
-    "support",
-    "support/**/*",
+    "tests/**/*",
+    "tools",
+    "tools/**/*",
     "playwright-report",
     "test-results"
   ]

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { isBrainSourceStorageUnavailable, testBrainSource } from "@/lib/brain/sourceSettings";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { isBrainSourceStorageUnavailable, testBrainSource } from "@/backend/brain/sourceSettings";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const accessResult = await resolveBrainAccess(req);

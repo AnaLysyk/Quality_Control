@@ -1,9 +1,9 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { hasCapability, type Capability } from "@/lib/permissions";
-import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
-import { syncReleaseManualToBrain } from "@/lib/brain-sync";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { hasCapability, type Capability } from "@/backend/permissions";
+import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/database/persistentJsonStore";
+import { syncReleaseManualToBrain } from "@/backend/brain/sync";
 
 type ManualRelease = {
   id: string;
@@ -131,4 +131,3 @@ export async function GET(req: NextRequest) {
   const releases = await readStore();
   return NextResponse.json(releases.filter((r) => r.companyId === companyId));
 }
-

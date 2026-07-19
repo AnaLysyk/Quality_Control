@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
-import { isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { isBrainNodeVisible, resolveBrainAccess } from "@/backend/brain/access";
+import { prisma } from "@/database/prismaClient";
 
 type MemoryBody = {
   title?: string;

@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { fetchApi } from "@/lib/api";
-import { readApiError } from "@/lib/apiEnvelope";
+import { fetchApi } from "@/backend/api";
+import { readApiError } from "@/backend/apiEnvelope";
 
 type Project = { code: string; title?: string };
 

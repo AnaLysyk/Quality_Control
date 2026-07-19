@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { fetchJiraIssuesForCompany } from "@/lib/jiraSync";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { fetchJiraIssuesForCompany } from "@/backend/jiraSync";
 import {
   canUseGlobalTestCaseScope,
   resolveAllowedProjectIds,
   resolveAllowedTestCaseCompanies,
-} from "@/lib/test-cases/testCasePermissions";
+} from "@/backend/test-cases/testCasePermissions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getDb() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

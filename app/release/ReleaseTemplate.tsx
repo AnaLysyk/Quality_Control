@@ -1,7 +1,7 @@
 ﻿import "server-only";
 import StatusChart from "@/components/StatusChart";
 import Image from "next/image";
-import { getRunDetailViewModel } from "@/lib/runDetailViewModel";
+import { getRunDetailViewModel } from "@/backend/runDetailViewModel";
 import { RunHero } from "./components/RunHero";
 import { RunChartSection } from "./components/RunChartSection";
 import { RunCaseListSection } from "./components/RunCaseListSection";

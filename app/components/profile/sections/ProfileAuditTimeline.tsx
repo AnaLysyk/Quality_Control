@@ -4,8 +4,8 @@
  * Profile Audit Timeline — Histórico de alterações
  */
 
-import { useProfileContext } from "@/lib/profile/useProfileContext";
-import type { ProfileAuditEntry } from "@/lib/profile/types";
+import { useProfileContext } from "@/backend/profile/useProfileContext";
+import type { ProfileAuditEntry } from "@/backend/profile/types";
 
 export type ProfileAuditTimelineProps = {
   entries: ProfileAuditEntry[];

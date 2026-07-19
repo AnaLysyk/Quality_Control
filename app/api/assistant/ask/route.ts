@@ -1,15 +1,16 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { InternalBrainEngine } from "@/lib/brain/internalEngine";
-import { logAgentExecution } from "@/lib/brain/orchestrator";
-import { AGENT_REGISTRY } from "@/lib/brain/agents";
-import { buildBrainAccessContextFromAuthUser } from "@/lib/brain/access";
-import { answerBrainChatQuestion } from "@/lib/brain/chat";
-import { buildAutoBrainRoute } from "@/lib/brain/autoRouter";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
-import { buildWebSupportContext, shouldUseWebSupport } from "@/lib/assistant/webSupport";
-import type { AgentMode } from "@/lib/brain/agents";
-import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { InternalBrainEngine } from "@/backend/brain/internalEngine";
+import { logAgentExecution } from "@/backend/brain/orchestrator";
+import { AGENT_REGISTRY } from "@/backend/brain/agents";
+import { buildBrainAccessContextFromAuthUser } from "@/backend/brain/access";
+import { answerBrainChatQuestion } from "@/backend/brain/chat";
+import { buildAutoBrainRoute } from "@/backend/brain/autoRouter";
+import { hasPermissionAccess } from "@/backend/permissionMatrix";
+import { buildWebSupportContext, shouldUseWebSupport } from "@/backend/assistant/webSupport";
+import type { AgentMode } from "@/backend/brain/agents";
+import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/backend/assistant/types";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -137,7 +138,7 @@ async function persistConversationMemory(args: {
   brainContext?: AssistantOpenEventDetail | null;
 }) {
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     const userInput = compactText(getLatestUserMessage(args.body), 1500);
     const assistantReply = compactText(args.reply, 1500);
     if (!userInput && !assistantReply) return;
@@ -273,13 +274,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
 
+  const limiter = await rateLimit(req, `assistant-ask:${authUser.id}`, 20, 60);
+  if (limiter.limited) return limiter.response;
+
   try {
     const rawBody = (await req.json().catch(() => ({}))) as AssistantRequestBody;
     const body = sanitizeRequestBody(rawBody);
     const brainContext = body.brainContext ?? null;
 
     if (isStructuredToolAction(body)) {
-      const { runAssistantRequest } = await import("@/lib/assistant/service");
+      const { runAssistantRequest } = await import("@/backend/assistant/service");
       const response = await withTimeout(runAssistantRequest(authUser, {
         message: body.message,
         context: body.context ?? null,
@@ -357,7 +361,7 @@ export async function POST(req: Request) {
       }
     }
     if (!shouldUseBrainFirstContext(brainContext)) {
-      const { runAssistantRequest } = await import("@/lib/assistant/service");
+      const { runAssistantRequest } = await import("@/backend/assistant/service");
       const response = await withTimeout(runAssistantRequest(authUser, {
         message: body.message,
         context: body.context ?? null,
@@ -393,7 +397,10 @@ export async function POST(req: Request) {
     }
 
     const companySlug = resolveCompanySlug(body, authUser);
-    const agentMode: AgentMode = autoBrainRoute.agentMode;
+    const explicitAgentMode = brainContext?.agentMode;
+    const isValidAgentMode = (value: unknown): value is AgentMode =>
+      value === "qa" || value === "debug" || value === "playwright" || value === "memory";
+    const agentMode: AgentMode = isValidAgentMode(explicitAgentMode) ? explicitAgentMode : autoBrainRoute.agentMode;
     const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "ðŸ§ ", label: "Agente Brain", color: "#5b92ff" };
     const startedAt = Date.now();
 
@@ -467,9 +474,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro interno";
     console.error("[assistant/ask] error:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno ao processar a solicitação" }, { status: 500 });
   }
 }
-

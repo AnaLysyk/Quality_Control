@@ -57,7 +57,7 @@ application behavior.
    <example-generation>
    For following plan:
 
-   ```markdown file=specs/plan.md
+   ```markdown file=docs/specs/plan.md
    ### 1. Adding New Todos
    **Seed:** `tests/seed.spec.ts`
 
@@ -72,7 +72,7 @@ application behavior.
    Following file is generated:
 
    ```ts file=add-valid-todo.spec.ts
-   // spec: specs/plan.md
+   // spec: docs/specs/plan.md
    // seed: tests/seed.spec.ts
 
    test.describe('Adding New Todos', () => {

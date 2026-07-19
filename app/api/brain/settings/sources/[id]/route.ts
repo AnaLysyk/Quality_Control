@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import {
   deleteBrainSource,
   isBrainSourceStorageUnavailable,
   updateBrainSource,
-} from "@/lib/brain/sourceSettings";
+} from "@/backend/brain/sourceSettings";
 
 function migrationResponse() {
   return NextResponse.json({

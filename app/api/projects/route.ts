@@ -1,15 +1,51 @@
 import { NextResponse } from "next/server";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
+import { resolveCompanyProjectVisibility } from "@/backend/permissions/projectAccess";
 import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getDb() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
+}
+
+function buildE2eProject(company: { id: string; slug: string }) {
+  const isPlatform = company.slug === "testing-company";
+  return {
+    id: `e2e-project-${company.slug}`,
+    slug: isPlatform ? "quality-control" : `portal-${company.slug}`,
+    name: isPlatform ? "Quality Control" : `Portal ${company.slug}`,
+    description: "Projeto relacional da massa E2E JSON.",
+    status: "active",
+    color: "#2563eb",
+    iconKey: "folder",
+    companyId: company.id,
+    createdAt: new Date(0).toISOString(),
+  };
+}
+
+function resolveE2eCompany(
+  access: Parameters<typeof resolveCompanyProjectVisibility>[0],
+  companySlug: string,
+) {
+  const normalizedSlug = companySlug.trim().toLowerCase();
+  const assignment = access.assignments.find(
+    (item) => item.status === "active" && item.companySlug.trim().toLowerCase() === normalizedSlug,
+  );
+  if (assignment) return { id: assignment.companyId, slug: assignment.companySlug };
+
+  if (
+    access.projectScope === "unrestricted" ||
+    access.companySlug?.trim().toLowerCase() === normalizedSlug
+  ) {
+    return { id: access.companyId ?? companySlug, slug: companySlug };
+  }
+
+  return null;
 }
 
 // GET /api/projects?companySlug=
@@ -28,29 +64,47 @@ export async function GET(request: Request) {
   if (!contextResult.ok) return contextResult.response;
 
   if (process.env.E2E_USE_JSON === "1") {
-    return NextResponse.json({
-      projects: [
-        {
-          id: "e2e-project-testing-company",
-          slug: "quality-control",
-          name: "Quality Control",
-          description: "Projeto mockado para execucao E2E sem banco.",
-          status: "active",
-          color: "#2563eb",
-          iconKey: "folder",
-          companyId: companySlug,
-          createdAt: new Date(0).toISOString(),
-        },
-      ],
+    const company = resolveE2eCompany(contextResult.context.access, companySlug);
+    if (!company) return NextResponse.json({ projects: [], access: { mode: "none", projectIds: [] } });
+
+    const visibility = resolveCompanyProjectVisibility(contextResult.context.access, {
+      companyId: company.id,
+      companySlug: company.slug,
     });
+    if (visibility.mode === "none") {
+      return NextResponse.json({ projects: [], access: visibility });
+    }
+
+    const project = buildE2eProject(company);
+    const projects =
+      visibility.mode === "all" || visibility.projectIds.includes(project.id) ? [project] : [];
+    return NextResponse.json({ projects, access: visibility });
   }
 
   const db = await getDb();
-  const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
-  if (!company) return NextResponse.json({ projects: [] });
+  const company = await db.company.findUnique({
+    where: { slug: companySlug },
+    select: { id: true, slug: true },
+  });
+  if (!company) return NextResponse.json({ projects: [], access: { mode: "none" } });
+
+  const visibility = resolveCompanyProjectVisibility(contextResult.context.access, {
+    companyId: company.id,
+    companySlug: company.slug,
+  });
+
+  if (visibility.mode === "none") {
+    return NextResponse.json({ projects: [], access: visibility });
+  }
+
+  const projectWhere = {
+    companyId: company.id,
+    status: "active",
+    ...(visibility.mode === "selected" ? { id: { in: visibility.projectIds } } : {}),
+  };
 
   const projects = await db.project.findMany({
-    where: { companyId: company.id, status: "active" },
+    where: projectWhere,
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -70,6 +124,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     projects: projects.map((p: typeof projects[number]) => ({ ...p, createdAt: p.createdAt.toISOString() })),
+    access: visibility,
   });
 }
 

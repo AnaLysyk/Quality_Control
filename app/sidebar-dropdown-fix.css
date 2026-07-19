@@ -1,0 +1,86 @@
+/*
+ * Seletores de empresa/projeto precisam ser superfícies opacas.
+ * O fundo translúcido dos controles deixava o menu de navegação aparecer
+ * por baixo da lista, criando o efeito "fantasma".
+ */
+.sidebar-operational-shell .sidebar-company-selector,
+.sidebar-operational-shell .sidebar-project-selector {
+  isolation: isolate;
+}
+
+.sidebar-operational-shell .sidebar-project-selector {
+  position: relative;
+}
+
+.sidebar-operational-shell .sidebar-dropdown,
+.sidebar-operational-shell .sidebar-dropdown-search-wrap,
+.sidebar-operational-shell .sidebar-dropdown > div {
+  background-color: var(--tc-surface) !important;
+  background-image: none !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.sidebar-operational-shell .sidebar-dropdown {
+  z-index: 999 !important;
+  border-color: var(--tc-border) !important;
+  box-shadow: 0 18px 42px rgba(2, 8, 23, 0.28) !important;
+  overflow: hidden;
+}
+
+.sidebar-operational-shell .sidebar-dropdown :is(button, input, span, div) {
+  opacity: 1;
+}
+
+/* O slug é uma informação técnica e não deve aparecer como segunda linha. */
+.sidebar-operational-shell .sidebar-company-slug,
+.sidebar-operational-shell .sidebar-project-slug {
+  display: none !important;
+}
+
+.sidebar-operational-shell .sidebar-company-option,
+.sidebar-operational-shell .sidebar-project-option {
+  min-height: 40px;
+}
+
+:root.theme-light .sidebar-operational-shell .sidebar-dropdown,
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-dropdown {
+  color: #0b1a3c !important;
+}
+
+:root.theme-light .sidebar-operational-shell .sidebar-dropdown :is(button, span, div, input),
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-dropdown :is(button, span, div, input) {
+  color: #0b1a3c !important;
+}
+
+:root.theme-light .sidebar-operational-shell .sidebar-dropdown input::placeholder,
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-dropdown input::placeholder {
+  color: #64748b !important;
+}
+
+:root.theme-light .sidebar-operational-shell .sidebar-company-option:hover,
+:root.theme-light .sidebar-operational-shell .sidebar-project-option:hover,
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-company-option:hover,
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-project-option:hover {
+  background: #eef3fb !important;
+}
+
+:root.dark .sidebar-operational-shell .sidebar-dropdown,
+:root[data-theme="dark"] .sidebar-operational-shell .sidebar-dropdown {
+  background-color: #0f1725 !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  color: #f7f9fc !important;
+}
+
+:root.dark .sidebar-operational-shell .sidebar-dropdown :is(button, span, div, input),
+:root[data-theme="dark"] .sidebar-operational-shell .sidebar-dropdown :is(button, span, div, input) {
+  color: #f7f9fc !important;
+}
+
+:root.dark .sidebar-operational-shell .sidebar-company-option:hover,
+:root.dark .sidebar-operational-shell .sidebar-project-option:hover,
+:root[data-theme="dark"] .sidebar-operational-shell .sidebar-company-option:hover,
+:root[data-theme="dark"] .sidebar-operational-shell .sidebar-project-option:hover {
+  background: #1b2940 !important;
+}

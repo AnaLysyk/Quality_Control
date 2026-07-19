@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiBell, FiExternalLink, FiRefreshCw, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { fetchApi } from "@/lib/api";
-import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
+import { fetchApi } from "@/backend/api";
+import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/backend/ticketsStatus";
 
 type NotificationItem = {
   id: string;
@@ -142,7 +142,7 @@ export default function NotificationsButton({
   useEffect(() => {
     let mounted = true;
     if (!user) return;
-    import("@/lib/rbac/devAccess")
+    import("@/backend/rbac/devAccess")
       .then((mod) => {
         if (!mounted) return;
         setCanManageTickets(Boolean(mod.isDevRole?.(user?.role)));

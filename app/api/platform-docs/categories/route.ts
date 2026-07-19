@@ -1,5 +1,5 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
+import { getAccessContext } from "@/backend/auth/session";
 import { readPlatformDocs, writePlatformDocs, newId, nowIso, sanitizeSlug } from "@/data/platformDocsStore";
 
 function canEditWiki(access: Awaited<ReturnType<typeof getAccessContext>> | null): boolean {

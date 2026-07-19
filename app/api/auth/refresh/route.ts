@@ -1,13 +1,15 @@
 ﻿import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
-import { createRefreshToken, hashRefreshToken } from "@/lib/auth/refreshToken";
-import { getRedis } from "@/lib/redis";
-import { shouldUseSecureCookies } from "@/lib/auth/cookies";
-import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { buildLocalSessionForUser } from "@/backend/auth/sessionBuilder";
+import { createRefreshToken, hashRefreshToken } from "@/backend/auth/refreshToken";
+import { getRedis } from "@/backend/redis";
+import { shouldUseSecureCookies } from "@/backend/auth/cookies";
+import { getJwtSecret } from "@/backend/auth/jwtSecret";
+import { rateLimit } from "@/backend/rateLimit";
 
-const DEFAULT_ACCESS_TTL_SECONDS = 60 * 60 * 8;
+// Mantido igual ao default de app/api/auth/login/route.ts.
+const DEFAULT_ACCESS_TTL_SECONDS = 60 * 15;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 function readPositiveIntEnv(name: string, fallback: number): number {
@@ -47,6 +49,9 @@ type RefreshRecord = {
 };
 
 export async function POST(req: Request) {
+  const limiter = await rateLimit(req, "auth-refresh", 30, 60);
+  if (limiter.limited) return limiter.response;
+
   const secret = getJwtSecret();
   if (!secret) {
     return NextResponse.json({ error: "JWT_SECRET ausente; refresh desativado" }, { status: 501 });
@@ -118,4 +123,3 @@ export async function POST(req: Request) {
 
   return res;
 }
-

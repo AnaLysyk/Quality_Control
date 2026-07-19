@@ -1,27 +1,29 @@
 "use client";
 
-import { getPermissionModulesWithScreens, getRouteScreenPermission, isScreenPermissionModuleId } from "@/lib/navigation/screenPermissions";
+import { getPermissionModulesWithScreens, getRouteScreenPermission, isScreenPermissionModuleId } from "@/backend/navigation/screenPermissions";
 
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, } from "react-icons/fi";
+  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiHelpCircle, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, FiX, } from "react-icons/fi";
 
 import AccessDeniedState from "@/components/access/AccessDeniedState";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
-import { getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
+import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
+import { getActionLabel, type PermissionModule } from "@/backend/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
   normalizePermissionMatrix,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+} from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 type ProfileOverride = {
   role?: SystemRole;
@@ -91,7 +93,7 @@ const PROFILE_DETAILS: Partial<
     tone: "border-blue-200 bg-blue-50 text-blue-900",
   },
   [SYSTEM_ROLES.TECHNICAL_SUPPORT]: {
-    title: "Suporte Técnico",
+    title: "Administrador",
     scope: "Suporte e atendimento",
     description: "Perfil para suporte, chamados, leitura operacional e apoio técnico entre empresas e projetos.",
     tone: "border-cyan-200 bg-cyan-50 text-cyan-900",
@@ -329,7 +331,7 @@ export default function AdminPermissionsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("module");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  const pageSize = 12;
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -401,19 +403,42 @@ export default function AdminPermissionsPage() {
     [draftOverride, systemDefaults],
   );
 
-  const hasDraftChanges = useMemo(() => {
-    const current = JSON.stringify({
-      allow: normalizePermissionMatrix(profileState?.override?.allow),
-      deny: normalizePermissionMatrix(profileState?.override?.deny),
-    });
+  const savedOverrideKey = useMemo(
+    () =>
+      JSON.stringify({
+        allow: normalizePermissionMatrix(profileState?.override?.allow),
+        deny: normalizePermissionMatrix(profileState?.override?.deny),
+      }),
+    [profileState?.override?.allow, profileState?.override?.deny],
+  );
 
-    const draft = JSON.stringify({
-      allow: normalizePermissionMatrix(draftOverride.allow),
-      deny: normalizePermissionMatrix(draftOverride.deny),
-    });
+  const draftOverrideKey = useMemo(
+    () =>
+      JSON.stringify({
+        allow: normalizePermissionMatrix(draftOverride.allow),
+        deny: normalizePermissionMatrix(draftOverride.deny),
+      }),
+    [draftOverride.allow, draftOverride.deny],
+  );
 
-    return current !== draft;
-  }, [draftOverride.allow, draftOverride.deny, profileState?.override?.allow, profileState?.override?.deny]);
+  const hasDraftChanges = savedOverrideKey !== draftOverrideKey;
+
+  const pendingChangesCount = useMemo(() => {
+    if (!hasDraftChanges) return 0;
+
+    const savedPermissions = applyPermissionOverride(systemDefaults, profileState?.override ?? null);
+    let count = 0;
+
+    for (const permissionModule of permissionModules) {
+      for (const action of permissionModule.actions) {
+        const savedHasAction = hasPermissionAccess(savedPermissions, permissionModule.id, action);
+        const draftHasAction = hasPermissionAccess(effectivePermissions, permissionModule.id, action);
+        if (savedHasAction !== draftHasAction) count += 1;
+      }
+    }
+
+    return count;
+  }, [effectivePermissions, hasDraftChanges, permissionModules, profileState?.override, systemDefaults]);
 
   const roleCards = useMemo(
     () =>
@@ -433,7 +458,7 @@ export default function AdminPermissionsPage() {
           visibleModules,
         };
       }),
-    [effectivePermissions, selectedRole],
+    [effectivePermissions, permissionModules, selectedRole],
   );
 
   const moduleRows = useMemo<ModuleRow[]>(() => {
@@ -601,6 +626,10 @@ export default function AdminPermissionsPage() {
     setSortDirection("asc");
   }
 
+  function handleDiscardDraft() {
+    setDraftOverride(profileState?.override ?? { role: selectedRole, allow: {}, deny: {} });
+  }
+
   function handleToggle(moduleId: string, action: string, checked: boolean) {
     setDraftOverride((current) => toggleOverrideAction(current, systemDefaults, moduleId, action, checked));
   }
@@ -688,7 +717,9 @@ export default function AdminPermissionsPage() {
   async function handleReset() {
     if (!canReset) return;
 
-    const confirmed = window.confirm("Restaurar este perfil para o padrão do sistema?");
+    const confirmed = window.confirm(
+      "Restaurar este perfil para o padrão do sistema? Isso também remove os overrides individuais de todos os usuários deste perfil.",
+    );
     if (!confirmed) return;
 
     setSaving(true);
@@ -840,31 +871,26 @@ export default function AdminPermissionsPage() {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#011848]">
-                <FiSliders className="h-4 w-4" />
-                Modo guiado para perfil
+        <Accordion type="single" collapsible className="rounded-2xl shadow-sm">
+          <AccordionItem value="guide" className="rounded-2xl border-slate-200 bg-white">
+            <AccordionTrigger className="px-4 py-2.5 text-xs font-black uppercase tracking-wide text-[#011848] hover:no-underline">
+              <span className="flex items-center gap-2">
+                <FiHelpCircle className="h-4 w-4" />
+                Como funciona: escolha o perfil → localize o módulo → ative/desative → salve
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-3">
+              <div className="grid gap-3 border-t border-slate-100 pt-3 md:grid-cols-2 xl:grid-cols-4">
+                {PROFILE_GUIDE_STEPS.map((step) => (
+                  <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs font-black text-[#011848]">{step.title}</p>
+                    <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500">{step.description}</p>
+                  </div>
+                ))}
               </div>
-              <p className="mt-1 text-sm font-semibold text-slate-500">
-                Este fluxo ativa ou desativa permissões no perfil inteiro. Todos os usuários desse perfil herdam o padrão salvo.
-              </p>
-            </div>
-            <span className="w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black uppercase text-emerald-700">
-              Ativar / Desativar por módulo
-            </span>
-          </div>
-
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {PROFILE_GUIDE_STEPS.map((step) => (
-              <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs font-black text-[#011848]">{step.title}</p>
-                <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {historyPanelOpen ? (
           <section className="profile-permissions-history permissions-history-panel rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -904,28 +930,51 @@ export default function AdminPermissionsPage() {
             const selected = selectedRole === card.role;
 
             return (
-              <button
+              <motion.button
                 key={card.role}
                 type="button"
+                layout
+                whileHover={{ y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
                 onClick={() => handleSelectRole(card.role)}
                 className={[
-                  "rounded-3xl border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
-                  selected ? `${card.details.tone} ring-2 ring-[#011848]/10` : "border-slate-200 bg-white text-slate-800",
+                  "relative rounded-3xl border p-4 text-left shadow-sm transition-colors",
+                  selected ? `${card.details.tone} ring-2 ring-[#011848]/10` : "border-slate-200 bg-white text-slate-800 hover:shadow-md",
                 ].join(" ")}
               >
+                {selected ? (
+                  <motion.span
+                    layoutId="profile-card-selected-ring"
+                    className="pointer-events-none absolute inset-0 rounded-3xl ring-2 ring-[#011848]/40"
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                  />
+                ) : null}
+
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-black uppercase tracking-wide opacity-70">{card.details.scope}</p>
                     <h2 className="mt-1 text-lg font-black">{card.details.title}</h2>
                   </div>
 
-                  {selected ? (
-                    <span className="grid h-7 w-7 place-items-center rounded-full bg-[#011848] text-white">
-                      <FiCheck className="h-4 w-4" />
-                    </span>
-                  ) : (
-                    <FiChevronRight className="mt-1 h-4 w-4 opacity-40" />
-                  )}
+                  <AnimatePresence mode="wait" initial={false}>
+                    {selected ? (
+                      <motion.span
+                        key="check"
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="grid h-7 w-7 place-items-center rounded-full bg-[#011848] text-white"
+                      >
+                        <FiCheck className="h-4 w-4" />
+                      </motion.span>
+                    ) : (
+                      <motion.span key="chevron" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <FiChevronRight className="mt-1 h-4 w-4 opacity-40" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <p className="mt-3 min-h-12 text-xs font-semibold leading-relaxed opacity-75">{card.details.description}</p>
@@ -941,30 +990,37 @@ export default function AdminPermissionsPage() {
                     <p className="text-lg font-black">{card.activeActions}</p>
                   </div>
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </section>
 
-        {notice.type !== "idle" ? (
-          <section
-            className={[
-              "rounded-2xl border px-4 py-3 text-sm font-semibold",
-              notice.type === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                : "border-rose-200 bg-rose-50 text-rose-800",
-            ].join(" ")}
-          >
-            <div className="flex gap-2">
-              {notice.type === "success" ? (
-                <FiCheck className="mt-0.5 h-4 w-4 shrink-0" />
-              ) : (
-                <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              )}
-              <span>{notice.message}</span>
-            </div>
-          </section>
-        ) : null}
+        <AnimatePresence>
+          {notice.type !== "idle" ? (
+            <motion.section
+              key={notice.type + notice.message}
+              initial={{ opacity: 0, y: -8, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className={[
+                "overflow-hidden rounded-2xl border px-4 py-3 text-sm font-semibold",
+                notice.type === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                  : "border-rose-200 bg-rose-50 text-rose-800",
+              ].join(" ")}
+            >
+              <div className="flex gap-2">
+                {notice.type === "success" ? (
+                  <FiCheck className="mt-0.5 h-4 w-4 shrink-0" />
+                ) : (
+                  <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                )}
+                <span>{notice.message}</span>
+              </div>
+            </motion.section>
+          ) : null}
+        </AnimatePresence>
 
         <section className="permissions-profile-content-grid grid gap-4">
           <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -1131,7 +1187,12 @@ export default function AdminPermissionsPage() {
                         {expanded ? (
                           <tr className="bg-slate-50">
                             <td colSpan={7} className="px-4 py-4">
-                              <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                              <motion.div
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.18, ease: "easeOut" }}
+                                className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
+                              >
                                 <section className="rounded-2xl border border-slate-200 bg-white p-4">
                                   <h3 className="text-sm font-black text-[#0f172a]">Permissões usadas pelo módulo</h3>
                                   <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -1163,7 +1224,7 @@ export default function AdminPermissionsPage() {
                                               checked ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500",
                                             ].join(" ")}
                                           >
-                                            {checked ? "Ativo" : "Off"}
+                                            {checked ? "Ativo" : "Desativado"}
                                           </span>
                                         </button>
                                       );
@@ -1224,7 +1285,7 @@ export default function AdminPermissionsPage() {
                                     )}
                                   </div>
                                 </section>
-                              </div>
+                              </motion.div>
                             </td>
                           </tr>
                         ) : null}
@@ -1294,6 +1355,61 @@ export default function AdminPermissionsPage() {
           </section>
         </section>
       </div>
+
+      <AnimatePresence>
+        {hasDraftChanges ? (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-4"
+          >
+            <div className="pointer-events-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur">
+              <div className="flex items-center gap-2 text-sm font-black text-[#0f172a]">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-[#011848]/10 text-[#011848]">
+                  <FiSliders className="h-3.5 w-3.5" />
+                </span>
+                <AnimatePresence mode="popLayout">
+                  <motion.span
+                    key={pendingChangesCount}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    {pendingChangesCount} alteração{pendingChangesCount === 1 ? "" : "ões"} não salva{pendingChangesCount === 1 ? "" : "s"}
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleDiscardDraft}
+                  disabled={saving}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-rose-300 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <FiX className="h-3.5 w-3.5" />
+                  Descartar
+                </motion.button>
+
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleSave}
+                  disabled={!canEdit || saving}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#011848] px-4 text-xs font-black text-white transition hover:bg-[#0b245f] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <FiSave className="h-3.5 w-3.5" />
+                  {saving ? "Salvando..." : "Salvar alterações"}
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </main>
   );
 }

@@ -15,8 +15,8 @@ import LanguageSelector from "@/components/LanguageSelector";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
-import { resolveActiveIdentity } from "@/lib/activeIdentity";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { resolveActiveIdentity } from "@/backend/activeIdentity";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import { useI18n } from "@/hooks/useI18n";
 
 type ToastState =

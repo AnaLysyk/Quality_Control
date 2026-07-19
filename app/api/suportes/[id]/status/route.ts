@@ -1,11 +1,11 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
-import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/lib/rbac/tickets";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketStatusChanged } from "@/lib/notificationService";
-import { getTicketStatusLabel } from "@/lib/ticketsStatus";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById, updateTicketStatus } from "@/backend/ticketsStore";
+import { attachAssigneeToTicket } from "@/backend/ticketsPresenter";
+import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/backend/rbac/tickets";
+import { appendTicketEvent } from "@/backend/ticketEventsStore";
+import { notifyTicketStatusChanged } from "@/backend/notificationService";
+import { getTicketStatusLabel } from "@/backend/ticketsStatus";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);

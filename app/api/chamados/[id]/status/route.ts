@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
-import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { getTicketStatusLabel } from "@/lib/ticketsStatus";
+import { getTicketById, updateTicketStatus } from "@/backend/ticketsStore";
+import { appendTicketEvent } from "@/backend/ticketEventsStore";
+import { getTicketStatusLabel } from "@/backend/ticketsStatus";
 
 // Máquina de estados: define transições permitidas
 const TICKET_STATE_MACHINE: Record<string, string[]> = {
@@ -15,10 +15,10 @@ const TICKET_STATE_MACHINE: Record<string, string[]> = {
 function isValidTransition(from: string, to: string) {
   return Array.isArray(TICKET_STATE_MACHINE[from]) && TICKET_STATE_MACHINE[from].includes(to);
 }
-import { notifyTicketStatusChanged } from "@/lib/notificationService";
-import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/lib/rbac/tickets";
+import { notifyTicketStatusChanged } from "@/backend/notificationService";
+import { attachAssigneeToTicket } from "@/backend/ticketsPresenter";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/backend/rbac/tickets";
 
 export async function PATCH(
   req: NextRequest,

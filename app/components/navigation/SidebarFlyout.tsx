@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import { getIcon } from "./iconRegistry";
-import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
+import type { NavItemDef, NavModuleDef } from "@/backend/navigation/navigationCatalog";
 import { OPEN_SUPPORT_TICKET_MODAL_EVENT } from "@/components/CreateSupportTicketButton";
 
 type SidebarFlyoutProps = {

@@ -2,9 +2,9 @@
 
 import { addRequest } from "@/data/requestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { notifyProfileDeletionRequest } from "@/lib/notificationService";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { notifyProfileDeletionRequest } from "@/backend/notificationService";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;

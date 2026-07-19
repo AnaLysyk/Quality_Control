@@ -1,35 +1,28 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { startScriptRun } from "@/lib/playwright/executionService";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { startScriptRun } from "@/backend/playwright/executionService";
+import { isEmbeddedAutomationExecutionEnabled } from "@/backend/playwright/executionPolicy";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const RunScriptSchema = z.object({
   companySlug: z.string().trim().min(1),
-  title: z.string().trim().default("Execução manual de script"),
-  scriptContent: z.string().min(1, "O script está vazio."),
+  title: z.string().trim().max(200).default("Execução manual de script"),
+  scriptContent: z.string().min(1, "O script está vazio.").max(1_000_000, "O script excede 1 MB."),
   timeoutMs: z.number().int().positive().max(300_000).default(60_000),
 });
-
-function assertAccess(
-  user: Awaited<ReturnType<typeof authenticateRequest>>,
-  companySlug: string,
-) {
-  if (!user) return false;
-  const allowed = resolveAutomationAllowedCompanySlugs(user);
-  const access = resolveAutomationAccess(user, allowed.length);
-  if (!access.canOpen) return false;
-  if (!access.hasGlobalCompanyVisibility && !allowed.includes(companySlug)) return false;
-  return true;
-}
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
+  const limiter = await rateLimit(request, `automation-script-run:${user.id ?? user.email ?? "unknown"}`, 10, 60);
+  if (limiter.limited) return limiter.response;
 
   const body = await request.json().catch(() => null);
   const parsed = RunScriptSchema.safeParse(body);
@@ -38,8 +31,21 @@ export async function POST(request: Request) {
   }
 
   const { companySlug, title, scriptContent, timeoutMs } = parsed.data;
-  if (!assertAccess(user, companySlug)) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  const contextResult = await resolveOperationalContext(request, {
+    moduleId: "playwright",
+    action: "execute",
+    companySlug,
+    requireCompany: true,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
+  if (!user.isGlobalAdmin) {
+    return NextResponse.json({ error: "Somente administrador global pode executar código local." }, { status: 403 });
+  }
+  if (!isEmbeddedAutomationExecutionEnabled()) {
+    return NextResponse.json({
+      error: "Runner embutido desativado. Configure um worker isolado para executar código.",
+    }, { status: 503 });
   }
 
   const runId = await startScriptRun({

@@ -1,9 +1,11 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getRedis } from "@/lib/redis";
-import { listLocalCompanies, listLocalUsers } from "@/lib/auth/localStore";
+import { getRedis } from "@/backend/redis";
+import { listLocalCompanies, listLocalUsers } from "@/backend/auth/localStore";
 import { getAllReleases } from "@/release/data";
 import { readManualReleaseStore } from "@/data/manualData";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 
 type ReleaseLike = Record<string, unknown>;
 
@@ -76,7 +78,13 @@ function compareRisk(left: CompanyQuality, right: CompanyQuality) {
   return weight[right.risk] - weight[left.risk] || right.openDefects - left.openDefects || right.runs - left.runs;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const contextResult = await resolveOperationalContext(request, {
+    moduleId: "dashboard",
+    action: "view",
+  });
+  if (!contextResult.ok) return contextResult.response;
+
   try {
     const [users, companies, releases, manualReleases, activeSessions] = await Promise.all([
       listLocalUsers(),
@@ -94,8 +102,28 @@ export async function GET() {
       })(),
     ]);
 
-    const companyById = new Map(companies.map((company) => [company.id, company]));
-    const companyBySlug = new Map(companies.map((company) => [normalizeSlug(company.slug), company]));
+    const globalScope = contextResult.context.scope === "global";
+    const allowedCompanyIds = new Set(contextResult.context.allowedCompanyIds);
+    const allowedCompanySlugs = new Set(contextResult.context.allowedCompanySlugs.map(normalizeSlug));
+    const visibleCompanies = globalScope
+      ? companies
+      : companies.filter(
+          (company) =>
+            allowedCompanyIds.has(company.id) || allowedCompanySlugs.has(normalizeSlug(company.slug)),
+        );
+    const visibleCompanyIds = new Set(visibleCompanies.map((company) => company.id));
+    const visibleCompanySlugs = new Set(visibleCompanies.map((company) => normalizeSlug(company.slug)));
+    const visibleUsers = globalScope
+      ? users
+      : users.filter(
+          (user) =>
+            user.id === contextResult.context.access.userId ||
+            (Boolean(user.home_company_id) && visibleCompanyIds.has(user.home_company_id as string)) ||
+            visibleCompanySlugs.has(normalizeSlug(user.default_company_slug)),
+        );
+
+    const companyById = new Map(visibleCompanies.map((company) => [company.id, company]));
+    const companyBySlug = new Map(visibleCompanies.map((company) => [normalizeSlug(company.slug), company]));
     const companyQuality = new Map<string, CompanyQuality>();
 
     function ensureCompany(input: { id?: unknown; slug?: unknown; name?: unknown }): CompanyQuality {
@@ -128,7 +156,7 @@ export async function GET() {
       return record;
     }
 
-    for (const company of companies) {
+    for (const company of visibleCompanies) {
       const record = ensureCompany({ id: company.id, slug: company.slug, name: company.name });
       const configuredProjects = Array.isArray(company.qase_project_codes) ? company.qase_project_codes.filter(Boolean).length : 0;
       record.projects = Math.max(record.projects, configuredProjects);
@@ -176,6 +204,13 @@ export async function GET() {
       const companyId = asString(entry.companyId ?? entry.clientId);
       const companySlug = asString(entry.companySlug ?? entry.clientSlug);
       const companyName = asString(entry.companyName ?? entry.clientName);
+      if (
+        !globalScope &&
+        !visibleCompanyIds.has(companyId) &&
+        !visibleCompanySlugs.has(normalizeSlug(companySlug))
+      ) {
+        continue;
+      }
       const target = ensureCompany({ id: companyId, slug: companySlug, name: companyName || "Testing Company" });
       const hasStats = stats.pass + stats.fail + stats.blocked + stats.notRun > 0;
       if (hasStats || normalizeStatus(entry.kind) !== "defect") target.runs += 1;
@@ -216,11 +251,11 @@ export async function GET() {
 
     return NextResponse.json({
       overview: {
-        totalUsers: users.length,
-        totalCompanies: companies.length,
+        totalUsers: visibleUsers.length,
+        totalCompanies: visibleCompanies.length,
         totalReleases,
         totalTestRuns,
-        activeSessions,
+        activeSessions: globalScope ? activeSessions : 0,
       },
       testStats,
       releaseStats,
@@ -236,10 +271,9 @@ export async function GET() {
         qaseProjects: companyQualityList.reduce((sum, company) => sum + company.qaseProjects, 0),
       },
       lastUpdated: new Date().toISOString(),
-    });
+    }, { headers: NO_STORE_HEADERS });
   } catch (error) {
     console.error("Error fetching metrics:", error);
     return NextResponse.json({ error: "Erro ao buscar métricas" }, { status: 500 });
   }
 }
-

@@ -6,21 +6,24 @@ import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
 import { ClientProvider } from "@/context/ClientContext";
-import { ProjectProvider } from "@/lib/core/project/ProjectContext";
+import { ProjectProvider } from "@/context/ProjectContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import {
   THEME_PREFERENCE_COOKIE,
   THEME_RESOLVED_COOKIE,
   normalizeResolvedTheme,
   normalizeThemePreference,
-} from "@/lib/appSettingsCookies";
+} from "@/backend/appSettingsCookies";
+import "@/backend/navigation/registerJiraNavigation";
 import "./globals.css";
 import "./operational-theme.css";
+import "./sidebar-dropdown-fix.css";
 import "./admin-permissions-theme.css";
 import "./agenda-global-theme.css";
 import "./brain-home-polish.css";
 import "./user-details-modal-polish.css";
 import { ClientBootScripts } from "./_components/ClientBootScripts";
+import { RelationshipContextSync } from "./_components/RelationshipContextSync";
 
 export const metadata: Metadata = {
   title: "Quality Control",
@@ -87,7 +90,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       }
     })();
   `;
-
   const migrateStorageScript = `
     (() => {
       try {
@@ -126,6 +128,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <ClientProvider>
                 <ProjectProvider>
                   <ClientBootScripts migrateStorageScript={migrateStorageScript} themeInitScript={themeInitScript} />
+                  <RelationshipContextSync />
                   <AppShell>{children}</AppShell>
                   <ToasterProvider />
                 </ProjectProvider>

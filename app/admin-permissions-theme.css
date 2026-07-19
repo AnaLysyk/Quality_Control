@@ -1,137 +1,144 @@
-/* Correção específica da tela /admin/permissions.
-   No modo claro a página precisa voltar a ter fundo claro, mas o modo escuro mantém o visual dark atual. */
+/* Tema da tela /admin/permissions. Os dois modos são explícitos para evitar
+   que classes claras do JSX deixem texto, tabela ou controles sem contraste. */
 
 html.theme-light body.qc-permissions-profile-route,
 html[data-theme="light"] body.qc-permissions-profile-route {
-  background:
-    radial-gradient(circle at 18% 8%, rgba(1, 24, 72, 0.08), transparent 30%),
-    radial-gradient(circle at 92% 18%, rgba(239, 0, 1, 0.08), transparent 28%),
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 52%, #eef3ff 100%) !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #eef3ff 100%) !important;
   color: #0f172a !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .profile-permissions-page,
 html.theme-light body.qc-permissions-profile-route .qc-profile-permissions-page,
-html[data-theme="light"] body.qc-permissions-profile-route .profile-permissions-page,
 html[data-theme="light"] body.qc-permissions-profile-route .qc-profile-permissions-page {
-  background:
-    radial-gradient(circle at top left, rgba(1, 24, 72, 0.06), transparent 30%),
-    radial-gradient(circle at top right, rgba(239, 0, 1, 0.06), transparent 28%),
-    #f8fafc !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.theme-light body.qc-permissions-profile-route section,
+html.theme-light body.qc-permissions-profile-route table,
+html.theme-light body.qc-permissions-profile-route tbody tr,
+html[data-theme="light"] body.qc-permissions-profile-route section,
+html[data-theme="light"] body.qc-permissions-profile-route table,
+html[data-theme="light"] body.qc-permissions-profile-route tbody tr {
+  background-color: #ffffff !important;
+  border-color: #d7deea !important;
+  color: #0f172a !important;
+}
+
+html.theme-light body.qc-permissions-profile-route thead,
+html[data-theme="light"] body.qc-permissions-profile-route thead {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+html.theme-light body.qc-permissions-profile-route input,
+html.theme-light body.qc-permissions-profile-route select,
+html[data-theme="light"] body.qc-permissions-profile-route input,
+html[data-theme="light"] body.qc-permissions-profile-route select {
+  background-color: #ffffff !important;
+  border-color: #d7deea !important;
   color: #0f172a !important;
 }
 
 html.theme-light body.qc-permissions-profile-route .permissions-profile-type-grid > button,
 html[data-theme="light"] body.qc-permissions-profile-route .permissions-profile-type-grid > button {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #ffffff !important;
+  border-color: #d7deea !important;
   color: #0f172a !important;
-  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.10) !important;
 }
 
 html.theme-light body.qc-permissions-profile-route .permissions-profile-type-grid > button.ring-2,
 html[data-theme="light"] body.qc-permissions-profile-route .permissions-profile-type-grid > button.ring-2 {
-  background:
-    linear-gradient(180deg, #ffffff 0%, #eef6ff 100%) !important;
-  border-color: rgba(1, 24, 72, 0.28) !important;
+  background: linear-gradient(180deg, #ffffff, #eef6ff) !important;
+  border-color: #7c91b5 !important;
   color: #011848 !important;
-  box-shadow:
-    0 0 0 1px rgba(1, 24, 72, 0.10),
-    0 18px 40px rgba(15, 23, 42, 0.14) !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .permissions-profile-type-grid > button h2,
-html.theme-light body.qc-permissions-profile-route .permissions-profile-type-grid > button p,
-html.theme-light body.qc-permissions-profile-route .permissions-profile-type-grid > button [class*="text-"],
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-profile-type-grid > button h2,
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-profile-type-grid > button p,
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-profile-type-grid > button [class*="text-"] {
-  color: inherit !important;
+html.dark body.qc-permissions-profile-route,
+html[data-theme="dark"] body.qc-permissions-profile-route {
+  background: linear-gradient(135deg, #050b16 0%, #07111f 52%, #0b1628 100%) !important;
+  color: #f8fafc !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .permissions-profile-type-grid > button [class*="bg-white"],
-html.theme-light body.qc-permissions-profile-route .permissions-profile-type-grid > button .bg-white\/70,
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-profile-type-grid > button [class*="bg-white"],
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-profile-type-grid > button .bg-white\/70 {
-  background: rgba(248, 250, 252, 0.96) !important;
-  border-color: rgba(148, 163, 184, 0.30) !important;
-  color: #0f172a !important;
+html.dark body.qc-permissions-profile-route .qc-profile-permissions-page,
+html[data-theme="dark"] body.qc-permissions-profile-route .qc-profile-permissions-page {
+  background: #07111f !important;
+  color: #f8fafc !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .permissions-profile-content-grid > section,
-html.theme-light body.qc-permissions-profile-route .permissions-history-panel,
-html.theme-light body.qc-permissions-profile-route .profile-permissions-history,
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-profile-content-grid > section,
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-history-panel,
-html[data-theme="light"] body.qc-permissions-profile-route .profile-permissions-history {
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(148, 163, 184, 0.28) !important;
-  color: #0f172a !important;
-  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08) !important;
+html.dark body.qc-permissions-profile-route section,
+html.dark body.qc-permissions-profile-route table,
+html.dark body.qc-permissions-profile-route tbody tr,
+html.dark body.qc-permissions-profile-route aside,
+html[data-theme="dark"] body.qc-permissions-profile-route section,
+html[data-theme="dark"] body.qc-permissions-profile-route table,
+html[data-theme="dark"] body.qc-permissions-profile-route tbody tr,
+html[data-theme="dark"] body.qc-permissions-profile-route aside {
+  background-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+  color: #f8fafc !important;
 }
 
-html.theme-light body.qc-permissions-profile-route tbody tr,
-html.theme-light body.qc-permissions-profile-route tr.bg-white,
-html[data-theme="light"] body.qc-permissions-profile-route tbody tr,
-html[data-theme="light"] body.qc-permissions-profile-route tr.bg-white {
-  background: #ffffff !important;
-  color: #0f172a !important;
+html.dark body.qc-permissions-profile-route thead,
+html.dark body.qc-permissions-profile-route thead tr,
+html[data-theme="dark"] body.qc-permissions-profile-route thead,
+html[data-theme="dark"] body.qc-permissions-profile-route thead tr {
+  background-color: #050e1c !important;
+  color: #d9e4f2 !important;
 }
 
-html.theme-light body.qc-permissions-profile-route tbody tr:hover,
-html[data-theme="light"] body.qc-permissions-profile-route tbody tr:hover {
-  background: #f8fafc !important;
+html.dark body.qc-permissions-profile-route tbody tr:hover,
+html[data-theme="dark"] body.qc-permissions-profile-route tbody tr:hover {
+  background-color: #111e32 !important;
 }
 
-html.theme-light body.qc-permissions-profile-route thead,
-html.theme-light body.qc-permissions-profile-route .bg-slate-50,
-html[data-theme="light"] body.qc-permissions-profile-route thead,
-html[data-theme="light"] body.qc-permissions-profile-route .bg-slate-50 {
-  background: #f8fafc !important;
-  color: #475569 !important;
+html.dark body.qc-permissions-profile-route h1,
+html.dark body.qc-permissions-profile-route h2,
+html.dark body.qc-permissions-profile-route h3,
+html.dark body.qc-permissions-profile-route td,
+html.dark body.qc-permissions-profile-route th,
+html.dark body.qc-permissions-profile-route p,
+html[data-theme="dark"] body.qc-permissions-profile-route h1,
+html[data-theme="dark"] body.qc-permissions-profile-route h2,
+html[data-theme="dark"] body.qc-permissions-profile-route h3,
+html[data-theme="dark"] body.qc-permissions-profile-route td,
+html[data-theme="dark"] body.qc-permissions-profile-route th,
+html[data-theme="dark"] body.qc-permissions-profile-route p {
+  color: #f8fafc !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .bg-white,
-html[data-theme="light"] body.qc-permissions-profile-route .bg-white {
-  background: #ffffff !important;
+html.dark body.qc-permissions-profile-route .text-slate-400,
+html.dark body.qc-permissions-profile-route .text-slate-500,
+html.dark body.qc-permissions-profile-route .text-slate-600,
+html[data-theme="dark"] body.qc-permissions-profile-route .text-slate-400,
+html[data-theme="dark"] body.qc-permissions-profile-route .text-slate-500,
+html[data-theme="dark"] body.qc-permissions-profile-route .text-slate-600 {
+  color: #b9c6d8 !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .text-slate-900,
-html.theme-light body.qc-permissions-profile-route .text-slate-800,
-html.theme-light body.qc-permissions-profile-route .text-slate-700,
-html.theme-light body.qc-permissions-profile-route [class*="text-[#0f172a]"],
-html.theme-light body.qc-permissions-profile-route [class*="text-[#011848]"],
-html[data-theme="light"] body.qc-permissions-profile-route .text-slate-900,
-html[data-theme="light"] body.qc-permissions-profile-route .text-slate-800,
-html[data-theme="light"] body.qc-permissions-profile-route .text-slate-700,
-html[data-theme="light"] body.qc-permissions-profile-route [class*="text-[#0f172a]"],
-html[data-theme="light"] body.qc-permissions-profile-route [class*="text-[#011848]"] {
-  color: #0f172a !important;
+html.dark body.qc-permissions-profile-route input,
+html.dark body.qc-permissions-profile-route select,
+html[data-theme="dark"] body.qc-permissions-profile-route input,
+html[data-theme="dark"] body.qc-permissions-profile-route select {
+  background-color: #111e32 !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  color: #f8fafc !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .text-slate-600,
-html.theme-light body.qc-permissions-profile-route .text-slate-500,
-html.theme-light body.qc-permissions-profile-route .text-slate-400,
-html[data-theme="light"] body.qc-permissions-profile-route .text-slate-600,
-html[data-theme="light"] body.qc-permissions-profile-route .text-slate-500,
-html[data-theme="light"] body.qc-permissions-profile-route .text-slate-400 {
-  color: #64748b !important;
+html.dark body.qc-permissions-profile-route input::placeholder,
+html[data-theme="dark"] body.qc-permissions-profile-route input::placeholder {
+  color: #8fa0b6 !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .permissions-smart-search,
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-smart-search {
-  background: #ffffff !important;
-  border-color: #d7deea !important;
+html.dark body.qc-permissions-profile-route .permissions-profile-type-grid > button,
+html[data-theme="dark"] body.qc-permissions-profile-route .permissions-profile-type-grid > button {
+  background: linear-gradient(145deg, #0f172a, #111e32) !important;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+  color: #f8fafc !important;
 }
 
-html.theme-light body.qc-permissions-profile-route .permissions-smart-search input,
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-smart-search input {
-  color: #0f172a !important;
-}
-
-html.theme-light body.qc-permissions-profile-route .permissions-hero-history-toggle,
-html[data-theme="light"] body.qc-permissions-profile-route .permissions-hero-history-toggle {
-  background: #ffffff !important;
-  border-color: #d7deea !important;
-  color: #0f172a !important;
+html.dark body.qc-permissions-profile-route .permissions-profile-type-grid > button.ring-2,
+html[data-theme="dark"] body.qc-permissions-profile-route .permissions-profile-type-grid > button.ring-2 {
+  background: linear-gradient(145deg, #102447, #132b55) !important;
+  border-color: #60a5fa !important;
+  color: #ffffff !important;
 }

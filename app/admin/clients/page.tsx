@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -7,10 +7,10 @@ import { CreateClientModal, type ClientFormValues } from "@/clients/components/C
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { hasAdminClientToolAccess } from "@/lib/adminClientAccess";
-import { fetchApi } from "@/lib/api";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import { hasAdminClientToolAccess } from "@/backend/adminClientAccess";
+import { fetchApi } from "@/backend/api";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/backend/apiEnvelope";
 import { FiCheckCircle, FiChevronLeft, FiChevronRight, FiCircle, FiExternalLink, FiEye, FiEyeOff, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle, FiCloudLightning, FiShield, FiTool, FiUser, FiUserPlus } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,38 +21,12 @@ import {
   normalizeFixedProfileKind,
   resolveFixedProfileKind,
   type FixedProfileKind,
-} from "@/lib/fixedProfilePresentation";
+} from "@/backend/fixedProfilePresentation";
+import { mapClient, hasQaseTokenConfigured, hasJiraTokenConfigured, type Client } from "./companyMapper";
 
 // ============================================================================
 // TYPES
 // ============================================================================
-
-type Client = {
-  id: string;
-  name: string;
-  slug?: string | null;
-  taxId?: string | null;
-  address?: string | null;
-  description?: string | null;
-  website?: string | null;
-  phone?: string | null;
-  logoUrl?: string | null;
-  docsLink?: string | null;
-  linkedinUrl?: string | null;
-  notes?: string | null;
-  integrationMode?: "qase" | "manual" | null;
-  qaseProjectCode?: string | null;
-  qaseProjectCodes?: string[] | null;
-  qaseToken?: string | null;
-  hasQaseToken?: boolean;
-  jiraBaseUrl?: string | null;
-  jiraEmail?: string | null;
-  jiraApiToken?: string | null;
-  notificationsFanoutEnabled?: boolean;
-  active: boolean;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-};
 
 type CompanyOption = {
   id: string;
@@ -159,12 +133,6 @@ function getInitials(value: string | null | undefined, defaultValue = "?") {
   return (parts[0].slice(0, 1) + parts[parts.length - 1].slice(0, 1)).toUpperCase();
 }
 
-function hasQaseTokenConfigured(client?: Partial<Client> | null) {
-  if (!client) return false;
-  if (typeof client.qaseToken === "string") return client.qaseToken.trim().length > 0;
-  return client.hasQaseToken === true;
-}
-
 function normalize(text?: string | null) {
   return (text ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -174,94 +142,6 @@ function normalizeProfileKind(user?: Pick<UserItem, "profile_kind" | "permission
     profileKind: user?.profile_kind,
     permissionRole: user?.permission_role,
   });
-}
-
-function mapClient(row: Record<string, unknown>): Client {
-  const name =
-    typeof row.name === "string"
-      ? row.name
-      : typeof row.company_name === "string"
-        ? row.company_name
-        : "";
-
-  const id = typeof row.id === "string" ? row.id : String(row.id ?? "");
-
-  const readNullableString = (value: unknown) => (typeof value === "string" && value.trim() ? value : null);
-  const readBoolean = (value: unknown) => (typeof value === "boolean" ? value : false);
-  const readProjectCodes = (value: unknown): string[] | null => {
-    if (Array.isArray(value) && value.every((item) => typeof item === "string")) return value as string[];
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-      if (!trimmed) return null;
-      const arr = trimmed
-        .split(/[\s,;|]+/g)
-        .map((code) => code.trim().toUpperCase())
-        .filter(Boolean);
-      return arr.length ? Array.from(new Set(arr)) : null;
-    }
-    return null;
-  };
-
-  return {
-    id,
-    name,
-    slug: readNullableString(row.slug),
-    taxId: readNullableString(row.tax_id),
-    address: readNullableString(row.address),
-    description: readNullableString(row.description),
-    website: readNullableString(row.website),
-    phone: readNullableString(row.phone),
-    logoUrl: readNullableString(row.logo_url),
-    docsLink: readNullableString(row.docs_link),
-    linkedinUrl: readNullableString(row.linkedin_url) ?? readNullableString(row.docs_link),
-    notes: readNullableString(row.notes),
-    integrationMode: readNullableString(row.integration_mode) as "qase" | "manual" | null,
-    qaseProjectCode: readNullableString(row.qase_project_code),
-    qaseProjectCodes: readProjectCodes(row.qase_project_codes),
-    qaseToken: null,
-    hasQaseToken: !!readNullableString(row.qase_token),
-    jiraBaseUrl: readNullableString(row.jira_base_url),
-    jiraEmail: readNullableString(row.jira_email),
-    jiraApiToken: null,
-    notificationsFanoutEnabled: typeof row.notifications_fanout_enabled === "boolean" ? row.notifications_fanout_enabled : true,
-    ...(() => {
-      const integrations = (row as any).integrations;
-      if (!Array.isArray(integrations)) return {};
-      const out: Partial<Client> = {};
-      for (const it of integrations) {
-        if (!it || typeof it !== "object") continue;
-        const type = String(it.type || "").toUpperCase();
-        const cfg = it.config ?? {};
-        if (type === "QASE") {
-          if (typeof cfg.token === "string" && cfg.token.trim()) {
-            out.hasQaseToken = true;
-            out.qaseToken = cfg.token;
-          }
-          if (Array.isArray(cfg.projects) && cfg.projects.length) {
-            out.qaseProjectCodes = Array.from(
-              new Set([
-                ...(out.qaseProjectCodes ?? []),
-                ...cfg.projects.map((p: any) =>
-                  typeof p === "string" ? p.trim().toUpperCase() : String(p).trim().toUpperCase()
-                ),
-              ])
-            );
-            if (!out.qaseProjectCode && out.qaseProjectCodes && out.qaseProjectCodes.length)
-              out.qaseProjectCode = out.qaseProjectCodes[0];
-          }
-        }
-        if (type === "JIRA") {
-          if (typeof cfg.baseUrl === "string" && cfg.baseUrl.trim()) out.jiraBaseUrl = cfg.baseUrl;
-          if (typeof cfg.email === "string" && cfg.email.trim()) out.jiraEmail = cfg.email;
-          if (typeof cfg.apiToken === "string" && cfg.apiToken.trim()) out.jiraApiToken = cfg.apiToken;
-        }
-      }
-      return out;
-    })(),
-    active: readBoolean(row.active),
-    createdAt: readNullableString(row.created_at),
-    updatedAt: readNullableString(row.updated_at),
-  };
 }
 
 function resolveUserTabParam(value: string | null): UserTab | null {
@@ -579,7 +459,7 @@ function getCompanyIntegrationBadges(company: Client): CompanyIntegrationBadge[]
     ? company.qaseProjectCodes.map((code) => String(code).trim()).filter(Boolean)
     : [];
   const hasQase = hasQaseTokenConfigured(company) || qaseCodes.length > 0 || Boolean(company.qaseProjectCode?.trim());
-  const hasJira = Boolean(company.jiraBaseUrl?.trim() || company.jiraEmail?.trim() || company.jiraApiToken?.trim());
+  const hasJira = hasJiraTokenConfigured(company) || Boolean(company.jiraBaseUrl?.trim() || company.jiraEmail?.trim());
 
   if (hasQase) {
     badges.push({
@@ -1445,9 +1325,9 @@ export default function AdminConsolidatedPage() {
 
     if (activeUserTab === "support") {
       return {
-        title: "Criar Suporte Técnico",
+        title: "Criar Administrador",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte Técnico",
+        submitLabel: "Criar Administrador",
         initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
@@ -1709,7 +1589,15 @@ export default function AdminConsolidatedPage() {
           <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
             <Tabs value={activeUserTab} onValueChange={(value) => setActiveUserTab(value as UserTab)}>
               <div className="border-b border-[var(--tc-border,#d7deea)] pb-5">
-                <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Gestão por contexto</h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Gestão por contexto</h2>
+                  <a
+                    href="/admin/users/vinculos"
+                    className="rounded-xl border border-[var(--tc-border,#d7deea)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] hover:bg-[var(--tc-surface-alt,#f8fafc)]"
+                  >
+                    Gerenciar líderes por empresa
+                  </a>
+                </div>
                 <div className="mt-4">
                   <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-[var(--tc-surface-alt,#f8fafc)] p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                     <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
@@ -1722,7 +1610,7 @@ export default function AdminConsolidatedPage() {
                       Líder TC
                     </TabsTrigger>
                     <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                      Suporte Técnico
+                      Administrador
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -1882,8 +1770,8 @@ export default function AdminConsolidatedPage() {
                       <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                         <FiTool className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte técnico encontrado</h3>
-                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum suporte técnico com os filtros atuais.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum administrador encontrado</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum administrador com os filtros atuais.</p>
                         </div>
                       </div>
                     ) : (
@@ -1953,6 +1841,7 @@ export default function AdminConsolidatedPage() {
               qase_token: data.qaseToken || undefined,
               notifications_fanout_enabled: data.notificationsFanoutEnabled ?? true,
               admin_email: data.adminEmail || undefined,
+              responsible_leader_id: data.responsibleLeaderId || undefined,
               qase_project_codes: normalizedCodes,
               qase_project_code: legacyProjectCode ?? null,
               integrations: (() => {
@@ -2045,4 +1934,3 @@ export default function AdminConsolidatedPage() {
     </div>
   );
 }
-

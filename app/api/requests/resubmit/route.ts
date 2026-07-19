@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import { getRequestById, resubmitRequest } from "@/data/requestsStore";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;

@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { isCompanyUser } from "@/lib/rbac/companyAccess";
-import { withCompanyValidation } from "@/lib/middleware/withCompanyValidation";
-import { ProjectsStore, type ProjectRecord } from "@/lib/projects/projectsStore";
-import { getQaseIntegrationSettings } from "@/lib/integrations";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { isCompanyUser } from "@/backend/rbac/companyAccess";
+import { withCompanyValidation } from "@/backend/middleware/withCompanyValidation";
+import { ProjectsStore, type ProjectRecord } from "@/backend/projects/projectsStore";
+import { getQaseIntegrationSettings } from "@/backend/integrations";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -84,10 +84,9 @@ export const PUT = withCompanyValidation(async (user, companyId, req) => {
     ...(typeof body.title === "string" ? { title: body.title } : {}),
     ...(typeof body.description === "string" ? { description: body.description } : {}),
     ...(typeof body.code === "string" ? { code: body.code } : {}),
-    companyId,
   };
 
-  const updated = await ProjectsStore.update(id, updates);
+  const updated = await ProjectsStore.update(id, companyId, updates);
   if (!updated) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   return NextResponse.json({ success: true, project: updated }, { status: 200 });
 });

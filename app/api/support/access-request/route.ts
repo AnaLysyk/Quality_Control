@@ -1,27 +1,27 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { createAccessRequest, listAccessRequests } from "@/data/accessRequestsStore";
-import { findLocalCompanyById, findLocalCompanyBySlug } from "@/lib/auth/localStore";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { createAccessRequest, listAccessRequests } from "@/data/access-requests/store";
+import { findLocalCompanyById, findLocalCompanyBySlug } from "@/backend/auth/localStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import {
   composeAccessRequestMessage,
   normalizeAccessType,
-} from "@/lib/accessRequestMessage";
-import { notifyAccessRequestCreated } from "@/lib/notificationService";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { prisma } from "@/lib/prismaClient";
-import { isSupportAdminUser, isTechnicalSupportUser } from "@/lib/supportAccess";
+} from "@/backend/access-requests/message";
+import { notifyAccessRequestCreated } from "@/backend/notificationService";
+import { hashPassword } from "@/backend/passwordHash";
+import { prisma } from "@/database/prismaClient";
+import { isSupportAdminUser, isTechnicalSupportUser } from "@/backend/supportAccess";
 import {
   normalizeRequestProfileType,
   requestProfileTypeNeedsCompany,
   resolveReviewQueue,
   resolveRequestQueueMessage,
   toInternalAccessType,
-} from "@/lib/requestRouting";
-import { shouldUseJsonStore } from "@/lib/storeMode";
+} from "@/backend/access-requests/routing";
+import { shouldUseJsonStore } from "@/backend/storeMode";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { rateLimit } from "@/lib/rateLimit";
-import { emailService } from "@/lib/email";
+import { rateLimit } from "@/backend/rateLimit";
+import { emailService } from "@/backend/email";
 
 type Payload = {
   email?: string;
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
     fullName: fullName || null,
     username: username || null,
     phone: phone || null,
-    passwordHash: hashPasswordSha256(password),
+    passwordHash: hashPassword(password),
     role,
     company: resolvedCompanyName || "(não informado)",
     clientId: resolvedClientId,

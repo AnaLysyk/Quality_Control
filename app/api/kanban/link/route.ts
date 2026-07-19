@@ -2,8 +2,8 @@
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
 import type { Card, Status } from "../types";
-import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
+import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/backend/auth/normalizeAuthenticatedUser";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });

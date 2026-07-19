@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { resolveMcpPoliciesForUser } from "@/lib/brain/mcpPolicy";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { resolveMcpPoliciesForUser } from "@/backend/brain/mcpPolicy";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

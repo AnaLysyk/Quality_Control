@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { rateLimit } from "@/backend/rateLimit";
 
 type WeatherPayload = {
   current?: {
@@ -36,6 +38,14 @@ function buildWeatherComment(input: { temperature: number | null; apparentTemper
 }
 
 export async function GET(request: Request) {
+  const accessResult = await resolveBrainAccess(request);
+  if (!accessResult.ok) {
+    return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
+  }
+
+  const rate = await rateLimit(request, `brain-weather:${accessResult.context.user.id}`, 20, 60);
+  if (rate.limited) return rate.response;
+
   const url = new URL(request.url);
   const lat = toNumber(url.searchParams.get("lat"));
   const lon = toNumber(url.searchParams.get("lon"));

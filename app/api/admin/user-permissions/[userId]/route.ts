@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAccessContext } from "@/lib/auth/session";
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
+import { getAccessContext } from "@/backend/auth/session";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
 import {
   applyPermissionOverride,
   normalizePermissionMatrix,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { prisma } from "@/lib/prismaClient";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
-import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { resolveProfilePermissionDefaults } from "@/lib/store/profilePermissionsStore";
-import { invalidateBrainCache } from "@/lib/brain/cache";
-import { invalidatePermissionAccessCache } from "@/lib/serverPermissionAccess";
+} from "@/backend/permissionMatrix";
+import { prisma } from "@/database/prismaClient";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
+import { validarAcessoUsuariosNoServidor } from "@/backend/permissions/validarAcessoUsuariosNoServidor";
+import { resolveProfilePermissionDefaults } from "@/backend/store/profilePermissionsStore";
+import { invalidateBrainCache } from "@/backend/brain/cache";
+import { invalidatePermissionAccessCache } from "@/backend/serverPermissionAccess";
 import {
   countPermissionActions,
   deleteUserPermissionOverride,
   getUserPermissionOverride,
   setUserPermissionOverride,
-} from "@/lib/store/userPermissionsStore";
+} from "@/backend/store/userPermissionsStore";
 
 export const revalidate = 0;
 

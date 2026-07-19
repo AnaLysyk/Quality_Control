@@ -1,6 +1,6 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
-import { canEditCompanyWiki } from "@/lib/companyWikiAccess";
+import { getAccessContext } from "@/backend/auth/session";
+import { canEditCompanyWiki } from "@/backend/companyWikiAccess";
 import { readCompanyDocs, writeCompanyDocs, nowIso } from "@/data/platformDocsStore";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ companySlug: string; id: string }> }) {

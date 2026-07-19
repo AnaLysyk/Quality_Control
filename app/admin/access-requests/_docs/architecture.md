@@ -15,7 +15,8 @@ Esta pasta concentra somente o front da tela administrativa de solicitações de
 ## Fora desta pasta
 
 - `app/api/admin/access-requests`: rotas HTTP da feature.
-- `lib/accessRequestsV2`: regra de negócio, domínio e serviços.
-- `prisma`: schema e migrations de banco.
+- `backend/access-requests`: regra de negócio, domínio e serviços.
+- `database/repositories/access-requests`: persistência específica do domínio.
+- `database/prisma`: schema e migrations de banco.
 
 Regra: componente visual não deve importar service de banco, Prisma ou regra de API diretamente.

@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;

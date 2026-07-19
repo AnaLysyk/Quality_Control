@@ -209,7 +209,7 @@ const ROLE_LABELS: Record<string, string> = {
   user: "Usuário da empresa", viewer: "Usuário da empresa", client_user: "Usuário da empresa", client_viewer: "Usuário da empresa", company_user: "Usuário da empresa",
   testing_company_user: "Usuário TC", dev: "Usuário TC", it_dev: "Usuário TC", developer: "Usuário TC", itdev: "Usuário TC",
   leader_tc: "Líder TC", tc_leader: "Líder TC", lider_tc: "Líder TC",
-  support: "Suporte técnico", technical_support: "Suporte técnico", tech_support: "Suporte técnico", support_tech: "Suporte técnico",
+  support: "Administrador", technical_support: "Administrador", tech_support: "Administrador", support_tech: "Administrador",
 };
 /** Metadata keys that contain role values. */
 const ROLE_META_KEYS = new Set(["role", "permissionRole", "targetPermissionRole", "actorRole", "membershipRole", "profileType"]);
@@ -1240,7 +1240,6 @@ export default function AdminAuditLogsPage() {
     </div>
   );
 }
-
 
 
 

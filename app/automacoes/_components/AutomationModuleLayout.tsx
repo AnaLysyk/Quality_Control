@@ -9,7 +9,7 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { RequireAuth } from "@/components/RequireAuth";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { resolveAutomationAccess } from "@/lib/automations/access";
+import { resolveAutomationAccess } from "@/backend/automations/access";
 
 import { AutomationModuleProvider } from "./AutomationModuleContext";
 import AutomationModuleSidebar from "./AutomationModuleSidebar";

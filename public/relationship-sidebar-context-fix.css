@@ -1,0 +1,39 @@
+body:has(.relationship-workspace) .sidebar-project-selector {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 20 !important;
+  display: block !important;
+  width: auto !important;
+  min-height: 44px !important;
+  margin-top: 0 !important;
+  margin-bottom: 12px !important;
+  transform: none !important;
+}
+
+body:has(.relationship-workspace) .sidebar-project-selector > .relative,
+body:has(.relationship-workspace) .sidebar-project-button {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+body:has(.relationship-workspace) .sidebar-project-dropdown {
+  top: calc(100% + 4px) !important;
+  bottom: auto !important;
+  z-index: 160 !important;
+}
+
+body:has(.relationship-workspace) .sidebar-search-fixed,
+body:has(.relationship-workspace) [data-testid="sidebar-operational-shell"] nav {
+  position: relative !important;
+  z-index: 10 !important;
+  clear: both !important;
+}
+
+body:has(.relationship-workspace) [data-testid="sidebar-operational-shell"] nav {
+  margin-top: 0 !important;
+}

@@ -1,14 +1,14 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
-import { getBiometricConfigPreview } from "@/lib/automations/biometrics/config";
-import { resolveExistingLocalBiometricFixtures } from "@/lib/automations/biometrics/localFixtures";
+import { getBiometricConfigPreview } from "@/backend/automations/biometrics/config";
+import { resolveExistingLocalBiometricFixtures } from "@/backend/automations/biometrics/localFixtures";
 import {
   resolveAutomationAccess,
   resolveAutomationAllowedCompanySlugs,
-} from "@/lib/automations/access";
-import { authenticateRequest } from "@/lib/jwtAuth";
+} from "@/backend/automations/access";
+import { authenticateRequest } from "@/backend/jwtAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { runBiometricAttach } = await import("@/lib/automations/biometrics/attachRunner");
+    const { runBiometricAttach } = await import("@/backend/automations/biometrics/attachRunner");
     const result = await runBiometricAttach({
       companySlug,
       config: access.canConfigure ? payload.advanced : undefined,
@@ -150,7 +150,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao executar o fluxo biométrico.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

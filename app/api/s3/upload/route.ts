@@ -1,7 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { requirePermission } from "@/backend/rbac/requirePermission";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -10,6 +11,9 @@ const BASE_DIR = path.join(process.cwd(), "data", "s3");
 export async function POST(req: Request) {
   const guard = await requirePermission(req, "documents", "create");
   if (!guard.ok) return guard.response;
+
+  const limiter = await rateLimit(req, `s3-upload:${guard.access.userId}`, 20, 60);
+  if (limiter.limited) return limiter.response;
 
   const form = await req.formData().catch(() => null);
   if (!form) {

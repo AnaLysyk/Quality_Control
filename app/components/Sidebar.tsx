@@ -15,8 +15,8 @@ import SidebarFavorites from "./navigation/SidebarFavorites";
 import SidebarFooter from "./navigation/SidebarFooter";
 import ProjectSelector from "./ProjectSelector";
 import CreateSupportTicketButton from "./CreateSupportTicketButton";
-import type { NavModuleDef } from "@/lib/navigation/navigationCatalog";
-import type { NavItemDef } from "@/lib/navigation/navigationCatalog";
+import type { NavModuleDef } from "@/backend/navigation/navigationCatalog";
+import type { NavItemDef } from "@/backend/navigation/navigationCatalog";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const REMOVED_MODULE_IDS = new Set<string>(["operations"]);

@@ -8,8 +8,8 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { RequireAuth } from "@/components/RequireAuth";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { fetchApi } from "@/lib/api";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { fetchApi } from "@/backend/api";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 
 function getInitials(value: string) {
   const parts = value.trim().split(/\s+/).filter(Boolean);

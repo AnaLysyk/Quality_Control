@@ -4,7 +4,7 @@
  * User Identity Section — Dados básicos do usuário
  */
 
-import { useProfileContext } from "@/lib/profile/useProfileContext";
+import { useProfileContext } from "@/backend/profile/useProfileContext";
 import { UserProfileForm } from "../forms/UserProfileForm";
 
 export type UserIdentitySectionProps = {

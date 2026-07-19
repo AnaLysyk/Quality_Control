@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiAlertTriangle, FiTrendingDown, FiZap } from "react-icons/fi";
 import { toast } from "react-hot-toast";
-import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/backend/apiEnvelope";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuthUser } from "@/hooks/useAuthUser";
 

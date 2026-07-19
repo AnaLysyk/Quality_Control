@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { createManualTestCaseRecord } from "@/lib/test-cases/testCaseRepository";
-import { canCreateTestCaseForCompany } from "@/lib/test-cases/testCasePermissions";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import type { CreateTestCaseInput } from "@/lib/test-cases/types";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { createManualTestCaseRecord } from "@/backend/test-cases/testCaseRepository";
+import { canCreateTestCaseForCompany } from "@/backend/test-cases/testCasePermissions";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import type { CreateTestCaseInput } from "@/backend/test-cases/types";
 
 type ImportPayload = {
   cases?: Array<CreateTestCaseInput & { companySlug?: string | null }>;

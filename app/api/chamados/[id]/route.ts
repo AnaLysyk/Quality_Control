@@ -1,11 +1,11 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById, updateTicket } from "@/lib/ticketsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { canEditTicketContent, canViewTicket } from "@/lib/rbac/tickets";
-import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById, updateTicket } from "@/backend/ticketsStore";
+import { appendTicketEvent } from "@/backend/ticketEventsStore";
+import { canEditTicketContent, canViewTicket } from "@/backend/rbac/tickets";
+import { attachAssigneeToTicket } from "@/backend/ticketsPresenter";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { notifyTicketUpdated } from "@/lib/notificationService";
+import { notifyTicketUpdated } from "@/backend/notificationService";
 
 export const revalidate = 0;
 

@@ -1,8 +1,8 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { prisma } from "@/lib/prismaClient";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { prisma } from "@/database/prismaClient";
 
 type DomainNode = {
   id: string;
@@ -62,7 +62,7 @@ function profileLabel(profileType: string) {
     empresa: "Empresa",
     company_user: "Usuário da Empresa",
     leader_tc: "Líder TC",
-    technical_support: "Suporte Técnico",
+    technical_support: "Administrador",
     testing_company_user: "Usuário TC",
     user: "Usuário TC",
     viewer: "Usuário TC",
@@ -144,7 +144,7 @@ async function resolveScopedCompanies(access: BrainAccessContext) {
   if (access.hasGlobalVisibility) {
     return prisma.company.findMany({
       where: { active: true },
-      select: { id: true, slug: true, name: true, company_name: true, status: true, active: true, notes: true, internal_notes: true, createdAt: true, updatedAt: true },
+      select: { id: true, slug: true, name: true, company_name: true, tax_id: true, status: true, active: true, notes: true, internal_notes: true, createdAt: true, updatedAt: true },
       orderBy: { name: "asc" },
       take: 250,
     });
@@ -176,7 +176,7 @@ async function resolveScopedCompanies(access: BrainAccessContext) {
         slugs.size ? { slug: { in: Array.from(slugs) } } : {},
       ].filter((item) => Object.keys(item).length > 0),
     },
-    select: { id: true, slug: true, name: true, company_name: true, status: true, active: true, notes: true, internal_notes: true, createdAt: true, updatedAt: true },
+    select: { id: true, slug: true, name: true, company_name: true, tax_id: true, status: true, active: true, notes: true, internal_notes: true, createdAt: true, updatedAt: true },
     orderBy: { name: "asc" },
     take: 120,
   });
@@ -798,3 +798,4 @@ export async function GET(req: Request) {
     },
   });
 }
+

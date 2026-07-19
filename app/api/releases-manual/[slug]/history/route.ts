@@ -1,12 +1,12 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
-import { slugifyRelease } from "@/lib/slugifyRelease";
-import { getMockRole } from "@/lib/rbac/defects";
-import { readManualReleases } from "@/lib/manualReleaseStore";
-import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
-import { listDefectHistory } from "@/lib/manualDefectHistoryStore";
-import { getLocalUserById } from "@/lib/auth/localStore";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
+import { slugifyRelease } from "@/backend/slugifyRelease";
+import { getMockRole } from "@/backend/rbac/defects";
+import { readManualReleases } from "@/backend/manualReleaseStore";
+import { resolveManualReleaseKind } from "@/backend/manualReleaseKind";
+import { listDefectHistory } from "@/backend/manualDefectHistoryStore";
+import { getLocalUserById } from "@/backend/auth/localStore";
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
   return resolveNormalizedCompanySlugs(user);

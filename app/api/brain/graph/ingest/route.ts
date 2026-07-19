@@ -1,10 +1,11 @@
 ﻿import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 
-import { addMemory, connectNodes, upsertNode } from "@/lib/brain";
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { isAllowedBrainEvent } from "@/lib/brain/contracts";
-import { prisma } from "@/lib/prismaClient";
+import { addMemory, connectNodes, upsertNode } from "@/backend/brain";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { isAllowedBrainEvent } from "@/backend/brain/contracts";
+import { prisma } from "@/database/prismaClient";
+import { rateLimit } from "@/backend/rateLimit";
 
 type IngestPayload = {
   eventType?: string;
@@ -155,6 +156,9 @@ export async function POST(req: Request) {
   if (!accessResult.ok) {
     return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
   }
+
+  const limiter = await rateLimit(req, `brain-ingest:${accessResult.context.user.id}`, 30, 60);
+  if (limiter.limited) return limiter.response;
 
   try {
     const body = (await req.json()) as IngestPayload;

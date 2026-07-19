@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/lib/companyQuality";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/backend/companyQuality";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 function toCsvLine(values: Array<string | number | null | undefined>) {
   return values.map((value) => {

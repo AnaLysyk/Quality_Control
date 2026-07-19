@@ -1,35 +1,25 @@
 ﻿
 import { NextRequest, NextResponse } from "next/server";
-import { listLocalUsers, updateLocalUser } from "@/lib/auth/localStore";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { listLocalUsers, updateLocalUser } from "@/backend/auth/localStore";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { isE2eMockAllowed } from "@/backend/auth/e2eMockGate";
 
 // PATCH: Edita um usuário existente
 export async function PATCH(req: NextRequest, context: { params: any }) {
-  // Permite autenticação fake para testes E2E
+  // Permite autenticação fake para testes E2E, somente com o mock E2E habilitado
+  // (PLAYWRIGHT_MOCK=true e fora de produção — ver backend/auth/e2eMockGate.ts).
   let testAdmin = false;
-  let testRole = 'leader_tc';
-  if (req.headers) {
+  if (isE2eMockAllowed() && req.headers) {
     if (typeof req.headers.get === 'function') {
       testAdmin = req.headers.get('x-test-admin') === 'true';
-      testRole = req.headers.get('x-test-role') || 'leader_tc';
     } else if (typeof req.headers.entries === 'function') {
       for (const [key, value] of req.headers.entries()) {
         if (key.toLowerCase() === 'x-test-admin' && value === 'true') testAdmin = true;
-        if (key.toLowerCase() === 'x-test-role') testRole = value;
       }
     }
   }
-  // Debug: log headers e fluxo
-  try {
-    const allHeaders = Array.from((req.headers as any).entries ? req.headers.entries() : []);
-    console.error('[PATCH][user][id] headers:', JSON.stringify(allHeaders));
-  } catch (e) {
-    console.error('[PATCH][user][id] erro ao logar headers:', e);
-  }
-  console.error('[PATCH][user][id] testAdmin:', testAdmin, 'testRole:', testRole);
   if (!testAdmin) {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
-    console.error('[PATCH][user][id] admin:', JSON.stringify(admin));
     if (!admin) {
       return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
     }

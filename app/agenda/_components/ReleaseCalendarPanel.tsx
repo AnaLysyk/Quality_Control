@@ -1,10 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import useSWR from "swr";
 import { FiBell, FiCalendar, FiCheckCircle, FiClock, FiFilter, FiGrid, FiPlus, FiRefreshCw, FiTarget, FiUserCheck, FiUsers } from "react-icons/fi";
 
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type CalendarEvent = {
   id: string;
@@ -90,7 +90,7 @@ const CONTEXT_OPTIONS = ["company", "project", "user", "tc", "support", "release
 const AUDIENCE_PROFILE_OPTIONS = ["all", "empresa", "company_user", "testing_company_user", "leader_tc", "technical_support", "release_actor", "brain"];
 
 const CONTEXT_LABELS: Record<string, string> = { company: "Empresa", project: "Projeto", user: "Usuario", tc: "TC", support: "Suporte", release: "Release", delivery: "Entrega" };
-const AUDIENCE_LABELS: Record<string, string> = { all: "Todos", empresa: "Admin empresa", company_user: "Usuario empresa", testing_company_user: "Usuario TC", leader_tc: "Lider TC", technical_support: "Suporte tecnico", release_actor: "Responsavel", brain: "Brain" };
+const AUDIENCE_LABELS: Record<string, string> = { all: "Todos", empresa: "Admin empresa", company_user: "Usuario empresa", testing_company_user: "Usuario TC", leader_tc: "Lider TC", technical_support: "Administrador", release_actor: "Responsavel", brain: "Brain" };
 const STATUS_LABELS: Record<string, string> = { planned: "Planejado", at_risk: "Em risco", blocked: "Bloqueado", done: "Concluido", cancelled: "Cancelado" };
 
 const inputClass = "w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]";
@@ -329,7 +329,7 @@ export function ReleaseCalendarPanel() {
             </span>
             <h1 className="mt-3 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">Calendario operacional de entrega</h1>
             <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-              Calendario unico para Lider TC e Suporte Tecnico acompanharem marcacoes de empresas, projetos, usuarios, horarios, riscos e entregas sem poluir a tela.
+              Calendario unico para Lider TC e Administrador acompanharem marcacoes de empresas, projetos, usuarios, horarios, riscos e entregas sem poluir a tela.
             </p>
           </div>
           <button type="button" onClick={() => void mutate()} className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
@@ -366,7 +366,7 @@ export function ReleaseCalendarPanel() {
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" onClick={() => setFilters((current) => ({ ...current, audienceProfile: "leader_tc" }))} className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-black text-indigo-700"><FiUserCheck /> Visao Lider TC</button>
-          <button type="button" onClick={() => setFilters((current) => ({ ...current, audienceProfile: "technical_support" }))} className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-black text-cyan-700"><FiUsers /> Visao Suporte Tecnico</button>
+          <button type="button" onClick={() => setFilters((current) => ({ ...current, audienceProfile: "technical_support" }))} className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-black text-cyan-700"><FiUsers /> Visao Administrador</button>
         </div>
         <datalist id="release-calendar-companies">{companyOptions.map((option) => <option key={option} value={option} />)}</datalist>
         <datalist id="release-calendar-projects">{projectOptions.map((option) => <option key={option} value={option} />)}</datalist>

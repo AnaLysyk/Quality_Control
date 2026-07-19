@@ -27,8 +27,8 @@ import Breadcrumb from "@/components/Breadcrumb";
 import DocumentViewer from "@/components/DocumentViewer";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { fetchApi } from "@/lib/api";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { fetchApi } from "@/backend/api";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 import { useI18n } from "@/hooks/useI18n";
 
 const COPY = {

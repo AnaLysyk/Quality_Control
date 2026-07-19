@@ -11,12 +11,12 @@ import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useI18n } from "@/hooks/useI18n";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
-import { canAccessGlobalSupportScope, canCreateSupportTickets, canManageSupportWorkflow, canViewSupportBoard } from "@/lib/supportAccess";
+import { canAccessGlobalSupportScope, canCreateSupportTickets, canManageSupportWorkflow, canViewSupportBoard } from "@/backend/supportAccess";
 import {
   getSuporteStatusLabel,
   normalizeKanbanStatus,
   type SuporteStatus,
-} from "@/lib/suportesStatus";
+} from "@/backend/suportesStatus";
 import SuporteDetailsModal from "@/components/SuporteDetailsModal";
 
 type SuporteItem = {

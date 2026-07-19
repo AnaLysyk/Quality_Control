@@ -5,8 +5,8 @@
  */
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProfileContext } from "@/lib/profile/useProfileContext";
-import type { ProfileTab } from "@/lib/profile/types";
+import { useProfileContext } from "@/backend/profile/useProfileContext";
+import type { ProfileTab } from "@/backend/profile/types";
 
 const TAB_LABELS: Record<ProfileTab, string> = {
   overview: "Visão geral",

@@ -204,7 +204,7 @@ export async function GET(req: NextRequest) {
       .slice(0, 6),
   );
 
-  const modules = Array.from(new Set(safeVisibleNodes.map((node) => readBrainNodeModule(node)).filter(Boolean))).sort().slice(0, 80);
+  const modules = Array.from(new Set(safeVisibleNodes.map((node) => readBrainNodeModule(node)).filter(Boolean))).sort((a, b) => a.localeCompare(b)).slice(0, 80);
   const companies = Array.from(new Map(
     safeVisibleNodes
       .filter((node) => readBrainNodeCompanyId(node))
@@ -250,8 +250,8 @@ export async function GET(req: NextRequest) {
       modules: modules.map((moduleName) => ({ id: moduleName, label: moduleName })),
       companies,
       projects,
-      types: Array.from(new Set(safeVisibleNodes.map((node) => node.type))).sort().slice(0, 50),
-      statuses: Array.from(new Set(safeVisibleNodes.map((node) => readBrainNodeStatus(node)))).sort().slice(0, 50),
+      types: Array.from(new Set(safeVisibleNodes.map((node) => node.type))).sort((a, b) => a.localeCompare(b)).slice(0, 50),
+      statuses: Array.from(new Set(safeVisibleNodes.map((node) => readBrainNodeStatus(node)))).sort((a, b) => a.localeCompare(b)).slice(0, 50),
     },
     nodes: ranked.map((node) => ({
       id: node.nodeId,

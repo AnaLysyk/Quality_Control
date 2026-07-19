@@ -14,6 +14,7 @@ import {
 } from "react-icons/fi";
 
 import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
+import { secureRandomFloat } from "@/shared/random";
 
 // Types
 
@@ -298,7 +299,7 @@ export default function AssetAnnotator({ assetId, assetName, assetUrl, companySl
     setDraftRegions((prev) => [
       ...prev,
       {
-        tempId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        tempId: `${Date.now()}-${secureRandomFloat().toString(36).slice(2, 8)}`,
         x: pending.x,
         y: pending.y,
         w: pending.w,

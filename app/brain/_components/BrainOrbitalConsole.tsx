@@ -512,7 +512,11 @@ export function BrainOrbitalConsole() {
 
   const activeCount = sources.filter((s) => s.status === "active").length;
   const pendingReview = sources.filter((s) => s.status === "error" || s.processingStatus === "erro").length;
-  const lastMemoryAt = sources.map((s) => s.lastMemoryAt).filter(Boolean).sort().at(-1);
+  const lastMemoryAt = sources
+    .map((s) => s.lastMemoryAt)
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => a.localeCompare(b))
+    .at(-1);
 
   return (
     <div ref={containerRef} className="relative h-[calc(100vh-64px)] min-h-[640px] w-full overflow-hidden bg-[#020713] text-[#eaf1fb]">

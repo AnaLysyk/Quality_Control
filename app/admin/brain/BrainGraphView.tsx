@@ -5,6 +5,7 @@ import { useBrainGraph, useBrainStats, useBrainNodeContext, useBrainMemories, us
 import type { BrainNode, BrainEdge, BrainMemory, BrainTimelineEvent } from "@/hooks/useBrain";
 import { useTranslation } from "@/context/LanguageContext";
 import styles from "./Brain.module.css";
+import { secureRandomFloat } from "@/shared/random";
 
 /* â”€â”€â”€ Hook to detect theme â”€â”€â”€ */
 function useTheme() {
@@ -140,8 +141,8 @@ function initSimulation(nodes: BrainNode[], edges: BrainEdge[], width: number, h
 
   const simNodes: SimNode[] = nodes.map((n) => ({
     ...n,
-    x: cx + (Math.random() - 0.5) * 400,
-    y: cy + (Math.random() - 0.5) * 400,
+    x: cx + (secureRandomFloat() - 0.5) * 400,
+    y: cy + (secureRandomFloat() - 0.5) * 400,
     vx: 0,
     vy: 0,
   }));

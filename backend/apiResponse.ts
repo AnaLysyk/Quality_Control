@@ -1,6 +1,7 @@
 ﻿import "server-only";
 
 import { NextResponse } from "next/server";
+import { secureRandomFloat } from "@/shared/random";
 
 export type ApiMeta = {
   requestId: string;
@@ -31,7 +32,7 @@ function nowIso() {
 function generateRequestId(): string {
   const anyCrypto = globalThis.crypto as unknown as { randomUUID?: () => string } | undefined;
   if (anyCrypto?.randomUUID) return anyCrypto.randomUUID();
-  return `req_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+  return `req_${secureRandomFloat().toString(16).slice(2)}_${Date.now()}`;
 }
 
 function shouldLog() {

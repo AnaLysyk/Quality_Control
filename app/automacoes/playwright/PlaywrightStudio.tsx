@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { secureRandomFloat } from "@/shared/random";
 import {
   FiAlertCircle,
   FiCheckCircle,
@@ -369,7 +370,7 @@ export class ${name} extends BasePage {
 // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function uid() {
-  return Math.random().toString(36).slice(2, 10);
+  return secureRandomFloat().toString(36).slice(2, 10);
 }
 
 function now() {

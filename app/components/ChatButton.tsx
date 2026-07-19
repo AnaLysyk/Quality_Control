@@ -16,6 +16,7 @@ import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import styles from "./ChatButton.module.css";
 import ConfirmDialog from "./ConfirmDialog";
 import UserAvatar from "./UserAvatar";
+import { secureRandomFloat } from "@/shared/random";
 
 type ChatMessage = {
   id: string;
@@ -111,7 +112,7 @@ function makeId(prefix: string) {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return `${prefix}-${crypto.randomUUID()}`;
   }
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}-${Date.now()}-${secureRandomFloat().toString(16).slice(2)}`;
 }
 
 function TCLogoSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
@@ -1135,7 +1136,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
               aria-label="Redimensionar Brain"
               title="Arraste para ajustar o tamanho do Brain"
               onPointerDown={startSidePanelResize}
-              className={`absolute inset-y-0 left-0 z-20 flex w-3 translate-x-0 cursor-ew-resize items-center justify-center bg-transparent text-transparent shadow-none transition ${resizingSidePanel ? "" : ""}`}
+              className="absolute inset-y-0 left-0 z-20 flex w-3 translate-x-0 cursor-ew-resize items-center justify-center bg-transparent text-transparent shadow-none transition"
             >
               â†”
             </button>
@@ -1168,7 +1169,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                       <p className="truncate text-[0.58rem] font-semibold uppercase tracking-[0.34em] text-white/72">Testing Company</p>
                       <div className="min-w-0">
                         <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} truncate font-black tracking-[-0.03em] text-white`}>
-                          {brainOpenContext?.source === "brain" ? "Brain" : "Brain"}
+                          Brain
                         </h3>
                         <p className={`max-w-[20rem] truncate ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>
                           {brainOpenContext?.nodeLabel ? `${brainOpenContext.nodeLabel} — ${brainOpenContext.nodeType ?? "nó"}` : activeScreenLabel}

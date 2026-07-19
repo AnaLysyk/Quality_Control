@@ -15,6 +15,7 @@ import {
 } from "@/backend/brain";
 import { detectAgentMode } from "@/backend/brain/agents";
 import type { AgentMode } from "@/backend/brain/agents";
+import { secureRandomFloat } from "@/shared/random";
 
 // â”€â”€â”€ Snapshot de dados reais do sistema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -334,7 +335,7 @@ export type EngineInput = {
 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function makeId(prefix: string) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2, 6)}`;
+  return `${prefix}_${Date.now()}_${secureRandomFloat().toString(16).slice(2, 6)}`;
 }
 
 /** Emite texto linha a linha para simular stream natural */

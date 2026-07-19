@@ -24,8 +24,8 @@ export type BrainRuntimeContext = {
 
 function stablePermissionVersion(permissions: PermissionMatrix) {
   const normalized = Object.keys(permissions)
-    .sort()
-    .map((moduleId) => `${moduleId}:${[...(permissions[moduleId] ?? [])].sort().join(",")}`)
+    .sort((a, b) => a.localeCompare(b))
+    .map((moduleId) => `${moduleId}:${[...(permissions[moduleId] ?? [])].sort((a, b) => a.localeCompare(b)).join(",")}`)
     .join("|");
 
   let hash = 0;

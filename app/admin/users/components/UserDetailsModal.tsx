@@ -108,8 +108,8 @@ function isDirty(a: {
   active: boolean;
   allowedProjectIds: string[];
 }) {
-  const sortedA = [...a.allowedProjectIds].sort();
-  const sortedB = [...b.allowedProjectIds].sort();
+  const sortedA = [...a.allowedProjectIds].sort((x, y) => x.localeCompare(y));
+  const sortedB = [...b.allowedProjectIds].sort((x, y) => x.localeCompare(y));
   return (
     a.name !== b.name ||
     a.login !== b.login ||

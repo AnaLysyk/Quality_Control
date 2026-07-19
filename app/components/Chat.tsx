@@ -35,6 +35,7 @@ import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/backend/api";
 import { resolveActiveIdentity } from "@/backend/activeIdentity";
+import { secureRandomFloat } from "@/shared/random";
 
 type ChatAttachment = {
   id: string;
@@ -100,7 +101,7 @@ function makeClientId(prefix: string) {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return `${prefix}-${crypto.randomUUID()}`;
   }
-  return `${prefix}-${Date.now()}-${Math.round(Math.random() * 1_000_000)}`;
+  return `${prefix}-${Date.now()}-${Math.round(secureRandomFloat() * 1_000_000)}`;
 }
 
 function normalizeSearch(value: string) {

@@ -22,6 +22,7 @@ import { FiCommand, FiGitBranch, FiList, FiMessageCircle, FiShare2, FiTable, FiU
 import { useBrainGraph } from "@/hooks/useBrain";
 import { BRAIN_GRAPH_NODE_COLORS, getBrainGraphNodeDefinition } from "@/backend/brain/graph";
 import styles from "./Brain.module.css";
+import { secureRandomFloat } from "@/shared/random";
 
 type BrainNodeApi = {
   id: string;
@@ -549,7 +550,7 @@ export default function BrainReactFlowView() {
 
     setCommandLog((current) => [
       ...current,
-      { id: `${Date.now()}-${Math.random()}`, role: "user", text: input },
+      { id: `${Date.now()}-${secureRandomFloat()}`, role: "user", text: input },
     ]);
 
     const response = await fetch("/api/brain/commands", {
@@ -565,7 +566,7 @@ export default function BrainReactFlowView() {
       setCommandLog((current) => [
         ...current,
         {
-          id: `${Date.now()}-${Math.random()}`,
+          id: `${Date.now()}-${secureRandomFloat()}`,
           role: "system",
           text: payload.confirmationMessage ?? "Esse comando exige confirmação.",
         },
@@ -577,7 +578,7 @@ export default function BrainReactFlowView() {
     setCommandLog((current) => [
       ...current,
       {
-        id: `${Date.now()}-${Math.random()}`,
+        id: `${Date.now()}-${secureRandomFloat()}`,
         role: "system",
         text: payload.ok
           ? JSON.stringify(payload.result ?? { ok: true }, null, 2)
@@ -592,7 +593,7 @@ export default function BrainReactFlowView() {
         setCommandLog((current) => [
           ...current,
           {
-            id: `${Date.now()}-${Math.random()}`,
+            id: `${Date.now()}-${secureRandomFloat()}`,
             role: "system",
             text: error instanceof Error ? error.message : "Falha ao executar comando.",
           },

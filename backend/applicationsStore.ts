@@ -1,4 +1,5 @@
 ﻿import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
+import { secureRandomFloat } from "@/shared/random";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
@@ -105,7 +106,7 @@ export async function listApplications(filter?: { companySlug?: string }): Promi
 export async function createApplication(input: ApplicationSeed): Promise<AppRecord> {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
-    const id = `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+    const id = `app_${Date.now().toString(36)}_${secureRandomFloat().toString(36).slice(2,8)}`;
     const qaseProjectCode = normalizeProjectCode(input.qaseProjectCode);
     const r = await prisma.application.create({
       data: {
@@ -124,7 +125,7 @@ export async function createApplication(input: ApplicationSeed): Promise<AppReco
     return pgToRecord(r);
   }
   const db = readFile();
-  const id = `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+  const id = `app_${Date.now().toString(36)}_${secureRandomFloat().toString(36).slice(2,8)}`;
   const now = new Date().toISOString();
   const qaseProjectCode = normalizeProjectCode(input.qaseProjectCode);
   const record: AppRecord = {
@@ -192,7 +193,7 @@ export async function syncCompanyApplications(input: {
       const slug = normalizeSlug(code);
       const name = (project.title ?? code).trim() || code;
       const src = input.source ?? "qase";
-      const r = await prisma.application.upsert({ where: { slug_companySlug: { slug, companySlug } }, create: { id: `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`, companyId: companyId ?? null, companySlug, name, slug, qaseProjectCode: code, source: src, active: true }, update: { companyId: companyId ?? null, name, slug, qaseProjectCode: code, source: src, active: true } });
+      const r = await prisma.application.upsert({ where: { slug_companySlug: { slug, companySlug } }, create: { id: `app_${Date.now().toString(36)}_${secureRandomFloat().toString(36).slice(2,8)}`, companyId: companyId ?? null, companySlug, name, slug, qaseProjectCode: code, source: src, active: true }, update: { companyId: companyId ?? null, name, slug, qaseProjectCode: code, source: src, active: true } });
       synced.push(pgToRecord(r));
     }
     return synced;
@@ -235,7 +236,7 @@ export async function syncCompanyApplications(input: {
     }
 
     const created: AppRecord = {
-      id: `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `app_${Date.now().toString(36)}_${secureRandomFloat().toString(36).slice(2, 8)}`,
       companyId,
       companySlug,
       name,

@@ -29,12 +29,31 @@ jest.mock("../../../backend/redis", () => ({
 import { randomUUID } from "crypto";
 import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../tools/functions/banco-de-dados/descrever-banco";
-import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "@/backend/store/permissionsStore";
-import { hasPermissionAccess } from "@/backend/permissionMatrix";
+import {
+  getUserPermissionOverride as getUserOverride,
+  setUserPermissionOverride as setUserOverride,
+  deleteUserPermissionOverride as deleteUserOverride,
+} from "@/backend/store/userPermissionsStore";
+import { applyPermissionOverride, hasPermissionAccess, type PermissionOverride } from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 import { createLocalUser } from "@/backend/auth/localStore";
 
 // Forçar uso do Postgres para estes testes
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
+
+// Helper local: reproduz o comportamento do antigo effectivePermissions() usando o
+// resolver vigente (resolveRoleDefaults + applyPermissionOverride), retornando Set por módulo.
+function effectivePermissions(role: string, override?: PermissionOverride | null) {
+  const result = applyPermissionOverride(resolveRoleDefaults(role), override ?? null);
+  return Object.fromEntries(
+    Object.entries(result).map(([moduleId, actions]) => [moduleId, new Set(actions)]),
+  ) as Record<string, Set<string>>;
+}
+
+async function listUserOverrides(userIds: string[]) {
+  const rows = await prisma.userPermissionOverride.findMany({ where: { userId: { in: userIds } } });
+  return rows.map((row) => ({ userId: row.userId }));
+}
 
 // â”€â”€ Cleanup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const createdUserIds: string[] = [];
@@ -148,7 +167,7 @@ describeDb("Tabela user_permission_overrides — gestão de permissões via DB",
     await setUserOverride(userA.id, { allow: { notes: ["edit"] } });
     await setUserOverride(userB.id, { deny: { tickets: ["delete"] } });
 
-    const all = await listUserOverrides();
+    const all = await listUserOverrides([userA.id, userB.id]);
     const ids = all.map((o) => o.userId);
     expect(ids).toContain(userA.id);
     expect(ids).toContain(userB.id);

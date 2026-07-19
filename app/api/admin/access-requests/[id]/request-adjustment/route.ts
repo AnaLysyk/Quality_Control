@@ -12,6 +12,7 @@ import {
 import { notifyAccessRequestAdjustmentRequested } from "@/backend/notificationService";
 import { prisma } from "@/database/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
+import type { AdminSession } from "@/backend/rbac/requireGlobalAdmin";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/backend/access-requests/reviewAccess";
 import { resolveReviewQueue } from "@/backend/access-requests/routing";
 import { shouldUseJsonStore } from "@/backend/storeMode";
@@ -81,6 +82,81 @@ async function notifyAndAuditAdjustment(input: {
   });
 }
 
+function checkAdjustmentEligibility(
+  admin: AdminSession,
+  existing: { message: string; email: string; status: string | null },
+) {
+  if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
+    return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
+  }
+  if (isFinalStatus(existing.status)) {
+    return NextResponse.json({ error: "Solicitação finalizada não aceita ajustes" }, { status: 409 });
+  }
+  return null;
+}
+
+function buildAdjustmentMessage(
+  existing: { message: string; email: string },
+  fields: AccessRequestAdjustmentField[],
+  comment: string,
+  fieldComments: Record<string, string>,
+) {
+  const parsed = parseAccessRequestMessage(existing.message, existing.email);
+  const round = (parsed.adjustmentRound || 0) + 1;
+  const historyEntry: AccessRequestAdjustmentRound = {
+    round,
+    requestedAt: new Date().toISOString(),
+    requestedFields: fields,
+    requestMessage: comment,
+    fieldComments,
+    requesterReturnedAt: null,
+    requesterDiff: [],
+  };
+  return composeAccessRequestMessage({
+    email: parsed.email || existing.email,
+    name: parsed.name,
+    fullName: parsed.fullName,
+    username: parsed.username,
+    phone: parsed.phone,
+    passwordHash: parsed.passwordHash,
+    role: parsed.jobRole,
+    company: parsed.company,
+    clientId: parsed.clientId,
+    accessType: parsed.accessType,
+    profileType: parsed.profileType,
+    title: parsed.title,
+    description: parsed.description,
+    notes: parsed.notes,
+    companyProfile: parsed.companyProfile,
+    originalRequest: parsed.originalRequest,
+    adjustmentRound: round,
+    adjustmentRequestedFields: fields,
+    adjustmentHistory: [...parsed.adjustmentHistory, historyEntry],
+    lastAdjustmentAt: parsed.lastAdjustmentAt,
+    lastAdjustmentDiff: parsed.lastAdjustmentDiff,
+  });
+}
+
+async function finalizeAdjustment(input: {
+  id: string;
+  email: string;
+  message: string;
+  admin: { id?: string | null; email?: string | null };
+  comment: string;
+  fields: AccessRequestAdjustmentField[];
+  fieldComments: Record<string, string>;
+}) {
+  await createAccessRequestComment({
+    requestId: input.id,
+    authorRole: "leader_tc",
+    authorName: input.admin.email || "Admin",
+    authorEmail: input.admin.email || null,
+    authorId: input.admin.id || null,
+    body: input.comment,
+  });
+  await notifyAndAuditAdjustment(input);
+}
+
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
@@ -144,66 +220,12 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (!existing) {
       return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
-    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
-    }
-    if (isFinalStatus(existing.status)) {
-      return NextResponse.json({ error: "Solicitação finalizada não aceita ajustes" }, { status: 409 });
-    }
+    const eligibilityError = checkAdjustmentEligibility(admin, existing);
+    if (eligibilityError) return eligibilityError;
 
-    const parsed = parseAccessRequestMessage(existing.message, existing.email);
-    const round = (parsed.adjustmentRound || 0) + 1;
-    const historyEntry: AccessRequestAdjustmentRound = {
-      round,
-      requestedAt: new Date().toISOString(),
-      requestedFields: fields,
-      requestMessage: comment,
-      fieldComments,
-      requesterReturnedAt: null,
-      requesterDiff: [],
-    };
-    const message = composeAccessRequestMessage({
-      email: parsed.email || existing.email,
-      name: parsed.name,
-      fullName: parsed.fullName,
-      username: parsed.username,
-      phone: parsed.phone,
-      passwordHash: parsed.passwordHash,
-      role: parsed.jobRole,
-      company: parsed.company,
-      clientId: parsed.clientId,
-      accessType: parsed.accessType,
-      profileType: parsed.profileType,
-      title: parsed.title,
-      description: parsed.description,
-      notes: parsed.notes,
-      companyProfile: parsed.companyProfile,
-      originalRequest: parsed.originalRequest,
-      adjustmentRound: round,
-      adjustmentRequestedFields: fields,
-      adjustmentHistory: [...parsed.adjustmentHistory, historyEntry],
-      lastAdjustmentAt: parsed.lastAdjustmentAt,
-      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
-    });
-
+    const message = buildAdjustmentMessage(existing, fields, comment, fieldComments);
     const updated = await updateAccessRequest(id, { status: "in_progress", message });
-    await createAccessRequestComment({
-      requestId: id,
-      authorRole: "leader_tc",
-      authorName: admin.email || "Admin",
-      authorEmail: admin.email || null,
-      authorId: admin.id || null,
-      body: comment,
-    });
-    await notifyAndAuditAdjustment({
-      id,
-      email: existing.email,
-      message,
-      admin,
-      comment,
-      fields,
-      fieldComments,
-    });
+    await finalizeAdjustment({ id, email: existing.email, message, admin, comment, fields, fieldComments });
 
     return NextResponse.json({
       ok: true,
@@ -219,70 +241,15 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (!existing) {
       return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
-    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
-    }
-    if (isFinalStatus(existing.status)) {
-      return NextResponse.json({ error: "Solicitação finalizada não aceita ajustes" }, { status: 409 });
-    }
+    const eligibilityError = checkAdjustmentEligibility(admin, existing);
+    if (eligibilityError) return eligibilityError;
 
-    const parsed = parseAccessRequestMessage(existing.message, existing.email);
-    const round = (parsed.adjustmentRound || 0) + 1;
-    const historyEntry: AccessRequestAdjustmentRound = {
-      round,
-      requestedAt: new Date().toISOString(),
-      requestedFields: fields,
-      requestMessage: comment,
-      fieldComments,
-      requesterReturnedAt: null,
-      requesterDiff: [],
-    };
-    const message = composeAccessRequestMessage({
-      email: parsed.email || existing.email,
-      name: parsed.name,
-      fullName: parsed.fullName,
-      username: parsed.username,
-      phone: parsed.phone,
-      passwordHash: parsed.passwordHash,
-      role: parsed.jobRole,
-      company: parsed.company,
-      clientId: parsed.clientId,
-      accessType: parsed.accessType,
-      profileType: parsed.profileType,
-      title: parsed.title,
-      description: parsed.description,
-      notes: parsed.notes,
-      companyProfile: parsed.companyProfile,
-      originalRequest: parsed.originalRequest,
-      adjustmentRound: round,
-      adjustmentRequestedFields: fields,
-      adjustmentHistory: [...parsed.adjustmentHistory, historyEntry],
-      lastAdjustmentAt: parsed.lastAdjustmentAt,
-      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
-    });
-
+    const message = buildAdjustmentMessage(existing, fields, comment, fieldComments);
     const updated = await prisma.supportRequest.update({
       where: { id },
       data: { status: "in_progress", message },
     });
-
-    await createAccessRequestComment({
-      requestId: id,
-      authorRole: "leader_tc",
-      authorName: admin.email || "Admin",
-      authorEmail: admin.email || null,
-      authorId: admin.id || null,
-      body: comment,
-    });
-    await notifyAndAuditAdjustment({
-      id,
-      email: existing.email,
-      message,
-      admin,
-      comment,
-      fields,
-      fieldComments,
-    });
+    await finalizeAdjustment({ id, email: existing.email, message, admin, comment, fields, fieldComments });
 
     return NextResponse.json({
       ok: true,
@@ -297,66 +264,12 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (!existing) {
       return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
-    if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
-    }
-    if (isFinalStatus(existing.status)) {
-      return NextResponse.json({ error: "Solicitação finalizada não aceita ajustes" }, { status: 409 });
-    }
+    const eligibilityError = checkAdjustmentEligibility(admin, existing);
+    if (eligibilityError) return eligibilityError;
 
-    const parsed = parseAccessRequestMessage(existing.message, existing.email);
-    const round = (parsed.adjustmentRound || 0) + 1;
-    const historyEntry: AccessRequestAdjustmentRound = {
-      round,
-      requestedAt: new Date().toISOString(),
-      requestedFields: fields,
-      requestMessage: comment,
-      fieldComments,
-      requesterReturnedAt: null,
-      requesterDiff: [],
-    };
-    const message = composeAccessRequestMessage({
-      email: parsed.email || existing.email,
-      name: parsed.name,
-      fullName: parsed.fullName,
-      username: parsed.username,
-      phone: parsed.phone,
-      passwordHash: parsed.passwordHash,
-      role: parsed.jobRole,
-      company: parsed.company,
-      clientId: parsed.clientId,
-      accessType: parsed.accessType,
-      profileType: parsed.profileType,
-      title: parsed.title,
-      description: parsed.description,
-      notes: parsed.notes,
-      companyProfile: parsed.companyProfile,
-      originalRequest: parsed.originalRequest,
-      adjustmentRound: round,
-      adjustmentRequestedFields: fields,
-      adjustmentHistory: [...parsed.adjustmentHistory, historyEntry],
-      lastAdjustmentAt: parsed.lastAdjustmentAt,
-      lastAdjustmentDiff: parsed.lastAdjustmentDiff,
-    });
-
+    const message = buildAdjustmentMessage(existing, fields, comment, fieldComments);
     const updated = await updateAccessRequest(id, { status: "in_progress", message });
-    await createAccessRequestComment({
-      requestId: id,
-      authorRole: "leader_tc",
-      authorName: admin.email || "Admin",
-      authorEmail: admin.email || null,
-      authorId: admin.id || null,
-      body: comment,
-    });
-    await notifyAndAuditAdjustment({
-      id,
-      email: existing.email,
-      message,
-      admin,
-      comment,
-      fields,
-      fieldComments,
-    });
+    await finalizeAdjustment({ id, email: existing.email, message, admin, comment, fields, fieldComments });
 
     return NextResponse.json({
       ok: true,

@@ -69,5 +69,15 @@ describe("companyRoutes", () => {
     // RESERVED_APP_ROOTS.
     expect(rewriteShortCompanyPathname("/planos-de-teste")).toBeNull();
   });
+
+  it("nao trata usuarios/vinculos como slug de empresa", () => {
+    // Regressão: /usuarios/vinculos (gestão de vínculos) estava sendo
+    // reescrita para /empresas/vinculos/home, tratando "vinculos" como se
+    // fosse um slug de empresa, porque "usuarios" não estava em
+    // RESERVED_APP_ROOTS — isso fazia a guarda de tela em
+    // app/usuarios/vinculos/layout.tsx nunca ser alcançada, já que o proxy
+    // reescrevia a requisição antes de chegar lá.
+    expect(rewriteShortCompanyPathname("/usuarios/vinculos")).toBeNull();
+  });
 });
 

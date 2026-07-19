@@ -95,24 +95,37 @@ export default function CompanyIntegrationsClient({ companySlug, provider }: { c
       );
       if (!confirmed) return;
     }
-    setSaving(true);
-    setMessage(null);
-    setError(null);
-    try {
+    const external = selectedExternal;
+
+    async function submitLink(forceReplace: boolean): Promise<void> {
       const response = await fetchApi(`/api/company-integrations/${encodeURIComponent(companySlug)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider,
-          externalKey: selectedExternal.key,
-          externalName: selectedExternal.name,
+          externalKey: external.key,
+          externalName: external.name,
           projectId: createProject ? undefined : selectedProjectId,
           createProject,
           confirmIntegratedRepository: provider === "qase",
+          forceReplace,
         }),
       });
       const payload = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(payload?.error || "Não foi possível relacionar o projeto.");
+      if (response.ok) return;
+
+      if (!forceReplace && payload?.code === "EXTERNAL_LINK_REPLACEMENT_REQUIRES_CONFIRMATION" && window.confirm(`${payload.error} Deseja substituir o vínculo?`)) {
+        return submitLink(true);
+      }
+
+      throw new Error(payload?.error || "Não foi possível relacionar o projeto.");
+    }
+
+    setSaving(true);
+    setMessage(null);
+    setError(null);
+    try {
+      await submitLink(false);
       setMessage(createProject ? "Projeto criado e integrado com sucesso." : "Projeto relacionado com sucesso.");
       setSelectedExternal(null);
       setSelectedProjectId("");

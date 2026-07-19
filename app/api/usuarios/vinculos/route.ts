@@ -16,19 +16,9 @@ async function getDb() {
 
 function canManage(user: Awaited<ReturnType<typeof authenticateRequest>>) {
   if (!user) return false;
-  const role = String(user.permissionRole ?? user.role ?? user.companyRole ?? "")
-    .trim()
-    .toLowerCase();
 
   return Boolean(
-    user.isGlobalAdmin ||
-      role === "leader_tc" ||
-      role === "empresa" ||
-      role === "company" ||
-      role === "company_admin" ||
-      role === "technical_support" ||
-      role === "support" ||
-      checkPermission(user, "relationships:create") ||
+    checkPermission(user, "relationships:create") ||
       checkPermission(user, "relationships:edit") ||
       checkPermission(user, "users:update") ||
       checkPermission(user, "permissions:update"),

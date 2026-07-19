@@ -70,3 +70,30 @@ jobs:
         run: |
           echo "Unit tests with coverage failed; the SonarCloud scan was still executed."
           exit 1
+
+  sonar-diagnostics:
+    name: Sonar New Code uncovered files
+    needs: sonar
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Print compact New Code coverage ranking
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PULL_REQUEST: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          scope="pullRequest=${SONAR_PULL_REQUEST}"
+          url="https://sonarcloud.io/api/measures/component_tree?component=AnaLysyk_Quality_Control&metricKeys=new_coverage,new_lines_to_cover,new_uncovered_lines&strategy=leaves&qualifiers=FIL&ps=500&${scope}"
+          curl --fail --silent --show-error --user "${SONAR_TOKEN}:" "$url" > /tmp/sonar-new-code.json
+          echo "UNCOVERED | TO_COVER | COVERAGE | FILE"
+          jq -r '
+            def metric($name):
+              ([.measures[]? | select(.metric == $name) | (.periods[0].value // .value // "0")][0] // "0") | tonumber;
+            .components[]
+            | { path: (.path // .name), coverage: metric("new_coverage"), toCover: metric("new_lines_to_cover"), uncovered: metric("new_uncovered_lines") }
+            | select(.toCover > 0 or .uncovered > 0)
+            | [.uncovered, .toCover, .coverage, .path]
+            | @tsv
+          ' /tmp/sonar-new-code.json | sort -t $'\t' -k1,1nr | head -80

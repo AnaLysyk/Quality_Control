@@ -6,6 +6,7 @@ import path from "node:path";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/backend/auth/session";
 import { getLocalUserById, updateLocalUser } from "@/backend/auth/localStore";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -51,6 +52,9 @@ export async function POST(req: Request) {
     if (!access) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
+
+    const limiter = await rateLimit(req, `me-avatar:${access.userId}`, 10, 60);
+    if (limiter.limited) return limiter.response;
 
     const user = await getLocalUserById(access.userId);
     if (!user) {

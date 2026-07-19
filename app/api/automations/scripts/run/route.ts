@@ -5,6 +5,7 @@ import { authenticateRequest } from "@/backend/jwtAuth";
 import { startScriptRun } from "@/backend/playwright/executionService";
 import { isEmbeddedAutomationExecutionEnabled } from "@/backend/playwright/executionPolicy";
 import { resolveOperationalContext } from "@/backend/context/operationalContext";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,9 @@ const RunScriptSchema = z.object({
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
+  const limiter = await rateLimit(request, `automation-script-run:${user.id ?? user.email ?? "unknown"}`, 10, 60);
+  if (limiter.limited) return limiter.response;
 
   const body = await request.json().catch(() => null);
   const parsed = RunScriptSchema.safeParse(body);

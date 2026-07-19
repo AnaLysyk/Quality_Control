@@ -10,6 +10,7 @@ import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
 import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
 import { answerBrainChatQuestion } from "@/backend/brain/chat";
 import { formatWebSearchForBrain, searchBrainWeb, shouldUseWebSearch } from "@/backend/brain/webSearch";
+import { rateLimit } from "@/backend/rateLimit";
 
 type BrainWeatherContext = { place?: string; temperature?: number | null; apparentTemperature?: number | null; humidity?: number | null; precipitation?: number | null; windSpeed?: number | null; label?: string; comment?: string; source?: string };
 type HomeSelectedAction = { id?: string | null; label?: string | null; href?: string | null; moduleLabel?: string | null };
@@ -60,6 +61,8 @@ export async function POST(req: NextRequest) {
   if (typeof lightweightBody.message === "string") {
     const accessResult = await resolveBrainAccess(req);
     if (!accessResult.ok) return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
+    const lightLimiter = await rateLimit(req, `brain-ask:${accessResult.context.user.id}`, 20, 60);
+    if (lightLimiter.limited) return lightLimiter.response;
     const graph = buildMockBrainGraph();
     const visibleGraph = filterBrainDomainGraphByAccess(graph.nodes, graph.edges, accessResult.context);
     const text = normalizeBrainText(lightweightBody.message);
@@ -98,6 +101,8 @@ export async function POST(req: NextRequest) {
 
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) return NextResponse.json({ error: status === 401 ? "Nao autorizado" : "Sem permissao" }, { status });
+  const limiter = await rateLimit(req, `brain-ask:${(admin as { id?: string }).id ?? "unknown"}`, 20, 60);
+  if (limiter.limited) return limiter.response;
   if (isE2eJsonMode()) {
     const body = (await req.json().catch(() => ({}))) as { messages?: Array<{ role: "user" | "assistant"; content: string }>; agentMode?: AgentMode | null };
     if (!body.messages?.length) return NextResponse.json({ error: "Mensagens obrigatorias" }, { status: 400 });

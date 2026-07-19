@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import {
   createBehaviorProfile,
   isBrainBehaviorProfileStorageUnavailable,
   listBehaviorProfiles,
-} from "@/lib/brain/behaviorProfiles";
+} from "@/backend/brain/behaviorProfiles";
 
 function migrationResponse() {
   return NextResponse.json({

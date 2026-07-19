@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { executeBrainCommand, interpretBrainCommand, listBrainCommands } from "@/lib/brain/commandInterpreter";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { executeBrainCommand, interpretBrainCommand, listBrainCommands } from "@/backend/brain/commandInterpreter";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

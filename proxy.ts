@@ -7,8 +7,8 @@ import {
   SHORT_COMPANY_ROUTE_MODE,
   shortenCompanyPathname,
   shouldUseShortCompanyRoutes,
-} from "@/lib/companyRoutes";
-import { isE2eMockAllowed } from "@/lib/auth/e2eMockGate";
+} from "@/backend/companyRoutes";
+import { isE2eMockAllowed } from "@/backend/auth/e2eMockGate";
 
 const COMPANY_ROUTE_REWRITE_HEADER = "x-company-route-rewrite";
 

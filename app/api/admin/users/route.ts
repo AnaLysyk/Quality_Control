@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { brainOnUserCreated } from "@/lib/brain/autoSync";
+import { hashPassword } from "@/backend/passwordHash";
+import { brainOnUserCreated } from "@/backend/brain/autoSync";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { type AccessContext } from "@/lib/auth/session";
-import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
+import { type AccessContext } from "@/backend/auth/session";
+import { getAdminUserItem, listAdminUserItems } from "@/backend/adminUsers";
 import {
   editableProfileNeedsCompany,
   editableProfileUsesAutomaticCompany,
@@ -13,8 +13,8 @@ import {
   resolveEditableProfileUserState,
   resolveEditableProfileRole,
   toStoredEditableUserRole,
-} from "@/lib/editableProfileRoles";
-import { isUserScopeLockedError } from "@/lib/companyUserScope";
+} from "@/backend/editableProfileRoles";
+import { isUserScopeLockedError } from "@/backend/companyUserScope";
 import {
   createLocalUser,
   findLocalCompanyById,
@@ -25,12 +25,12 @@ import {
   removeLocalLink,
   updateLocalUser,
   upsertLocalLink,
-} from "@/lib/auth/localStore";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
-import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { readSyncedUserProfileFields, sanitizeUserProfileText } from "@/lib/userProfileData";
-import { emailService } from "@/lib/email";
+} from "@/backend/auth/localStore";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
+import { validarAcessoUsuariosNoServidor } from "@/backend/permissions/validarAcessoUsuariosNoServidor";
+import { readSyncedUserProfileFields, sanitizeUserProfileText } from "@/backend/userProfileData";
+import { emailService } from "@/backend/email";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -286,7 +286,7 @@ export async function POST(req: NextRequest) {
 
   const rawTemp = randomUUID().replace(/-/g, "");
   const plainTempPassword = rawTemp.charAt(0).toUpperCase() + rawTemp.slice(1, 9) + "!";
-  const passwordHash = hashPasswordSha256(plainTempPassword);
+  const passwordHash = hashPassword(plainTempPassword);
   let user = null;
   try {
     user = await createLocalUser({

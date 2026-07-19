@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ import { ClientDetails } from "./components/ClientDetails";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { CreateClientModal, type ClientFormValues } from "./components/CreateClientModal";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { getAccessToken } from "@/lib/api";
+import { getAccessToken } from "@/backend/api";
 import { RequireAuth } from "@/components/RequireAuth";
 
 type TeamMember = {
@@ -126,7 +126,7 @@ function ClientsPage() {
                 : role === "client_admin" || role === "empresa"
                   ? "Admin"
                   : role === "it_dev" || role === "technical_support"
-                    ? "Suporte Técnico"
+                    ? "Administrador"
                     : role === "company_user"
                       ? "Usuário da empresa"
                       : "Usuário",

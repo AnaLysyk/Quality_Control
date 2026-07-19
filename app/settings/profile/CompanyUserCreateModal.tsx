@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { fetchApi } from "@/lib/api";
-import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+import { fetchApi } from "@/backend/api";
+import { JOB_TITLE_OPTIONS } from "@/backend/jobTitles";
 
 type CompanyUserCreateModalProps = {
   open: boolean;

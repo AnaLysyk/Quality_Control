@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
-import { buildBrainNodeActions, resolveBrainAction } from "@/lib/brain/actions";
+import { assertBrainNodeAccess, resolveBrainAccess } from "@/backend/brain/access";
+import { buildBrainNodeActions, resolveBrainAction } from "@/backend/brain/actions";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

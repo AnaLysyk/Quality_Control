@@ -483,8 +483,8 @@ Esses testes cobrem contratos, legado, galeria visual de e-mails ou fundações 
 ## Dependências específicas
 
 - E-mail/outbox: `test-results/emails/outbox.jsonl`.
-- Banco/seed: scripts em `support/functions/banco-de-dados/solicitar-acesso`.
-- Sessão/permissão: helpers em `support/functions/api/solicitar-acesso/autenticacao`.
+- Banco/seed: scripts em `tools/functions/banco-de-dados/solicitar-acesso`.
+- Sessão/permissão: helpers em `tools/functions/api/solicitar-acesso/autenticacao`.
 - Consulta pública: `accessKey` emitido no e-mail ou retornado pela API nos testes.
 
 ## Recomendações de automação futura

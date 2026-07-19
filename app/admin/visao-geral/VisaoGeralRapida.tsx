@@ -15,9 +15,9 @@ import {
   FiZap,
 } from "react-icons/fi";
 import UserAvatar from "@/components/UserAvatar";
-import { fetchApi } from "@/lib/api";
-import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import type { CompanyRow, Stats } from "@/lib/quality";
+import { fetchApi } from "@/backend/api";
+import { unwrapEnvelopeData } from "@/backend/apiEnvelope";
+import type { CompanyRow, Stats } from "@/backend/quality";
 
 type Overview = {
   companies: CompanyRow[];

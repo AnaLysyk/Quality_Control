@@ -4,12 +4,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import jwt from "jsonwebtoken";
 
-import { listLocalCompanies, listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
+import { listLocalCompanies, listLocalLinksForUser, listLocalUsers } from "@/backend/auth/localStore";
 import { getJsonStoreDir } from "@/data/jsonStorePath";
-import { getJwtSecret } from "@/lib/auth/jwtSecret";
-import { prisma } from "@/lib/prismaClient";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
-import { getRedis } from "@/lib/redis";
+import { getJwtSecret } from "@/backend/auth/jwtSecret";
+import { prisma } from "@/database/prismaClient";
+import { shouldUsePostgresPersistence } from "@/database/persistenceMode";
+import { getRedis } from "@/backend/redis";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 
@@ -61,7 +61,7 @@ function hasGlobalCompanyAccess(auth: Pick<AuthContext, "isGlobalAdmin" | "role"
   const roles = [auth.role, auth.companyRole, auth.permissionRole]
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim().toLowerCase());
-  return roles.includes("leader_tc") || roles.includes("technical_support");
+  return roles.includes("technical_support");
 }
 
 const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
@@ -267,11 +267,8 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         ]);
         const hasFullCompanyAccess =
           isGlobalAdmin ||
-          role?.trim().toLowerCase() === "leader_tc" ||
           role?.trim().toLowerCase() === "technical_support" ||
-          companyRole?.trim().toLowerCase() === "leader_tc" ||
           companyRole?.trim().toLowerCase() === "technical_support" ||
-          permissionRole?.trim().toLowerCase() === "leader_tc" ||
           permissionRole?.trim().toLowerCase() === "technical_support";
         const allowed = hasFullCompanyAccess
           ? companies
@@ -295,11 +292,8 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
       ]);
       const hasFullCompanyAccess =
         isGlobalAdmin ||
-        role?.trim().toLowerCase() === "leader_tc" ||
         role?.trim().toLowerCase() === "technical_support" ||
-        companyRole?.trim().toLowerCase() === "leader_tc" ||
         companyRole?.trim().toLowerCase() === "technical_support" ||
-        permissionRole?.trim().toLowerCase() === "leader_tc" ||
         permissionRole?.trim().toLowerCase() === "technical_support";
       const allowed = hasFullCompanyAccess
         ? companies
@@ -338,11 +332,8 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
     ]);
     const hasFullCompanyAccess =
       isGlobalAdmin ||
-      role?.trim().toLowerCase() === "leader_tc" ||
       role?.trim().toLowerCase() === "technical_support" ||
-      companyRole?.trim().toLowerCase() === "leader_tc" ||
       companyRole?.trim().toLowerCase() === "technical_support" ||
-      permissionRole?.trim().toLowerCase() === "leader_tc" ||
       permissionRole?.trim().toLowerCase() === "technical_support";
     const allowed = hasFullCompanyAccess
       ? companies
@@ -673,4 +664,3 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

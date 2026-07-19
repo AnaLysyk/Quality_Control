@@ -3,21 +3,28 @@
 import { ClientCreateRequestSchema, ClientSchema } from "@/contracts/client";
 import { ErrorResponseSchema } from "@/contracts/errors";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { syncCompanyApplications } from "@/lib/applicationsStore";
-import { deleteLocalCompany, listLocalCompanies, updateLocalCompany } from "@/lib/auth/localStore";
+import { syncCompanyApplications } from "@/backend/applicationsStore";
+import { deleteLocalCompany, listLocalCompanies, updateLocalCompany } from "@/backend/auth/localStore";
 import {
   buildCompanyUpdatePatch,
   mapCompanyRecord,
   normalizeComparableName,
   normalizeTaxId,
-} from "@/lib/companyRecord";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+} from "@/backend/companyRecord";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { getAccessContext } from "@/backend/auth/session";
+import { isCompanyAllowed } from "@/backend/auth/accessAssignment";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
 
 const jsonError = (message: string, status: number) =>
   NextResponse.json(ErrorResponseSchema.parse({ error: message }), { status });
+
+async function canAccessCompany(req: NextRequest, company: { id: string; slug?: string | null }) {
+  const access = await getAccessContext(req);
+  return Boolean(access && isCompanyAllowed(access, { companyId: company.id, companySlug: company.slug }));
+}
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
@@ -27,8 +34,12 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   const companies = await listLocalCompanies();
   const company = companies.find((item) => item.id === id);
   if (!company) return jsonError("Empresa não encontrada", 404);
+  if (!(await canAccessCompany(req, company))) return jsonError("Sem permissão", 403);
 
-  return NextResponse.json(ClientSchema.parse(mapCompanyRecord(company)), { status: 200 });
+  return NextResponse.json(
+    ClientSchema.parse(mapCompanyRecord(company, { maskQaseToken: true, maskJiraToken: true })),
+    { status: 200 },
+  );
 }
 
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -39,6 +50,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   const companies = await listLocalCompanies();
   const current = companies.find((item) => item.id === id);
   if (!current) return jsonError("Empresa não encontrada", 404);
+  if (!(await canAccessCompany(req, current))) return jsonError("Sem permissão", 403);
 
   const body = await req.json().catch(() => null);
   const parsed = ClientCreateRequestSchema.partial().safeParse(body);
@@ -119,7 +131,10 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     },
   });
 
-  return NextResponse.json(ClientSchema.parse(mapCompanyRecord(updated)), { status: 200 });
+  return NextResponse.json(
+    ClientSchema.parse(mapCompanyRecord(updated, { maskQaseToken: true, maskJiraToken: true })),
+    { status: 200 },
+  );
 }
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -130,6 +145,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
   const companies = await listLocalCompanies();
   const current = companies.find((item) => item.id === id);
   if (!current) return jsonError("Empresa não encontrada", 404);
+  if (!(await canAccessCompany(req, current))) return jsonError("Sem permissão", 403);
 
   const deleted = await deleteLocalCompany(id);
   if (!deleted) return jsonError("Empresa não encontrada", 404);
@@ -148,4 +164,3 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

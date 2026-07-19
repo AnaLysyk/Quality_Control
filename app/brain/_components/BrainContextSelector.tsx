@@ -292,7 +292,7 @@ export function BrainContextSelector({
               <span className="qc-brain-filter-eyebrow">Fluxo de leitura</span>
               <h2>Perfil → empresa → usuário → módulo → item</h2>
               <p>
-                Para líder TC e suporte técnico, a visão mostra empresas gerenciadas, usuários vinculados, solicitações da Quality Control e agenda. Para empresa, mostra usuários empresariais e usuários TC vinculados à empresa.
+                Para líder TC e administrador, a visão mostra empresas gerenciadas, usuários vinculados, solicitações da Quality Control e agenda. Para empresa, mostra usuários empresariais e usuários TC vinculados à empresa.
               </p>
             </div>
 

@@ -1,14 +1,14 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { normalizeDefectStatus } from "@/lib/defectNormalization";
+import { getAccessContext } from "@/backend/auth/session";
+import { normalizeDefectStatus } from "@/backend/defectNormalization";
 import {
   getLocalUserById,
   listLocalCompanies,
   listLocalLinksForUser,
-} from "@/lib/auth/localStore";
-import { listUserNotes } from "@/lib/userNotesStore";
-import { resolveVisibleCompanies } from "@/lib/companyVisibility";
+} from "@/backend/auth/localStore";
+import { listUserNotes } from "@/backend/userNotesStore";
+import { resolveVisibleCompanies } from "@/backend/companyVisibility";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

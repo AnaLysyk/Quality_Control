@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { CreateFavoriteInput, FavoriteItem } from "@/lib/navigation/favoritesTypes";
+import type { CreateFavoriteInput, FavoriteItem } from "@/backend/navigation/favoritesTypes";
 
 const LOCAL_KEY = "qc:favorites";
 

@@ -1,33 +1,33 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
-import { listApplications } from "@/lib/applicationsStore";
-import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { QaseError } from "@/lib/qaseSdk";
-import { listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
-import { canAccessTestCaseRecord, resolveAllowedProjectIds } from "@/lib/test-cases/testCasePermissions";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { hasGlobalCompanyVisibility } from "@/backend/companyDefectsAccess";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
+import { listApplications } from "@/backend/applicationsStore";
+import { getClientQaseSettings } from "@/backend/qaseConfig";
+import { QaseError } from "@/backend/qaseSdk";
+import { listTestCaseRecords } from "@/backend/test-cases/testCaseRepository";
+import { canAccessTestCaseRecord, resolveAllowedProjectIds } from "@/backend/test-cases/testCasePermissions";
 import {
   extractNumericCaseIds,
   parseTestPlanCases,
   type TestPlanCase,
-} from "@/lib/testPlanCases";
+} from "@/backend/testPlanCases";
 import {
   createQasePlan,
   deleteQasePlan,
   getQasePlan,
   listQasePlans,
   updateQasePlan,
-} from "@/lib/qasePlans";
+} from "@/backend/qasePlans";
 import {
   createManualTestPlan,
   deleteManualTestPlan,
   getManualTestPlan,
   listManualTestPlans,
   updateManualTestPlan,
-} from "@/lib/testPlansStore";
-import { normalizeTestPlanSource, type TestPlanSource } from "@/lib/testPlanCases";
+} from "@/backend/testPlansStore";
+import { normalizeTestPlanSource, type TestPlanSource } from "@/backend/testPlanCases";
 
 type ApplicationItem = {
   id: string;

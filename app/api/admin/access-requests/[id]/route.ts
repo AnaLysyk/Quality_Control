@@ -1,25 +1,25 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { deleteAccessRequest, getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import { deleteAccessRequest, getAccessRequestById, updateAccessRequest } from "@/data/access-requests/store";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import {
   composeAccessRequestMessage,
   normalizeAccessType,
   parseAccessRequestMessage,
-} from "@/lib/accessRequestMessage";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { prisma } from "@/lib/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
-import { appendAccessRequestRemovalHistory } from "@/lib/accessRequestRemovalHistory";
+} from "@/backend/access-requests/message";
+import { hashPassword } from "@/backend/passwordHash";
+import { prisma } from "@/database/prismaClient";
+import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
+import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/backend/access-requests/reviewAccess";
+import { appendAccessRequestRemovalHistory } from "@/backend/access-requests/removalHistory";
 import {
   normalizeRequestProfileType,
   resolveReviewQueue,
   toInternalAccessType,
-} from "@/lib/requestRouting";
-import { shouldUseJsonStore } from "@/lib/storeMode";
-import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
-import { updateAccessRequestDetailsForReviewer } from "@/lib/accessRequestsV2/service";
+} from "@/backend/access-requests/routing";
+import { shouldUseJsonStore } from "@/backend/storeMode";
+import { getAccessRequestV2ById } from "@/backend/access-requests/repository";
+import { updateAccessRequestDetailsForReviewer } from "@/backend/access-requests/service";
 
 type AccessRequestBody = {
   email?: string;
@@ -67,7 +67,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const notes = typeof body.notes === "string" ? body.notes.trim() : "";
   const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes.trim() : null;
   const password = typeof body.password === "string" ? body.password.trim() : "";
-  const passwordHash = password ? hashPasswordSha256(password) : null;
+  const passwordHash = password ? hashPassword(password) : null;
 
   const { id } = await context.params;
   const v2Request = await getAccessRequestV2ById(id);
@@ -393,4 +393,3 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
   const removed = await prisma.supportRequest.deleteMany({ where: { id } });
   return NextResponse.json({ ok: removed.count > 0 });
 }
-

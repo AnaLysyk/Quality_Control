@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { createAccessRequestFromPayload, listAccessRequestsForUser } from "@/lib/accessRequestsV2/service";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { createAccessRequestFromPayload, listAccessRequestsForUser } from "@/backend/access-requests/service";
 
 export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);
@@ -27,4 +27,3 @@ export async function POST(req: Request) {
   const result = await createAccessRequestFromPayload(body, req, authUser);
   return NextResponse.json(result.body, { status: result.status });
 }
-

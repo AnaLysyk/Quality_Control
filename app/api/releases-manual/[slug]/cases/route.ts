@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { readManualReleaseCases, writeManualReleaseCases, type ManualCaseItem } from "@/lib/manualReleaseStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { readManualReleaseCases, writeManualReleaseCases, type ManualCaseItem } from "@/backend/manualReleaseStore";
 
 function normalizeItem(raw: Record<string, unknown>): ManualCaseItem | null {
   const id = raw.id ?? raw.caseId ?? raw.case_id;

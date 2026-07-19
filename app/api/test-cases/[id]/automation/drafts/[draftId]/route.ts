@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { canAccessTestCaseRecord } from "@/lib/test-cases/testCasePermissions";
-import { getTestCaseRecord, saveTestCaseAutomationLink } from "@/lib/test-cases/testCaseRepository";
-import { getAutomationDraft, updateAutomationDraft, updateAutomationDraftStatus } from "@/lib/test-cases/automationDraftsStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { canAccessTestCaseRecord } from "@/backend/test-cases/testCasePermissions";
+import { getTestCaseRecord, saveTestCaseAutomationLink } from "@/backend/test-cases/testCaseRepository";
+import { getAutomationDraft, updateAutomationDraft, updateAutomationDraftStatus } from "@/backend/test-cases/automationDraftsStore";
 
 export async function GET(
   req: Request,

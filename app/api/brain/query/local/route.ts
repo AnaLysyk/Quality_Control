@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
-import { BrainGraphRagService } from "@/lib/brain/graphRagService";
+import { assertBrainNodeAccess, resolveBrainAccess } from "@/backend/brain/access";
+import { BrainGraphRagService } from "@/backend/brain/graphRagService";
 
 export async function POST(req: Request) {
   const accessResult = await resolveBrainAccess(req);

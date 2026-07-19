@@ -1,0 +1,72 @@
+﻿import { SYSTEM_ROLES } from "@/backend/auth/roles";
+import { NAV_CATALOG, type NavModuleDef } from "@/backend/navigation/navigationCatalog";
+import { buildNavigationForUser } from "@/backend/navigation/navigationPermissions";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
+
+function buildSupportNavigation() {
+  return buildNavigationForUser(
+    NAV_CATALOG,
+    SYSTEM_ROLES.TECHNICAL_SUPPORT,
+    resolveRoleDefaults(SYSTEM_ROLES.TECHNICAL_SUPPORT),
+  );
+}
+
+function moduleIds(modules: NavModuleDef[]) {
+  return modules.map((module) => module.id);
+}
+
+function itemIds(modules: NavModuleDef[]) {
+  return modules.flatMap((module) => module.items.map((item) => item.id));
+}
+
+describe("perfil suporte - navegacao base", () => {
+  it("exibe os modulos principais do suporte tecnico", () => {
+    const modules = buildSupportNavigation();
+
+    expect(moduleIds(modules)).toEqual(
+      expect.arrayContaining([
+        "home",
+        "companies",
+        "quality",
+        "automation",
+        "requests",
+        "support",
+        "chat",
+        "brain",
+        "management",
+        "logs",
+      ]),
+    );
+  });
+
+  it("exibe atalhos operacionais permitidos para suporte tecnico", () => {
+    const items = itemIds(buildSupportNavigation());
+
+    expect(items).toEqual(
+      expect.arrayContaining([
+        "companies-search",
+        "companies-create",
+        "requests-list",
+        "support-create",
+        "support-kanban",
+        "support-chamados",
+        "auto-playwright",
+        "auto-ui-studio",
+        "brain-graph",
+        "brain-ask",
+        "management-profile",
+        "management-users",
+      ]),
+    );
+  });
+
+  it("nao exibe atalhos de criacao de perfis privilegiados", () => {
+    const items = itemIds(buildSupportNavigation());
+
+    expect(items).not.toContain("users-create-leader-tc");
+    expect(items).not.toContain("users-create-support");
+    expect(items).not.toContain("users-create-user-tc");
+    expect(items).not.toContain("users-create-company-user");
+  });
+});
+

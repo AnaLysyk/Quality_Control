@@ -1,8 +1,8 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { createQaseClient, QaseError } from "@/lib/qaseSdk";
-import { getAccessContext } from "@/lib/auth/session";
+import { getClientQaseSettings } from "@/backend/qaseConfig";
+import { createQaseClient, QaseError } from "@/backend/qaseSdk";
+import { getAccessContext } from "@/backend/auth/session";
 
 export const runtime = "nodejs";
 

@@ -1,15 +1,21 @@
 ﻿import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { prisma } from "@/lib/prismaClient";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { prisma } from "@/database/prismaClient";
 import {
   canAccessCompany,
+  canAccessProject,
   canAccessSensitivity,
   canViewBase64,
   PermissionError,
-} from "@/lib/test-data-hub/permissions";
-import { RunnerAssetGuardrail, UsagePolicyValidator } from "@/lib/test-data-hub/guardrails";
+} from "@/backend/test-data-hub/permissions";
+import { UsagePolicyValidator } from "@/backend/test-data-hub/guardrails";
+import {
+  createTestDataDownloadToken,
+  TEST_DATA_DOWNLOAD_PURPOSES,
+  type TestDataDownloadPurpose,
+} from "@/backend/test-data-hub/downloadToken";
 
 /**
  * POST /api/test-data-assets/resolve
@@ -75,10 +81,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { assetIds, format = "file", purpose = "test_execution" } = body;
+    const { assetIds, format = "file", purpose: rawPurpose = "test_execution" } = body;
+    const purpose = rawPurpose as TestDataDownloadPurpose;
 
     // Validate request
-    if (!Array.isArray(assetIds) || assetIds.length === 0) {
+    if (
+      !Array.isArray(assetIds) ||
+      assetIds.length === 0 ||
+      assetIds.length > 100 ||
+      assetIds.some((id) => typeof id !== "string" || !id.trim())
+    ) {
       return NextResponse.json({ error: "assetIds must be a non-empty array" }, { status: 400 });
     }
 
@@ -86,7 +98,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'format must be "file" or "base64"' }, { status: 400 });
     }
 
-    if (!["playwright", "test_execution", "documentation"].includes(purpose)) {
+    if (!TEST_DATA_DOWNLOAD_PURPOSES.includes(purpose)) {
       return NextResponse.json({ error: 'purpose must be "playwright", "test_execution", or "documentation"' }, { status: 400 });
     }
 
@@ -114,6 +126,7 @@ export async function POST(request: NextRequest) {
             allowPlaywrightUpload: true,
             allowApiMultipart: true,
             allowBase64Api: true,
+            allowReportContent: true,
           },
         },
       },
@@ -129,14 +142,18 @@ export async function POST(request: NextRequest) {
     const deniedAssets = [];
 
     for (const asset of assets) {
-      // Check company access
+      if (asset.status !== "active") {
+        deniedAssets.push({ assetId: asset.id, reason: "inactive" });
+        continue;
+      }
+
+      // Check company and exact project access
       if (!canAccessCompany(user, asset.companySlug)) {
         deniedAssets.push({ assetId: asset.id, reason: "company_access" });
         continue;
       }
 
-      // Check project access
-      if (asset.projectId && !user.isGlobalAdmin && !user.companySlugs?.includes(asset.companySlug)) {
+      if (!canAccessProject(user, asset.companySlug, asset.projectId)) {
         deniedAssets.push({ assetId: asset.id, reason: "project_access" });
         continue;
       }
@@ -165,8 +182,13 @@ export async function POST(request: NextRequest) {
       }
 
       if (format === "file") {
-        const playgroundCheck = UsagePolicyValidator.validateUsage(policy, "playwright_upload");
-        if (!playgroundCheck.allowed) {
+        const usage = purpose === "playwright"
+          ? "playwright_upload"
+          : purpose === "documentation"
+            ? "report_content"
+            : "api_multipart";
+        const policyCheck = UsagePolicyValidator.validateUsage(policy, usage);
+        if (!policyCheck.allowed) {
           deniedAssets.push({ assetId: asset.id, reason: "policy_violation" });
         }
       }
@@ -209,7 +231,13 @@ export async function POST(request: NextRequest) {
         assets: assets.map((asset) => {
           // Generate temporary download URL
           // In production, this would include a signed token and expiration
-          const downloadUrl = `/api/test-data-assets/${asset.id}/content?purpose=${purpose}&expires=${expiresAt.getTime()}`;
+          const token = createTestDataDownloadToken({
+            assetId: asset.id,
+            userId: user.id,
+            purpose,
+            expiresAt: expiresAt.getTime(),
+          });
+          const downloadUrl = `/api/test-data-assets/${asset.id}/content?purpose=${purpose}&token=${encodeURIComponent(token)}`;
 
           return {
             assetId: asset.id,
@@ -272,4 +300,3 @@ function getMimeExtension(mimeType: string | null): string {
 
   return mimeMap[mimeType] || "bin";
 }
-

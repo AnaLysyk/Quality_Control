@@ -8,12 +8,12 @@ import {
   type ReleaseCalendarEvent,
   type ReleaseCalendarEventType,
 } from "@/data/releaseCalendarModel";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { getAccessContext } from "@/lib/auth/session";
-import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
-import { listReleaseCalendarEvents, updateReleaseCalendarEvent, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent, type ReleaseCalendarEventInput } from "@/lib/releaseCalendarStore";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/backend/permissionMatrix";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { createNotificationEvent, type NotificationEventRecipient } from "@/backend/notificationEventsStore";
+import { listReleaseCalendarEvents, updateReleaseCalendarEvent, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent, type ReleaseCalendarEventInput } from "@/backend/releaseCalendarStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -45,7 +45,7 @@ const VALID_AUDIENCE_PROFILES = [
   "brain",
 ] as const;
 const VALID_SCOPES = ["mine", "company", "all"] as const;
-const GLOBAL_AGENDA_ROLES = new Set(["leader_tc", "technical_support"]);
+const GLOBAL_AGENDA_ROLES = new Set(["technical_support"]);
 
 type ReleaseStatus = (typeof VALID_STATUSES)[number];
 type AgendaScope = (typeof VALID_SCOPES)[number];
@@ -133,7 +133,14 @@ function actorName(user: { name?: string | null; email?: string | null; id: stri
 }
 
 function canViewGlobalAgenda(access: AccessContextValue) {
-  return access.isGlobalAdmin || GLOBAL_AGENDA_ROLES.has(normalizeText(access.role));
+  return access.isGlobalAdmin || access.projectScope === "unrestricted" || GLOBAL_AGENDA_ROLES.has(normalizeText(access.role));
+}
+
+function canAccessCalendarCompany(access: AccessContextValue, companySlug?: string | null) {
+  if (canViewGlobalAgenda(access)) return true;
+  const target = normalizeText(companySlug);
+  if (!target) return true;
+  return access.companySlugs.some((slug) => normalizeText(slug) === target);
 }
 
 function eventBelongsToUser(event: ReleaseCalendarEvent, access: AccessContextValue) {
@@ -388,8 +395,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { response } = await requireReleaseCalendarAccess(req, "create");
-  if (response) return response;
+  const { access, response } = await requireReleaseCalendarAccess(req, "create");
+  if (response || !access) return response;
 
   const user = await authenticateRequest(req);
   if (!user) {
@@ -407,6 +414,9 @@ export async function POST(req: NextRequest) {
     defaultNotificationRules: ["Notificar participantes", "Lembrar 5 minutos antes"],
     defaultBrianRules: ["Registrar contexto no Brain", "Relacionar participantes e decisao"],
   });
+  if (!canAccessCalendarCompany(access, eventInput.companySlug)) {
+    return NextResponse.json({ error: "Empresa fora do escopo permitido." }, { status: 403, headers: NO_STORE_HEADERS });
+  }
 
   const event = await upsertReleaseCalendarEvent({
     ...eventInput,
@@ -427,8 +437,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { response } = await requireReleaseCalendarAccess(req, "edit");
-  if (response) return response;
+  const { access, response } = await requireReleaseCalendarAccess(req, "edit");
+  if (response || !access) return response;
 
   const user = await authenticateRequest(req);
   if (!user) {
@@ -441,6 +451,14 @@ export async function PATCH(req: NextRequest) {
 
   if (!id) {
     return NextResponse.json({ error: "Informe o id do agendamento." }, { status: 400, headers: NO_STORE_HEADERS });
+  }
+
+  const current = (await listReleaseCalendarEvents({})).find((event) => event.id === id);
+  if (!current) {
+    return NextResponse.json({ error: "Evento de agenda nao encontrado." }, { status: 404, headers: NO_STORE_HEADERS });
+  }
+  if (!canAccessCalendarCompany(access, current.companySlug)) {
+    return NextResponse.json({ error: "Empresa fora do escopo permitido." }, { status: 403, headers: NO_STORE_HEADERS });
   }
 
   const eventPatch = buildEventMutationInput(body ?? {});

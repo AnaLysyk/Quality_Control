@@ -4,8 +4,9 @@
  * Profile Actions — botões de ação contextuais
  */
 
-import { useProfileAction, useDangerZone, useProfileMode } from "@/lib/profile/useProfileContext";
-import { cn } from "@/lib/cn";
+import { useProfileAction, useDangerZone, useProfileMode } from "@/backend/profile/useProfileContext";
+import { cn } from "@/backend/cn";
+import { Spinner } from "@/components/ui/spinner";
 
 export type ProfileActionButton = {
   label: string;
@@ -92,9 +93,7 @@ export function ProfileActions({
                 : "bg-(--tc-accent) text-white hover:bg-(--tc-accent-hover) disabled:opacity-50",
           )}
         >
-          {btn.loading && (
-            <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          )}
+          {btn.loading && <Spinner size={16} color="currentColor" className="mr-2" />}
           {btn.label}
         </button>
       ))}

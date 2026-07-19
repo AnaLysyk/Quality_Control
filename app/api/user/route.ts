@@ -1,9 +1,9 @@
-﻿import { NextRequest, NextResponse } from "next/server";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
-import { isUserScopeLockedError } from "@/lib/companyUserScope";
-import { readSyncedUserProfileFields } from "@/lib/userProfileData";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { NextRequest, NextResponse } from "next/server";
+import { hashPassword } from "@/backend/passwordHash";
+import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/backend/auth/localStore";
+import { isUserScopeLockedError } from "@/backend/companyUserScope";
+import { readSyncedUserProfileFields } from "@/backend/userProfileData";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 // POST: Cria um novo usuário e vincula a uma empresa
 export async function POST(req: NextRequest) {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
   }
 
-  const hash = hashPasswordSha256(password);
+  const hash = hashPassword(password);
   let user = null;
   try {
     user = await createLocalUser({

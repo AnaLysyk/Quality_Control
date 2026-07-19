@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FiBriefcase, FiCalendar, FiCheckCircle, FiClock, FiFilter, FiMessageCircle, FiRefreshCw, FiSearch, FiUser, FiUsers } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 
 const VIEW_MODES = ["mine", "company", "management"] as const;
@@ -71,17 +72,20 @@ function formatDay(value: string) {
 }
 
 function formatTime(value?: string | null) {
-  const parsed = value ? Date.parse(value) : NaN;
+  const parsed = value ? Date.parse(value) : Number.NaN;
   if (!Number.isFinite(parsed)) return "--:--";
   return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(parsed);
 }
 
 function duration(startAt?: string | null, endAt?: string | null) {
-  const start = startAt ? Date.parse(startAt) : NaN;
-  const end = endAt ? Date.parse(endAt) : NaN;
+  const start = startAt ? Date.parse(startAt) : Number.NaN;
+  const end = endAt ? Date.parse(endAt) : Number.NaN;
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return "tempo não definido";
   const minutes = Math.round((end - start) / 60000);
-  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h${minutes % 60 ? ` ${minutes % 60}min` : ""}`;
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainderMinutes = minutes % 60;
+  return remainderMinutes ? `${hours}h ${remainderMinutes}min` : `${hours}h`;
 }
 
 function statusLabel(status?: string | null) {
@@ -209,7 +213,7 @@ export default function AgendaPage() {
 
   const counters = useMemo(() => {
     const soon = Date.now() + 5 * 60 * 1000;
-    return { total: events.length, visible: filteredEvents.length, planned: events.filter((event) => event.status === "planned").length, done: events.filter((event) => event.status === "done").length, notDone: events.filter((event) => event.status === "cancelled").length, reminder: events.filter((event) => { const start = event.startAt ? Date.parse(event.startAt) : NaN; return Number.isFinite(start) && start >= Date.now() && start <= soon; }).length };
+    return { total: events.length, visible: filteredEvents.length, planned: events.filter((event) => event.status === "planned").length, done: events.filter((event) => event.status === "done").length, notDone: events.filter((event) => event.status === "cancelled").length, reminder: events.filter((event) => { const start = event.startAt ? Date.parse(event.startAt) : Number.NaN; return Number.isFinite(start) && start >= Date.now() && start <= soon; }).length };
   }, [events, filteredEvents.length]);
 
   function changeMonth(offset: number) {
@@ -249,9 +253,9 @@ export default function AgendaPage() {
               </div>
             </div>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[11px] font-bold sm:grid-cols-3 xl:grid-cols-6">
+          <ScrollReveal className="mt-3 grid grid-cols-2 gap-2 text-center text-[11px] font-bold sm:grid-cols-3 xl:grid-cols-6" stagger={0.05} deps={[loadingEvents]}>
             {[["Visíveis", `${counters.visible}/${counters.total}`], ["Futuras", counters.planned], ["Realizadas", counters.done], ["Não realizadas", counters.notDone], ["Empresas", companiesCount || companyOptions.length], ["5 min", counters.reminder]].map(([label, value]) => <div key={String(label)} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-slate-950"><span className="block text-slate-500 dark:text-slate-400">{label}</span><strong className="mt-0.5 block text-sm text-[#011848] dark:text-white">{value}</strong></div>)}
-          </div>
+          </ScrollReveal>
         </section>
 
         {error ? <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700 dark:border-red-400/25 dark:bg-red-400/10 dark:text-red-100">{error}</div> : null}
@@ -274,7 +278,12 @@ export default function AgendaPage() {
               {WEEK_DAYS.map((day) => <div key={day} className="p-3">{day}</div>)}
             </div>
 
-            <div className="grid flex-1 grid-cols-7 grid-rows-6 overflow-hidden bg-slate-100 dark:bg-slate-950/60">
+            <ScrollReveal
+              className="grid flex-1 grid-cols-7 grid-rows-6 overflow-hidden bg-slate-100 dark:bg-slate-950/60"
+              stagger={0.012}
+              y={10}
+              deps={[visibleMonth.getTime(), loadingEvents]}
+            >
               {monthDays.map((day) => {
                 const dayEvents = eventsByDay.get(day.key) ?? [];
                 const selected = selectedDay === day.key;
@@ -291,7 +300,7 @@ export default function AgendaPage() {
                   </button>
                 );
               })}
-            </div>
+            </ScrollReveal>
           </section>
 
           <aside className="min-h-[calc(100vh-17rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#0b1220]">
@@ -303,14 +312,18 @@ export default function AgendaPage() {
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black text-[#011848] dark:border-white/10 dark:bg-slate-950 dark:text-white">{selectedDayEvents.length}</span>
             </div>
 
-            <div className="grid max-h-[calc(100vh-23rem)] gap-3 overflow-y-auto pr-1">
+            <ScrollReveal
+              className="grid max-h-[calc(100vh-23rem)] gap-3 overflow-y-auto pr-1"
+              stagger={0.06}
+              deps={[selectedDay, loadingEvents]}
+            >
               {selectedDayEvents.map((event) => {
                 const expanded = expandedEventId === event.id;
                 return <article key={event.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/70"><button type="button" onClick={() => setExpandedEventId(expanded ? null : event.id)} className="w-full p-3 text-left"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"><FiClock className="text-[#ef0001]" />{formatTime(event.startAt)} - {formatTime(event.endAt)} · {duration(event.startAt, event.endAt)}</p><h4 className="mt-1 truncate text-sm font-black text-[#011848] dark:text-white">{event.title}</h4><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{event.companyName || event.companySlug || contextLabel(event.context)}</p></div><span className={["shrink-0 rounded-full border px-2 py-1 text-[10px] font-black", statusClass(event.status)].join(" ")}>{statusLabel(event.status)}</span></div></button>{expanded ? <div className="border-t border-slate-200 p-3 text-sm dark:border-white/10"><p className="text-slate-600 dark:text-slate-300">{event.description || event.releaseName || "Evento de agenda operacional."}</p><div className="mt-3 grid gap-2 rounded-2xl bg-slate-50 p-3 text-xs text-slate-700 dark:bg-slate-950 dark:text-slate-300"><span><strong>Projeto:</strong> {event.projectSlug || "Sem projeto"}</span><span><strong>Responsável:</strong> {event.ownerName || "Sem responsável"}</span><span><strong>Participantes:</strong> {(event.participantNames?.length ? event.participantNames : ["Não informados"]).join(", ")}</span><span className="inline-flex items-center gap-1"><FiMessageCircle className="text-[#ef0001]" />Registro vinculado ao Chat/Brain quando a reunião nascer de conversa.</span></div>{canUpdateStatus ? <div className="mt-3 flex flex-wrap gap-2"><button onClick={() => updateStatus(event.id, "planned")} className="rounded-xl border border-sky-200 bg-sky-50 px-2 py-1 text-xs font-black text-sky-700">Vai acontecer</button><button onClick={() => updateStatus(event.id, "done")} className="rounded-xl border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-black text-emerald-700">Realizada</button><button onClick={() => updateStatus(event.id, "cancelled")} className="rounded-xl border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-black text-slate-600">Não realizada</button><button onClick={() => updateStatus(event.id, "blocked")} className="rounded-xl border border-red-200 bg-red-50 px-2 py-1 text-xs font-black text-red-700">Bloquear</button></div> : null}</div> : null}</article>;
               })}
 
               {!loadingEvents && selectedDayEvents.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500 dark:border-white/15 dark:bg-slate-950 dark:text-slate-400"><FiCheckCircle className="mx-auto h-7 w-7 text-emerald-500" /><p className="mt-3 font-bold">Nenhum agendamento neste dia.</p><p className="mt-1 text-sm">Troque o mês, selecione outro dia ou ajuste os filtros.</p></div> : null}
-            </div>
+            </ScrollReveal>
           </aside>
         </section>
       </section>

@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 import { FiFileText } from "react-icons/fi";
 import StatusChart from "@/components/StatusChart";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
-import { formatRunTitle } from "@/lib/runPresentation";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
+import { formatRunTitle } from "@/backend/runPresentation";
 
 type Stats = { pass: number; fail: number; blocked: number; notRun: number };
 

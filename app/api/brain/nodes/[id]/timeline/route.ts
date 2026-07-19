@@ -1,7 +1,7 @@
 ﻿import { type NextRequest, NextResponse } from "next/server";
 
-import { getNodeTimeline } from "@/lib/brain";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getNodeTimeline } from "@/backend/brain";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export async function GET(
   req: NextRequest,

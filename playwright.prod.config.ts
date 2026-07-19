@@ -3,7 +3,7 @@
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "https://quality-control-qwqs.onrender.com";
 
 export default defineConfig({
-  testDir: "./testes",
+  testDir: "./tests",
   timeout: 90 * 1000,
   expect: { timeout: 10000 },
   retries: 0,

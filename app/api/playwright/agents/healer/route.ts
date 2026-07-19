@@ -1,11 +1,11 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { requireAiApiKey } from "@/lib/ai/apiKey";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
+import { requireAiApiKey } from "@/backend/ai/apiKey";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,7 +83,7 @@ Rules:
       `UPDATE playwright_agent_tasks SET status='error', error=$1, finished_at=NOW() WHERE id=$2`,
       [msg, taskId],
     );
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

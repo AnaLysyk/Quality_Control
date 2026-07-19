@@ -1,8 +1,8 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { prisma } from "@/lib/prismaClient";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { prisma } from "@/database/prismaClient";
 
 type DomainNode = {
   id: string;
@@ -62,7 +62,7 @@ function profileLabel(profileType: string) {
     empresa: "Empresa",
     company_user: "Usuário da Empresa",
     leader_tc: "Líder TC",
-    technical_support: "Suporte Técnico",
+    technical_support: "Administrador",
     testing_company_user: "Usuário TC",
     user: "Usuário TC",
     viewer: "Usuário TC",

@@ -18,7 +18,7 @@ import {
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 import StatusChart from "@/components/StatusChart";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { getAppColorClass, getAppMeta } from "@/lib/appMeta";
+import { getAppColorClass, getAppMeta } from "@/backend/appMeta";
 import type {
   CompanyRunsHeroStats,
   HomeRunItem,

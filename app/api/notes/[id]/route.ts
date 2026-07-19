@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { deleteUserNote, updateUserNote } from "@/lib/userNotesStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { deleteUserNote, updateUserNote } from "@/backend/userNotesStore";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);

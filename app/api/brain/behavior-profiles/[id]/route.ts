@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import {
   deleteBehaviorProfile,
   isBrainBehaviorProfileStorageUnavailable,
   updateBehaviorProfile,
-} from "@/lib/brain/behaviorProfiles";
+} from "@/backend/brain/behaviorProfiles";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const accessResult = await resolveBrainAccess(req);

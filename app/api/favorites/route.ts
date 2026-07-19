@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import type { CreateFavoriteInput, FavoriteItem } from "@/lib/navigation/favoritesTypes";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import type { CreateFavoriteInput, FavoriteItem } from "@/backend/navigation/favoritesTypes";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
 
   // Try Prisma first
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     const rows = await (prisma as any).favorite.findMany({
       where: { userId },
       orderBy: { sortOrder: "asc" },
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
 
   // Try Prisma
   try {
-    const { prisma } = await import("@/lib/prismaClient");
+    const { prisma } = await import("@/database/prismaClient");
     const existing = await (prisma as any).favorite.findFirst({ where: { userId, href: body.href } });
     if (existing) {
       const fav: FavoriteItem = {

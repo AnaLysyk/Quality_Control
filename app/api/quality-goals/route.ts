@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { readGoalStatusStore } from "@/lib/qualityGoalAlerts";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { readGoalStatusStore } from "@/backend/qualityGoalAlerts";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 export const runtime = "nodejs";
 

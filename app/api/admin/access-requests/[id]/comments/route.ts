@@ -1,24 +1,24 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAccessRequestById } from "@/data/accessRequestsStore";
+import { getAccessRequestById } from "@/data/access-requests/store";
 import {
   createAccessRequestComment,
   listAccessRequestComments,
-} from "@/data/accessRequestCommentsStore";
-import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
-import type { AccessRequestV2 } from "@/lib/accessRequestsV2/domain";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { notifyAccessRequestComment } from "@/lib/notificationService";
-import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
-import { prisma } from "@/lib/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
+} from "@/data/access-requests/commentsStore";
+import { getAccessRequestV2ById } from "@/backend/access-requests/repository";
+import type { AccessRequestV2 } from "@/backend/access-requests/domain";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { notifyAccessRequestComment } from "@/backend/notificationService";
+import { extractPasswordResetRequestId } from "@/backend/passwordResetAccessQueue";
+import { prisma } from "@/database/prismaClient";
+import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
 import {
   canReviewerAccessQueue,
   resolveAccessRequestQueue,
-} from "@/lib/requestReviewAccess";
-import { shouldUseJsonStore } from "@/lib/storeMode";
+} from "@/backend/access-requests/reviewAccess";
+import { shouldUseJsonStore } from "@/backend/storeMode";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -261,4 +261,3 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
   return NextResponse.json({ item: record }, { status: 200 });
 }
-

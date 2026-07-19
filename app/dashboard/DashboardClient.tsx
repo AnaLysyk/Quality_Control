@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -24,9 +24,9 @@ import {
 } from "react-icons/fi";
 import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 import Breadcrumb from "@/components/Breadcrumb";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 
 type CompanyRisk = "critical" | "warning" | "stable" | "empty";
 
@@ -138,7 +138,7 @@ function resolveRole(user: Partial<AuthUser>) {
 
 function roleLabel(value: ReturnType<typeof resolveRole>) {
   if (value === SYSTEM_ROLES.LEADER_TC) return "Líder TC";
-  if (value === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "Suporte Técnico";
+  if (value === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "Administrador";
   if (value === SYSTEM_ROLES.EMPRESA) return "Empresa";
   if (value === SYSTEM_ROLES.COMPANY_USER) return "Usuário da empresa";
   return "Perfil operacional";
@@ -156,11 +156,11 @@ function openAssistant(message: string, metadata?: Record<string, unknown>) {
         context: {
           module: "dashboard",
           screenLabel: "Visão geral TC",
-          screenSummary: "Painel executivo de qualidade por empresa para gestão Testing Company, consultoria, suporte técnico e liderança.",
+          screenSummary: "Painel executivo de qualidade por empresa para gestão Testing Company, consultoria, administrador e liderança.",
           suggestedPrompts: [
             "Resuma a carteira de empresas",
             "Quais empresas precisam de ação imediata?",
-            "Monte próximos passos para suporte técnico",
+            "Monte próximos passos para administrador",
             "Abra os nós do Brain relacionados a risco",
           ],
           metadata: metadata ?? null,
@@ -373,7 +373,7 @@ export default function DashboardClient() {
               <p className="text-xs font-semibold uppercase text-[var(--tc-accent,#ef0001)]">Controle de qualidade</p>
               <h1 className="mt-1 text-2xl font-black text-[var(--tc-text,#0b1a3c)] sm:text-3xl">Visão geral da carteira TC</h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--tc-text-muted,#64748b)]">
-                Mesa executiva para Líder TC e Suporte Técnico acompanharem saúde, risco, execução, defeitos e governança por empresa.
+                Mesa executiva para Líder TC e Administrador acompanharem saúde, risco, execução, defeitos e governança por empresa.
               </p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-[var(--tc-text-muted,#64748b)]">
                 <span className="rounded-md border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5">{roleLabel(normalizedRole)}</span>
@@ -418,7 +418,7 @@ export default function DashboardClient() {
               action={
               <button
                 type="button"
-                onClick={() => openAssistant("Analise o ranking de empresas e gere uma ordem de atendimento para Líder TC e Suporte Técnico.", { nodeId: "exec-companies", criticalCompanies: criticalCompanies.length })}
+                onClick={() => openAssistant("Analise o ranking de empresas e gere uma ordem de atendimento para Líder TC e Administrador.", { nodeId: "exec-companies", criticalCompanies: criticalCompanies.length })}
                 className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-bold text-[var(--tc-text,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)]"
               >
                 <FiMessageCircle /> Analisar carteira
@@ -475,7 +475,7 @@ export default function DashboardClient() {
           <SectionHeader kicker="Perfil" title="Foco de atuação" description="Leitura separada para liderança, suporte e governança." />
           <div className="grid gap-3 lg:grid-cols-3">
             <ProfileHelpCard title="Líder TC" description="Carteira, criticidade, prioridade consultiva, governança e saúde geral." prompts={["Priorize a carteira", "Gere resumo executivo", "Compare empresas críticas"]} />
-            <ProfileHelpCard title="Suporte Técnico" description="Risco, bug, bloqueio, triagem, evidência e encaminhamento por empresa/projeto." prompts={["Explique causa provável", "Sugira próxima ação", "Monte resposta técnica"]} />
+            <ProfileHelpCard title="Administrador" description="Risco, bug, bloqueio, triagem, evidência e encaminhamento por empresa/projeto." prompts={["Explique causa provável", "Sugira próxima ação", "Monte resposta técnica"]} />
             <ProfileHelpCard title="Governança" description="Perfis, permissões, rastreabilidade, cobertura e consistência da operação QA." prompts={["Revisar permissões", "Checar cobertura", "Auditar risco"]} />
           </div>
         </section>

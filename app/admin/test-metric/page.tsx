@@ -7,13 +7,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamicImport from "next/dynamic";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 const CompanyMetricsCard = dynamicImport(
   () => import("@/components/CompanyMetricsCard").then((mod) => mod.CompanyMetricsCard),
   { ssr: false, loading: () => <div>Carregando métricas...</div> }
 );
 import type { DefectsSummary } from "@/components/CompanyMetricsCard";
-import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
+import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/backend/apiEnvelope";
 
 type Stats = { pass: number; fail: number; blocked: number; notRun: number };
 

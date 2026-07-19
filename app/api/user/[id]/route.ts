@@ -1,13 +1,13 @@
 ﻿
 import { NextRequest, NextResponse } from "next/server";
-import { listLocalUsers, updateLocalUser } from "@/lib/auth/localStore";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { isE2eMockAllowed } from "@/lib/auth/e2eMockGate";
+import { listLocalUsers, updateLocalUser } from "@/backend/auth/localStore";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { isE2eMockAllowed } from "@/backend/auth/e2eMockGate";
 
 // PATCH: Edita um usuário existente
 export async function PATCH(req: NextRequest, context: { params: any }) {
   // Permite autenticação fake para testes E2E, somente com o mock E2E habilitado
-  // (PLAYWRIGHT_MOCK=true e fora de produção — ver lib/auth/e2eMockGate.ts).
+  // (PLAYWRIGHT_MOCK=true e fora de produção — ver backend/auth/e2eMockGate.ts).
   let testAdmin = false;
   if (isE2eMockAllowed() && req.headers) {
     if (typeof req.headers.get === 'function') {

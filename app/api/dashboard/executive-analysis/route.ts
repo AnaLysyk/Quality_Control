@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import type { CompanyDashboardData } from "@/empresas/[slug]/dashboard/companyDashboardData";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 
 export const maxDuration = 30;
 export const runtime = "nodejs";
@@ -167,6 +168,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const operational = await resolveOperationalContext(req, {
+      moduleId: "dashboard",
+      action: "view",
+      companySlug: body.companySlug,
+      requireCompany: true,
+    });
+    if (!operational.ok) return operational.response;
+
     const analysis = await generateExecutiveAnalysis(body);
     return NextResponse.json(analysis);
   } catch (error) {
@@ -174,4 +183,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to generate analysis" }, { status: 500 });
   }
 }
-

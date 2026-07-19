@@ -46,7 +46,7 @@ REDIS_PING_SECRET=um_segredo_para_testar_/api/public/redis/ping
 1. Abra `/login` e faça login.
 2. Confirme que `/admin/home` abre sem voltar para `/login`.
 3. Se definir `REDIS_PING_SECRET`, valide:
-   `GET /api/public/redis/ping?secret=<REDIS_PING_SECRET>`
+   `GET /api/public/redis/ping` com o header `x-redis-ping-secret: <REDIS_PING_SECRET>`.
 4. Confirme que a resposta nao e `REDIS_NOT_CONFIGURED`.
 
 ## Sintoma quando Redis falta

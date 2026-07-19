@@ -2,15 +2,15 @@
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
+import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/backend/auth/normalizeAuthenticatedUser";
 import {
   getTicketViewScope,
   getUsersViewScope,
   toVisibilityMap,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { canAccess } from "@/lib/permissions/can-access";
-import { getUserAccessContext } from "@/lib/permissions/get-user-access-context";
+} from "@/backend/permissionMatrix";
+import { canAccess } from "@/backend/permissions/can-access";
+import { getUserAccessContext } from "@/backend/permissions/get-user-access-context";
 
 const subscribeToHydration = () => () => undefined;
 const getHydratedSnapshot = () => true;

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useRef, useState, useEffect } from "react";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import styles from "./AgentView.module.css";
 
 type AgentMode = "qa" | "debug" | "playwright" | "memory";

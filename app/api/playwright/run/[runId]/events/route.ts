@@ -1,7 +1,7 @@
-﻿import { authenticateRequest } from "@/lib/jwtAuth";
-import { getRunEmitter } from "@/lib/playwright/executionService";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
+﻿import { authenticateRequest } from "@/backend/jwtAuth";
+import { getRunEmitter } from "@/backend/playwright/executionService";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

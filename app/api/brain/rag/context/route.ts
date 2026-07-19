@@ -2,16 +2,16 @@
 import type { Prisma } from "@prisma/client";
 
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
-import { isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
+import { isBrainNodeVisible, resolveBrainAccess } from "@/backend/brain/access";
 import {
   auditBrainQuery,
   isBrainOptionalRowVisible,
   sanitizeBrainMetadata,
   sanitizeBrainOptionalMemoryItem,
   sanitizeBrainText,
-} from "@/lib/brain/security";
-import { buildBrainSearchIndex, searchBrainIndex } from "@/lib/brain/searchIndex";
-import { prisma } from "@/lib/prismaClient";
+} from "@/backend/brain/security";
+import { buildBrainSearchIndex, searchBrainIndex } from "@/backend/brain/searchIndex";
+import { prisma } from "@/database/prismaClient";
 
 type FindManyDelegate = {
   findMany: (args?: Record<string, unknown>) => Promise<unknown[]>;

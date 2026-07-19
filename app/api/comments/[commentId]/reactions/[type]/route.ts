@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { removeReaction } from "@/lib/ticketReactionsStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { removeReaction } from "@/backend/ticketReactionsStore";
 
 export async function DELETE(req: Request, context: { params: Promise<{ commentId: string; type: string }> }) {
   const user = await authenticateRequest(req);

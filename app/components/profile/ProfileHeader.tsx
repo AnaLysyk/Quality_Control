@@ -5,7 +5,7 @@
  */
 
 import { FiUser } from "react-icons/fi";
-import { cn } from "@/lib/cn";
+import { cn } from "@/backend/cn";
 
 export type ProfileHeaderProps = {
   title: string;

@@ -23,8 +23,8 @@ import {
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
-import { fetchApi } from "@/lib/api";
-import { resolveActiveIdentity } from "@/lib/activeIdentity";
+import { fetchApi } from "@/backend/api";
+import { resolveActiveIdentity } from "@/backend/activeIdentity";
 
 type ChatContact = {
   id: string;
@@ -146,7 +146,7 @@ function formatRelative(value: string) {
 function getContactRoleLabel(contact: ChatContact) {
   const value = (contact.profile_kind ?? contact.permission_role ?? "").toLowerCase();
   if (value === "leader_tc") return "Lider TC";
-  if (value === "technical_support") return "Suporte tecnico";
+  if (value === "technical_support") return "Administrador";
   if (value === "empresa") return "Empresa";
   if (value === "company_user") return "Usuario da empresa";
   if (value === "testing_company_user") return "Usuario TC";

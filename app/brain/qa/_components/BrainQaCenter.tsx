@@ -5,7 +5,7 @@ import useSWR from "swr";
 import type { IconType } from "react-icons";
 import { FiCheckCircle, FiClipboard, FiCopy, FiDatabase, FiFileText, FiPlayCircle, FiShield, FiZap } from "react-icons/fi";
 
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type BrainEvalCase = {
   id: string;

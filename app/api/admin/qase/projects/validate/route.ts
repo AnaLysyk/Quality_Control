@@ -1,8 +1,8 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { createQaseClient, QaseError } from "@/lib/qaseSdk";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getClientQaseSettings } from "@/backend/qaseConfig";
+import { createQaseClient, QaseError } from "@/backend/qaseSdk";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export const runtime = "nodejs";
 

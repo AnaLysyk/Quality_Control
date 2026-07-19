@@ -1,4 +1,4 @@
-﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
 
 export type PerfilVisualInput = {
   companyRole?: string | null;
@@ -20,7 +20,7 @@ export type PerfilVisual = {
 
 const PERFIL_LABELS: Record<SystemRole, string> = {
   [SYSTEM_ROLES.LEADER_TC]: "Lider TC",
-  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: "Suporte Tecnico",
+  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: "Administrador",
   [SYSTEM_ROLES.TESTING_COMPANY_USER]: "Usuario TC",
   [SYSTEM_ROLES.EMPRESA]: "Empresa",
   [SYSTEM_ROLES.COMPANY_USER]: "Usuario da empresa",

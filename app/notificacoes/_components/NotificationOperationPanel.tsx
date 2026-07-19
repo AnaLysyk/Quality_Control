@@ -4,7 +4,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import useSWR from "swr";
 import { FiActivity, FiBell, FiCheckCircle, FiCpu, FiExternalLink, FiInbox, FiLayers, FiMessageCircle, FiRefreshCw, FiSave, FiShield, FiSliders, FiUsers } from "react-icons/fi";
 
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type Workflow = {
   id: string;

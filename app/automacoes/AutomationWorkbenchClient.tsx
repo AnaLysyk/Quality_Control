@@ -25,7 +25,7 @@ import {
   AUTOMATION_REQUEST_TOTAL,
 } from "@/data/automationCatalog";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { resolveAutomationAccess } from "@/lib/automations/access";
+import { resolveAutomationAccess } from "@/backend/automations/access";
 import AutomationStudio from "./AutomationStudio";
 
 const BiometricAutomationRunner = dynamic(() => import("./BiometricAutomationRunner"), {
@@ -280,7 +280,7 @@ export default function AutomationWorkbenchClient() {
               <div className="mt-4 space-y-3">
                 {[
                   "Líder TC: gestão completa de ambientes, presets e histórico.",
-                  "Suporte técnico: operação completa e leitura global.",
+                  "Administrador: operação completa e leitura global.",
                   "Usuário TC: leitura operacional apenas das empresas vinculadas.",
                   "Empresa e usuário da empresa: mesma visão operacional, restrita à própria empresa.",
                 ].map((item) => (
@@ -477,4 +477,3 @@ export default function AutomationWorkbenchClient() {
     </RequireAuth>
   );
 }
-

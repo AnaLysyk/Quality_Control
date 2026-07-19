@@ -1,11 +1,11 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { requireAiApiKey } from "@/lib/ai/apiKey";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/backend/automations/access";
+import { requireAiApiKey } from "@/backend/ai/apiKey";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
+import { automationPool, ensureAutomationTables } from "@/database/automationPool";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,7 +62,7 @@ Always write in the same language as the input. If input is in Portuguese, respo
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     await failTask(taskId, msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

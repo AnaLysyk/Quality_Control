@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { isBrainSourceStorageUnavailable, listBrainSourceAudit } from "@/lib/brain/sourceSettings";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { isBrainSourceStorageUnavailable, listBrainSourceAudit } from "@/backend/brain/sourceSettings";
 
 export async function GET(req: NextRequest) {
   const accessResult = await resolveBrainAccess(req);

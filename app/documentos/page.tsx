@@ -10,8 +10,8 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { RequireAuth } from "@/components/RequireAuth";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
-import { fetchApi } from "@/lib/api";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
+import { fetchApi } from "@/backend/api";
 
 function normalizeRole(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
@@ -24,7 +24,7 @@ function resolveScopePresentation(user: ReturnType<typeof useAuthUser>["user"], 
   const isCompany = roles.includes("empresa") || roles.includes("company_user") || (user?.userOrigin ?? user?.user_origin) === "client_company";
 
   if (isLeader) return { profile: "Lider TC", scope: "Todas as empresas" };
-  if (isSupport) return { profile: "Suporte tecnico", scope: "Todas as empresas" };
+  if (isSupport) return { profile: "Administrador", scope: "Todas as empresas" };
   if (isCompany) return { profile: "Empresa", scope: "Propria empresa" };
   return { profile: "Usuario TC", scope: "Empresas vinculadas" };
 }
@@ -307,4 +307,3 @@ export default function DocumentosPage() {
     </RequireAuth>
   );
 }
-

@@ -1,11 +1,11 @@
 ﻿import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAdminUserItem } from "@/lib/adminUsers";
-import { getAccessContext } from "@/lib/auth/session";
-import { getLocalUserById, listLocalLinksForUser, updateLocalUser } from "@/lib/auth/localStore";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { resolveUserProfilePermissions, buildProfileContext } from "@/lib/profile/profilePermissions";
+import { getAdminUserItem } from "@/backend/adminUsers";
+import { getAccessContext } from "@/backend/auth/session";
+import { getLocalUserById, listLocalLinksForUser, updateLocalUser } from "@/backend/auth/localStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { resolveUserProfilePermissions, buildProfileContext } from "@/backend/profile/profilePermissions";
 
 function readText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";

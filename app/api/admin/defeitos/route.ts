@@ -1,6 +1,6 @@
 ﻿import { NextRequest } from "next/server";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { apiFail, apiOk } from "@/lib/apiResponse";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { apiFail, apiOk } from "@/backend/apiResponse";
 
 type QaseDefect = {
   id: string;

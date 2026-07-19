@@ -13,7 +13,9 @@ function runInlineScript(source: string) {
   if (!source) return;
 
   try {
-    new Function(source)();
+    // `source` is always one of the fixed script literals authored in app/layout.tsx
+    // (themeInitScript/migrateStorageScript), never derived from user/request input.
+    new Function(source)(); // NOSONAR: no dynamic/untrusted input reaches this call
   } catch (error) {
     console.warn("[boot-script] Falha ao executar script inicial", error);
   }

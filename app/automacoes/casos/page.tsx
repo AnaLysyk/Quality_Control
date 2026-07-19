@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FiArrowLeft, FiCode, FiCpu, FiSave } from "react-icons/fi";
 import AutomationCasesQueue from "../AutomationCasesQueue";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { useAutomationModuleContext } from "../_components/AutomationModuleContext";
 
 type TestCaseStep = {

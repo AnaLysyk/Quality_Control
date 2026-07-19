@@ -6,7 +6,7 @@ import { CompanySelector } from "../components/CompanySelector";
 import { ReleasesList } from "./ReleasesList";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
 
 export default function ReleasesPage() {
   const { user } = useAuthUser();

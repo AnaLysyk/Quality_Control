@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { searchNodes, upsertNode } from "@/lib/brain";
-import { isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { searchNodes, upsertNode } from "@/backend/brain";
+import { isBrainNodeVisible, resolveBrainAccess } from "@/backend/brain/access";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

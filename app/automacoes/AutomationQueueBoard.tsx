@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { FiCheckCircle, FiClock, FiCode, FiExternalLink, FiGitPullRequest, FiInbox, FiX } from "react-icons/fi";
 
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type QueueTestCase = {
   id: string;

@@ -4,10 +4,10 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FiChevronRight, FiMaximize2, FiMinimize2, FiSend, FiSidebar, FiTrash2, FiX, FiZap } from "react-icons/fi";
-import type { AssistantAction, AssistantContextEntityType, AssistantConversationTurn, AssistantOpenEventDetail, AssistantPanelMode, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
-import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
-import { fetchApi } from "@/lib/api";
-import { getScreenPermissionModuleId } from "@/lib/navigation/screenPermissions";
+import type { AssistantAction, AssistantContextEntityType, AssistantConversationTurn, AssistantOpenEventDetail, AssistantPanelMode, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/backend/assistant/types";
+import { resolveAssistantScreenContext } from "@/backend/assistant/screenContext";
+import { fetchApi } from "@/backend/api";
+import { getScreenPermissionModuleId } from "@/backend/navigation/screenPermissions";
 import {
   runAccessRequestsBrainCommand,
   type AccessRequestsBrainPendingAction,

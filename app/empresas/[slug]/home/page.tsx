@@ -12,11 +12,11 @@ import {
   FiShield,
 } from "react-icons/fi";
 import { readManualReleaseStore } from "@/data/manualData";
-import { findLocalCompanyBySlug } from "@/lib/auth/localStore";
-import { listApplications } from "@/lib/applicationsStore";
-import { mapCompanyRecord, normalizeProjectCodes } from "@/lib/companyRecord";
-import { normalizeDefectStatus } from "@/lib/defectNormalization";
-import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
+import { findLocalCompanyBySlug } from "@/backend/auth/localStore";
+import { listApplications } from "@/backend/applicationsStore";
+import { mapCompanyRecord, normalizeProjectCodes } from "@/backend/companyRecord";
+import { normalizeDefectStatus } from "@/backend/defectNormalization";
+import { resolveManualReleaseKind } from "@/backend/manualReleaseKind";
 import { getAllReleases } from "@/release/data";
 
 export const dynamic = "force-dynamic";

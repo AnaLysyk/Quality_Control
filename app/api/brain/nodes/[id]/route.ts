@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getNodeMemories, getNodeWithContext, getSubgraph, traceImpact } from "@/lib/brain";
-import { assertBrainNodeAccess, filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
+import { getNodeMemories, getNodeWithContext, getSubgraph, traceImpact } from "@/backend/brain";
+import { assertBrainNodeAccess, filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/backend/brain/access";
 
 function memoryRelatedNodeIds(memory: { nodeId?: string | null; relatedNodeIds?: unknown }) {
   const related = Array.isArray(memory.relatedNodeIds)

@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
 import { listAllRequests, listUserRequests, type RequestStatus, type RequestType } from "@/data/requestsStore";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { canReviewSelfServiceRequests, resolveSelfServiceRequestScope } from "@/lib/selfServiceRequestAccess";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { canReviewSelfServiceRequests, resolveSelfServiceRequestScope } from "@/backend/selfServiceRequestAccess";
 
 function isRequestStatus(value: string | null): value is RequestStatus {
   return value === "PENDING" || value === "APPROVED" || value === "REJECTED";

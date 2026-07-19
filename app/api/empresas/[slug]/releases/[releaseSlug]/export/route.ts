@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { generateRunPdf } from "@/lib/runPdfGenerator";
-import { getRunDetailViewModel } from "@/lib/runDetailViewModel";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { generateRunPdf } from "@/backend/runPdfGenerator";
+import { getRunDetailViewModel } from "@/backend/runDetailViewModel";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 
 function buildCsv(vm: {
   displayTitle: string;
@@ -28,10 +28,15 @@ function buildCsv(vm: {
 }
 
 export async function GET(req: Request, context: { params: Promise<{ slug: string; releaseSlug: string }> }) {
-  const guard = await requirePermission(req, "runs", "export");
-  if (!guard.ok) return guard.response;
-
   const { slug, releaseSlug } = await context.params;
+  const contextResult = await resolveOperationalContext(req, {
+    moduleId: "runs",
+    action: "export",
+    companySlug: slug,
+    requireCompany: true,
+  });
+  if (!contextResult.ok) return contextResult.response;
+
   const { searchParams } = new URL(req.url);
   const format = (searchParams.get("format") || "csv").toLowerCase();
   const safeFormat = format === "pdf" ? "pdf" : "csv";

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { FiCheckCircle, FiSend } from "react-icons/fi";
-import { QASE_EVERYTHING_SCOPES, QASE_SYNC_SCOPE_LABELS, type QaseSyncMode, type QaseSyncScope } from "@/lib/qaseIntegrationPolicy";
+import { QASE_EVERYTHING_SCOPES, QASE_SYNC_SCOPE_LABELS, type QaseSyncMode, type QaseSyncScope } from "@/backend/qaseIntegrationPolicy";
 
 export type QaseFullSyncSummaryProps = {
   mode: QaseSyncMode;

@@ -3,7 +3,7 @@
 import { createContext, useContext } from "react";
 
 import type { ClientAccess } from "@/context/ClientContext";
-import type { AutomationAccess } from "@/lib/automations/access";
+import type { AutomationAccess } from "@/backend/automations/access";
 
 export type AutomationModuleContextValue = {
   access: AutomationAccess;

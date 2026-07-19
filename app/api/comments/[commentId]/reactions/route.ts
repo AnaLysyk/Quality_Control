@@ -1,11 +1,11 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById } from "@/lib/ticketsStore";
-import { findTicketCommentById } from "@/lib/ticketCommentsStore";
-import { addReaction } from "@/lib/ticketReactionsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketReactionAdded } from "@/lib/notificationService";
-import { canViewTicket } from "@/lib/rbac/tickets";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById } from "@/backend/ticketsStore";
+import { findTicketCommentById } from "@/backend/ticketCommentsStore";
+import { addReaction } from "@/backend/ticketReactionsStore";
+import { appendTicketEvent } from "@/backend/ticketEventsStore";
+import { notifyTicketReactionAdded } from "@/backend/notificationService";
+import { canViewTicket } from "@/backend/rbac/tickets";
 
 export async function POST(req: Request, context: { params: Promise<{ commentId: string }> }) {
   const user = await authenticateRequest(req);

@@ -20,17 +20,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { publishAuthUser, useAuthUser } from "@/hooks/useAuthUser";
 import { useI18n } from "@/hooks/useI18n";
 import { useAppSettings, type Language, type Theme } from "@/context/AppSettingsContext";
-import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
-import { fetchApi } from "@/lib/api";
-import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
-import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
-import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
+import { JOB_TITLE_OPTIONS } from "@/backend/jobTitles";
+import { fetchApi } from "@/backend/api";
+import { isInstitutionalCompanyAccount } from "@/backend/activeIdentity";
+import { buildCompanyPathForAccess } from "@/backend/companyRoutes";
+import { getFixedProfileLabel, resolveFixedProfileKind } from "@/backend/fixedProfilePresentation";
+import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/backend/permissionMatrix";
 import {
   canCreateCompanyUsersByScope,
   canViewCompanyUsersByScope,
   resolveUserScopePolicy,
-} from "@/lib/userScopePolicy";
+} from "@/backend/userScopePolicy";
 
 type LinkedCompany = {
   client_id: string;

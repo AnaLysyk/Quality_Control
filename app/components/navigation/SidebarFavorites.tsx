@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FiBookmark, FiX } from "react-icons/fi";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { FavoriteItem } from "@/lib/navigation/favoritesTypes";
+import type { FavoriteItem } from "@/backend/navigation/favoritesTypes";
 
 type SidebarFavoritesProps = {
   favorites: FavoriteItem[];

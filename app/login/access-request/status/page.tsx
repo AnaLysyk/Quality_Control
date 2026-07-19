@@ -145,7 +145,7 @@ function profileLabel(role?: string, companyName?: string) {
   }
   if (role === "testing_company_user") return "Usuário Testing Company";
   if (role === "leader_tc") return "Líder TC";
-  if (role === "technical_support") return "Suporte técnico";
+  if (role === "technical_support") return "Administrador";
   return role || "Perfil solicitado";
 }
 
@@ -621,7 +621,7 @@ function StatusContent() {
                       <option value="company_user">Acesso vinculado à empresa</option>
                       <option value="testing_company_user">Usuário TC</option>
                       <option value="leader_tc">Líder TC</option>
-                      <option value="technical_support">Suporte técnico</option>
+                      <option value="technical_support">Administrador</option>
                     </select>
                   ) : field === "description" || field === "notes" || field.includes("Description") || field.includes("Notes") ? (
                     <textarea className={`${ADJUSTMENT_CONTROL_CLASS} min-h-28 resize-y`} value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`} />
@@ -794,4 +794,3 @@ export default function AccessRequestStatusPage() {
     </Suspense>
   );
 }
-

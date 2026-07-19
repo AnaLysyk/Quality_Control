@@ -1,6 +1,6 @@
 ﻿import { NextRequest } from "next/server";
 import { getAllReleases, type ReleaseEntry } from "@/release/data";
-import { getAllManualReleases } from "@/release/manualData";
+import { getAllManualReleases } from "@/data/manualData";
 import type { Release as ManualRelease } from "@/types/release";
 import {
   buildCompanyRows,
@@ -13,12 +13,12 @@ import {
   TrendSummary,
   TrendPoint,
   Stats,
-} from "@/lib/quality";
-import { normalizeDefectStatus } from "@/lib/defectNormalization";
-import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
-import { apiFail, apiOk } from "@/lib/apiResponse";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
+} from "@/backend/quality";
+import { normalizeDefectStatus } from "@/backend/defectNormalization";
+import { resolveManualReleaseKind } from "@/backend/manualReleaseKind";
+import { apiFail, apiOk } from "@/backend/apiResponse";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { listLocalCompanies, type LocalAuthCompany } from "@/backend/auth/localStore";
 
 export const revalidate = 0;
 

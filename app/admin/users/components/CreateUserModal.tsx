@@ -1,16 +1,16 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { readApiError } from "@/lib/apiEnvelope";
+import { readApiError } from "@/backend/apiEnvelope";
 import {
   editableProfileNeedsCompany,
   editableProfileUsesAutomaticCompany,
   normalizeEditableProfileRole,
-} from "@/lib/editableProfileRoles";
-import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
-import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+} from "@/backend/editableProfileRoles";
+import type { FixedProfileKind } from "@/backend/fixedProfilePresentation";
+import { JOB_TITLE_OPTIONS } from "@/backend/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/UserAvatar";
 import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";
@@ -59,7 +59,7 @@ const ROLE_OPTIONS: Array<{ value: FixedProfileKind; label: string }> = [
   { value: "company_user", label: "Usuário da empresa" },
   { value: "testing_company_user", label: "Usuário TC" },
   { value: "leader_tc", label: "Líder TC" },
-  { value: "technical_support", label: "Suporte Técnico" },
+  { value: "technical_support", label: "Administrador" },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 type RoleValue = FixedProfileKind;

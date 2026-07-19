@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { AuthCompany } from "@/../packages/contracts/src/auth";
+import type { AuthCompany } from "@/contracts/auth";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAccessContext } from "@/lib/auth/session";
-import { buildCurrentUserResponse } from "@/lib/core/session/currentUserResponse";
+import { getAccessContext } from "@/backend/auth/session";
+import { buildCurrentUserResponse } from "@/backend/auth/currentUserResponse";
 import {
   findLocalUserByEmailOrId,
   getLocalUserById,
@@ -14,12 +14,12 @@ import {
   listLocalUsers,
   normalizeLocalRole,
   updateLocalUser,
-} from "@/lib/auth/localStore";
-import { isAvatarKey } from "@/lib/avatarCatalog";
-import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+} from "@/backend/auth/localStore";
+import { isAvatarKey } from "@/backend/avatarCatalog";
+import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/backend/companyRoutes";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -377,7 +377,7 @@ export async function PATCH(req: Request) {
     );
   } catch (error) {
     const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível atualizar os dados";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
@@ -396,7 +396,7 @@ export async function DELETE(req: Request) {
       normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
       normalizedCompanyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
     if (!canDeleteDirectly) {
-      return NextResponse.json({ error: "Somente lider TC ou suporte técnico podem deletar o perfil diretamente" }, { status: 403 });
+      return NextResponse.json({ error: "Somente lider TC ou administrador podem deletar o perfil diretamente" }, { status: 403 });
     }
 
     const user = await getLocalUserById(access.userId);
@@ -416,6 +416,6 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível deletar o usuário";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

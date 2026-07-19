@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { runBrainDailyMaintenance } from "@/lib/brain/maintenanceService";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { runBrainDailyMaintenance } from "@/backend/brain/maintenanceService";
 
 function isAuthorizedByCronSecret(req: Request) {
   const expected = process.env.BRAIN_MAINTENANCE_SECRET?.trim();

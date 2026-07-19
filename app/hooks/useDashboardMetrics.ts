@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useMemo } from "react";
-import type { DashboardMetricCard } from "@/lib/dashboard/types";
+import type { DashboardMetricCard } from "@/backend/dashboard/types";
 
 export function useDashboardMetrics(metrics: DashboardMetricCard[]) {
   return useMemo(

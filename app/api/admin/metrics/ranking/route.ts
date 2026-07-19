@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { listClients } from "@/data/clientsRepository";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
 
 const MOCK_CLIENTS = [
   { slug: "demo", name: "Demo" },

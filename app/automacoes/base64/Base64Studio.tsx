@@ -189,6 +189,14 @@ function HistoryRow({
     <div className="border-b border-zinc-800 last:border-0">
       <div
         onClick={() => void handleExpand()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            void handleExpand();
+          }
+        }}
+        role="button"
+        tabIndex={0}
         className="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-800/50"
       >
         {expanded ? (
@@ -502,6 +510,14 @@ export default function Base64Studio() {
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFiles(e.dataTransfer.files); }}
                 onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                role="button"
+                tabIndex={0}
               >
                 <FiUploadCloud className={`h-10 w-10 mb-3 transition-colors ${isDragging ? "text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)] opacity-40"}`} />
                 <p className="text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">

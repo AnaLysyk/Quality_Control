@@ -584,10 +584,15 @@ function SignalList({
 function DashboardDrawer({ drawer, onClose }: { drawer: DrawerState; onClose: () => void }) {
   if (!drawer) return null;
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-sm"
+      onClick={onClose}
+      onKeyDown={(event) => event.key === "Escape" && onClose()}
+    >
       <aside
         className="h-full w-full max-w-2xl overflow-y-auto bg-[var(--tc-surface,#fff)] p-5 shadow-[-20px_0_50px_rgba(15,23,42,0.18)]"
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
           <div>

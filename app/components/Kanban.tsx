@@ -576,10 +576,12 @@ export default function Kanban({
           className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4"
           data-hide-on-export="true"
           onClick={() => setAddOpen(false)}
+          onKeyDown={(event) => event.key === "Escape" && setAddOpen(false)}
         >
           <div
             className="my-auto w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -943,6 +945,14 @@ export default function Kanban({
                         <h3
                           className={`mt-1 text-base font-semibold text-slate-900 ${editable && !item.fromApi ? "cursor-pointer" : ""}`}
                           onClick={() => (editable && !item.fromApi ? handleEditClick(column.key, item) : undefined)}
+                          onKeyDown={(event) => {
+                            if ((event.key === "Enter" || event.key === " ") && editable && !item.fromApi) {
+                              event.preventDefault();
+                              handleEditClick(column.key, item);
+                            }
+                          }}
+                          role={editable && !item.fromApi ? "button" : undefined}
+                          tabIndex={editable && !item.fromApi ? 0 : undefined}
                         >
                           {item.title || "Sem título"}
                         </h3>

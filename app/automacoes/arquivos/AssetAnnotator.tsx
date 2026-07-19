@@ -390,7 +390,11 @@ export default function AssetAnnotator({ assetId, assetName, assetUrl, companySl
   const selectedRegion = regions.find((r) => r.id === selectedId) ?? null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white text-slate-900 dark:bg-[#050816] dark:text-slate-100" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-white text-slate-900 dark:bg-[#050816] dark:text-slate-100"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
+    >
       <style jsx global>{`
         .asset-annotator-scroll {
           scrollbar-width: none;

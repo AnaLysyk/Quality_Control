@@ -146,8 +146,16 @@ export default function CompanyProjectsPage() {
       </div>
 
       {createOpen ? (
-        <div className="fixed inset-0 z-[120] grid place-items-center bg-slate-950/45 px-4 backdrop-blur-sm" onClick={() => setCreateOpen(false)}>
-          <div className="w-full max-w-xl rounded-[26px] bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[120] grid place-items-center bg-slate-950/45 px-4 backdrop-blur-sm"
+          onClick={() => setCreateOpen(false)}
+          onKeyDown={(event) => event.key === "Escape" && setCreateOpen(false)}
+        >
+          <div
+            className="w-full max-w-xl rounded-[26px] bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
             <h2 className="text-2xl font-black text-[#0b1f52]">Novo projeto manual</h2>
             <p className="mt-2 text-sm text-slate-600">O projeto permanecerá manual até ser integrado ao Qase ou Jira.</p>
             <div className="mt-5 grid gap-4">

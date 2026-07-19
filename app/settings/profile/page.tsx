@@ -3514,7 +3514,11 @@ export default function SettingsProfilePage() {
 
         {deleteRequestOpen ? (
           <div className="fixed inset-0 z-60 flex items-center justify-center px-4">
-            <div className="absolute inset-0 bg-black/40" onClick={() => !deleteRequestLoading && setDeleteRequestOpen(false)} />
+            <div
+              className="absolute inset-0 bg-black/40"
+              onClick={() => !deleteRequestLoading && setDeleteRequestOpen(false)}
+              onKeyDown={(event) => event.key === "Escape" && !deleteRequestLoading && setDeleteRequestOpen(false)}
+            />
             <div className="relative z-70 w-full max-w-xl rounded-2xl border border-(--tc-border) bg-(--tc-surface) p-5 shadow-[0_30px_80px_rgba(2,6,23,0.6)]">
               <h3 className="text-base font-semibold text-(--tc-text-primary)">Solicitar exclusão de perfil</h3>
               <p className="mt-1 text-sm font-medium text-[#0b1f52] dark:text-[#d7e5ff]">Explique o motivo para a equipe administrativa analisar a exclusão.</p>

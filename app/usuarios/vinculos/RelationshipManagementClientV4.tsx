@@ -454,8 +454,16 @@ export default function RelationshipManagementClientV4() {
       </section>
 
       {historyOpen ? (
-        <div className="fixed inset-0 z-[110] bg-slate-950/35 backdrop-blur-sm" onClick={() => setHistoryOpen(false)}>
-          <aside className="relationship-history-panel" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[110] bg-slate-950/35 backdrop-blur-sm"
+          onClick={() => setHistoryOpen(false)}
+          onKeyDown={(event) => event.key === "Escape" && setHistoryOpen(false)}
+        >
+          <aside
+            className="relationship-history-panel"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <div><p className="text-xs font-black uppercase tracking-[0.18em]">Histórico</p><h2 className="mt-1 text-xl font-black">Alterações de vínculo</h2></div>
               <button type="button" onClick={() => setHistoryOpen(false)}><FiX /></button>

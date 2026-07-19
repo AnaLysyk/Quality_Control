@@ -375,12 +375,14 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         <div
           className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-[2px] lg:hidden"
           onClick={onClose}
+          onKeyDown={(event) => event.key === "Escape" && onClose()}
           role="presentation"
         >
           <div
             id={mobilePanelId}
             className="h-full w-fit max-w-[calc(100vw-1.5rem)]"
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"

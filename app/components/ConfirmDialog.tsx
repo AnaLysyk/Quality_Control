@@ -36,7 +36,11 @@ export default function ConfirmDialog(props: {
       aria-describedby={description ? "confirm-desc" : undefined}
       className="fixed inset-0 z-60 flex items-center justify-center px-4"
     >
-      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onCancel}
+        onKeyDown={(e) => e.key === "Escape" && onCancel()}
+      />
       <div
         ref={dialogRef}
         className="relative z-70 max-w-lg w-full rounded-2xl bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_30px_80px_rgba(2,6,23,0.6)] ring-1 ring-(--tc-border,#e5e7eb)"

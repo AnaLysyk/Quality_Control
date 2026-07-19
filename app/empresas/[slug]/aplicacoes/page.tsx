@@ -291,10 +291,12 @@ function ApplicationModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/72 p-4 backdrop-blur-sm lg:left-(--sidebar-collapsed)"
       onClick={onClose}
+      onKeyDown={(event) => event.key === "Escape" && onClose()}
     >
       <div
         className="max-h-[calc(100dvh-1.5rem)] w-full max-w-[min(78rem,calc(100vw-1rem))] overflow-y-auto rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] shadow-[0_32px_90px_rgba(15,23,42,0.42)]"
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-[var(--tc-border,#e5e7eb)] bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-5 py-4 text-white sm:px-6 sm:py-5">
           <div>

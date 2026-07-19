@@ -1342,9 +1342,17 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setSidebarOpen(false)}>
+        <div
+          className="fixed inset-0 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)}
+        >
           <div className="absolute inset-0 bg-[#0b1a3c]/40" />
-          <div className="absolute left-0 top-0 bottom-0 w-72 bg-[#ffffff] border-r border-[#e5e7eb] z-50" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="absolute left-0 top-0 bottom-0 w-72 bg-[#ffffff] border-r border-[#e5e7eb] z-50"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#f3f4f6]">
               <span className="font-bold text-[#0b1a3c] text-sm">Documentação</span>
               <button type="button" onClick={() => setSidebarOpen(false)} title="Fechar menu" className="p-1 rounded hover:bg-[#f3f4f6] text-[#6b7280]"><FiX /></button>

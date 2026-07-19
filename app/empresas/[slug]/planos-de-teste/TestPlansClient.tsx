@@ -1360,6 +1360,9 @@ export default function TestPlansClient({
               closeModal();
             }
           }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") closeModal();
+          }}
         >
           <div data-testid="test-plan-create-modal" className="max-h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-y-auto rounded-4xl border border-[var(--tc-border)] bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)]">
             <div className="bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-5 text-white">

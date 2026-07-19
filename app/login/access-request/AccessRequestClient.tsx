@@ -1022,6 +1022,7 @@ export default function AccessRequestClient() {
             styles.modalOverlay
           }`}
           onClick={() => setIsRequestOpen(false)}
+          onKeyDown={(event) => event.key === "Escape" && setIsRequestOpen(false)}
           role="presentation"
         >
           <div
@@ -1032,6 +1033,7 @@ export default function AccessRequestClient() {
             aria-modal="true"
             aria-labelledby="request-title"
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -1442,6 +1444,7 @@ export default function AccessRequestClient() {
             styles.modalOverlay
           }`}
           onClick={() => setIsLookupOpen(false)}
+          onKeyDown={(event) => event.key === "Escape" && setIsLookupOpen(false)}
           role="presentation"
         >
           <div
@@ -1452,6 +1455,7 @@ export default function AccessRequestClient() {
             aria-modal="true"
             aria-labelledby="lookup-title"
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div>

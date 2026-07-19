@@ -613,6 +613,9 @@ export default function AutomationExecutionsDashboard() {
               setSelectedKey(null);
             }
           }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setSelectedKey(null);
+          }}
         >
           <div className="flex max-h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-[#0b1a3c] shadow-[0_24px_80px_rgba(15,23,42,0.22)] dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
             <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">

@@ -1267,11 +1267,13 @@ export default function CompanyDocumentsPage() {
               aria-labelledby="document-detail-title"
               className="fixed inset-0 z-40 overflow-y-auto bg-black/45 px-4 py-4 backdrop-blur-sm sm:py-8"
               onClick={(event) => { if (event.target === event.currentTarget) closeItemDetails(); }}
+              onKeyDown={(event) => { if (event.key === "Escape") closeItemDetails(); }}
             >
               <div className="pointer-events-none flex min-h-full items-start justify-center">
                 <div
                   className="pointer-events-auto my-2 w-full max-w-4xl overflow-hidden rounded-4xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-[0_24px_80px_rgba(15,23,42,0.28)]"
                   onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
                 >
                   <div className="bg-[linear-gradient(135deg,#071e53_0%,#142b63_42%,#ef0001_100%)] px-4 py-4 sm:px-5">
                     <div className="flex items-start justify-between gap-4">
@@ -1516,6 +1518,7 @@ export default function CompanyDocumentsPage() {
               aria-labelledby="composer-modal-title"
               className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm"
               onClick={(event) => { if (event.target === event.currentTarget) setComposer(null); }}
+              onKeyDown={(event) => { if (event.key === "Escape") setComposer(null); }}
             >
               <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-4xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
                 <div className="flex items-start justify-between gap-4 border-b border-[var(--tc-border,#d7deea)] px-5 py-5 sm:px-6">
@@ -1667,6 +1670,7 @@ export default function CompanyDocumentsPage() {
               aria-labelledby="delete-modal-title"
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
               onClick={(e) => { if (e.target === e.currentTarget) setDeletingId(null); }}
+              onKeyDown={(e) => { if (e.key === "Escape") setDeletingId(null); }}
             >
               <div className="w-full max-w-sm rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-red-100 bg-red-50 text-red-600">

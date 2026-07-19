@@ -1495,6 +1495,7 @@ export default function KanbanItPage() {
         <div
           className="ticket-detail-modal-overlay support-create-modal-overlay"
           onClick={closeCreateModal}
+          onKeyDown={(event) => event.key === "Escape" && closeCreateModal()}
         >
           <div
             className="support-create-modal-shell"
@@ -1502,6 +1503,7 @@ export default function KanbanItPage() {
             aria-modal="true"
             aria-labelledby="support-create-modal-title"
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
           >
             <div className="support-create-modal-header">
               <div className="support-create-modal-heading">

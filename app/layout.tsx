@@ -14,6 +14,7 @@ import {
   normalizeResolvedTheme,
   normalizeThemePreference,
 } from "@/backend/appSettingsCookies";
+import "@/backend/navigation/registerJiraNavigation";
 import "./globals.css";
 import "./operational-theme.css";
 import "./sidebar-dropdown-fix.css";

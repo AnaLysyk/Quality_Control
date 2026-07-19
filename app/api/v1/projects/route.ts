@@ -84,10 +84,9 @@ export const PUT = withCompanyValidation(async (user, companyId, req) => {
     ...(typeof body.title === "string" ? { title: body.title } : {}),
     ...(typeof body.description === "string" ? { description: body.description } : {}),
     ...(typeof body.code === "string" ? { code: body.code } : {}),
-    companyId,
   };
 
-  const updated = await ProjectsStore.update(id, updates);
+  const updated = await ProjectsStore.update(id, companyId, updates);
   if (!updated) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   return NextResponse.json({ success: true, project: updated }, { status: 200 });
 });

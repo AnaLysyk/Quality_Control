@@ -3,17 +3,37 @@ import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { normalizeLegacyRole, type SystemRole } from "@/backend/auth/roles";
 import { getAccessContext } from "@/backend/auth/session";
 import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
+import { prisma } from "@/database/prismaClient";
 import {
   deleteProfilePermissionOverride,
   getProfilePermissionOverride,
   setProfilePermissionOverride,
 } from "@/backend/store/profilePermissionsStore";
+import { deleteUserPermissionOverridesForUserIds } from "@/backend/store/userPermissionsStore";
+import { resolveUserProfileRole } from "@/backend/permissions/resolveUserProfileRole";
 import { applyPermissionOverride, normalizePermissionMatrix, type PermissionMatrix } from "@/backend/permissionMatrix";
 import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 import { validarAcessoUsuariosNoServidor } from "@/backend/permissions/validarAcessoUsuariosNoServidor";
 import { notifyProfilePermissionsChanged } from "@/backend/notificationService";
 import { invalidateBrainCache } from "@/backend/brain/cache";
 import { invalidatePermissionAccessCache } from "@/backend/serverPermissionAccess";
+
+async function resolveUserIdsForProfile(role: SystemRole) {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      role: true,
+      globalRole: true,
+      user_origin: true,
+      user_scope: true,
+      default_company_slug: true,
+      home_company_id: true,
+      created_by_company_id: true,
+    },
+  });
+
+  return users.filter((user) => resolveUserProfileRole(user) === role).map((user) => user.id);
+}
 
 export const revalidate = 0;
 
@@ -168,7 +188,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     const role = await resolveRole(params);
     if (!role) return NextResponse.json({ error: "Perfil inválido." }, { status: 400 });
 
+    const affectedUserIds = await resolveUserIdsForProfile(role);
     await deleteProfilePermissionOverride(role);
+    const clearedUserOverrides = await deleteUserPermissionOverridesForUserIds(affectedUserIds);
     const permissions = resolveSystemDefaults(role);
     const updatedAt = new Date().toISOString();
 
@@ -185,13 +207,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
         role,
         effectiveCount: countPermissionActions(permissions),
         restored: true,
+        affectedUsers: affectedUserIds.length,
+        clearedUserOverrides,
       },
     });
 
     await notifyProfilePermissionsChanged({
       profileRole: role,
       actorEmail: guard.admin?.email ?? null,
-      changedSummary: "perfil restaurado para o padrão do sistema",
+      changedSummary: clearedUserOverrides
+        ? `perfil restaurado para o padrão do sistema e ${clearedUserOverrides} override(s) individual(is) removido(s)`
+        : "perfil restaurado para o padrão do sistema",
       updatedAt,
     });
     invalidateBrainCache("profile.permissions.reset");

@@ -30,13 +30,22 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/database/prismaClient";
 import { describeDb } from "../../../tools/functions/banco-de-dados/descrever-banco";
 import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
-import { effectivePermissions } from "@/backend/store/permissionsStore";
 import {
   hasPermissionAccess,
   applyPermissionOverride,
   toVisibilityMap,
   getTicketViewScope,
+  type PermissionOverride,
 } from "@/backend/permissionMatrix";
+
+// Helper local: reproduz o comportamento do antigo effectivePermissions() usando o
+// resolver vigente (resolveRoleDefaults + applyPermissionOverride), retornando Set por módulo.
+function effectivePermissions(role: string, override?: PermissionOverride | null) {
+  const result = applyPermissionOverride(resolveRoleDefaults(role), override ?? null);
+  return Object.fromEntries(
+    Object.entries(result).map(([moduleId, actions]) => [moduleId, new Set(actions)]),
+  ) as Record<string, Set<string>>;
+}
 import { resolvePermissionRoleForUser } from "@/backend/adminUsers";
 import { resolvePermissionAccessForUser } from "@/backend/serverPermissionAccess";
 import {

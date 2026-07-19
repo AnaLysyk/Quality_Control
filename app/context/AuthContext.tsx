@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, ReactNode } from "react";
 import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contracts/auth";
 import { getAccessToken, refreshClientSession } from "@/backend/api";
 import { unwrapEnvelopeData } from "@/backend/apiEnvelope";
@@ -220,14 +220,42 @@ function clearAuthCache() {
   }
 }
 
+const subscribeToHydration = () => () => undefined;
+const getHydratedSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const cached = typeof window !== "undefined" ? readE2eBootstrap() ?? readAuthCache() : null;
-  const [user, setUser] = useState<AuthUser | null>(cached?.user ?? null);
-  const [companies, setCompanies] = useState<AuthCompany[]>(cached?.companies ?? []);
-  const [loading, setLoading] = useState(cached === null); // skip spinner if cache hit
+  // `sessionStorage` só existe no client: ler o cache direto no corpo do componente
+  // (como antes) faz a primeira renderização do client divergir da renderização do
+  // servidor (que sempre parte de user=null/loading=true), causando hydration mismatch
+  // e o "tree will be regenerated on the client" a cada navegação. Por isso o cache só
+  // é aplicado depois que `hydrated` vira true (via useSyncExternalStore), garantindo
+  // que a primeira renderização do client seja idêntica à do servidor.
+  const hydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getHydratedSnapshot,
+    getServerHydrationSnapshot,
+  );
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [companies, setCompanies] = useState<AuthCompany[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const initialHadCacheRef = useRef(cached !== null);
+  const initialHadCacheRef = useRef(false);
+  const cacheAppliedRef = useRef(false);
   const refreshInFlightRef = useRef<Promise<MeResult> | null>(null);
+
+  useEffect(() => {
+    if (!hydrated || cacheAppliedRef.current) return;
+    cacheAppliedRef.current = true;
+
+    const cached = readE2eBootstrap() ?? readAuthCache();
+    if (!cached) return;
+
+    initialHadCacheRef.current = true;
+    setUser(cached.user);
+    setCompanies(cached.companies);
+    setLoading(false); // skip spinner if cache hit
+  }, [hydrated]);
 
   const refreshUser = useCallback(async (showSpinner = true): Promise<MeResult> => {
     if (refreshInFlightRef.current) {

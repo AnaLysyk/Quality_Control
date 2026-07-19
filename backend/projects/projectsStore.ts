@@ -88,10 +88,10 @@ export const ProjectsStore = {
     return record;
   },
 
-  async update(id: string, updates: Partial<ProjectRecord>): Promise<ProjectRecord | null> {
+  async update(id: string, companyId: string, updates: Partial<ProjectRecord>): Promise<ProjectRecord | null> {
     if (USE_POSTGRES) {
       const prisma = await getPrisma();
-      const existing = await prisma.supportProject.findUnique({ where: { id } });
+      const existing = await prisma.supportProject.findFirst({ where: { id, companyId } });
       if (!existing) return null;
       const row = await prisma.supportProject.update({
         where: { id },
@@ -99,15 +99,14 @@ export const ProjectsStore = {
           ...(updates.title !== undefined ? { title: updates.title } : {}),
           ...(updates.code !== undefined ? { code: updates.code } : {}),
           ...(updates.description !== undefined ? { description: updates.description } : {}),
-          ...(updates.companyId !== undefined ? { companyId: updates.companyId } : {}),
         },
       });
       return pgToRecord(row);
     }
     const all = await readStore();
-    const idx = all.findIndex((p) => p.id === id && (!updates.companyId || p.companyId === updates.companyId));
+    const idx = all.findIndex((p) => p.id === id && p.companyId === companyId);
     if (idx === -1) return null;
-    const updated = { ...all[idx], ...updates, updatedAt: new Date().toISOString() };
+    const updated = { ...all[idx], ...updates, companyId, updatedAt: new Date().toISOString() };
     all[idx] = updated;
     await writeStore(all);
     return updated;

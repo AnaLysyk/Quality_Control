@@ -14,13 +14,6 @@ const INTERNAL_ADMIN_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
 ]);
 
-const HIDDEN_MENU_ROUTE_IDS = new Set([
-  "operacao.inicio",
-  "operacao.dashboard",
-  "operacao.metricas",
-  "operacao.busca",
-]);
-
 const MANAGEMENT_ROUTE_PERMISSIONS: Record<string, { moduleId: string; action: string }> = {
   "gestao.perfil": { moduleId: "permissions", action: "view" },
   "gestao.usuarios": { moduleId: "users", action: "view" },
@@ -62,8 +55,6 @@ function canSeeNavigationDefinition(
   visibleRouteIds: Set<string>,
 ) {
   if (!userRole || !context) return false;
-
-  if (item.routeId && HIDDEN_MENU_ROUTE_IDS.has(item.routeId)) return false;
 
   const allowedRoles = item.allowedRoles;
   if (allowedRoles && !allowedRoles.includes(userRole)) return false;

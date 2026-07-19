@@ -27,7 +27,7 @@ describe("local auth user CRUD flows", () => {
       user: "ana.paula.lysyk",
       user_scope: "company_only",
       user_origin: "client_company",
-      allow_multi_company_link: false,
+      allow_multi_company_link: true,
       status: "active",
       active: true,
     });

@@ -12,6 +12,7 @@ export default function RelationshipManagementAdminPage() {
       <link rel="stylesheet" href="/relationship-management-v4.css" />
       <link rel="stylesheet" href="/relationship-management-fullscreen.css" />
       <link rel="stylesheet" href="/relationship-management-wallpaper-fix.css" />
+      <link rel="stylesheet" href="/relationship-sidebar-context-fix.css" />
       <RelationshipManagementWorkspace />
     </>
   );

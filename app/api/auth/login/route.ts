@@ -15,6 +15,11 @@ import { rateLimit } from "@/backend/rateLimit";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
+// Mitigação enquanto não há revogação de JWT por sessão/JTI (depende do Redis
+// estar estável): access token curto reduz a janela de uso indevido de um
+// token copiado antes do logout. O refresh token (rotativo, revogável) cobre
+// a renovação sem exigir novo login.
+const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 60 * 15;
 
 function readPositiveIntEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -105,7 +110,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
-    const accessTtlSeconds = readPositiveIntEnv("ACCESS_TOKEN_TTL_SECONDS", SESSION_TTL_SECONDS);
+    const accessTtlSeconds = readPositiveIntEnv("ACCESS_TOKEN_TTL_SECONDS", DEFAULT_ACCESS_TOKEN_TTL_SECONDS);
     const refreshTtlSeconds = readPositiveIntEnv("REFRESH_TOKEN_TTL_SECONDS", DEFAULT_REFRESH_TTL_SECONDS);
 
     const sessionId = randomUUID();

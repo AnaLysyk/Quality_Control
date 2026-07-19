@@ -8,7 +8,8 @@ import { shouldUseSecureCookies } from "@/backend/auth/cookies";
 import { getJwtSecret } from "@/backend/auth/jwtSecret";
 import { rateLimit } from "@/backend/rateLimit";
 
-const DEFAULT_ACCESS_TTL_SECONDS = 60 * 60 * 8;
+// Mantido igual ao default de app/api/auth/login/route.ts.
+const DEFAULT_ACCESS_TTL_SECONDS = 60 * 15;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 function readPositiveIntEnv(name: string, fallback: number): number {

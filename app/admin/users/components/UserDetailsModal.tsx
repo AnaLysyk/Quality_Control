@@ -1,13 +1,13 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
-import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
-import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/backend/editableProfileRoles";
+import type { FixedProfileKind } from "@/backend/fixedProfilePresentation";
+import { JOB_TITLE_OPTIONS } from "@/backend/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ClientOption = { id: string; name: string; slug?: string | null };
@@ -44,7 +44,7 @@ const ROLE_OPTIONS = [
   { value: "company_user", label: "Usuário da empresa" },
   { value: "testing_company_user", label: "Usuário TC" },
   { value: "leader_tc", label: "Lider TC" },
-  { value: "technical_support", label: "Suporte Técnico" },
+  { value: "technical_support", label: "Administrador" },
 ] as const;
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 

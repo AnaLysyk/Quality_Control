@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import type { NavItemDef, NavModuleDef } from "@/backend/navigation/navigationCatalog";
 
 const RELATIONSHIP_MANAGEMENT_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,

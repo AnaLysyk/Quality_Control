@@ -20,8 +20,9 @@ import {
   FiSearch,
 } from "react-icons/fi";
 import Breadcrumb from "@/components/Breadcrumb";
-import { fetchApi } from "@/lib/api";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { fetchApi } from "@/backend/api";
+import { useProjectContext } from "@/context/ProjectContext";
 
 type ProjectItem = {
   id: string;
@@ -272,11 +273,11 @@ export default function CompanyProjectsPage() {
                 Cada aplicação vira uma operação independente de qualidade. Ao abrir um projeto, dashboard, casos, defeitos, planos, runs e documentos passam a usar o mesmo escopo.
               </p>
             </div>
-            <div className="grid min-w-full grid-cols-3 gap-2 sm:min-w-[440px]">
+            <ScrollReveal className="grid min-w-full grid-cols-3 gap-2 sm:min-w-[440px]" stagger={0.08} deps={[loading]}>
               <StatCard label="Projetos" value={activeCount} />
               <StatCard label="Qase" value={qaseCount} />
               <StatCard label="Manuais" value={manualCount} />
-            </div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -310,7 +311,7 @@ export default function CompanyProjectsPage() {
 
           {error ? <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div> : null}
 
-          <div className="mt-5 grid gap-3">
+          <ScrollReveal className="mt-5 grid gap-3" stagger={0.06} deps={[loading, filtered.length]}>
             {loading ? <p className="text-sm text-(--tc-text-secondary,#4b5563)">Carregando projetos...</p> : null}
             {!loading && filtered.length === 0 ? <p className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) px-4 py-8 text-center text-sm text-(--tc-text-muted,#6b7280)">Nenhum projeto encontrado.</p> : null}
             {filtered.map((project) => (
@@ -344,7 +345,7 @@ export default function CompanyProjectsPage() {
                 </div>
               </article>
             ))}
-          </div>
+          </ScrollReveal>
         </section>
       </div>
 

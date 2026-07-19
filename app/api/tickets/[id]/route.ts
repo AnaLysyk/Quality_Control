@@ -1,12 +1,12 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById, deleteTicketForUser, updateTicket } from "@/lib/ticketsStore";
-import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketAssigned, notifyTicketUpdated } from "@/lib/notificationService";
-import { canAssignTicket, canEditTicketContent, canManageAllTickets, canMoveTicket, canViewTicket } from "@/lib/rbac/tickets";
-import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { listAdminUserItems } from "@/lib/adminUsers";
-import { isTechnicalSupportUser } from "@/lib/supportAccess";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById, deleteTicketForUser, updateTicket } from "@/backend/ticketsStore";
+import { appendTicketEvent } from "@/backend/ticketEventsStore";
+import { notifyTicketAssigned, notifyTicketUpdated } from "@/backend/notificationService";
+import { canAssignTicket, canEditTicketContent, canManageAllTickets, canMoveTicket, canViewTicket } from "@/backend/rbac/tickets";
+import { attachAssigneeToTicket } from "@/backend/ticketsPresenter";
+import { listAdminUserItems } from "@/backend/adminUsers";
+import { isTechnicalSupportUser } from "@/backend/supportAccess";
 
 export const revalidate = 0;
 

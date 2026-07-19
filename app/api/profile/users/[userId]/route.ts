@@ -1,10 +1,10 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { listLocalUsers, updateLocalUser } from "@/lib/auth/localStore";
-import { buildProfileRuntimeContext } from "@/lib/profile/contextBuilder";
-import type { EntityStatus, ProfileAuditEntry, UserRole } from "@/lib/profile/types";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { listLocalUsers, updateLocalUser } from "@/backend/auth/localStore";
+import { buildProfileRuntimeContext } from "@/backend/profile/contextBuilder";
+import type { EntityStatus, ProfileAuditEntry, UserRole } from "@/backend/profile/types";
 
 function normalizeProfileStatus(status: unknown): EntityStatus | undefined {
   if (

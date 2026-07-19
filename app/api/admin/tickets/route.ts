@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { listAllTickets, listTicketsForUser } from "@/lib/ticketsStore";
-import { isItDev } from "@/lib/rbac/tickets";
-import { attachAssigneeInfo } from "@/lib/ticketsPresenter";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { listAllTickets, listTicketsForUser } from "@/backend/ticketsStore";
+import { isItDev } from "@/backend/rbac/tickets";
+import { attachAssigneeInfo } from "@/backend/ticketsPresenter";
 
 export const revalidate = 0;
 

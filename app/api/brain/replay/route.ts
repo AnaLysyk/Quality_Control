@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getSubgraph } from "@/lib/brain";
-import { assertBrainNodeAccess, filterBrainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
-import { prisma } from "@/lib/prismaClient";
+import { getSubgraph } from "@/backend/brain";
+import { assertBrainNodeAccess, filterBrainGraphByAccess, resolveBrainAccess } from "@/backend/brain/access";
+import { prisma } from "@/database/prismaClient";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

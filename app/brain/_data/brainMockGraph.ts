@@ -1,4 +1,4 @@
-﻿import type { BrainEdge, BrainGraphSummary, BrainNode, BuiltBrainGraph } from "../_types/brain.types";
+import type { BrainEdge, BrainGraphSummary, BrainNode, BuiltBrainGraph } from "../_types/brain.types";
 
 export const brainMockNodes: BrainNode[] = [
   {
@@ -55,10 +55,10 @@ export const brainMockNodes: BrainNode[] = [
     projectId: "project_qc",
     projectName: "Quality Control",
     label: "Solicitação Barbara",
-    description: "Pedido de acesso para suporte tecnico recusado apos revisao.",
+    description: "Pedido de acesso para administrador recusado apos revisao.",
     status: "warning",
     size: "md",
-    information: "Barbara abriu uma solicitacao de suporte tecnico, a solicitacao esta recusada e possui log pendente de evidencia.",
+    information: "Barbara abriu uma solicitacao de administrador, a solicitacao esta recusada e possui log pendente de evidencia.",
     createdBy: "Barbara",
     createdAt: new Date().toISOString(),
     generatedBy: "user",
@@ -74,7 +74,7 @@ export const brainMockNodes: BrainNode[] = [
     projectId: "project_qc",
     projectName: "Quality Control",
     label: "Barbara",
-    description: "Pessoa solicitante do acesso de suporte tecnico.",
+    description: "Pessoa solicitante do acesso de administrador.",
     status: "ok",
     size: "sm",
   },
@@ -86,7 +86,7 @@ export const brainMockNodes: BrainNode[] = [
     companyName: "Testing Company",
     projectId: "project_qc",
     projectName: "Quality Control",
-    label: "Suporte tecnico",
+    label: "Administrador",
     description: "Perfil solicitado, depende de permissao efetiva e escopo de empresa.",
     status: "pending",
     size: "sm",
@@ -410,4 +410,3 @@ export function buildMockBrainGraph(): BuiltBrainGraph {
     auditLogs: [],
   };
 }
-

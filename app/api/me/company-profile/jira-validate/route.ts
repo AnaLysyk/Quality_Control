@@ -1,8 +1,8 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { canManageInstitutionalCompanyAccess, resolveCurrentCompanyFromAccess } from "@/lib/companyProfileAccess";
-import { validateJiraCloudCredentials } from "@/lib/jiraCloud";
+import { getAccessContext } from "@/backend/auth/session";
+import { canManageInstitutionalCompanyAccess, resolveCurrentCompanyFromAccess } from "@/backend/companyProfileAccess";
+import { validateJiraCloudCredentials } from "@/backend/jiraCloud";
 
 export const runtime = "nodejs";
 

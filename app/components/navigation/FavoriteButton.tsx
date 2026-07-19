@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { FiBookmark } from "react-icons/fi";
 import { useFavorites } from "@/hooks/navigation/useFavorites";
-import type { CreateFavoriteInput, FavoriteType } from "@/lib/navigation/favoritesTypes";
+import type { CreateFavoriteInput, FavoriteType } from "@/backend/navigation/favoritesTypes";
 
 type FavoriteButtonProps = {
   label: string;

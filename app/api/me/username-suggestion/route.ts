@@ -1,7 +1,7 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { suggestNextUniqueLogin } from "@/lib/auth/localStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { suggestNextUniqueLogin } from "@/backend/auth/localStore";
 
 export async function POST(req: Request) {
   try {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, username }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível gerar o login";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

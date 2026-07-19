@@ -1,4 +1,4 @@
-import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
+import type { NavItemDef, NavModuleDef } from "@/backend/navigation/navigationCatalog";
 
 export type BrainHomeAction = {
   id: string;

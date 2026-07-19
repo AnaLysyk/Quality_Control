@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { listTestProjects } from "@/lib/test-projects/testProjectsRepository";
-import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
-import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { listTestProjects } from "@/backend/test-projects/testProjectsRepository";
+import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
+import { hasGlobalCompanyVisibility } from "@/backend/companyDefectsAccess";
 
 function normalizeCompanySlug(value: string | null) {
   const normalized = value?.trim().toLowerCase();

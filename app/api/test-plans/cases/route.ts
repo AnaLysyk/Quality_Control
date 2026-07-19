@@ -1,14 +1,14 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
-import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
-import { listApplications } from "@/lib/applicationsStore";
-import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { QaseError } from "@/lib/qaseSdk";
-import { getQaseCase } from "@/lib/qasePlans";
-import { getTestCaseRecord } from "@/lib/test-cases/testCaseRepository";
-import { canAccessTestCaseRecord } from "@/lib/test-cases/testCasePermissions";
-import { getManualTestPlan } from "@/lib/testPlansStore";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { hasGlobalCompanyVisibility } from "@/backend/companyDefectsAccess";
+import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
+import { listApplications } from "@/backend/applicationsStore";
+import { getClientQaseSettings } from "@/backend/qaseConfig";
+import { QaseError } from "@/backend/qaseSdk";
+import { getQaseCase } from "@/backend/qasePlans";
+import { getTestCaseRecord } from "@/backend/test-cases/testCaseRepository";
+import { canAccessTestCaseRecord } from "@/backend/test-cases/testCasePermissions";
+import { getManualTestPlan } from "@/backend/testPlansStore";
 
 function normalizeCompanySlug(value: unknown) {
   return String(value ?? "").trim().toLowerCase();

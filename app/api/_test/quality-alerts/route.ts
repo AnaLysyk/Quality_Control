@@ -1,11 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { writeAlertsStore, type QualityAlert } from "@/lib/qualityAlert";
-
-const IS_TEST_ENV =
-  process.env.PLAYWRIGHT_MOCK === "true" ||
-  process.env.NODE_ENV === "test" ||
-  process.env.E2E_USE_JSON === "1" ||
-  process.env.E2E_USE_JSON === "true";
+import { writeAlertsStore, type QualityAlert } from "@/backend/qualityAlert";
+import { isE2eMockAllowed } from "@/backend/auth/e2eMockGate";
 
 function normalizeAlert(input: Record<string, unknown>): QualityAlert | null {
   const companySlug = typeof input.companySlug === "string" ? input.companySlug : null;
@@ -24,7 +19,7 @@ function normalizeAlert(input: Record<string, unknown>): QualityAlert | null {
 }
 
 export async function POST(req: Request) {
-  if (!IS_TEST_ENV) {
+  if (!isE2eMockAllowed()) {
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
@@ -46,4 +41,3 @@ export async function POST(req: Request) {
   await writeAlertsStore(alerts);
   return NextResponse.json({ ok: true, total: alerts.length });
 }
-

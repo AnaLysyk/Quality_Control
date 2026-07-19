@@ -1,9 +1,9 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
-import { readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
-import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
+import { getAccessContext } from "@/backend/auth/session";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/backend/i18n";
+import { readPersistentJson, writePersistentJson } from "@/database/persistentJsonStore";
+import { validarAcessoUsuariosNoServidor } from "@/backend/permissions/validarAcessoUsuariosNoServidor";
 
 export const revalidate = 0;
 

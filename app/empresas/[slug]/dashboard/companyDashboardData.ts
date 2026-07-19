@@ -1,16 +1,16 @@
 ﻿import "server-only";
 
 import { readManualReleaseStore } from "@/data/manualData";
-import { findLocalCompanyBySlug, listLocalCompanies, listLocalLinksForCompany, listLocalUsers } from "@/lib/auth/localStore";
-import { resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
-import { type AppRecord, listApplications } from "@/lib/applicationsStore";
-import { mapCompanyRecord, normalizeProjectCodes } from "@/lib/companyRecord";
-import { normalizeDefectStatus } from "@/lib/defectNormalization";
-import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
-import { readAlertsStore, type QualityAlert } from "@/lib/qualityAlert";
-import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { createQaseClient } from "@/lib/qaseSdk";
-import { formatRunTitle } from "@/lib/runPresentation";
+import { findLocalCompanyBySlug, listLocalCompanies, listLocalLinksForCompany, listLocalUsers } from "@/backend/auth/localStore";
+import { resolveLocalUserDisplayName } from "@/backend/manualReleaseResponsible";
+import { type AppRecord, listApplications } from "@/backend/applicationsStore";
+import { mapCompanyRecord, normalizeProjectCodes } from "@/backend/companyRecord";
+import { normalizeDefectStatus } from "@/backend/defectNormalization";
+import { resolveManualReleaseKind } from "@/backend/manualReleaseKind";
+import { readAlertsStore, type QualityAlert } from "@/backend/qualityAlert";
+import { getClientQaseSettings } from "@/backend/qaseConfig";
+import { createQaseClient } from "@/backend/qaseSdk";
+import { formatRunTitle } from "@/backend/runPresentation";
 import { getAllReleases, type ReleaseEntry } from "@/release/data";
 import type { Release } from "@/types/release";
 import type {

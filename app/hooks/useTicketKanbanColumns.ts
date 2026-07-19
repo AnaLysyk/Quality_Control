@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { isDevRole } from "@/lib/rbac/devAccess";
-import { formatTicketStatusLabel, type TicketStatusOption } from "@/lib/ticketsStatus";
+import { isDevRole } from "@/backend/rbac/devAccess";
+import { formatTicketStatusLabel, type TicketStatusOption } from "@/backend/ticketsStatus";
 
 export type TicketKanbanColumn = {
   key: string;

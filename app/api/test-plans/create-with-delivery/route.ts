@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

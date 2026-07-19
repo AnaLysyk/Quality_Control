@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { buildTestCaseMetrics, listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
-import { filterTestCasesByPermission } from "@/lib/test-cases/testCasePermissions";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { buildTestCaseMetrics, listTestCaseRecords } from "@/backend/test-cases/testCaseRepository";
+import { filterTestCasesByPermission } from "@/backend/test-cases/testCasePermissions";
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);

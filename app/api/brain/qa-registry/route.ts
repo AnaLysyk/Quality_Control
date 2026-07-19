@@ -6,7 +6,7 @@ import {
   listBrainPromptTemplates,
   listBrainQuickActions,
 } from "@/data/brainQaRegistry";
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);

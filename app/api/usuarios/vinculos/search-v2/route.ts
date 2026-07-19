@@ -1,8 +1,8 @@
 import { Prisma, Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { checkPermission } from "@/lib/permissions/checkPermission";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { checkPermission } from "@/backend/permissions/checkPermission";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ const ALL_MODES: RelationshipMode[] = ["companies", "leaders", "qa_users", "busi
 const COMPANY_MODES: RelationshipMode[] = ["qa_users", "business_users"];
 
 async function getDb() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

@@ -1,17 +1,17 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { appendDefectHistory, listDefectHistory } from "@/lib/manualDefectHistoryStore";
-import { encodeDefectAssigneeNote, summarizeDefectActivity } from "@/lib/defectActivity";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { appendDefectHistory, listDefectHistory } from "@/backend/manualDefectHistoryStore";
+import { encodeDefectAssigneeNote, summarizeDefectActivity } from "@/backend/defectActivity";
 import {
   canAccessCompanyDefects,
   pickDefectNotificationShape,
   resolveAccessibleCompanyDefect,
   resolveDefectActor,
-} from "@/lib/companyDefectsAccess";
-import { listManualReleaseResponsibleOptions } from "@/lib/manualReleaseResponsible";
-import { canEditManualDefect, resolveDefectRole } from "@/lib/rbac/defects";
-import { notifyDefectAssigned } from "@/lib/notificationService";
-import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
+} from "@/backend/companyDefectsAccess";
+import { listManualReleaseResponsibleOptions } from "@/backend/manualReleaseResponsible";
+import { canEditManualDefect, resolveDefectRole } from "@/backend/rbac/defects";
+import { notifyDefectAssigned } from "@/backend/notificationService";
+import { invalidateCompanyDefectsDataset } from "@/backend/companyDefectsDataset";
 
 function normalizeString(value: unknown) {
   if (typeof value !== "string") return null;

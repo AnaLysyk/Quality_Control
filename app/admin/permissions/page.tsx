@@ -1,6 +1,6 @@
 "use client";
 
-import { getPermissionModulesWithScreens, getRouteScreenPermission, isScreenPermissionModuleId } from "@/lib/navigation/screenPermissions";
+import { getPermissionModulesWithScreens, getRouteScreenPermission, isScreenPermissionModuleId } from "@/backend/navigation/screenPermissions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,17 +11,17 @@ import {
 
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
-import { getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
+import { SYSTEM_ROUTES } from "@/backend/navigation/route-map";
+import { getActionLabel, type PermissionModule } from "@/backend/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
   normalizePermissionMatrix,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+} from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 type ProfileOverride = {
   role?: SystemRole;
@@ -91,7 +91,7 @@ const PROFILE_DETAILS: Partial<
     tone: "border-blue-200 bg-blue-50 text-blue-900",
   },
   [SYSTEM_ROLES.TECHNICAL_SUPPORT]: {
-    title: "Suporte Técnico",
+    title: "Administrador",
     scope: "Suporte e atendimento",
     description: "Perfil para suporte, chamados, leitura operacional e apoio técnico entre empresas e projetos.",
     tone: "border-cyan-200 bg-cyan-50 text-cyan-900",
@@ -329,7 +329,7 @@ export default function AdminPermissionsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("module");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  const pageSize = 12;
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -433,7 +433,7 @@ export default function AdminPermissionsPage() {
           visibleModules,
         };
       }),
-    [effectivePermissions, selectedRole],
+    [effectivePermissions, permissionModules, selectedRole],
   );
 
   const moduleRows = useMemo<ModuleRow[]>(() => {
@@ -1163,7 +1163,7 @@ export default function AdminPermissionsPage() {
                                               checked ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500",
                                             ].join(" ")}
                                           >
-                                            {checked ? "Ativo" : "Off"}
+                                            {checked ? "Ativo" : "Desativado"}
                                           </span>
                                         </button>
                                       );

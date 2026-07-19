@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
-import { canAccess } from "@/lib/permissions/can-access";
-import { prisma } from "@/lib/prismaClient";
+import { isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
+import { canAccess } from "@/backend/permissions/can-access";
+import { prisma } from "@/database/prismaClient";
 
 function canManageMemory(access: BrainAccessContext) {
   return access.canManage || canAccess(access.userAccess, { moduleId: "brain", action: "manage_memories" });

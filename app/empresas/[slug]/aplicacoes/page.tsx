@@ -17,7 +17,7 @@ import {
   FiTrash2,
   FiX,
 } from "react-icons/fi";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 import { useI18n } from "@/hooks/useI18n";
 
 const COPY = {

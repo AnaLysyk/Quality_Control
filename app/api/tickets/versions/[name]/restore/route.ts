@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { restoreVersion } from "@/lib/ticketsStore";
-import { isItDev } from "@/lib/rbac/tickets";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { restoreVersion } from "@/backend/ticketsStore";
+import { isItDev } from "@/backend/rbac/tickets";
 
 export async function POST(req: Request, context: { params: Promise<{ name: string }> }) {
   const user = await authenticateRequest(req);

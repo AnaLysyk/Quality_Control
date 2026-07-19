@@ -1,15 +1,15 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
-import { buildDefectComments } from "@/lib/defectActivity";
-import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { appendDefectHistory } from "@/backend/manualDefectHistoryStore";
+import { buildDefectComments } from "@/backend/defectActivity";
+import { invalidateCompanyDefectsDataset } from "@/backend/companyDefectsDataset";
 import {
   canAccessCompanyDefects,
   pickDefectNotificationShape,
   resolveAccessibleCompanyDefect,
   resolveDefectActor,
-} from "@/lib/companyDefectsAccess";
-import { notifyDefectCommentAdded } from "@/lib/notificationService";
+} from "@/backend/companyDefectsAccess";
+import { notifyDefectCommentAdded } from "@/backend/notificationService";
 
 function normalizeString(value: unknown) {
   if (typeof value !== "string") return null;

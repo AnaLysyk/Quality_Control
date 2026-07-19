@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FiBriefcase, FiChevronDown, FiFolder, FiPlus } from "react-icons/fi";
 import { useClientContext } from "@/context/ClientContext";
-import { useProjectContext } from "@/lib/core/project/ProjectContext";
+import { useProjectContext } from "@/context/ProjectContext";
 
 type Props = {
   collapsed?: boolean;

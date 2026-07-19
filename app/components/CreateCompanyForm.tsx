@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, type BrasilApiCnpjLookup } from "@/lib/brasilApiCnpj";
+import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, type BrasilApiCnpjLookup } from "@/backend/brasilApiCnpj";
 
 export default function CreateCompanyForm({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");

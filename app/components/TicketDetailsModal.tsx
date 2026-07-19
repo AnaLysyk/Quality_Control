@@ -4,8 +4,8 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type React
 import { createPortal } from "react-dom";
 import { FiEdit2, FiMessageSquare, FiPaperclip, FiSave, FiSend, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { TICKET_STATUS_OPTIONS } from "@/lib/ticketsStatus";
-import type { TicketPriority, TicketType } from "@/lib/ticketsStore";
+import { TICKET_STATUS_OPTIONS } from "@/backend/ticketsStatus";
+import type { TicketPriority, TicketType } from "@/backend/ticketsStore";
 
 type TicketStatusOption = { value: string; label: string };
 type TicketAssigneeOption = {

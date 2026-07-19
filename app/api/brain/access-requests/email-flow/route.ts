@@ -2,8 +2,8 @@
 
 import { listAuditLogs } from "@/data/auditLogRepository";
 import { listBrainEmailFlow, isAccessRequestEmail, type BrainEmailFlowEntry } from "@/data/brainEmailFlowRepository";
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { listAccessRequestsV2 } from "@/lib/accessRequestsV2/repository";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { listAccessRequestsV2 } from "@/backend/access-requests/repository";
 
 const PUBLIC_ROUTES = [
   {
@@ -188,4 +188,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Erro ao montar fluxo de e-mails das solicitações" }, { status: 500 });
   }
 }
-

@@ -1,38 +1,25 @@
 "use client";
 
-async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 12000) {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(input, {
-      ...init,
-      signal: controller.signal,
-    });
-  } finally {
-    window.clearTimeout(timeout);
-  }
-}
 export const dynamic = "force-dynamic";
 
-import { getPermissionModulesWithScreens } from "@/lib/navigation/screenPermissions";
+import { getPermissionModulesWithScreens } from "@/backend/navigation/screenPermissions";
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiRefreshCw, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, FiX, } from "react-icons/fi";
+  FiAlertTriangle, FiCheck, FiChevronDown, FiChevronRight, FiClock, FiEye, FiEyeOff, FiRotateCcw, FiSave, FiSearch, FiShield, FiSliders, FiUsers, FiX, } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
-import { getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { SYSTEM_ROLES, type SystemRole } from "@/backend/auth/roles";
+import { getFixedProfileLabel } from "@/backend/fixedProfilePresentation";
+import { getActionLabel, type PermissionModule } from "@/backend/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
   normalizePermissionMatrix,
   type PermissionMatrix,
-} from "@/lib/permissionMatrix";
-import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+} from "@/backend/permissionMatrix";
+import { resolveRoleDefaults } from "@/backend/permissions/roleDefaults";
 
 type ProfileUserSummary = {
   id: string;
@@ -122,7 +109,7 @@ type SortDirection = "asc" | "desc";
 
 const PROFILE_OPTIONS: Array<{ role: SystemRole; label: string }> = [
   { role: SYSTEM_ROLES.LEADER_TC, label: "Líder TC" },
-  { role: SYSTEM_ROLES.TECHNICAL_SUPPORT, label: "Suporte Técnico" },
+  { role: SYSTEM_ROLES.TECHNICAL_SUPPORT, label: "Administrador" },
   { role: SYSTEM_ROLES.TESTING_COMPANY_USER, label: "Usuário TC" },
   { role: SYSTEM_ROLES.EMPRESA, label: "Empresa" },
   { role: SYSTEM_ROLES.COMPANY_USER, label: "Usuário da Empresa" },
@@ -518,7 +505,9 @@ export default function UsersPermissionsPage() {
   }, [allowedCompanyKeys, canSeeAllUsers]);
 
   useEffect(() => {
-    if (canView) void loadUsers();
+    if (!canView) return;
+    const timer = window.setTimeout(() => void loadUsers(), 0);
+    return () => window.clearTimeout(timer);
   }, [canView, loadUsers]);
 
   async function loadUserPermissions(profileUser: UserPermissionRow) {
@@ -857,16 +846,6 @@ export default function UsersPermissionsPage() {
     setPage(1);
   }
 
-  function toggleSort(nextKey: UserSortKey) {
-    if (sortKey === nextKey) {
-      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
-      return;
-    }
-
-    setSortKey(nextKey);
-    setSortDirection("asc");
-  }
-
   if (loading) return <AccessDeniedState state="loading" />;
 
   if (!canView) {
@@ -879,8 +858,6 @@ export default function UsersPermissionsPage() {
       />
     );
   }
-
-  const sortMark = sortDirection === "asc" ? "?" : "?";
 
   return (
     <main className="qc-users-permissions-page min-h-screen px-4 py-4 text-[#0f172a] lg:px-6">
@@ -991,7 +968,7 @@ export default function UsersPermissionsPage() {
         </section>
 
         <section className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-[#011848]">
-          Empresas visualizam apenas usuários vinculados ao próprio escopo. Liderança e suporte técnico visualizam todos.
+          Empresas visualizam apenas usuários vinculados ao próprio escopo. Liderança e administrador visualizam todos.
         </section>
 
         <section className="sticky top-3 z-30 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -1384,7 +1361,7 @@ export default function UsersPermissionsPage() {
                                                     disabled={!canEditUser || savingThisUser}
                                                     className="h-8 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-black text-emerald-800 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
                                                   >
-                                                    Ativar tudo
+                                                    Ativar
                                                   </button>
 
                                                   <button
@@ -1393,7 +1370,7 @@ export default function UsersPermissionsPage() {
                                                     disabled={!canEditUser || savingThisUser}
                                                     className="h-8 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-black text-rose-800 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
                                                   >
-                                                    Ocultar tudo
+                                                    Desativar
                                                   </button>
                                                 </div>
                                               </div>
@@ -1523,5 +1500,3 @@ export default function UsersPermissionsPage() {
     </main>
   );
 }
-
-

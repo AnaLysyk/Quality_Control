@@ -1,11 +1,11 @@
-﻿import type { SystemRole } from "@/lib/auth/roles";
-import type { PermissionMatrix } from "@/lib/permissionMatrix";
+﻿import type { SystemRole } from "@/backend/auth/roles";
+import type { PermissionMatrix } from "@/backend/permissionMatrix";
 import { NAV_CATALOG, type NavItemDef, type NavModuleDef } from "../catalogo/menuLateral.catalog";
 import {
   buildNavigationForUser,
   canSeeNavItem,
   filterNavModule,
-} from "@/lib/navigation/navigationPermissions";
+} from "@/backend/navigation/navigationPermissions";
 
 type FiltrarMenuPorPerfilInput = {
   catalogo?: NavModuleDef[];

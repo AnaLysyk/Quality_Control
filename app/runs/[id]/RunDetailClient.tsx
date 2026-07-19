@@ -13,7 +13,7 @@ import {
   FiShield,
   FiXCircle,
 } from "react-icons/fi";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type RunStatus = "draft" | "scheduled" | "in_progress" | "paused" | "completed" | "cancelled" | "aborted";
 type RunItemStatus = "not_run" | "in_progress" | "passed" | "failed" | "blocked" | "skipped" | "retest";

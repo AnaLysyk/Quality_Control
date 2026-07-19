@@ -13,8 +13,8 @@ import UserAvatar from "@/components/UserAvatar";
 import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
 import { useI18n } from "@/hooks/useI18n";
-import { resolveActiveIdentity } from "@/lib/activeIdentity";
-import { fetchApi } from "@/lib/api";
+import { resolveActiveIdentity } from "@/backend/activeIdentity";
+import { fetchApi } from "@/backend/api";
 
 type ToolComponentProps = {
   defaultOpen?: boolean;

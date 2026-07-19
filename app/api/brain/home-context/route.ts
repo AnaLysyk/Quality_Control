@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { listAuditLogs } from "@/data/auditLogRepository";
-import { getAccessContext } from "@/lib/auth/session";
-import { getLocalUserById, listLocalCompanies, listLocalUsers } from "@/lib/auth/localStore";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { getLocalUserById, listLocalCompanies, listLocalUsers } from "@/backend/auth/localStore";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

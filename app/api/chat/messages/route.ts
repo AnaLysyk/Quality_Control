@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { listChatContacts } from "@/lib/chatContacts";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { listChatContacts } from "@/backend/chatContacts";
 import {
   appendChatMessage,
   listChatInboxSummaries,
   listChatThreadMessages,
   type ChatAttachment,
-} from "@/lib/chatStore";
-import { recordConversationBrainSignal } from "@/lib/conversationBrainFeed";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
-import { fixMojibake, fixMojibakeDeep } from "@/lib/text/fixMojibake";
+} from "@/backend/chatStore";
+import { recordConversationBrainSignal } from "@/backend/conversationBrainFeed";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
+import { NO_STORE_HEADERS } from "@/backend/http/noStore";
+import { fixMojibake, fixMojibakeDeep } from "@/backend/text/fixMojibake";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

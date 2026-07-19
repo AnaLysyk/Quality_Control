@@ -23,6 +23,10 @@ jobs:
       E2E_USE_JSON: "1"
       AUTH_STORE: "json"
       USE_JSON_STORE: "true"
+      # Só satisfaz a validação do prisma.config.ts (exige a env var definida
+      # pra rodar "prisma generate"); os testes usam AUTH_STORE=json/
+      # USE_JSON_STORE=true acima, não conectam nesse banco de verdade.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/quality_control_ci"
 
     steps:
       - name: Checkout repository
@@ -38,6 +42,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
       - name: Run unit tests with coverage
         run: npm run test:coverage

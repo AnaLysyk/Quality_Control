@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -33,8 +33,8 @@ import {
 import UserAvatar from "@/components/UserAvatar";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { fetchApi } from "@/lib/api";
-import { resolveActiveIdentity } from "@/lib/activeIdentity";
+import { fetchApi } from "@/backend/api";
+import { resolveActiveIdentity } from "@/backend/activeIdentity";
 
 type ChatAttachment = {
   id: string;
@@ -165,7 +165,7 @@ function formatFileSize(bytes: number) {
 function getContactRoleLabel(contact: ChatContact) {
   const value = (contact.profile_kind ?? contact.permission_role ?? "").toLowerCase();
   if (value === "leader_tc") return "Líder TC";
-  if (value === "technical_support") return "Suporte Tecnico";
+  if (value === "technical_support") return "Administrador";
   if (value === "empresa") return "Empresa";
   if (value === "company_user") return "Usuario da empresa";
   if (value === "testing_company_user") return "Usuario TC";
@@ -626,7 +626,7 @@ export default function Chat() {
   const hasFullDirectoryAccess = isFullDirectoryUser(user);
   const accessLabel = hasFullDirectoryAccess ? "Visão global" : "Empresas vinculadas";
   const accessNote = hasFullDirectoryAccess
-    ? "Suporte técnico, líder TC e administradores conseguem conversar com toda a plataforma."
+    ? "Administradores, líderes TC e administradores de empresa conseguem conversar com toda a plataforma."
     : "Os demais perfis enxergam apenas usuários das empresas vinculadas, respeitando as permissões atuais.";
 
   const filteredContacts = useMemo(() => {
@@ -1412,4 +1412,3 @@ export default function Chat() {
     </div>
   );
 }
-

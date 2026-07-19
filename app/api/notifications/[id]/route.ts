@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { updateNotificationStatus } from "@/lib/userNotificationsStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { updateNotificationStatus } from "@/backend/userNotificationsStore";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);

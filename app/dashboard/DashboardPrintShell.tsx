@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { ReactNode } from "react";
 import { FiDownload } from "react-icons/fi";
@@ -29,7 +29,7 @@ export default function DashboardPrintShell({ children }: { children: ReactNode 
         <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Leitura executiva</p>
         <h2 className="mt-1 text-lg font-black">O que decidir neste painel</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Use esta visão para priorizar empresas críticas, revisar filas em atenção, identificar falhas ou bloqueios e direcionar a atuação de Líder TC e Suporte Técnico.
+          Use esta visão para priorizar empresas críticas, revisar filas em atenção, identificar falhas ou bloqueios e direcionar a atuação de Líder TC e Administrador.
         </p>
       </section>
       <div className="fixed bottom-6 right-6 z-50 print:hidden">

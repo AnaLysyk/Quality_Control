@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { getCompanyRouteSection } from "@/lib/companyRoutes";
+import { getCompanyRouteSection } from "@/backend/companyRoutes";
 
 interface MainWrapperProps {
   pathname: string;

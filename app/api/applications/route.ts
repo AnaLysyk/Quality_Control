@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { listApplications, createApplication } from "../../../lib/applicationsStore";
-import { getCompanyIntegratedDefects } from "../../../lib/companyDefects";
-import { syncApplicationToBrain } from "@/lib/brain-sync";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
+import { listApplications, createApplication } from "../../../backend/applicationsStore";
+import { getCompanyIntegratedDefects } from "../../../backend/companyDefects";
+import { syncApplicationToBrain } from "@/backend/brain/sync";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 
 const APPLICATIONS_CACHE_TTL_MS = 30_000;
 

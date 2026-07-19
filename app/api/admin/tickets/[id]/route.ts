@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
-import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { canMoveTicket, canViewTicket } from "@/lib/rbac/tickets";
-import { notifyTicketStatusChanged } from "@/lib/notificationService";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById, updateTicketStatus } from "@/backend/ticketsStore";
+import { attachAssigneeToTicket } from "@/backend/ticketsPresenter";
+import { canMoveTicket, canViewTicket } from "@/backend/rbac/tickets";
+import { notifyTicketStatusChanged } from "@/backend/notificationService";
 
 export const revalidate = 0;
 

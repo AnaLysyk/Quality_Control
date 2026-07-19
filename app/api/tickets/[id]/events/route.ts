@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById } from "@/lib/ticketsStore";
-import { listTicketEvents } from "@/lib/ticketEventsStore";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { canViewTicket } from "@/lib/rbac/tickets";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById } from "@/backend/ticketsStore";
+import { listTicketEvents } from "@/backend/ticketEventsStore";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { canViewTicket } from "@/backend/rbac/tickets";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;

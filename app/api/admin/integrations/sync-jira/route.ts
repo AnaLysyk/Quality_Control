@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
 import "server-only";
-import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { fetchJiraIssuesForCompany, syncJiraIssuesToApplications } from "@/lib/jiraSync";
-import { info } from "@/lib/logger";
+import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/backend/auth/normalizeAuthenticatedUser";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { fetchJiraIssuesForCompany, syncJiraIssuesToApplications } from "@/backend/jiraSync";
+import { info } from "@/backend/logger";
 
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);

@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-import { hashRefreshToken } from "@/lib/auth/refreshToken";
-import { getRedis } from "@/lib/redis";
-import { shouldUseSecureCookies } from "@/lib/auth/cookies";
+import { hashRefreshToken } from "@/backend/auth/refreshToken";
+import { getRedis } from "@/backend/redis";
+import { shouldUseSecureCookies } from "@/backend/auth/cookies";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { COMPANY_ROUTE_MODE_COOKIE } from "@/lib/companyRoutes";
+import { COMPANY_ROUTE_MODE_COOKIE } from "@/backend/companyRoutes";
 
 function readCookieValue(cookieHeader: string, name: string): string | null {
   if (!cookieHeader) return null;

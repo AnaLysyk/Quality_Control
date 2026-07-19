@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FiCamera } from "react-icons/fi";
-import { hasFailedImageSrc, markFailedImageSrc } from "@/lib/failedImageSrc";
+import { hasFailedImageSrc, markFailedImageSrc } from "@/backend/failedImageSrc";
 
 type UserAvatarSize = "sm" | "md" | "lg" | "xl";
 

@@ -1,15 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { logAgentExecution } from "@/lib/brain/orchestrator";
-import { InternalBrainEngine } from "@/lib/brain/internalEngine";
-import type { AgentMode } from "@/lib/brain/agents";
-import { runAllGuardrails } from "@/lib/brain/guardrails";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { logAgentExecution } from "@/backend/brain/orchestrator";
+import { InternalBrainEngine } from "@/backend/brain/internalEngine";
+import type { AgentMode } from "@/backend/brain/agents";
+import { runAllGuardrails } from "@/backend/brain/guardrails";
 import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
-import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
-import { answerBrainChatQuestion } from "@/lib/brain/chat";
-import { formatWebSearchForBrain, searchBrainWeb, shouldUseWebSearch } from "@/lib/brain/webSearch";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/backend/brain/access";
+import { answerBrainChatQuestion } from "@/backend/brain/chat";
+import { formatWebSearchForBrain, searchBrainWeb, shouldUseWebSearch } from "@/backend/brain/webSearch";
 
 type BrainWeatherContext = { place?: string; temperature?: number | null; apparentTemperature?: number | null; humidity?: number | null; precipitation?: number | null; windSpeed?: number | null; label?: string; comment?: string; source?: string };
 type HomeSelectedAction = { id?: string | null; label?: string | null; href?: string | null; moduleLabel?: string | null };
@@ -17,7 +17,7 @@ type HomeSelectedAction = { id?: string | null; label?: string | null; href?: st
 function resolveBrainRoleLabel(context: BrainAccessContext) {
   const role = normalizeForBrain(String(context.userAccess.permissionRole ?? context.userAccess.role ?? context.user.permissionRole ?? context.user.role ?? context.user.companyRole ?? context.userAccess.profileKind ?? ""));
   if (role.includes("leader") || role.includes("lider")) return "Lider TC";
-  if (role.includes("support") || role.includes("suporte") || role.includes("technical")) return "Suporte Tecnico";
+  if (role.includes("support") || role.includes("suporte") || role.includes("technical")) return "Administrador";
   if (role.includes("testing") || role.includes("tc")) return "Usuario Testing Company";
   if (role.includes("empresa") || role.includes("company")) return "Empresa";
   return "seu perfil";

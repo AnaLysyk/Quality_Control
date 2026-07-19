@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { registerScreen } from "@/lib/brain/registry";
+import { registerScreen } from "@/backend/brain/registry";
 import { BrainDashboard } from "../../brain/_components/BrainDashboard";
 import styles from "../../brain/brain-theme.module.css";
 import nodeThemeStyles from "../../brain/brain-node-theme-fixes.module.css";

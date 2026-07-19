@@ -6,8 +6,8 @@
  */
 
 import { ReactNode } from "react";
-import { ProfileProvider, useProfileContext } from "@/lib/profile/useProfileContext";
-import type { ProfileRuntimeContext } from "@/lib/profile/types";
+import { ProfileProvider, useProfileContext } from "@/backend/profile/useProfileContext";
+import type { ProfileRuntimeContext } from "@/backend/profile/types";
 
 export function ProfileShell({
   context,

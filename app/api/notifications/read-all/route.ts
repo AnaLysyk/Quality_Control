@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { closeAllNotifications, closeNotificationsByTicketId } from "@/lib/userNotificationsStore";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { closeAllNotifications, closeNotificationsByTicketId } from "@/backend/userNotificationsStore";
 
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);

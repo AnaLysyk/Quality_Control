@@ -28,7 +28,7 @@ import {
   type AutomationRequestKeyValue,
   type AutomationRequestPreset,
 } from "@/data/automationIde";
-import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/backend/automations/companyScope";
 
 type CompanyOption = {
   name: string;

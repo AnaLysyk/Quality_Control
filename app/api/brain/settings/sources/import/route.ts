@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
-import { importBrainFileDocument } from "@/lib/brain/fileImport";
-import { isBrainSourceStorageUnavailable } from "@/lib/brain/sourceSettings";
+import { resolveBrainAccess } from "@/backend/brain/access";
+import { importBrainFileDocument } from "@/backend/brain/fileImport";
+import { isBrainSourceStorageUnavailable } from "@/backend/brain/sourceSettings";
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
 

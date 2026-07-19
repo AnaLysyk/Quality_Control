@@ -1,6 +1,6 @@
-﻿import { apiFail, apiOk } from "@/lib/apiResponse";
-import { updateRunItemResult } from "@/lib/runOperationStore";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+﻿import { apiFail, apiOk } from "@/backend/apiResponse";
+import { updateRunItemResult } from "@/backend/runOperationStore";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 import type { QaseResultSyncStatus, TestRunItemStatus } from "@/data/runOperationModel";
 
 export const dynamic = "force-dynamic";

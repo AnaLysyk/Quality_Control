@@ -14,10 +14,10 @@ import {
   FiTool,
 } from "react-icons/fi";
 
-import type { AutomationAccess } from "@/lib/automations/access";
+import type { AutomationAccess } from "@/backend/automations/access";
 import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
 import { AUTOMATION_COMPANY_TOOLS, type AutomationCompanyTool } from "@/data/automationIde";
-import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/backend/automations/companyScope";
 
 type CompanyOption = {
   name: string;

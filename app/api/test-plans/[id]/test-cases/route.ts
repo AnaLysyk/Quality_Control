@@ -1,10 +1,10 @@
 ﻿import { NextResponse } from "next/server";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
-import { canAccessTestCaseRecord, canCreateTestCaseForCompany, resolveAllowedProjectIds } from "@/lib/test-cases/testCasePermissions";
-import { getManualTestPlan, updateManualTestPlan } from "@/lib/testPlansStore";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { resolveNormalizedCompanySlugs } from "@/backend/auth/normalizeAuthenticatedUser";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { listTestCaseRecords } from "@/backend/test-cases/testCaseRepository";
+import { canAccessTestCaseRecord, canCreateTestCaseForCompany, resolveAllowedProjectIds } from "@/backend/test-cases/testCasePermissions";
+import { getManualTestPlan, updateManualTestPlan } from "@/backend/testPlansStore";
 
 type TestCaseRecord = Awaited<ReturnType<typeof listTestCaseRecords>>[number];
 

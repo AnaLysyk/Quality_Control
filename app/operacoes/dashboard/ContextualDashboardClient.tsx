@@ -16,8 +16,9 @@ import {
 } from "react-icons/fi";
 
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { fetchApi } from "@/lib/api";
-import { resolveDashboardContext } from "@/lib/dashboard/context";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { fetchApi } from "@/backend/api";
+import { resolveDashboardContext } from "@/backend/dashboard/context";
 import {
   DEFAULT_CONTEXTUAL_DASHBOARD_FILTERS,
   buildDashboardAggregate,
@@ -42,8 +43,8 @@ import {
   type DashboardSignalStatus,
   type DashboardViewMode,
   type DashboardWidgetDefinition,
-} from "@/lib/dashboard/contextual";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+} from "@/backend/dashboard/contextual";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
 
 type DashboardPayload = {
   period?: string;
@@ -1352,12 +1353,14 @@ export default function ContextualDashboardClient() {
             <InsightStrip insights={insights} />
 
             {activeWidgets.has("summary") ? (
-              <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                <MetricButton label="Sinais no recorte" value={aggregate.total} detail="Total renderizado com filtros ativos." tone="neutral" onClick={() => openDetails("Sinais no recorte", filteredSignals)} />
-                <MetricButton label="Riscos" value={aggregate.risks} detail="Falhas, bloqueios, criticos ou sem responsavel." tone={aggregate.risks > 0 ? "critical" : "positive"} onClick={() => openDetails("Itens de risco", criticalItems)} />
-                <MetricButton label="Falhas" value={aggregate.failed} detail="Itens com status falha ou alerta." tone={aggregate.failed > 0 ? "critical" : "positive"} onClick={() => openDetails("Falhas do periodo", failedItems)} />
-                <MetricButton label="Bloqueados" value={aggregate.blocked} detail="Itens impedindo continuidade operacional." tone={aggregate.blocked > 0 ? "warning" : "positive"} onClick={() => openDetails("Bloqueios do periodo", blockedItems)} />
-                <MetricButton label="Sem responsavel" value={aggregate.withoutOwner} detail="Itens sem dono claro para acao." tone={aggregate.withoutOwner > 0 ? "warning" : "positive"} onClick={() => openDetails("Itens sem responsavel", withoutOwnerItems)} />
+              <section>
+                <ScrollReveal className="grid gap-3 md:grid-cols-2 xl:grid-cols-5" stagger={0.07} deps={[aggregate.total]}>
+                  <MetricButton label="Sinais no recorte" value={aggregate.total} detail="Total renderizado com filtros ativos." tone="neutral" onClick={() => openDetails("Sinais no recorte", filteredSignals)} />
+                  <MetricButton label="Riscos" value={aggregate.risks} detail="Falhas, bloqueios, criticos ou sem responsavel." tone={aggregate.risks > 0 ? "critical" : "positive"} onClick={() => openDetails("Itens de risco", criticalItems)} />
+                  <MetricButton label="Falhas" value={aggregate.failed} detail="Itens com status falha ou alerta." tone={aggregate.failed > 0 ? "critical" : "positive"} onClick={() => openDetails("Falhas do periodo", failedItems)} />
+                  <MetricButton label="Bloqueados" value={aggregate.blocked} detail="Itens impedindo continuidade operacional." tone={aggregate.blocked > 0 ? "warning" : "positive"} onClick={() => openDetails("Bloqueios do periodo", blockedItems)} />
+                  <MetricButton label="Sem responsavel" value={aggregate.withoutOwner} detail="Itens sem dono claro para acao." tone={aggregate.withoutOwner > 0 ? "warning" : "positive"} onClick={() => openDetails("Itens sem responsavel", withoutOwnerItems)} />
+                </ScrollReveal>
               </section>
             ) : null}
 
@@ -1370,11 +1373,11 @@ export default function ContextualDashboardClient() {
 
               {activeWidgets.has("company_health") ? (
                 <WidgetShell widget={{ title: "Saude institucional", question: "Como esta esta empresa?", reason: "Aparece porque o recorte esta focado em uma empresa." }}>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <ScrollReveal className="grid gap-3 sm:grid-cols-3" stagger={0.07} deps={[aggregate.pending, aggregate.resolved]}>
                     <MetricButton label="Pendentes" value={aggregate.pending} detail="Itens novos ou em andamento." tone={aggregate.pending > 0 ? "warning" : "positive"} />
                     <MetricButton label="Resolvidos" value={aggregate.resolved} detail="Itens encerrados no recorte." tone="positive" />
                     <MetricButton label="Modulos ativos" value={aggregate.modules.length} detail="Modulos com dado real." tone="neutral" />
-                  </div>
+                  </ScrollReveal>
                 </WidgetShell>
               ) : null}
 

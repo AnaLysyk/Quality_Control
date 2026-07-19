@@ -1,7 +1,7 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { uploadAndPersistCompanyLogo } from "@/lib/companyLogoUpload";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { uploadAndPersistCompanyLogo } from "@/backend/companyLogoUpload";
 
 export const runtime = "nodejs";
 
@@ -37,7 +37,7 @@ export async function POST(
       error instanceof Error && error.message.trim()
         ? error.message.trim()
         : "Não foi possível enviar o logo";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 

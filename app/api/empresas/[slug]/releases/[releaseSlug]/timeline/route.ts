@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
-import { getReleaseTimeline } from "@/lib/releaseTimeline";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { getReleaseTimeline } from "@/backend/releaseTimeline";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 export async function GET(req: Request, context: { params: Promise<{ slug: string; releaseSlug: string }> }) {
   const guard = await requirePermission(req, "releases", "view");

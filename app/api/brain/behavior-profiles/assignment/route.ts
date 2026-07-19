@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { resolveBrainAccess } from "@/backend/brain/access";
 import {
   isBrainBehaviorProfileStorageUnavailable,
   resolveEffectiveBehaviorProfile,
   setBehaviorAssignment,
   type BehaviorSurface,
-} from "@/lib/brain/behaviorProfiles";
+} from "@/backend/brain/behaviorProfiles";
 
 const SURFACES = new Set(["home", "chat", "summary", "report", "audio"]);
 

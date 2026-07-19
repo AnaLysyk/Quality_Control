@@ -1,7 +1,7 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { listAccessRequestRemovalHistory } from "@/lib/accessRequestRemovalHistory";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
+import { listAccessRequestRemovalHistory } from "@/backend/access-requests/removalHistory";
+import { requireAccessRequestReviewerWithStatus } from "@/backend/rbac/requireAccessRequestReviewer";
 
 export async function GET(req: Request) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);

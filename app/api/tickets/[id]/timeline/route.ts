@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { getTicketById, listTicketTimeline } from "@/lib/ticketsStore";
-import { canViewTicket } from "@/lib/rbac/tickets";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { getTicketById, listTicketTimeline } from "@/backend/ticketsStore";
+import { canViewTicket } from "@/backend/rbac/tickets";
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);

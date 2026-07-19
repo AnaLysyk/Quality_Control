@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { authenticateRequest } from "@/backend/jwtAuth";
 import { listUserRequests } from "@/data/requestsStore";
-import { countUnreadUserNotifications, createUserNotification, listUserNotifications } from "@/lib/userNotificationsStore";
-import { canAdminReviewQueue, normalizeRequestProfileType, resolveReviewQueue } from "@/lib/requestRouting";
+import { countUnreadUserNotifications, createUserNotification, listUserNotifications } from "@/backend/userNotificationsStore";
+import { canAdminReviewQueue, normalizeRequestProfileType, resolveReviewQueue } from "@/backend/access-requests/routing";
 
 const PENDING_RESET_SYNC_TTL_MS = 60_000;
 const UNREAD_COUNT_CACHE_TTL_MS = 5 * 60_000;

@@ -13,7 +13,7 @@ import {
   FiSearch,
   FiX,
 } from "react-icons/fi";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/backend/api";
 
 type TestCaseStep = {
   id?: string;

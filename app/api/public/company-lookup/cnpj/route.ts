@@ -1,9 +1,13 @@
 ﻿import { NextResponse } from "next/server";
-import { lookupCompanyByCnpj } from "@/lib/company-lookup/companyLookup";
+import { lookupCompanyByCnpj } from "@/backend/company-lookup/companyLookup";
+import { rateLimit } from "@/backend/rateLimit";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const limiter = await rateLimit(request, "public-company-lookup-cnpj", 20, 60);
+  if (limiter.limited) return limiter.response;
+
   const { searchParams } = new URL(request.url);
   const cnpj = searchParams.get("cnpj") ?? "";
 
@@ -20,19 +24,14 @@ export async function GET(request: Request) {
         ? error.message
         : "Não foi possível consultar o CNPJ.";
 
-    console.error("[COMPANY LOOKUP][CNPJ]", {
-      cnpj,
-      message,
-    });
+    console.error("[COMPANY LOOKUP][CNPJ]", message);
 
     return NextResponse.json(
       {
         ok: false,
         message,
-        cnpj,
       },
       { status: 400 },
     );
   }
 }
-

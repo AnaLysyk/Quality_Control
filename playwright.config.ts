@@ -58,10 +58,10 @@ if (envOverrides.E2E_USE_JSON === "1" || envOverrides.E2E_USE_JSON === "true") {
 const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING === "1" || process.env.PLAYWRIGHT_USE_EXISTING === "true";
 const includeEdge = process.env.PLAYWRIGHT_INCLUDE_EDGE === "1" || process.env.PLAYWRIGHT_INCLUDE_EDGE === "true";
 export default defineConfig({
-  testDir: "testes",
+  testDir: "tests",
   testMatch: ["**/*.spec.ts"],
-  testIgnore: ["**/support/**", "**/*.test.ts", "**/*.test.tsx"],
-  globalSetup: "./support/functions/banco-de-dados/ambiente/preparar-ambiente-testes.ts",
+  testIgnore: ["**/tools/**", "**/*.test.ts", "**/*.test.tsx"],
+  globalSetup: "./tools/functions/banco-de-dados/ambiente/preparar-ambiente-testes.ts",
   timeout: 60 * 1000,
   expect: { timeout: 5000 },
   retries: 0,
@@ -77,7 +77,7 @@ export default defineConfig({
     ? undefined
     : {
       command:
-        "npx tsx support/functions/banco-de-dados/solicitar-acesso/usuarios/criar-usuarios-teste.ts && npm run dev:ci:clean",
+        "npx tsx tools/functions/banco-de-dados/solicitar-acesso/usuarios/criar-usuarios-teste.ts && npm run dev:ci:clean",
         url: baseURL,
         reuseExistingServer: true,
         timeout: 300 * 1000,

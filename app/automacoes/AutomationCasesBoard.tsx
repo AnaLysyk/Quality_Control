@@ -19,10 +19,10 @@ import {
   FiTerminal,
 } from "react-icons/fi";
 
-import type { AutomationAccess } from "@/lib/automations/access";
+import type { AutomationAccess } from "@/backend/automations/access";
 import { AUTOMATION_CASES, type AutomationCaseDefinition } from "@/data/automationCases";
 import { AUTOMATION_STUDIO_ASSETS, AUTOMATION_STUDIO_BLUEPRINTS, AUTOMATION_STUDIO_SCRIPT_TEMPLATES } from "@/data/automationStudio";
-import { matchesAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { matchesAutomationCompanyScope } from "@/backend/automations/companyScope";
 
 type CompanyOption = {
   name: string;

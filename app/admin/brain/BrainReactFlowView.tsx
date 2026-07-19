@@ -20,7 +20,7 @@ import {
 import { FiCommand, FiGitBranch, FiList, FiMessageCircle, FiShare2, FiTable, FiUsers } from "react-icons/fi";
 
 import { useBrainGraph } from "@/hooks/useBrain";
-import { BRAIN_GRAPH_NODE_COLORS, getBrainGraphNodeDefinition } from "@/lib/brain/graph";
+import { BRAIN_GRAPH_NODE_COLORS, getBrainGraphNodeDefinition } from "@/backend/brain/graph";
 import styles from "./Brain.module.css";
 
 type BrainNodeApi = {

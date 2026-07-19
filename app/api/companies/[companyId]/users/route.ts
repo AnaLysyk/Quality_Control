@@ -1,19 +1,37 @@
-﻿import { randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-import { canDeleteUserByProfile } from "@/lib/adminUserDeleteAccess";
-import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
+import { canDeleteUserByProfile } from "@/backend/adminUserDeleteAccess";
+import { getAdminUserItem, listAdminUserItems } from "@/backend/adminUsers";
 import {
   createLocalUser,
   listLocalCompanies,
   listLocalUsers,
   updateLocalUser,
   upsertLocalLink,
-} from "@/lib/auth/localStore";
-import { getAccessContext } from "@/lib/auth/session";
-import { isUserScopeLockedError } from "@/lib/companyUserScope";
-import { generateTempPassword, hashPasswordSha256 } from "@/lib/passwordHash";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+} from "@/backend/auth/localStore";
+import { getAccessContext } from "@/backend/auth/session";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { isUserScopeLockedError } from "@/backend/companyUserScope";
+import { generateTempPassword, hashPassword } from "@/backend/passwordHash";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { assertCompanyAccess } from "@/backend/rbac/validateCompanyAccess";
+
+async function requireCompanyMemberAccess(req: NextRequest, companyId: string) {
+  const user = await authenticateRequest(req);
+  if (!user) {
+    return { response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }) };
+  }
+  try {
+    await assertCompanyAccess(user, companyId);
+    return { user };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const status = message === "MISSING_COMPANY_ID" ? 400 : 403;
+    const errorMessage = status === 400 ? "companyId é obrigatório" : "Sem permissão";
+    return { response: NextResponse.json({ error: errorMessage }, { status }) };
+  }
+}
 
 export const revalidate = 0;
 
@@ -42,7 +60,7 @@ function normalizeMembershipRole(input?: string | null) {
 }
 
 function buildTempPasswordHash() {
-  return hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
+  return hashPassword(`${Date.now()}-${randomUUID()}`);
 }
 
 async function parseCompanyId(
@@ -53,10 +71,13 @@ async function parseCompanyId(
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ companyId: string }> },
 ) {
   const companyId = await parseCompanyId(context);
+  const { user, response } = await requireCompanyMemberAccess(req, companyId);
+  if (!user) return response;
+
   const users = await listAdminUserItems({ companyId });
   return NextResponse.json(users);
 }
@@ -71,6 +92,8 @@ export async function POST(
   }
 
   const companyId = await parseCompanyId(context);
+  const scoped = await requireCompanyMemberAccess(req, companyId);
+  if (!scoped.user) return scoped.response;
   const companies = await listLocalCompanies();
   if (!companies.some((company) => company.id === companyId)) {
     return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
@@ -87,10 +110,10 @@ export async function POST(
   let tempPassword: string | undefined;
   const passwordHash =
     typeof body?.password === "string" && body.password
-      ? hashPasswordSha256(body.password)
+      ? hashPassword(body.password)
       : (() => {
           tempPassword = generateTempPassword();
-          return hashPasswordSha256(tempPassword);
+          return hashPassword(tempPassword);
         })();
 
   if (!name || !email || !login) {
@@ -149,12 +172,21 @@ export async function PATCH(
   context: { params: Promise<{ companyId: string }> },
 ) {
   const companyId = await parseCompanyId(context);
+  const { user, response } = await requireCompanyMemberAccess(req, companyId);
+  if (!user) return response;
+
   const body = await req.json().catch(() => null);
   const userId = typeof body?.id === "string" ? body.id : "";
   const updates = body?.updates && typeof body.updates === "object" ? body.updates : null;
 
   if (!userId || !updates) {
     return NextResponse.json({ error: "Campos obrigatorios" }, { status: 400 });
+  }
+
+  const targetBeforeUpdate = await getAdminUserItem(userId);
+  const targetCompanyIds = targetBeforeUpdate?.companyIds ?? targetBeforeUpdate?.company_ids ?? [];
+  if (!targetBeforeUpdate || !targetCompanyIds.includes(companyId)) {
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const email = typeof updates.email === "string" ? updates.email.trim().toLowerCase() : null;
@@ -223,7 +255,9 @@ export async function DELETE(
   }
 
   const access = await getAccessContext(req);
-  await parseCompanyId(context);
+  const companyId = await parseCompanyId(context);
+  const scoped = await requireCompanyMemberAccess(req, companyId);
+  if (!scoped.user) return scoped.response;
   const body = await req.json().catch(() => null);
   const userId = typeof body?.id === "string" ? body.id : "";
 
@@ -233,6 +267,10 @@ export async function DELETE(
 
   const target = await getAdminUserItem(userId);
   if (!target) {
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+  }
+  const targetCompanyIds = target.companyIds ?? target.company_ids ?? [];
+  if (!targetCompanyIds.includes(companyId)) {
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
@@ -252,4 +290,3 @@ export async function DELETE(
   const item = await getAdminUserItem(userId);
   return NextResponse.json(item ?? updated);
 }
-

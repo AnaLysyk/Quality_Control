@@ -6,8 +6,8 @@
  */
 
 import { useState } from "react";
-import { useProfileContext, useProfileAction } from "@/lib/profile/useProfileContext";
-import { COMPANY_PROFILE_FIELDS, isFieldEditable, isFieldVisible } from "@/lib/profile/fieldPermissions";
+import { useProfileContext, useProfileAction } from "@/backend/profile/useProfileContext";
+import { COMPANY_PROFILE_FIELDS, isFieldEditable, isFieldVisible } from "@/backend/profile/fieldPermissions";
 
 export type CompanyProfileFormProps = {
   companyId: string;

@@ -1,13 +1,13 @@
 ﻿import { NextResponse } from "next/server";
-import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
-import { getLocalUserById } from "@/lib/auth/localStore";
-import { listDefectHistory } from "@/lib/manualDefectHistoryStore";
-import { buildDefectComments, summarizeDefectActivity } from "@/lib/defectActivity";
-import { getIntegratedDefectQaseHistory } from "@/lib/companyDefects";
+import { authenticateRequest, type AuthUser } from "@/backend/jwtAuth";
+import { getLocalUserById } from "@/backend/auth/localStore";
+import { listDefectHistory } from "@/backend/manualDefectHistoryStore";
+import { buildDefectComments, summarizeDefectActivity } from "@/backend/defectActivity";
+import { getIntegratedDefectQaseHistory } from "@/backend/companyDefects";
 import {
   canAccessCompanyDefects,
   resolveAccessibleCompanyDefect,
-} from "@/lib/companyDefectsAccess";
+} from "@/backend/companyDefectsAccess";
 
 function normalizeString(value: unknown) {
   if (typeof value !== "string") return null;

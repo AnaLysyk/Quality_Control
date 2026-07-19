@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
-import { filterTestCasesByPermission } from "@/lib/test-cases/testCasePermissions";
-import { listLatestAutomationDraftsByTestCase } from "@/lib/test-cases/automationDraftsStore";
-import type { AutomationDraft } from "@/lib/test-cases/types";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { listTestCaseRecords } from "@/backend/test-cases/testCaseRepository";
+import { filterTestCasesByPermission } from "@/backend/test-cases/testCasePermissions";
+import { listLatestAutomationDraftsByTestCase } from "@/backend/test-cases/automationDraftsStore";
+import type { AutomationDraft } from "@/backend/test-cases/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

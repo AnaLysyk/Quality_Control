@@ -1,26 +1,26 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
 import { ClientCreateRequestSchema, ClientSchema } from "@/contracts/client";
-import { syncCompanyApplications } from "@/lib/applicationsStore";
-import { getClientQaseSettings } from "@/lib/qaseConfig";
-import { createQaseClient, QaseError } from "@/lib/qaseSdk";
+import { syncCompanyApplications } from "@/backend/applicationsStore";
+import { getClientQaseSettings } from "@/backend/qaseConfig";
+import { createQaseClient, QaseError } from "@/backend/qaseSdk";
 import {
   listLocalCompanies,
   updateLocalCompany,
-} from "@/lib/auth/localStore";
-import { getAccessContext } from "@/lib/auth/session";
+} from "@/backend/auth/localStore";
+import { getAccessContext } from "@/backend/auth/session";
 import {
   areProjectCodesEqual,
   buildCompanyUpdatePatch,
   mapCompanyRecord,
   normalizeComparableName,
   normalizeTaxId,
-} from "@/lib/companyRecord";
+} from "@/backend/companyRecord";
 import {
   canManageInstitutionalCompanyAccess,
   resolveCurrentCompanyFromAccess,
-} from "@/lib/companyProfileAccess";
-import { validateJiraCloudCredentials } from "@/lib/jiraCloud";
+} from "@/backend/companyProfileAccess";
+import { validateJiraCloudCredentials } from "@/backend/jiraCloud";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 export const runtime = "nodejs";

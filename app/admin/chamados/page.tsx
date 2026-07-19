@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
-import { canAccessGlobalSupportScope, canViewSupportBoard } from "@/lib/supportAccess";
+import { canAccessGlobalSupportScope, canViewSupportBoard } from "@/backend/supportAccess";
 
 export default function AdminChamadosPage() {
   const router = useRouter();

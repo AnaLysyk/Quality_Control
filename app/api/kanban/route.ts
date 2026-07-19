@@ -2,8 +2,8 @@
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "./store";
 import type { Status } from "./types";
-import { getAuthContext } from "@/lib/rbac";
-import type { AuthUser } from "@/lib/jwtAuth";
+import { getAuthContext } from "@/backend/rbac";
+import type { AuthUser } from "@/backend/jwtAuth";
 
 export const revalidate = 0;
 

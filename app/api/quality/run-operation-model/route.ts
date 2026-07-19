@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import { getRunOperationModel } from "@/data/runOperationModel";
-import { requirePermission } from "@/lib/rbac/requirePermission";
+import { requirePermission } from "@/backend/rbac/requirePermission";
 
 export const dynamic = "force-dynamic";
 

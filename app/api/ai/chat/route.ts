@@ -1,8 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-import { runAssistantRequest } from "@/lib/assistant/service";
-import type { AssistantClientRequest } from "@/lib/assistant/types";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { runAssistantRequest } from "@/backend/assistant/service";
+import type { AssistantClientRequest } from "@/backend/assistant/types";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { hasPermissionAccess } from "@/backend/permissionMatrix";
+import { rateLimit } from "@/backend/rateLimit";
 
 // Keep the API aligned with the client-side toggle used by ChatButton.
 const ASSISTANT_ENABLED = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
@@ -29,14 +30,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
+  const limiter = await rateLimit(req, `ai-chat:${authUser.id}`, 20, 60);
+  if (limiter.limited) return limiter.response;
+
   try {
     const body = (await req.json().catch(() => ({}))) as AssistantClientRequest;
     const response = await runAssistantRequest(authUser, body ?? {});
     return NextResponse.json(response);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro interno";
     console.error("[assistant] falha ao processar requisicao:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno ao processar a solicitação" }, { status: 500 });
   }
 }
-

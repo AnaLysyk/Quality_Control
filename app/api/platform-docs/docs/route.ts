@@ -1,8 +1,8 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { getAccessContext } from "@/lib/auth/session";
-import { notifyPlatformWikiDocPublished } from "@/lib/notificationService";
+import { getAccessContext } from "@/backend/auth/session";
+import { notifyPlatformWikiDocPublished } from "@/backend/notificationService";
 import { readPlatformDocs, writePlatformDocs, newId, nowIso, sanitizeSlug, type DocBlock } from "@/data/platformDocsStore";
-import { normalizeWikiDocStatus, shouldNotifyWikiDocPublished } from "@/lib/wikiDocsStatus";
+import { normalizeWikiDocStatus, shouldNotifyWikiDocPublished } from "@/backend/wikiDocsStatus";
 
 function canEditWiki(access: Awaited<ReturnType<typeof getAccessContext>> | null): boolean {
   if (!access) return false;

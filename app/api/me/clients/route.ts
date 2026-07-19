@@ -1,8 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 
-import { getAccessContext } from "@/lib/auth/session";
-import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
-import { resolveVisibleCompanies } from "@/lib/companyVisibility";
+import { getAccessContext } from "@/backend/auth/session";
+import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/backend/auth/localStore";
+import { resolveVisibleCompanies } from "@/backend/companyVisibility";
 
 export const revalidate = 0;
 

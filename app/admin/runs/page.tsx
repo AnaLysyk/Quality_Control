@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { slugifyRelease } from "@/lib/slugifyRelease";
-import { getAppMeta } from "@/lib/appMeta";
-import { formatRunText, formatRunTitle, stripRunPrefix } from "@/lib/runPresentation";
+import { slugifyRelease } from "@/backend/slugifyRelease";
+import { getAppMeta } from "@/backend/appMeta";
+import { formatRunText, formatRunTitle, stripRunPrefix } from "@/backend/runPresentation";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 
 type AdminRun = {

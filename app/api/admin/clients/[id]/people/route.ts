@@ -1,10 +1,12 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { getAdminUserItem } from "@/lib/adminUsers";
-import { findLocalCompanyById, upsertLocalLink } from "@/lib/auth/localStore";
-import { isUserScopeLockedError } from "@/lib/companyUserScope";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { getAdminUserItem } from "@/backend/adminUsers";
+import { findLocalCompanyById, upsertLocalLink } from "@/backend/auth/localStore";
+import { isUserScopeLockedError } from "@/backend/companyUserScope";
+import { requireGlobalAdminWithStatus } from "@/backend/rbac/requireGlobalAdmin";
+import { authenticateRequest } from "@/backend/jwtAuth";
+import { assertCompanyAccess } from "@/backend/rbac/validateCompanyAccess";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
@@ -13,6 +15,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const { id: companyId } = await params;
+  const actor = await authenticateRequest(req);
+  try {
+    await assertCompanyAccess(actor, companyId);
+  } catch {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  }
   const company = await findLocalCompanyById(companyId);
   if (!company) {
     return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
@@ -70,4 +78,3 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   return NextResponse.json({ item: updated }, { status: 200 });
 }
-

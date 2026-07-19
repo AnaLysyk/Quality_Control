@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { resolveOperationalContext } from "@/lib/context/operationalContext";
-import { resolveCompanyProjectVisibility } from "@/lib/core/project/projectAccess";
+import { writeAuditLog } from "@/backend/audit/writeAuditLog";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/backend/auth/roles";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
+import { resolveCompanyProjectVisibility } from "@/backend/permissions/projectAccess";
 import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getDb() {
-  const { prisma } = await import("@/lib/prismaClient");
+  const { prisma } = await import("@/database/prismaClient");
   return prisma;
 }
 

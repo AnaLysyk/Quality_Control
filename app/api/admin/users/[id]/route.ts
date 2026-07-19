@@ -1,8 +1,8 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "@/lib/adminUserDeleteAccess";
-import { getAdminUserItem } from "@/lib/adminUsers";
+import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "@/backend/adminUserDeleteAccess";
+import { getAdminUserItem } from "@/backend/adminUsers";
 import {
   editableProfileNeedsCompany,
   isGlobalPrivilegeProfileRole,
@@ -10,8 +10,8 @@ import {
   resolveEditableProfileRole,
   toStoredEditableUserRole,
   type EditableProfileRole,
-} from "@/lib/editableProfileRoles";
-import { isUserScopeLockedError } from "@/lib/companyUserScope";
+} from "@/backend/editableProfileRoles";
+import { isUserScopeLockedError } from "@/backend/companyUserScope";
 import {
   findLocalCompanyById,
   listLocalLinksForUser,
@@ -19,11 +19,11 @@ import {
   removeLocalLink,
   updateLocalUser,
   upsertLocalLink,
-} from "@/lib/auth/localStore";
-import { getAccessContext, type AccessContext } from "@/lib/auth/session";
-import type { AcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
-import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
-import { sanitizeUserProfileText } from "@/lib/userProfileData";
+} from "@/backend/auth/localStore";
+import { getAccessContext, type AccessContext } from "@/backend/auth/session";
+import type { AcessoUsuarios } from "@/backend/permissions/validarAcessoUsuarios";
+import { validarAcessoUsuariosNoServidor } from "@/backend/permissions/validarAcessoUsuariosNoServidor";
+import { sanitizeUserProfileText } from "@/backend/userProfileData";
 
 export const revalidate = 0;
 

@@ -1,10 +1,11 @@
 ﻿import { NextResponse } from "next/server";
-import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/lib/companyQuality";
+import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/backend/companyQuality";
 import { getAllReleases } from "@/release/data";
-import { ensureSummaryAlerts, readAlertsStore } from "@/lib/qualityAlert";
-import { getRedis } from "@/lib/redis";
-import { rateLimit } from "@/lib/rateLimit";
-import { calculateQualityScore } from "@/lib/qualityScore";
+import { ensureSummaryAlerts, readAlertsStore } from "@/backend/qualityAlert";
+import { getRedis } from "@/backend/redis";
+import { rateLimit } from "@/backend/rateLimit";
+import { calculateQualityScore } from "@/backend/qualityScore";
+import { resolveOperationalContext } from "@/backend/context/operationalContext";
 
 export async function GET(req: Request, context: { params: Promise<{ slug?: string }> }) {
     // Rate limit: 30 req/min per IP
@@ -17,6 +18,13 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
   if (!slug) {
     return NextResponse.json({ error: "Empresa não informada" }, { status: 400 });
   }
+  const operational = await resolveOperationalContext(req, {
+    moduleId: "dashboard",
+    action: "view",
+    companySlug: slug,
+    requireCompany: true,
+  });
+  if (!operational.ok) return operational.response;
   const period = url.searchParams.get("period") || "30d";
   const cacheKey = `dash:${slug}:${period}`;
   const redis = getRedis();
@@ -73,4 +81,3 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
   await redis.set(cacheKey, JSON.stringify(response), { ex: 120 });
   return NextResponse.json(response);
 }
-

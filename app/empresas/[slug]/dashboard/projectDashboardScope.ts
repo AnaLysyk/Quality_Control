@@ -1,4 +1,4 @@
-﻿import { normalizeDefectStatus } from "@/lib/defectNormalization";
+﻿import { normalizeDefectStatus } from "@/backend/defectNormalization";
 import type { CompanyDashboardData } from "./companyDashboardData";
 
 type DashboardScopeInput = {

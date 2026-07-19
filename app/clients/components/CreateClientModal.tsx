@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap, FiEdit2 } from "react-icons/fi";
-import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, isCnpjValid } from "@/lib/brasilApiCnpj";
+import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, isCnpjValid } from "@/backend/brasilApiCnpj";
 import UserAvatar from "@/components/UserAvatar";
 import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";
 
@@ -27,6 +27,7 @@ export type ClientFormValues = {
   notes?: string;
   description?: string;
   adminEmail?: string;
+  responsibleLeaderId?: string;
   active: boolean;
   integrationMode: ClientIntegrationMode;
   qaseToken?: string;
@@ -47,6 +48,8 @@ type QaseProjectOption = {
   status?: ProjectStatus;
   imageUrl?: string | null;
 };
+
+type LeaderCandidate = { id: string; name: string; email: string };
 
 type Props = {
   open: boolean;
@@ -126,6 +129,9 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const [generatingUsername, setGeneratingUsername] = useState(false);
   const [active, setActive] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
+  const [responsibleLeaderId, setResponsibleLeaderId] = useState("");
+  const [leaderCandidates, setLeaderCandidates] = useState<LeaderCandidate[]>([]);
+  const [leadersLoading, setLeadersLoading] = useState(false);
   // integrationMode removed: Qase fields are always visible
   const [qaseToken, setQaseToken] = useState("");
   const [showQaseToken, setShowQaseToken] = useState(false);
@@ -166,6 +172,21 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const companyLogoPreviewName = name || companyUsername || adminEmail || "Empresa";
   const companyLogoPreviewSrc = logoPreviewObjectUrl ?? (logoUrl.trim() || null);
 
+  useEffect(() => {
+    if (!open || mode !== "create") return;
+    let mounted = true;
+    setLeadersLoading(true);
+    void fetch("/api/clients/leader-candidates", { credentials: "include", cache: "no-store" })
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (mounted) setLeaderCandidates(Array.isArray(data?.items) ? data.items : []);
+      })
+      .finally(() => {
+        if (mounted) setLeadersLoading(false);
+      });
+    return () => { mounted = false; };
+  }, [open, mode]);
+
   function clearCompanyLogoObjectPreview() {
     if (logoPreviewObjectUrl) {
       URL.revokeObjectURL(logoPreviewObjectUrl);
@@ -178,7 +199,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     setError(null);
 
     if (choice.avatarValue.startsWith("data:image/") && choice.avatarValue.length > 500000) {
-      setError("Imagem muito grande para salvar na empresa. Use GIF por URL, emoji, Ã­cone ou uma imagem menor.");
+      setError("Imagem muito grande para salvar na empresa. Use GIF por URL, emoji, ícone ou uma imagem menor.");
       return;
     }
 
@@ -213,12 +234,12 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     }
 
     if (rawCnpj.length < 14) {
-      setCnpjMessage("Digite os 14 dÃ­gitos do CNPJ.");
+      setCnpjMessage("Digite os 14 dígitos do CNPJ.");
       return;
     }
 
     if (!isCnpjValid(rawCnpj)) {
-      setCnpjMessage("âŒ CNPJ invÃ¡lido (checksum falhou).");
+      setCnpjMessage("❌ CNPJ inválido (checksum falhou).");
       return;
     }
 
@@ -308,7 +329,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     }
 
     if (!isCnpjValid(rawCnpj)) {
-      setCnpjMessage("âŒ CNPJ invÃ¡lido (checksum falhou).");
+      setCnpjMessage("❌ CNPJ inválido (checksum falhou).");
       return;
     }
 
@@ -318,7 +339,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     cnpjLookupControllerRef.current = controller;
 
     setCnpjLoading(true);
-    setCnpjMessage("âœ“ CNPJ vÃ¡lido. Consultando BrasilAPI...");
+    setCnpjMessage("✓ CNPJ válido. Consultando BrasilAPI...");
 
     try {
       const data = await lookupCnpjCompany(rawCnpj, controller.signal);
@@ -364,9 +385,9 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
       }
 
       if (companyName || companyAddress || data?.cep || data?.numero || data?.complemento || contactPhone || cnae || contactEmail) {
-        setCnpjMessage("âœ“ CNPJ vÃ¡lido. Dados preenchidos pela BrasilAPI.");
+        setCnpjMessage("✓ CNPJ válido. Dados preenchidos pela BrasilAPI.");
       } else {
-        setCnpjMessage("âœ“ CNPJ vÃ¡lido, mas sem dados adicionais na BrasilAPI.");
+        setCnpjMessage("✓ CNPJ válido, mas sem dados adicionais na BrasilAPI.");
       }
     } catch (error) {
       if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
@@ -494,12 +515,12 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
       });
       const payload = (await response.json().catch(() => null)) as { username?: string; error?: string } | null;
       if (!response.ok) {
-        throw new Error(payload?.error || "NÃ£o foi possÃ­vel gerar o usuÃ¡rio da empresa.");
+        throw new Error(payload?.error || "Não foi possível gerar o usuário da empresa.");
       }
       const generated = (payload?.username ?? "").trim().toLowerCase();
       if (generated) setCompanyUsername(generated);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "NÃ£o foi possÃ­vel gerar o usuÃ¡rio da empresa.";
+      const message = err instanceof Error ? err.message : "Não foi possível gerar o usuário da empresa.";
       toast.error(message);
     } finally {
       setGeneratingUsername(false);
@@ -600,6 +621,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     setNotificationsFanoutEnabled(false);
     setCompanyUsername("");
     setActive(false);
+    setResponsibleLeaderId("");
     setQaseToken("");
     resetQaseSelection();
     if (logoPreviewObjectUrl) {
@@ -656,7 +678,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
       });
       const data = (await res.json().catch(() => null)) as { items?: QaseProjectOption[]; error?: string } | null;
       if (!res.ok) {
-        throw new Error(data?.error || "NÃ£o foi possÃ­vel consultar os projetos da Qase.");
+        throw new Error(data?.error || "Não foi possível consultar os projetos da Qase.");
       }
 
       const items = Array.isArray(data?.items)
@@ -717,7 +739,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     }
     // avoid duplicates
     if (qaseProjects.some((p) => p.code === code) || selectedQaseProjectCodes.includes(code)) {
-      setQaseProjectsError("Projeto jÃ¡ adicionado.");
+      setQaseProjectsError("Projeto já adicionado.");
       return;
     }
     const project: QaseProjectOption = { code, title: name, status: "unknown" };
@@ -792,7 +814,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     if (taxId.trim()) {
       const rawCnpj = normalizeCnpj(taxId);
       if (!isCnpjValid(rawCnpj)) {
-        setError("CNPJ invÃ¡lido. Verifique o nÃºmero.");
+        setError("CNPJ inválido. Verifique o número.");
         return;
       }
     }
@@ -809,7 +831,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           return;
         }
         if (!primaryProject || !selectedCodes.includes(primaryProject)) {
-          setError("Selecione o projeto principal da integraÃ§Ã£o.");
+          setError("Selecione o projeto principal da integração.");
           return;
         }
       }
@@ -843,6 +865,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
         active,
         integrationMode: selectedCodes.length || qaseToken.trim() ? "qase" : "manual",
         adminEmail: adminEmail.trim() || undefined,
+        responsibleLeaderId: responsibleLeaderId || undefined,
         qaseToken: qaseToken.trim() || undefined,
         qaseProjectCode: selectedCodes.length ? (selectedCodes[0] || "").trim().toUpperCase() : undefined,
         qaseProjectCodes: Array.isArray(selectedCodes) ? selectedCodes : [],
@@ -880,14 +903,14 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             if (appsRes.ok) {
               const appsJson = await appsRes.json().catch(() => null);
               const apps = Array.isArray(appsJson?.items) ? appsJson.items : [];
-              if (apps.length) messages.push(`AplicaÃ§Ãµes geradas: ${apps.length}`);
+              if (apps.length) messages.push(`Aplicações geradas: ${apps.length}`);
             }
           } catch {
             // ignore
           }
         }
         if (messages.length) {
-          toast.success(messages.join(" â€” "));
+          toast.success(messages.join(" — "));
         } else {
           toast.success("Empresa cadastrada");
         }
@@ -912,7 +935,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const isViewMode = mode === 'view' && !isEditing;
   const isEditMode = mode === 'create' || mode === 'edit' || (mode === 'view' && isEditing);
   const modalTitle = mode === 'create' ? 'Cadastrar empresa' : isViewMode ? 'Empresa' : 'Editar empresa';
-  const submitButtonText = mode === 'create' ? 'Salvar empresa' : mode === 'edit' ? 'Salvar mudanÃ§as' : 'Salvar';
+  const submitButtonText = mode === 'create' ? 'Salvar empresa' : mode === 'edit' ? 'Salvar mudanças' : 'Salvar';
 
   function handleCloseOrCancel() {
     // From view->edit, cancel returns to read-only view.
@@ -939,7 +962,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             <h3 className="mt-1 text-2xl font-black tracking-tight text-white">{modalTitle}</h3>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-white/78">
               {mode === 'create' 
-                ? 'Preencha os dados principais e configure a integraÃ§Ã£o se necessÃ¡rio.'
+                ? 'Preencha os dados principais e configure a integração se necessário.'
                 : isViewMode
                 ? 'Visualize os dados da empresa.'
                 : 'Edite os dados da empresa.'}
@@ -949,7 +972,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-lg leading-none text-white/80 transition hover:bg-white/18 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             onClick={handleCloseOrCancel}
-            aria-label="Fechar ou cancelar ediÃ§Ã£o"
+            aria-label="Fechar ou cancelar edição"
           >
             x
           </button>
@@ -964,7 +987,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
 
         <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
           <label className="block text-sm">
-            Nome / razÃ£o social
+            Nome / razão social
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={name}
@@ -1006,6 +1029,24 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             </div>
           </label>
 
+          {mode === "create" ? (
+            <label className="block text-sm">
+              Líder TC responsável <span className="text-xs text-(--tc-text-muted)">(opcional)</span>
+              <select
+                className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                value={responsibleLeaderId}
+                onChange={(event) => setResponsibleLeaderId(event.target.value)}
+                disabled={leadersLoading}
+              >
+                <option value="">{leadersLoading ? "Carregando líderes..." : "Definir depois"}</option>
+                {leaderCandidates.map((leader) => (
+                  <option key={leader.id} value={leader.id}>{leader.name} — {leader.email}</option>
+                ))}
+              </select>
+              <span className="mt-1 block text-xs text-(--tc-text-muted)">Cria o projeto Geral e concede acesso imediato à empresa.</span>
+            </label>
+          ) : null}
+
           <label className="block text-sm">
             CNPJ
             <input
@@ -1039,18 +1080,18 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           </label>
 
           <label className="block text-sm md:col-span-2">
-            EndereÃ§o
+            Endereço
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Rua, nÃºmero, cidade"
+              placeholder="Rua, número, cidade"
               disabled={isViewMode}
             />
           </label>
 
           <label className="block text-sm">
-            NÃºmero
+            Número
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={addressNumber}
@@ -1066,7 +1107,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={addressDetail}
               onChange={(e) => setAddressDetail(e.target.value)}
-              placeholder="Bloco, sala, referÃªncia"
+              placeholder="Bloco, sala, referência"
               disabled={isViewMode}
             />
           </label>
@@ -1120,7 +1161,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                 <div>
                   <p className="text-sm font-semibold text-(--tc-text)">Logo da empresa</p>
                   <p className="mt-1 text-xs leading-5 text-(--tc-text-muted)">
-                    Informe a logo oficial da empresa. Essa imagem serÃ¡ usada em PDFs, relatÃ³rios, cards e Ã¡reas institucionais.
+                    Informe a logo oficial da empresa. Essa imagem será usada em PDFs, relatórios, cards e áreas institucionais.
                   </p>
                 </div>
 
@@ -1183,16 +1224,16 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                 disabled={isViewMode}
               />
               <span>
-                <span className="block font-semibold text-(--tc-text)">Fan-out de notificaÃ§Ãµes</span>
+                <span className="block font-semibold text-(--tc-text)">Fan-out de notificações</span>
                 <span className="mt-1 block text-xs text-(--tc-text-muted)">
-                  Quando ativo, mudanÃ§as no contexto da empresa notificam tambÃ©m usuÃ¡rios vinculados.
+                  Quando ativo, mudanças no contexto da empresa notificam também usuários vinculados.
                 </span>
               </span>
             </label>
           </div>
 
           <label className="block text-sm md:col-span-2">
-            UsuÃ¡rio da empresa
+            Usuário da empresa
             <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
               <input
                 className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
@@ -1207,26 +1248,26 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                 className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm font-semibold text-(--tc-text) disabled:opacity-60"
                 disabled={isViewMode || generatingUsername || !name.trim()}
               >
-                {generatingUsername ? "Gerando..." : "Gerar usuÃ¡rio"}
+                {generatingUsername ? "Gerando..." : "Gerar usuário"}
               </button>
             </div>
             <span className="mt-1 block text-xs text-(--tc-text-muted)">
-              Login Ãºnico do perfil institucional da empresa. SerÃ¡ usado no usuÃ¡rio que acessa o Meu Perfil dessa empresa.
+              Login único do perfil institucional da empresa. Será usado no usuário que acessa o Meu Perfil dessa empresa.
             </span>
           </label>
 
           <fieldset className="md:col-span-2 rounded-2xl border border-sky-200/80 bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_100%)] p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] dark:border-sky-700/45 dark:bg-[linear-gradient(180deg,rgba(14,30,55,0.94)_0%,rgba(8,20,38,0.98)_100%)]" disabled={isViewMode}>
             <legend className="flex items-center gap-2 px-2 text-sm font-bold text-(--tc-text)">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-sky-600 text-white shadow-sm"><FiLink2 size={12} /></span>
-              IntegraÃ§Ã£o
+              Integração
             </legend>
             <p className="mt-1 text-xs leading-5 text-(--tc-text-muted)">
-              Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicaÃ§Ãµes. Cada projeto selecionado serÃ¡ tratado como uma aplicaÃ§Ã£o separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
+              Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicações. Cada projeto selecionado será tratado como uma aplicação separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
             </p>
 
             <div className="mt-3">
-              <p className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100"><FiZap size={13} className="text-sky-500" /> IntegraÃ§Ã£o com Qase</p>
-              <p className="mt-1 text-xs text-(--tc-text-muted)">Informe o token da Qase (novo ou jÃ¡ salvo) e clique em &quot;Buscar projetos&quot; para carregar os projetos disponÃ­veis. Selecione os projetos que deseja vincular â€” cada projeto selecionado serÃ¡ cadastrado como uma aplicaÃ§Ã£o da empresa.</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100"><FiZap size={13} className="text-sky-500" /> Integração com Qase</p>
+              <p className="mt-1 text-xs text-(--tc-text-muted)">Informe o token da Qase (novo ou já salvo) e clique em &quot;Buscar projetos&quot; para carregar os projetos disponíveis. Selecione os projetos que deseja vincular — cada projeto selecionado será cadastrado como uma aplicação da empresa.</p>
             </div>
 
             <div className="mt-4 space-y-4">
@@ -1292,14 +1333,14 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><FiCloudLightning size={14} className="text-(--tc-accent,#ef0001)" /> Projetos encontrados</p>
-                        <p className="mt-1 text-xs text-(--tc-text-muted)">Selecione os projetos que deseja vincular â€” cada projeto vira uma aplicaÃ§Ã£o independente.</p>
+                        <p className="mt-1 text-xs text-(--tc-text-muted)">Selecione os projetos que deseja vincular — cada projeto vira uma aplicação independente.</p>
                       </div>
                       <div className="text-sm text-(--tc-text-muted)">{Math.min(displayLimit, qaseProjects.filter((p) => {
                         const q = searchProjects.trim().toLowerCase();
                         if (onlyValid && p.status !== "valid") return false;
                         if (!q) return true;
                         return p.code.toLowerCase().includes(q) || (p.title || "").toLowerCase().includes(q);
-                      }).length)} carregados â€¢ {selectedProjects.length} selecionado{selectedProjects.length !== 1 ? "s" : ""}</div>
+                      }).length)} carregados • {selectedProjects.length} selecionado{selectedProjects.length !== 1 ? "s" : ""}</div>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -1309,7 +1350,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                       </div>
                       <label className="ml-2 flex items-center gap-2 text-xs text-(--tc-text-muted)">
                         <input type="checkbox" checked={onlyValid} onChange={(e) => setOnlyValid(e.target.checked)} className="h-4 w-4" />
-                        <span>Mostrar apenas vÃ¡lidos</span>
+                        <span>Mostrar apenas válidos</span>
                       </label>
                     </div>
 
@@ -1337,7 +1378,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                                     <span className="block font-semibold text-(--tc-text)">{project.title}</span>
                                     {project.status && (
                                       <span className={`text-xs font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full ${project.status === "valid" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : project.status === "invalid" ? "bg-rose-50 text-rose-700 border border-rose-200" : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
-                                        {project.status === "valid" ? "VÃ¡lido" : project.status === "invalid" ? "InvÃ¡lido" : "Pendente"}
+                                        {project.status === "valid" ? "Válido" : project.status === "invalid" ? "Inválido" : "Pendente"}
                                       </span>
                                     )}
                                   </div>
@@ -1412,15 +1453,15 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                         </label>
                       </div>
                       <div className="flex flex-col justify-center">
-                        <div className="text-sm font-medium">AplicaÃ§Ãµes que serÃ£o criadas</div>
-                        <div className="mt-1 text-xs text-(--tc-text-muted)">{selectedProjects.length} aplicaÃ§Ã£o{selectedProjects.length !== 1 ? "s" : ""}</div>
+                        <div className="text-sm font-medium">Aplicações que serão criadas</div>
+                        <div className="mt-1 text-xs text-(--tc-text-muted)">{selectedProjects.length} aplicação{selectedProjects.length !== 1 ? "s" : ""}</div>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 rounded-xl border border-dashed border-sky-300 bg-sky-50 px-4 py-4 text-sm text-slate-600 dark:border-sky-700/55 dark:bg-sky-950/30 dark:text-slate-300">
                     <FiSearch size={18} className="shrink-0 text-sky-500" />
-                    <span>Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicaÃ§Ãµes da empresa. Cada projeto da Qase serÃ¡ cadastrado como uma aplicaÃ§Ã£o independente.</span>
+                    <span>Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicações da empresa. Cada projeto da Qase será cadastrado como uma aplicação independente.</span>
                   </div>
                 )}
               </div>
@@ -1429,7 +1470,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           </fieldset>
 
           <label className="block text-sm md:col-span-2">
-            DescriÃ§Ã£o curta
+            Descrição curta
             <textarea
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={description}
@@ -1447,7 +1488,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="ObservaÃ§Ãµes adicionais"
+              placeholder="Observações adicionais"
               disabled={isViewMode}
             />
           </label>
@@ -1493,4 +1534,3 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     </div>
   );
 }
-

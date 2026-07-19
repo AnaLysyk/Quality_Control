@@ -47,9 +47,18 @@ jobs:
         run: npx prisma generate
 
       - name: Run unit tests with coverage
+        id: coverage
+        continue-on-error: true
         run: npm run test:coverage
 
       - name: Run SonarCloud scan
+        if: always()
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Preserve coverage test failure
+        if: always() && steps.coverage.outcome == 'failure'
+        run: |
+          echo "Unit tests with coverage failed; the SonarCloud scan was still executed."
+          exit 1

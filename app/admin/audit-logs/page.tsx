@@ -1167,8 +1167,16 @@ export default function AdminAuditLogsPage() {
 
       {/* Purge modal */}
       {purgeOpen && (
-        <div className={styles.modalOverlay} onClick={() => !purging && setPurgeOpen(false)}>
-          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={styles.modalOverlay}
+          onClick={() => !purging && setPurgeOpen(false)}
+          onKeyDown={(e) => e.key === "Escape" && !purging && setPurgeOpen(false)}
+        >
+          <div
+            className={styles.modalBox}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
               <div className={styles.modalIconWrap}>
                 <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">

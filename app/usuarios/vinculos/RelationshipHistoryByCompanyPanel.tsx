@@ -99,8 +99,16 @@ export default function RelationshipHistoryByCompanyPanel({ open, onClose }: Pro
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] bg-slate-950/35 backdrop-blur-sm" onClick={onClose}>
-      <aside className="relationship-history-panel relationship-history-by-company" onClick={(event) => event.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-[110] bg-slate-950/35 backdrop-blur-sm"
+      onClick={onClose}
+      onKeyDown={(event) => event.key === "Escape" && onClose()}
+    >
+      <aside
+        className="relationship-history-panel relationship-history-by-company"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
         <div className="relationship-history-heading">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.22em]">Histórico por perfil</p>

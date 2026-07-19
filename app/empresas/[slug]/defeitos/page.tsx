@@ -3216,11 +3216,13 @@ export default function CompanyDefectsPage() {
           role="dialog"
           aria-modal="true"
           onClick={closeDrawer}
+          onKeyDown={(event) => event.key === "Escape" && closeDrawer()}
         >
           <div
             className="defect-detail-modal h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-hidden rounded-4xl bg-[var(--tc-surface,#fff)] text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_28px_90px_rgba(15,23,42,0.28)]"
             data-testid="defect-modal"
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
           >
             <div className="flex h-full flex-col">
               <div className="border-b border-slate-200 bg-[linear-gradient(135deg,#0f2350_0%,#213f88_48%,#b30f2d_100%)] px-6 py-5 text-white">

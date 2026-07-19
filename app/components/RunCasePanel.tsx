@@ -36,11 +36,13 @@ export function RunCasePanel({ item, columnKey, projectCode, onClose }: RunCaseP
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
       onClick={onClose}
+      onKeyDown={(e) => e.key === "Escape" && onClose()}
       role="presentation"
     >
       <div
         className="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6 space-y-5"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label="Detalhes do caso de teste"

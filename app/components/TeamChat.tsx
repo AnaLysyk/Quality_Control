@@ -1199,7 +1199,7 @@ export default function TeamChat() {
     <div className="qc-chat-shell qc-team-chat-testing-company h-full min-h-0 overflow-hidden bg-[linear-gradient(180deg,var(--page-bg),var(--tc-bg))] text-(--tc-text-primary)" onClickCapture={handleChatModalButtonCapture}>
       {scheduleModalOpen ? (
         <div className="qc-chat-schedule-modal" role="dialog" aria-modal="true" aria-label="Agendar reunião">
-          <div className="qc-chat-modal-backdrop" onClick={() => setScheduleModalOpen(false)} />
+          <div className="qc-chat-modal-backdrop" onClick={() => setScheduleModalOpen(false)} onKeyDown={(e) => e.key === "Escape" && setScheduleModalOpen(false)} />
           <div className="qc-chat-schedule-modal__panel">
             <div className="qc-chat-schedule-modal__header">
               <div>
@@ -1281,7 +1281,7 @@ export default function TeamChat() {
       ) : null}
       {chatActionTarget ? (
         <div className="qc-chat-unified-action-modal" role="dialog" aria-modal="true" aria-label={isComposerAction ? "Enviar na conversa" : "Reagir Ã  mensagem"}>
-          <div className="qc-chat-modal-backdrop" onClick={() => setChatActionTarget(null)} />
+          <div className="qc-chat-modal-backdrop" onClick={() => setChatActionTarget(null)} onKeyDown={(e) => e.key === "Escape" && setChatActionTarget(null)} />
           <div className="qc-chat-unified-action-modal__panel">
             <div className="qc-chat-unified-action-modal__header">
               <div>
@@ -1345,7 +1345,7 @@ export default function TeamChat() {
       ) : null}
       {messageReactionTarget ? (
         <div className="qc-chat-message-reaction-modal" role="dialog" aria-modal="true" aria-label="Reagir Ã  mensagem">
-          <div className="qc-chat-modal-backdrop" onClick={() => setMessageReactionTarget(null)} />
+          <div className="qc-chat-modal-backdrop" onClick={() => setMessageReactionTarget(null)} onKeyDown={(e) => e.key === "Escape" && setMessageReactionTarget(null)} />
           <div className="qc-chat-modal-panel qc-chat-message-reaction-modal__panel">
             <div className="qc-chat-modal-header">
               <div>
@@ -1383,7 +1383,7 @@ export default function TeamChat() {
       ) : null}
       {reactionModalOpen ? (
         <div className="qc-chat-reaction-modal" role="dialog" aria-modal="true" aria-label="Reagir Ã  conversa">
-          <div className="qc-chat-reaction-modal__backdrop" onClick={() => setReactionModalOpen(false)} />
+          <div className="qc-chat-reaction-modal__backdrop" onClick={() => setReactionModalOpen(false)} onKeyDown={(e) => e.key === "Escape" && setReactionModalOpen(false)} />
           <div className="qc-chat-reaction-modal__panel">
             <div className="qc-chat-reaction-modal__header">
               <div>

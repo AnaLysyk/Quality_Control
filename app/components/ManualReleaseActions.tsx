@@ -403,7 +403,13 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
       </div>
 
       {editOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/72 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={(event) => { if (event.target === event.currentTarget && !editSaving) setEditOpen(false); }}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/72 px-4 py-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={(event) => { if (event.target === event.currentTarget && !editSaving) setEditOpen(false); }}
+          onKeyDown={(event) => { if (event.key === "Escape" && !editSaving) setEditOpen(false); }}
+        >
           <div className="w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/15 bg-[#081428] text-white shadow-[0_30px_90px_rgba(2,6,23,0.45)]">
             <div className="flex items-start justify-between gap-4 border-b border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-5">
               <div className="space-y-2">

@@ -2255,6 +2255,14 @@ export default function PlaywrightStudio({ activeCompanySlug, companies, testCas
             <div
               key={run.id}
               onClick={() => setActiveRunId(run.id === activeRunId ? null : run.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setActiveRunId(run.id === activeRunId ? null : run.id);
+                }
+              }}
+              role="button"
+              tabIndex={0}
               className={`mb-1.5 cursor-pointer rounded-lg border px-3 py-2 transition-colors ${
                 activeRunId === run.id
                   ? "border-[#ef0001] bg-red-50 dark:border-[#ef0001] dark:bg-zinc-800"
@@ -2656,6 +2664,9 @@ export default function PlaywrightStudio({ activeCompanySlug, companies, testCas
           <div
             className="fixed inset-0 z-40"
             onClick={() => setContextMenu(null)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setContextMenu(null);
+            }}
           />
           <div
             ref={ctxMenuRef}

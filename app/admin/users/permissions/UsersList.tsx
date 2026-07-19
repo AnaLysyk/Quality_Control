@@ -16,7 +16,19 @@ export default function UsersList({ users, onSelect }: { users: User[]; onSelect
       </div>
       <div>
         {users.map(u => (
-          <div key={u.id} className={styles.userItem} onClick={() => onSelect(u)}>
+          <div
+            key={u.id}
+            className={styles.userItem}
+            onClick={() => onSelect(u)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onSelect(u);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
             <div className={styles.userNameSmall}>{u.name}</div>
             <div className={styles.userMeta}>{u.email} — {u.role}</div>
           </div>

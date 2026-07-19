@@ -761,6 +761,9 @@ export function CreateManualReleaseButton({
               closeModal();
             }
           }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") closeModal();
+          }}
         >
           <div data-testid="test-run-create-modal" className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-4xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
             <div className="bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-4 text-white sm:px-8 sm:py-5">
@@ -1455,6 +1458,14 @@ export function CreateManualReleaseButton({
                                 onDragStart={(e) => { e.stopPropagation(); handleCardDragStart(e, item.id, column.key); }}
                                 onDragEnd={() => setDraggingCardId(null)}
                                 onClick={() => setEditingCase({ ...item })}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    setEditingCase({ ...item });
+                                  }
+                                }}
+                                role="button"
+                                tabIndex={0}
                                 className={[
                                   "relative cursor-pointer rounded-[22px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:border-[var(--tc-accent,#ef0001)]/30 hover:shadow-md",
                                   draggingCardId === item.id ? "opacity-40" : "",
@@ -1555,6 +1566,7 @@ export function CreateManualReleaseButton({
               role="dialog"
               aria-modal="true"
               onClick={(e) => { if (e.target === e.currentTarget) setEditingCase(null); }}
+              onKeyDown={(e) => { if (e.key === "Escape") setEditingCase(null); }}
             >
               <div className="w-full max-w-2xl rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
                 {/* Header */}

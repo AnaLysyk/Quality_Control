@@ -760,6 +760,14 @@ export default function BrainGraphView() {
                         key={neighbor.id}
                         className={styles.neighborItem}
                         onClick={() => setSelectedNodeId(neighbor.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedNodeId(neighbor.id);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
                       >
                         <span className={styles.neighborDot} ref={(el) => { if (el) el.style.setProperty("--dot-color", getNodeColor(neighbor.type, isDark)); }} />
                         <span>{neighbor.label}</span>
@@ -804,7 +812,19 @@ export default function BrainGraphView() {
                   {nodeContext.impact.paths.slice(0, 10).map((p: { nodeId: string; edgeType: string; distance: number }, i: number) => {
                     const impactNode = nodeContext.impact.impactedNodes.find((n: BrainNode) => n.id === p.nodeId);
                     return (
-                      <div key={i} className={styles.neighborItem} onClick={() => setSelectedNodeId(p.nodeId)}>
+                      <div
+                        key={i}
+                        className={styles.neighborItem}
+                        onClick={() => setSelectedNodeId(p.nodeId)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedNodeId(p.nodeId);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
                         <span className={styles.neighborDot} ref={(el) => { if (el) el.style.setProperty("--dot-color", getNodeColor(impactNode?.type ?? "", isDark)); }} />
                         <span>{impactNode?.label ?? p.nodeId.slice(0, 8)}</span>
                         <span className={styles.neighborEdgeType}>

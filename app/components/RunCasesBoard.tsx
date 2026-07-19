@@ -734,6 +734,14 @@ export function RunCasesBoard({
                           }}
                           onDragEnd={() => setDraggingCardId(null)}
                           onClick={() => editable && setEditingCase({ ...item })}
+                          onKeyDown={(event) => {
+                            if ((event.key === "Enter" || event.key === " ") && editable) {
+                              event.preventDefault();
+                              setEditingCase({ ...item });
+                            }
+                          }}
+                          role={editable ? "button" : undefined}
+                          tabIndex={editable ? 0 : undefined}
                           className={[
                             "relative rounded-[22px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:border-[var(--tc-accent,#ef0001)]/30 hover:shadow-md",
                             editable ? "cursor-pointer" : "",
@@ -882,6 +890,9 @@ export function RunCasesBoard({
           aria-modal="true"
           onClick={(event) => {
             if (event.target === event.currentTarget) setEditingCase(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setEditingCase(null);
           }}
         >
           <div className="w-full max-w-3xl rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] shadow-[0_40px_140px_rgba(15,23,42,0.38)]">

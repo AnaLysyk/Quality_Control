@@ -717,6 +717,9 @@ function StatusContent() {
           onClick={() => {
             if (!busy) setCancelOpen(false);
           }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && !busy) setCancelOpen(false);
+          }}
           role="presentation"
           data-testid="access-request-cancel-modal-overlay"
         >
@@ -727,6 +730,7 @@ function StatusContent() {
             aria-labelledby="access-request-cancel-title"
             aria-describedby="access-request-cancel-description"
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
             data-testid="access-request-cancel-modal"
           >
             <div className="h-2 bg-linear-to-r from-[#011848] via-[#142b63] to-[#ef0001]" />

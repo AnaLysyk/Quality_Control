@@ -525,6 +525,7 @@ export function AccessRequestsTableExperience({
                 <div
                   className="absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-left shadow-[0_22px_60px_rgba(15,23,42,0.18)]"
                   onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
                 >
                   <button
                     type="button"

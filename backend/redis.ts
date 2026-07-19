@@ -135,36 +135,28 @@ class PostgresRedis {
   }
 
   async incr(key: string) {
-    return prisma.$transaction(async (tx) => {
-      const rows = await tx.$queryRaw<Array<{ key: string; value: string; expiresAt: Date | null }>>`
-        SELECT "key", "value", "expiresAt"
-        FROM "persistent_kv"
-        WHERE "key" = ${key}
-        LIMIT 1
-      `;
-      const row = rows[0] ?? null;
-      if (!row || (row.expiresAt && row.expiresAt.getTime() <= Date.now())) {
-        await tx.$executeRaw`
-          INSERT INTO "persistent_kv" ("key", "value", "expiresAt", "createdAt", "updatedAt")
-          VALUES (${key}, ${"1"}, ${null}, NOW(), NOW())
-          ON CONFLICT ("key")
-          DO UPDATE SET
-            "value" = ${"1"},
-            "expiresAt" = NULL,
-            "updatedAt" = NOW()
-        `;
-        return 1;
-      }
-
-      const current = Number.parseInt(row.value, 10);
-      const next = Number.isFinite(current) ? current + 1 : 1;
-      await tx.$executeRaw`
-        UPDATE "persistent_kv"
-        SET "value" = ${String(next)}, "expiresAt" = ${row.expiresAt}, "updatedAt" = NOW()
-        WHERE "key" = ${key}
-      `;
-      return next;
-    });
+    // Upsert atômico numa única ida ao banco (sem `$transaction`, que precisa
+    // reservar uma conexão dedicada por 2 round-trips e vinha estourando o
+    // timeout do pool sob carga: "Unable to start a transaction in the given
+    // time"). O INSERT ... ON CONFLICT já garante atomicidade no Postgres.
+    const rows = await prisma.$queryRaw<Array<{ value: string }>>`
+      INSERT INTO "persistent_kv" ("key", "value", "expiresAt", "createdAt", "updatedAt")
+      VALUES (${key}, '1', NULL, NOW(), NOW())
+      ON CONFLICT ("key") DO UPDATE SET
+        "value" = CASE
+          WHEN "persistent_kv"."expiresAt" IS NOT NULL AND "persistent_kv"."expiresAt" <= NOW() THEN '1'
+          WHEN "persistent_kv"."value" ~ '^[0-9]+$' THEN ("persistent_kv"."value"::bigint + 1)::text
+          ELSE '1'
+        END,
+        "expiresAt" = CASE
+          WHEN "persistent_kv"."expiresAt" IS NOT NULL AND "persistent_kv"."expiresAt" <= NOW() THEN NULL
+          ELSE "persistent_kv"."expiresAt"
+        END,
+        "updatedAt" = NOW()
+      RETURNING "value"
+    `;
+    const next = Number.parseInt(rows[0]?.value ?? "1", 10);
+    return Number.isFinite(next) ? next : 1;
   }
 
   async keys(pattern: string) {

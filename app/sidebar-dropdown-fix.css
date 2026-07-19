@@ -8,13 +8,8 @@
   isolation: isolate;
 }
 
-.sidebar-operational-shell .sidebar-company-selector {
-  z-index: 180;
-}
-
 .sidebar-operational-shell .sidebar-project-selector {
   position: relative;
-  z-index: 170;
 }
 
 .sidebar-operational-shell .sidebar-dropdown,

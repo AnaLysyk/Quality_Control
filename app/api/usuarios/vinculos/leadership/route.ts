@@ -52,12 +52,7 @@ function hasPlatformVisibility(user: AuthUser) {
 }
 
 function canEditRelationships(user: AuthUser) {
-  return Boolean(
-    user.isGlobalAdmin ||
-      ["technical_support", "support", "leader_tc", "empresa", "company", "company_admin"].includes(normalizedRole(user)) ||
-      checkPermission(user, "relationships:edit") ||
-      checkPermission(user, "relationships:create"),
-  );
+  return Boolean(checkPermission(user, "relationships:edit") || checkPermission(user, "relationships:create"));
 }
 
 async function resolveScopedCompanyIds(user: AuthUser) {

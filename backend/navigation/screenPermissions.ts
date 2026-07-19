@@ -57,7 +57,7 @@ export function getPermissionModulesWithScreens(baseModules: readonly Permission
 function getRelationshipDefaultsForRole(role: ReturnType<typeof normalizeLegacyRole>): string[] {
   if (role === SYSTEM_ROLES.LEADER_TC) return ["view", "create", "edit", "delete"];
   if (role === SYSTEM_ROLES.EMPRESA) return ["view", "edit", "delete"];
-  if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return ["view"];
+  if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return ["view", "create", "edit", "delete"];
   return [];
 }
 

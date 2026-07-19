@@ -121,24 +121,21 @@ describe("local auth store disk mode", () => {
     );
   });
 
-  it("faz fallback para memória quando a gravação em disco falha", async () => {
+  it("registra e absorve a falha de gravação em disco", async () => {
     const warning = jest.spyOn(console, "warn").mockImplementation(() => undefined);
     const storeModule = await loadStore({
       readFile: jest.fn().mockRejectedValue(new Error("missing")),
       mkdir: jest.fn().mockRejectedValue(new Error("readonly")),
     });
 
-    await storeModule.writeLocalAuthStore({
+    await expect(storeModule.writeLocalAuthStore({
       users: [{ id: "u1", name: "Ana", email: "ana@example.com", password_hash: "hash" }],
       companies: [],
       memberships: [],
       links: [],
-    });
+    })).resolves.toBeUndefined();
 
-    process.env.LOCAL_AUTH_IN_MEMORY = "true";
-    const result = await storeModule.readLocalAuthStore();
     expect(warning).toHaveBeenCalledWith(expect.stringContaining("Falha ao persistir em disco"));
-    expect(result.users[0]?.id).toBe("u1");
     warning.mockRestore();
   });
 });

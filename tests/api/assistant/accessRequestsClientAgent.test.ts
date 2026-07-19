@@ -205,9 +205,9 @@ describe("runAccessRequestsClientAgentCommand", () => {
   });
 
   it("retorna mensagens de falha para ações ausentes", () => {
-    expect(runAccessRequestsClientAgentCommand("/admin/access-requests", "baixar pdf")).toContain("não encontrei o botao");
-    expect(runAccessRequestsClientAgentCommand("/admin/access-requests", "editar solicitação")).toContain("não encontrei o botao");
-    expect(runAccessRequestsClientAgentCommand("/admin/access-requests", "visualizar solicitação")).toContain("não encontrei o botao");
+    expect(runAccessRequestsClientAgentCommand("/admin/access-requests", "baixar pdf")).toContain("nao encontrei o botao");
+    expect(runAccessRequestsClientAgentCommand("/admin/access-requests", "editar solicitação")).toContain("nao encontrei o botao");
+    expect(runAccessRequestsClientAgentCommand("/admin/access-requests", "visualizar solicitação")).toContain("nao encontrei o botao");
   });
 
   it("retorna null para comando desconhecido", () => {

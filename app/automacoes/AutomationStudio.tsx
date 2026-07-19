@@ -49,6 +49,7 @@ import {
 } from "@/data/automationStudio";
 import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
 import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/backend/automations/companyScope";
+import { secureRandomFloat } from "@/shared/random";
 
 type CompanyOption = {
   name: string;
@@ -220,7 +221,7 @@ function createClientId() {
     return crypto.randomUUID();
   }
 
-  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `id-${Date.now()}-${secureRandomFloat().toString(36).slice(2, 8)}`;
 }
 
 function draftStorageKey(companySlug: string, flowId: string) {

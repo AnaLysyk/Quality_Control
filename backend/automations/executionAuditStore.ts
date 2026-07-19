@@ -1,6 +1,7 @@
 ﻿import "server-only";
 
 import { prisma } from "@/database/prismaClient";
+import { secureRandomFloat } from "@/shared/random";
 
 const DEFAULT_RETENTION_DAYS = 30;
 const DEFAULT_PRUNE_INTERVAL_SECONDS = 600;
@@ -90,7 +91,7 @@ export async function saveAutomationExecutionAudit(input: AutomationExecutionAud
   const serialized = JSON.stringify(payload);
   const route = normalizeKeySegment(input.route);
   const routeKey = `automation:execution:last:${route}`;
-  const historyKey = `automation:execution:item:${route}:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
+  const historyKey = `automation:execution:item:${route}:${Date.now()}:${secureRandomFloat().toString(36).slice(2, 10)}`;
 
   try {
     await upsertKv(routeKey, serialized);

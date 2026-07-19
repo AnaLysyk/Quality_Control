@@ -581,14 +581,14 @@ export function BrainNeuralDashboard() {
   const nodeTypeOptions = useMemo(
     () => Array.from(
       new Set(graph.nodes.map((node) => node.type).filter((value): value is BrainNodeType => Boolean(value))),
-    ).sort(),
+    ).sort((a, b) => a.localeCompare(b)),
     [graph.nodes],
   );
 
   const nodeStatusOptions = useMemo(
     () => Array.from(
       new Set(graph.nodes.map((node) => node.status).filter((value): value is BrainNodeStatus => Boolean(value))),
-    ).sort(),
+    ).sort((a, b) => a.localeCompare(b)),
     [graph.nodes],
   );
 

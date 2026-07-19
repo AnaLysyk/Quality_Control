@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { CreateFavoriteInput, FavoriteItem } from "@/backend/navigation/favoritesTypes";
+import { secureRandomFloat } from "@/shared/random";
 
 const LOCAL_KEY = "qc:favorites";
 
@@ -26,7 +27,7 @@ function saveLocalFavorites(items: FavoriteItem[]) {
 }
 
 function makeLocalId() {
-  return `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  return `local_${Date.now()}_${secureRandomFloat().toString(36).slice(2, 8)}`;
 }
 
 export function useFavorites() {

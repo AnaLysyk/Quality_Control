@@ -98,11 +98,12 @@ export default function Kanban({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const projectAbbr = (qaseProject || project || "").toUpperCase();
 
-  const hasItems =
+  const hasItems = Boolean(
     localData.pass.length ||
-    localData.fail.length ||
-    localData.blocked.length ||
-    localData.notRun.length;
+      localData.fail.length ||
+      localData.blocked.length ||
+      localData.notRun.length,
+  );
   const totals = {
     pass: localData.pass.length,
     fail: localData.fail.length,

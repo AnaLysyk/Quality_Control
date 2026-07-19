@@ -93,7 +93,6 @@ const PROJECT_SCOPED_ITEM_IDS = new Set([
   "quality-doc-links",
   "quality-doc-repository",
 ]);
-const PROJECT_OPTIONAL_SCOPED_ITEM_IDS = new Set<string>();
 const ENABLED_NAV_CATALOG = NAV_CATALOG;
 
 function withScopeQuery(
@@ -138,7 +137,7 @@ function resolveItemHref(
   projectSlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
 ): string | undefined {
-  const includeProject = PROJECT_SCOPED_ITEM_IDS.has(item.id) || PROJECT_OPTIONAL_SCOPED_ITEM_IDS.has(item.id);
+  const includeProject = PROJECT_SCOPED_ITEM_IDS.has(item.id);
 
   if (item.id === "admin-permissions-profile") {
     return "/admin/permissions";

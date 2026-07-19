@@ -29,6 +29,7 @@ import {
   type AutomationRequestPreset,
 } from "@/data/automationIde";
 import { isTestingCompanyScope, matchesAutomationCompanyScope } from "@/backend/automations/companyScope";
+import { secureRandomFloat } from "@/shared/random";
 
 type CompanyOption = {
   name: string;
@@ -66,7 +67,7 @@ const DEFAULT_AUTH: AutomationRequestAuth = { type: "none" };
 
 function createKeyValueRow(seed?: Partial<AutomationRequestKeyValue>): KeyValueRow {
   return {
-    id: Math.random().toString(36).slice(2, 10),
+    id: secureRandomFloat().toString(36).slice(2, 10),
     key: seed?.key ?? "",
     value: seed?.value ?? "",
   };

@@ -30,7 +30,7 @@ export function getBrainCacheKey(context: BrainRuntimeContext, extra: Record<str
     `permission:${context.permissionVersion}`,
     `bump:${permissionVersionBump}`,
     ...Object.keys(extra)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .map((key) => `${key}:${normalizePart(extra[key])}`),
   ];
   return parts.join("|");

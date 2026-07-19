@@ -29,7 +29,7 @@ describe("local auth store user lifecycle", () => {
       status: "active",
       user_origin: "client_company",
       user_scope: "company_only",
-      allow_multi_company_link: false,
+      allow_multi_company_link: true,
     });
 
     const updated = await mod.updateLocalUser(created.id, {

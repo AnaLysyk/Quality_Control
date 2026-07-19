@@ -1,6 +1,7 @@
 ﻿import "server-only";
 import { prisma } from "@/database/prismaClient";
-import { info, warn, error } from "@/backend/logger";
+import { info, warn } from "@/backend/logger";
+import { secureRandomFloat } from "@/shared/random";
 
 function buildBasicAuth(email: string, token: string) {
   return `Basic ${Buffer.from(`${email}:${token}`).toString("base64")}`;
@@ -69,7 +70,7 @@ export async function syncJiraIssuesToApplications(companySlug: string, maxResul
     const key = String(i.key ?? "");
     const summary = String(i.summary ?? key);
     const slug = normalizeSlug(`jira-${key}`);
-    const id = `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; // NOSONAR: record id, not a security token
+    const id = `app_${Date.now().toString(36)}_${secureRandomFloat().toString(36).slice(2, 8)}`;
     try {
       const up = await prisma.application.upsert({
         where: { slug_companySlug: { slug, companySlug } },
@@ -84,4 +85,3 @@ export async function syncJiraIssuesToApplications(companySlug: string, maxResul
   info(`syncJiraIssuesToApplications finished`, { company: companySlug, persisted: synced.length });
   return synced;
 }
-

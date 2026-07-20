@@ -1,5 +1,5 @@
-import { mergeBrainGraphs } from "@/app/brain/_utils/brainGraphBuilder";
-import type { BrainNode } from "@/app/brain/_types/brain.types";
+import { mergeBrainGraphs } from "@/brain/_utils/brainGraphBuilder";
+import type { BrainNode } from "@/brain/_types/brain.types";
 
 describe("mergeBrainGraphs", () => {
   it("prefere o no mais completo e remove arestas orfas", () => {

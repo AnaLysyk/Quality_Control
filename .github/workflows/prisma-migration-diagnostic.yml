@@ -1,0 +1,53 @@
+name: Prisma migration diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Run migrations
+        id: migrate
+        continue-on-error: true
+        shell: bash
+        run: |
+          export DATABASE_URL="postgresql://ci:ci@127.0.0.1:5432/ci?schema=public"
+          npx prisma migrate deploy --config prisma.config.ts > /tmp/prisma-migrate.log 2>&1
+      - name: Upload migration log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: prisma-migration-log
+          path: /tmp/prisma-migrate.log
+          if-no-files-found: error
+          retention-days: 1
+      - name: Preserve failure
+        if: steps.migrate.outcome == 'failure'
+        run: exit 1

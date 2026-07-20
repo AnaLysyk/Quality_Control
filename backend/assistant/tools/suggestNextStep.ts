@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import type { AuthUser } from "@/backend/jwtAuth";
 import { hasPermissionAccess } from "@/backend/permissionMatrix";
@@ -7,18 +7,13 @@ import type { AssistantScreenContext } from "../types";
 import { isEmpresaUser } from "../data";
 import type { AssistantExecutorResult } from "./types";
 
-/**
- * Gera sugestões inteligentes baseadas em:
- * 1. Contexto da tela atual
- * 2. Permissões do usuário
- * 3. Conhecimento do Brain (memórias e padrões)
- * 4. Atividade recente
- */
-export async function toolSuggestNextStep(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
+export async function toolSuggestNextStep(
+  user: AuthUser,
+  context: AssistantScreenContext,
+): Promise<AssistantExecutorResult> {
   const suggestions: string[] = [];
   const smartTips: string[] = [];
 
-  // Buscar memórias relevantes do Brain para contexto
   try {
     const relevantMemories = await prisma.brainMemory.findMany({
       where: {
@@ -34,16 +29,15 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
       select: { title: true, summary: true, memoryType: true },
     });
 
-    for (const mem of relevantMemories) {
-      if (mem.memoryType === "PATTERN") {
-        smartTips.push(`ðŸ’¡ ${mem.title}`);
+    for (const memory of relevantMemories) {
+      if (memory.memoryType === "PATTERN") {
+        smartTips.push(`💡 ${memory.title}`);
       }
     }
   } catch {
     // Brain optional
   }
 
-  // Sugestões contextuais por rota/tela antes do módulo genérico
   const isAccessRequestsContext = context.route.startsWith("/admin/access-requests");
   const isBrainContext =
     context.module === "brain" ||
@@ -51,76 +45,98 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
     context.route.startsWith("/admin/brain");
 
   if (isAccessRequestsContext) {
-    suggestions.push("ðŸ”Ž Buscar uma pessoa na fila de solicitações");
-    suggestions.push("ðŸ§­ Explicar o que falta para aprovar uma solicitação");
-    suggestions.push("ðŸ“ Orientar quais campos devolver para ajuste");
-    suggestions.push("ðŸ“„ Abrir ou baixar o PDF da solicitação visível");
+    suggestions.push(
+      "🔎 Buscar uma pessoa na fila de solicitações",
+      "🧭 Explicar o que falta para aprovar uma solicitação",
+      "📝 Orientar quais campos devolver para ajuste",
+      "📄 Abrir ou baixar o PDF da solicitação visível",
+    );
   }
 
   if (isBrainContext) {
-    suggestions.push("ðŸ§  Resumir o Brain e o que ele já sabe");
-    suggestions.push("ðŸ•¸ï¸ Explicar relações do grafo de conhecimento");
-    suggestions.push("ðŸ”Ž Buscar contexto em memórias, telas e entidades");
-    suggestions.push("âž¡ï¸ Sugerir o próximo passo como agente");
+    suggestions.push(
+      "🧠 Resumir o Brain e o que ele já sabe",
+      "🕸️ Explicar relações do grafo de conhecimento",
+      "🔎 Buscar contexto em memórias, telas e entidades",
+      "➡️ Sugerir o próximo passo como agente",
+    );
   }
 
-  // Sugestões contextuais por módulo
   if (context.module === "support") {
-    suggestions.push("ðŸ” Buscar tickets de alta prioridade sem responsável");
-    suggestions.push("ðŸ“‹ Resumir um chamado pelo ID para acelerar triagem");
-    if (hasPermissionAccess(user.permissions, "tickets", "create") || hasPermissionAccess(user.permissions, "support", "create")) {
-      suggestions.push("âœï¸ Transformar um relato em chamado estruturado");
-      suggestions.push("ðŸŽ« Criar novo ticket a partir de descrição");
+    suggestions.push(
+      "🔍 Buscar tickets de alta prioridade sem responsável",
+      "📋 Resumir um chamado pelo ID para acelerar triagem",
+    );
+    if (
+      hasPermissionAccess(user.permissions, "tickets", "create") ||
+      hasPermissionAccess(user.permissions, "support", "create")
+    ) {
+      suggestions.push(
+        "✏️ Transformar um relato em chamado estruturado",
+        "🎫 Criar novo ticket a partir de descrição",
+      );
     }
   }
 
   if (context.module === "permissions") {
-    suggestions.push("ðŸ” Explicar por que um perfil não vê um módulo");
-    suggestions.push("ðŸ“Š Listar ações disponíveis para o usuário analisado");
-    suggestions.push("ðŸ”§ Analisar escopo de acesso atual");
+    suggestions.push(
+      "🔐 Explicar por que um perfil não vê um módulo",
+      "📊 Listar ações disponíveis para o usuário analisado",
+      "🔧 Analisar escopo de acesso atual",
+    );
   }
 
   if (context.module === "test_plans") {
-    suggestions.push("ðŸ§ª Gerar caso de teste a partir do bug atual");
-    suggestions.push("ðŸ“ Criar roteiro de teste estruturado");
-    suggestions.push("âœ… Validar cobertura de testes existente");
+    suggestions.push(
+      "🧪 Gerar caso de teste a partir do bug atual",
+      "📝 Criar roteiro de teste estruturado",
+      "✅ Validar cobertura de testes existente",
+    );
   }
 
   if (context.module === "dashboard" && !isAccessRequestsContext && !isBrainContext) {
-    suggestions.push("ðŸ“ˆ Analisar métricas de qualidade do período");
-    suggestions.push("ðŸŽ¯ Identificar tendências nos indicadores");
-    suggestions.push("âš ï¸ Listar áreas que precisam de atenção");
+    suggestions.push(
+      "📈 Analisar métricas de qualidade do período",
+      "🎯 Identificar tendências nos indicadores",
+      "⚠️ Listar áreas que precisam de atenção",
+    );
   }
 
   if (context.module === "releases") {
-    suggestions.push("ðŸš€ Verificar status do último deploy");
-    suggestions.push("ðŸ“¦ Analisar testes pendentes para release");
-    suggestions.push("ðŸ“‹ Gerar relatório de qualidade da versão");
+    suggestions.push(
+      "🚀 Verificar status do último deploy",
+      "📦 Analisar testes pendentes para release",
+      "📋 Gerar relatório de qualidade da versão",
+    );
   }
 
   if (context.module === "company") {
     if (isEmpresaUser(user)) {
-      suggestions.push("ðŸ¢ Resumir status atual da minha empresa");
-      suggestions.push("ðŸ› Listar defeitos e bugs ativos no projeto");
-      suggestions.push("ðŸ“Š Ver métricas de qualidade dos testes");
-      suggestions.push("ðŸš€ Checar status dos planos de release");
+      suggestions.push(
+        "🏢 Resumir status atual da minha empresa",
+        "🐛 Listar defeitos e bugs ativos no projeto",
+        "📊 Ver métricas de qualidade dos testes",
+        "🚀 Checar status dos planos de release",
+      );
     } else {
-      suggestions.push("ðŸ¢ Resumir perfil da empresa");
-      suggestions.push("ðŸ“Š Analisar métricas de atendimento do cliente");
-      suggestions.push("ðŸ“‹ Listar integrações ativas");
-      suggestions.push("ðŸ‘¥ Ver usuários vinculados à empresa");
+      suggestions.push(
+        "🏢 Resumir perfil da empresa",
+        "📊 Analisar métricas de atendimento do cliente",
+        "📋 Listar integrações ativas",
+        "👥 Ver usuários vinculados à empresa",
+      );
     }
   }
 
-  // Sugestões genéricas se não há contexto específico
   if (!suggestions.length) {
-    suggestions.push("ðŸ“ Mostrar o contexto atual da tela");
-    suggestions.push("ðŸ” Buscar registros no seu escopo de acesso");
-    suggestions.push("ðŸ” Explicar permissões da tela atual");
-    suggestions.push("ðŸ’¡ O que posso fazer por você?");
+    suggestions.push(
+      "📍 Mostrar o contexto atual da tela",
+      "🔍 Buscar registros no seu escopo de acesso",
+      "🔐 Explicar permissões da tela atual",
+      "💡 O que posso fazer por você?",
+    );
   }
 
-  // Montar resposta
   const mainSuggestions = suggestions.slice(0, 4);
   let replyText = "**O que posso ajudar agora:**\n\n";
   replyText += mainSuggestions.map((item, index) => `${index + 1}. ${item}`).join("\n");
@@ -134,12 +150,14 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
     tool: "suggest_next_step",
     success: true,
     summary: "próximos passos sugeridos com contexto inteligente",
-    actions: mainSuggestions.map((prompt) => ({ 
-      kind: "prompt", 
-      label: prompt.replace(/^[^\s]+\s/, ""), // Remove emoji for clean label
-      prompt: prompt.replace(/^[^\s]+\s/, ""), 
-    })),
+    actions: mainSuggestions.map((prompt) => {
+      const cleanPrompt = prompt.replace(/^[^\s]+\s/, "");
+      return {
+        kind: "prompt",
+        label: cleanPrompt,
+        prompt: cleanPrompt,
+      };
+    }),
     reply: replyText,
   };
 }
-

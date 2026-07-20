@@ -10,11 +10,19 @@ export type UserProfileRoleInput = {
   created_by_company_id: string | null;
 };
 
+function roleText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
+    return String(value);
+  }
+  return "";
+}
+
 export function resolveUserProfileRole(user: UserProfileRoleInput): SystemRole | null {
   const globalRole = normalizeLegacyRole(user.globalRole ?? null);
   if (globalRole) return globalRole;
 
-  const role = normalizeLegacyRole(typeof user.role === "string" ? user.role : String(user.role ?? ""));
+  const role = normalizeLegacyRole(roleText(user.role));
   const looksCompanyUser =
     user.user_origin === "company" ||
     user.user_origin === "client" ||

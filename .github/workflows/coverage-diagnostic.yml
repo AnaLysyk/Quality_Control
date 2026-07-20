@@ -1,0 +1,45 @@
+name: Coverage diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      NEXT_DISABLE_FONT_DOWNLOAD: "1"
+      SKIP_PRISMA_MIGRATE: "true"
+      E2E_USE_JSON: "1"
+      AUTH_STORE: "json"
+      USE_JSON_STORE: "true"
+      DATABASE_URL: "postgresql://user:password@localhost:5432/quality_control_ci"
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Run full coverage
+        id: coverage
+        continue-on-error: true
+        run: npm run test:coverage > /tmp/coverage.log 2>&1
+      - name: Upload coverage log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: full-coverage-log
+          path: /tmp/coverage.log
+          if-no-files-found: error
+          retention-days: 1
+      - name: Preserve failure
+        if: steps.coverage.outcome == 'failure'
+        run: exit 1

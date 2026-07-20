@@ -139,19 +139,19 @@ describe("local auth store CRUD", () => {
     const company = await store.createLocalCompany({ name: "Empresa" });
 
     await expect(store.upsertLocalLink({ userId: user.id, companyId: company.id, role: "viewer" }))
-      .resolves.toBe("usuario_tc");
+      .resolves.toBe("testing_company_user");
     await expect(store.upsertLocalLink({
       userId: user.id,
       companyId: company.id,
       role: "support",
       capabilities: ["admin.read"],
       allowedProjectIds: ["p1"],
-    })).resolves.toBe("suporte_tecnico");
+    })).resolves.toBe("technical_support");
 
     const links = await store.listLocalLinks();
     expect(links).toHaveLength(1);
     expect(links[0]).toEqual(expect.objectContaining({
-      role: "suporte_tecnico",
+      role: "technical_support",
       capabilities: ["admin.read"],
       allowedProjectIds: ["p1"],
     }));
@@ -162,11 +162,11 @@ describe("local auth store CRUD", () => {
   it("normaliza papéis legados e globais", async () => {
     const store = await loadStore();
     expect(store.normalizeLocalRole("company_admin")).toBe("empresa");
-    expect(store.normalizeLocalRole("developer")).toBe("suporte_tecnico");
-    expect(store.normalizeLocalRole("tc_leader")).toBe("lider_tc");
+    expect(store.normalizeLocalRole("developer")).toBe("technical_support");
+    expect(store.normalizeLocalRole("tc_leader")).toBe("leader_tc");
     expect(store.normalizeGlobalRole("GLOBAL_ADMIN")).toBe("global_admin");
     expect(store.normalizeGlobalRole("user")).toBeNull();
-    expect(store.toLegacyRole("viewer", false)).toBe("usuario_tc");
-    expect(store.toLegacyRole("viewer", true)).toBe("lider_tc");
+    expect(store.toLegacyRole("viewer", false)).toBe("testing_company_user");
+    expect(store.toLegacyRole("viewer", true)).toBe("leader_tc");
   });
 });

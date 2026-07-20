@@ -1,5 +1,5 @@
-import { buildAccessRequestsBrainGraph } from "@/app/brain/_utils/brainGraphBuilder";
-import type { BrainAccessRequestRow, BrainAuditLogItem } from "@/app/brain/_types/brain.types";
+import { buildAccessRequestsBrainGraph } from "@/brain/_utils/brainGraphBuilder";
+import type { BrainAccessRequestRow, BrainAuditLogItem } from "@/brain/_types/brain.types";
 
 function makeRequest(overrides: Partial<BrainAccessRequestRow> = {}): BrainAccessRequestRow {
   return {

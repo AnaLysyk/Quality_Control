@@ -46,6 +46,13 @@ function makeRequest(url: string) {
   return new Request(url, { method: "GET" }) as unknown as Request;
 }
 
+const platformUser = baseUser({
+  role: "technical_support",
+  permissionRole: "technical_support",
+  companyRole: "technical_support",
+  companyId: null,
+});
+
 describe("app/api/usuarios/vinculos/search-v2/route.ts", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -70,49 +77,118 @@ describe("app/api/usuarios/vinculos/search-v2/route.ts", () => {
     expect(res.status).toBe(403);
   });
 
-  it("restringe operador de empresa aos modos qa_users/business_users, ignorando 'companies' pedido", async () => {
+  it("restringe operador de empresa aos modos qa_users/business_users", async () => {
     mockedAuthenticateRequest.mockResolvedValue(baseUser() as never);
     mockedCheckPermission.mockReturnValue(true);
 
     const res = await GET(makeRequest("https://app.local/api/usuarios/vinculos/search-v2?mode=companies"));
-    expect(res.status).toBe(200);
     const body = await res.json();
+
+    expect(res.status).toBe(200);
     expect(body.allowedModes).toEqual(["qa_users", "business_users"]);
     expect(body.mode).toBe("qa_users");
     expect(body.companyOperator).toBe(true);
   });
 
-  it("libera todos os modos, incluindo 'companies', para perfil com visão de plataforma", async () => {
-    mockedAuthenticateRequest.mockResolvedValue(baseUser({ role: "technical_support", permissionRole: "technical_support", companyRole: "technical_support" }) as never);
+  it("libera todos os modos para perfil com visão de plataforma", async () => {
+    mockedAuthenticateRequest.mockResolvedValue(platformUser as never);
     mockedCheckPermission.mockReturnValue(true);
 
     const res = await GET(makeRequest("https://app.local/api/usuarios/vinculos/search-v2?mode=companies"));
-    expect(res.status).toBe(200);
     const body = await res.json();
+
+    expect(res.status).toBe(200);
     expect(body.allowedModes).toEqual(["companies", "leaders", "qa_users", "business_users"]);
     expect(body.mode).toBe("companies");
   });
 
-  it("bloqueia query curta (1-2 caracteres) sem consultar o banco, mas ainda devolve permissions", async () => {
+  it("bloqueia query curta sem consultar pessoas ou empresas", async () => {
     mockedAuthenticateRequest.mockResolvedValue(baseUser() as never);
     mockedCheckPermission.mockImplementation((_user, permission) => permission === "relationships:view" || permission === "relationships:edit");
 
     const res = await GET(makeRequest("https://app.local/api/usuarios/vinculos/search-v2?q=ab"));
-    expect(res.status).toBe(200);
     const body = await res.json();
+
+    expect(res.status).toBe(200);
     expect(body.people).toEqual([]);
     expect(body.permissions).toEqual({ canCreate: false, canEdit: true, canDelete: false });
     expect(mockPrisma().user.findMany).not.toHaveBeenCalled();
+    expect(mockPrisma().company.findMany).not.toHaveBeenCalled();
   });
 
-  it("retorna pessoas no modo qa_users com query válida", async () => {
+  it("combina companyId, memberships, links e assignments no escopo do operador", async () => {
     mockedAuthenticateRequest.mockResolvedValue(baseUser() as never);
     mockedCheckPermission.mockReturnValue(true);
-    mockPrisma().user.findMany.mockResolvedValue([{ id: "qa-1", name: "Fulano TC", email: "fulano@x.com" }]);
+    const db = mockPrisma();
+    db.membership.findMany.mockResolvedValue([{ companyId: "company-2" }]);
+    db.userCompanyLink.findMany.mockResolvedValue([{ companyId: "company-3" }]);
+    db.projectTeamAssignment.findMany
+      .mockResolvedValueOnce([{ companyId: "company-4" }])
+      .mockResolvedValueOnce([]);
 
     const res = await GET(makeRequest("https://app.local/api/usuarios/vinculos/search-v2?mode=qa_users&q=fulano"));
+
     expect(res.status).toBe(200);
+    expect(db.user.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        AND: expect.arrayContaining([
+          expect.objectContaining({ OR: expect.any(Array) }),
+        ]),
+      }),
+    }));
+  });
+
+  it("retorna empresas e assignments ativos no modo companies", async () => {
+    mockedAuthenticateRequest.mockResolvedValue(platformUser as never);
+    mockedCheckPermission.mockReturnValue(true);
+    const db = mockPrisma();
+    db.company.findMany.mockResolvedValue([
+      { id: "company-1", name: "Empresa A", company_name: "Empresa A", slug: "empresa-a", status: "active", logo_url: null },
+    ]);
+    db.projectTeamAssignment.findMany.mockResolvedValue([
+      { id: "assignment-1", role: "leader_tc", status: "active", company: { id: "company-1" }, project: { id: "project-1" }, user: { id: "leader-1" } },
+    ]);
+
+    const res = await GET(makeRequest("https://app.local/api/usuarios/vinculos/search-v2?mode=companies&q=empresa"));
     const body = await res.json();
-    expect(body.people).toEqual([{ id: "qa-1", name: "Fulano TC", email: "fulano@x.com" }]);
+
+    expect(res.status).toBe(200);
+    expect(body.modeLabel).toBe("Empresas");
+    expect(body.companies).toHaveLength(1);
+    expect(body.assignments).toHaveLength(1);
+    expect(db.user.findMany).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["leaders", "Líder TC"],
+    ["qa_users", "Usuário TC"],
+    ["business_users", "Usuário empresarial"],
+  ])("consulta pessoas no modo %s", async (mode, expectedLabel) => {
+    mockedAuthenticateRequest.mockResolvedValue(platformUser as never);
+    mockedCheckPermission.mockReturnValue(true);
+    const db = mockPrisma();
+    db.user.findMany.mockResolvedValue([{ id: `${mode}-1`, name: "Pessoa", email: "pessoa@x.com" }]);
+    db.projectTeamAssignment.findMany.mockResolvedValue([{ id: "assignment-1", user: { id: `${mode}-1` } }]);
+
+    const res = await GET(makeRequest(`https://app.local/api/usuarios/vinculos/search-v2?mode=${mode}&q=pessoa`));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.modeLabel).toBe(expectedLabel);
+    expect(body.people).toHaveLength(1);
+    expect(body.assignments).toHaveLength(1);
+  });
+
+  it("não consulta assignments quando não há resultados", async () => {
+    mockedAuthenticateRequest.mockResolvedValue(platformUser as never);
+    mockedCheckPermission.mockReturnValue(true);
+
+    const res = await GET(makeRequest("https://app.local/api/usuarios/vinculos/search-v2?mode=leaders&q=inexistente"));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.people).toEqual([]);
+    expect(body.assignments).toEqual([]);
+    expect(mockPrisma().projectTeamAssignment.findMany).not.toHaveBeenCalled();
   });
 });

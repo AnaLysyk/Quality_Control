@@ -11,11 +11,17 @@ type Viewer = {
   is_global_admin?: boolean | null;
 } | null | undefined;
 
+function permissionForAction(action: AccessRequestsBrainActionType) {
+  if (action === "approve") return "approve";
+  if (action === "reject") return "reject";
+  return "comment";
+}
+
 export function canRunAccessRequestsBrainAction(viewer: Viewer, action: AccessRequestsBrainActionType) {
   if (action === "view") return true;
   if (action === "pdf") return hasAccessRequestPermission(viewer, "view");
   if (action === "approve" || action === "reject" || action === "request_adjustment") {
-    return hasAccessRequestPermission(viewer, action === "approve" ? "approve" : action === "reject" ? "reject" : "comment");
+    return hasAccessRequestPermission(viewer, permissionForAction(action));
   }
   if (action === "remove") return hasAccessRequestPermission(viewer, "delete");
   return false;
@@ -38,5 +44,3 @@ export function hasAccessRequestPermission(viewer: Viewer, permission: string) {
 export function accessRequestsPermissionDeniedReply() {
   return "Eu encontrei a solicitação, mas não vou executar essa ação porque seu perfil não tem permissão para isso nesta tela.";
 }
-
-

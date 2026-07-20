@@ -1,28 +1,33 @@
 ﻿import type { AccessRequestProfilePreview } from "../../_types/accessRequests.types";
 
-type StatusBubblesProps = {
+type StatusBubblesProps = Readonly<{
   profile: AccessRequestProfilePreview;
   missingRequiredFields: boolean;
   requiresCompany: boolean;
   changedCount: number;
   commentsLocked: boolean;
-};
+}>;
 
-function ValidationItem({
-  label,
-  value,
-  tone,
-}: {
+type ValidationItemProps = Readonly<{
   label: string;
   value: string;
   tone: "ok" | "warn" | "neutral";
-}) {
-  const dotClass =
-    tone === "ok"
-      ? "bg-emerald-500"
-      : tone === "warn"
-        ? "bg-amber-500"
-        : "bg-slate-400";
+}>;
+
+function toneDotClass(tone: ValidationItemProps["tone"]) {
+  if (tone === "ok") return "bg-emerald-500";
+  if (tone === "warn") return "bg-amber-500";
+  return "bg-slate-400";
+}
+
+function changesTone(commentsLocked: boolean, changedCount: number): ValidationItemProps["tone"] {
+  if (commentsLocked) return "neutral";
+  if (changedCount > 0) return "warn";
+  return "neutral";
+}
+
+function ValidationItem({ label, value, tone }: ValidationItemProps) {
+  const dotClass = toneDotClass(tone);
 
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -63,10 +68,9 @@ export function StatusBubbles({
         <ValidationItem
           label="Alterações"
           value={`${changedCount} campo(s)`}
-          tone={commentsLocked ? "neutral" : changedCount > 0 ? "warn" : "neutral"}
+          tone={changesTone(commentsLocked, changedCount)}
         />
       </div>
     </section>
   );
 }
-

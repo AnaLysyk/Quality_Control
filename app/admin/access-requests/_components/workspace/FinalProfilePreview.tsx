@@ -1,6 +1,10 @@
 ﻿import type { AccessRequestProfilePreview } from "../../_types/accessRequests.types";
 
-export function FinalProfilePreview({ profile }: { profile: AccessRequestProfilePreview }) {
+type FinalProfilePreviewProps = Readonly<{
+  profile: AccessRequestProfilePreview;
+}>;
+
+export function FinalProfilePreview({ profile }: FinalProfilePreviewProps) {
   const rows = [
     { label: "Nome completo", value: profile.fullName || profile.name || "Não informado" },
     { label: "Usuário", value: profile.username || "A definir" },
@@ -28,4 +32,3 @@ export function FinalProfilePreview({ profile }: { profile: AccessRequestProfile
     </section>
   );
 }
-

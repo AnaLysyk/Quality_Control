@@ -42,15 +42,13 @@
   return null;
 }
 
-export function OutcomeBanner({
-  status,
-  accepting,
-  requestingAdjustment,
-}: {
+type OutcomeBannerProps = Readonly<{
   status: string;
   accepting: boolean;
   requestingAdjustment: boolean;
-}) {
+}>;
+
+export function OutcomeBanner({ status, accepting, requestingAdjustment }: OutcomeBannerProps) {
   const copy = bannerCopy(status, accepting, requestingAdjustment);
   if (!copy) return null;
 
@@ -61,4 +59,3 @@ export function OutcomeBanner({
     </section>
   );
 }
-

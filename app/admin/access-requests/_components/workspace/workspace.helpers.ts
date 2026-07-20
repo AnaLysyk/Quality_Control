@@ -25,7 +25,7 @@ export function initials(value: string | null | undefined) {
   if (!cleaned) return "QC";
   const parts = cleaned.split(/\s+/).filter(Boolean);
   const first = parts[0]?.[0] ?? "";
-  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : parts[0]?.[1] ?? "";
+  const last = parts.length > 1 ? parts.at(-1)?.[0] ?? "" : parts[0]?.[1] ?? "";
   return `${first}${last}`.toUpperCase();
 }
 
@@ -59,4 +59,3 @@ export function buildPreviewProfile(
     passwordProvided: draft.passwordProvided ?? selected.passwordProvided,
   };
 }
-

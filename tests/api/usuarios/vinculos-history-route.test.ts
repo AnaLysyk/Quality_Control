@@ -66,10 +66,16 @@ const logAssignLeader = {
   created_at: new Date("2026-01-02T00:00:00.000Z"),
   actor_user_id: "actor-1",
   actor_email: "actor@x.com",
-  action: "assign_leader",
+  action: "transfer_leader",
   entity_id: "assignment-2",
   entity_label: "Ciclana",
-  metadata: { companyId: "company-1", projectId: "project-1", targetUserId: "target-2" },
+  metadata: {
+    companyId: "company-1",
+    projectId: "project-1",
+    targetUserId: "target-2",
+    previousLeaderId: "previous-1",
+    reason: "Troca de liderança",
+  },
 };
 
 const logDeactivateBusiness = {
@@ -80,8 +86,15 @@ const logDeactivateBusiness = {
   action: "deactivate_business_user",
   entity_id: "user-3",
   entity_label: "Empresarial",
-  metadata: { companyId: "company-2", userId: "target-3", reason: "Encerramento" },
+  metadata: { companyId: "company-2", userId: "target-3", reason: "Encerramento", projectIds: ["project-2"] },
 };
+
+const platformUser = baseUser({
+  role: "technical_support",
+  permissionRole: "technical_support",
+  companyRole: "technical_support",
+  companyId: null,
+});
 
 describe("app/api/usuarios/vinculos/history/route.ts", () => {
   beforeEach(() => {
@@ -90,6 +103,7 @@ describe("app/api/usuarios/vinculos/history/route.ts", () => {
     db.membership.findMany.mockResolvedValue([]);
     db.userCompanyLink.findMany.mockResolvedValue([]);
     db.projectTeamAssignment.findMany.mockResolvedValue([]);
+    db.auditLog.findMany.mockResolvedValue([]);
     db.company.findMany.mockResolvedValue([]);
     db.project.findMany.mockResolvedValue([]);
     db.user.findMany.mockResolvedValue([]);
@@ -97,58 +111,86 @@ describe("app/api/usuarios/vinculos/history/route.ts", () => {
 
   it("retorna 401 sem usuário autenticado", async () => {
     mockedAuthenticateRequest.mockResolvedValue(null);
-    const res = await GET(makeRequest());
-    expect(res.status).toBe(401);
+    expect((await GET(makeRequest())).status).toBe(401);
   });
 
   it("retorna 403 sem relationships:view", async () => {
     mockedAuthenticateRequest.mockResolvedValue(baseUser() as never);
     mockedCheckPermission.mockReturnValue(false);
-    const res = await GET(makeRequest());
-    expect(res.status).toBe(403);
+    expect((await GET(makeRequest())).status).toBe(403);
   });
 
-  it("retorna 403 ao pedir uma empresa fora do escopo do operador", async () => {
+  it("retorna 403 ao pedir uma empresa fora do escopo", async () => {
     mockedAuthenticateRequest.mockResolvedValue(baseUser() as never);
     mockedCheckPermission.mockReturnValue(true);
-    mockPrisma().auditLog.findMany.mockResolvedValue([]);
-
     const res = await GET(makeRequest("https://app.local/api/usuarios/vinculos/history?companyId=outra-empresa"));
     expect(res.status).toBe(403);
   });
 
-  it("operador com escopo de empresa só vê logs da própria empresa, mesmo sem filtrar por companyId", async () => {
+  it("combina empresa direta, membership, link e assignment no escopo", async () => {
+    mockedAuthenticateRequest.mockResolvedValue(baseUser() as never);
+    mockedCheckPermission.mockReturnValue(true);
+    const db = mockPrisma();
+    db.membership.findMany.mockResolvedValue([{ companyId: "company-2" }]);
+    db.userCompanyLink.findMany.mockResolvedValue([{ companyId: "company-3" }]);
+    db.projectTeamAssignment.findMany.mockResolvedValue([{ companyId: "company-4" }]);
+    db.auditLog.findMany.mockResolvedValue([
+      logCreate,
+      { ...logDeactivateBusiness, id: "log-4", metadata: { companyId: "company-4", userId: "target-4" } },
+    ]);
+
+    const body = await (await GET(makeRequest())).json();
+    expect(body.total).toBe(2);
+    expect(body.scopedCompanyIds).toEqual(expect.arrayContaining(["company-1", "company-2", "company-3", "company-4"]));
+  });
+
+  it("filtra explicitamente pela empresa solicitada", async () => {
+    mockedAuthenticateRequest.mockResolvedValue(platformUser as never);
+    mockedCheckPermission.mockReturnValue(true);
+    mockPrisma().auditLog.findMany.mockResolvedValue([logCreate, logDeactivateBusiness]);
+
+    const body = await (await GET(makeRequest("https://app.local/api/usuarios/vinculos/history?companyId=company-2"))).json();
+    expect(body.total).toBe(1);
+    expect(body.profiles.find((profile: { key: string }) => profile.key === "business_user").entries).toHaveLength(1);
+  });
+
+  it("operador com escopo só vê logs autorizados", async () => {
     mockedAuthenticateRequest.mockResolvedValue(baseUser() as never);
     mockedCheckPermission.mockReturnValue(true);
     mockPrisma().auditLog.findMany.mockResolvedValue([logCreate, logDeactivateBusiness]);
 
-    const res = await GET(makeRequest());
-    expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await (await GET(makeRequest())).json();
     expect(body.total).toBe(1);
     expect(body.globalVisibility).toBe(false);
-    expect(body.scopedCompanyIds).toEqual(["company-1"]);
   });
 
-  it("perfil com visão global (technical_support) vê logs de todas as empresas", async () => {
-    mockedAuthenticateRequest.mockResolvedValue(
-      baseUser({ role: "technical_support", permissionRole: "technical_support", companyRole: "technical_support" }) as never,
-    );
+  it("perfil global vê todas as empresas", async () => {
+    mockedAuthenticateRequest.mockResolvedValue(platformUser as never);
     mockedCheckPermission.mockReturnValue(true);
     mockPrisma().auditLog.findMany.mockResolvedValue([logCreate, logDeactivateBusiness]);
 
-    const res = await GET(makeRequest());
-    expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await (await GET(makeRequest())).json();
     expect(body.total).toBe(2);
     expect(body.globalVisibility).toBe(true);
     expect(body.scopedCompanyIds).toEqual([]);
   });
 
-  it("classifica cada log no perfil correto (leader_tc, qa_tc, business_user) e enriquece com dados relacionados", async () => {
-    mockedAuthenticateRequest.mockResolvedValue(
-      baseUser({ role: "technical_support", permissionRole: "technical_support", companyRole: "technical_support" }) as never,
-    );
+  it("ignora metadata nula, primitiva ou array sem quebrar", async () => {
+    mockedAuthenticateRequest.mockResolvedValue(platformUser as never);
+    mockedCheckPermission.mockReturnValue(true);
+    mockPrisma().auditLog.findMany.mockResolvedValue([
+      { ...logCreate, id: "null", metadata: null },
+      { ...logCreate, id: "string", metadata: "invalid" },
+      { ...logCreate, id: "array", metadata: [] },
+    ]);
+
+    const body = await (await GET(makeRequest())).json();
+    expect(body.total).toBe(3);
+    expect(body.profiles.find((profile: { key: string }) => profile.key === "qa_tc").entries).toHaveLength(3);
+  });
+
+  it("classifica e enriquece leader_tc, qa_tc e business_user", async () => {
+    mockedAuthenticateRequest.mockResolvedValue(platformUser as never);
     mockedCheckPermission.mockReturnValue(true);
     const db = mockPrisma();
     db.auditLog.findMany.mockResolvedValue([logCreate, logAssignLeader, logDeactivateBusiness]);
@@ -161,24 +203,17 @@ describe("app/api/usuarios/vinculos/history/route.ts", () => {
       { id: "target-1", name: "Alvo Um", full_name: null, email: "alvo1@x.com" },
       { id: "target-2", name: "Alvo Dois", full_name: null, email: "alvo2@x.com" },
       { id: "target-3", name: "Alvo Três", full_name: null, email: "alvo3@x.com" },
+      { id: "previous-1", name: "Líder anterior", full_name: null, email: "anterior@x.com" },
       { id: "actor-1", name: "Ator", full_name: null, email: "actor@x.com" },
     ]);
 
-    const res = await GET(makeRequest());
-    expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await (await GET(makeRequest())).json();
+    const qa = body.profiles.find((profile: { key: string }) => profile.key === "qa_tc");
+    const leader = body.profiles.find((profile: { key: string }) => profile.key === "leader_tc");
+    const business = body.profiles.find((profile: { key: string }) => profile.key === "business_user");
 
-    const qaProfile = body.profiles.find((p: { key: string }) => p.key === "qa_tc");
-    const leaderProfile = body.profiles.find((p: { key: string }) => p.key === "leader_tc");
-    const businessProfile = body.profiles.find((p: { key: string }) => p.key === "business_user");
-
-    expect(qaProfile.entries).toHaveLength(1);
-    expect(qaProfile.entries[0]).toMatchObject({ id: "log-1", action: "create", company: { id: "company-1" } });
-
-    expect(leaderProfile.entries).toHaveLength(1);
-    expect(leaderProfile.entries[0]).toMatchObject({ id: "log-2", action: "assign_leader" });
-
-    expect(businessProfile.entries).toHaveLength(1);
-    expect(businessProfile.entries[0]).toMatchObject({ id: "log-3", action: "deactivate_business_user", reason: "Encerramento" });
+    expect(qa.entries[0]).toMatchObject({ actionLabel: "Vínculo criado", company: { id: "company-1" } });
+    expect(leader.entries[0]).toMatchObject({ actionLabel: "Liderança transferida", previousLeader: { id: "previous-1" } });
+    expect(business.entries[0]).toMatchObject({ actionLabel: "Acesso empresarial removido", projectIds: ["project-2"] });
   });
 });

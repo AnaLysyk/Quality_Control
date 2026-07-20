@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { requireScreenAccess } from "@/backend/auth/pageAccessGuard";
 
-export default async function ChatLayout({ children }: { children: ReactNode }) {
+type ChatLayoutProps = Readonly<{ children: ReactNode }>;
+
+export default async function ChatLayout({ children }: ChatLayoutProps) {
   await requireScreenAccess("chat", "view", { loginNext: "/chat" });
   return <>{children}</>;
 }

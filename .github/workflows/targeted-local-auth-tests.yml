@@ -26,6 +26,14 @@ jobs:
       - name: Print result
         if: always()
         run: tail -220 /tmp/local-auth-tests.log
+      - name: Upload targeted test log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: targeted-local-auth-test-log
+          path: /tmp/local-auth-tests.log
+          if-no-files-found: error
+          retention-days: 1
       - name: Preserve failure
         if: steps.targeted.outcome == 'failure'
         run: exit 1

@@ -18,6 +18,11 @@ function formatCounter(counter: Record<string, number>) {
   return Object.entries(counter).map(([key, value]) => `${key}: ${value}`).join(", ");
 }
 
+function formatRowExample(row: AccessRequestsBrainVisibleRow) {
+  const email = row.email ? ` — ${row.email}` : "";
+  return `- ${row.name}${email}: ${row.status}, perfil ${row.profile}, empresa ${row.company}.`;
+}
+
 export function readAccessRequestsBrainRows(): AccessRequestsBrainVisibleRow[] {
   if (typeof document === "undefined") return [];
   const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-brain-row="access-request"]'))
@@ -91,7 +96,7 @@ export function buildAccessRequestsBrainSummary(actionText: string, user: unknow
   const profileCounter = countBy(rows.map((row) => row.profile));
   const withoutCompany = rows.filter((row) => /não informada|nao informada|não informado|nao informado/i.test(row.company)).length;
   const withChanges = rows.filter((row) => row.changes > 0).length;
-  const examples = rows.slice(0, 5).map((row) => `- ${row.name}${row.email ? ` — ${row.email}` : ""}: ${row.status}, perfil ${row.profile}, empresa ${row.company}.`);
+  const examples = rows.slice(0, 5).map(formatRowExample);
   const attention = [
     withoutCompany > 0 ? `${withoutCompany} solicitação(ões) sem empresa informada.` : "",
     withChanges > 0 ? `${withChanges} solicitação(ões) com alteração marcada.` : "",
@@ -118,5 +123,3 @@ export function buildAccessRequestsBrainSummary(actionText: string, user: unknow
     "Próximo passo: abra uma solicitação visível para conferir dados, histórico, ajustes e PDF.",
   ].join("\n");
 }
-
-

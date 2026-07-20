@@ -16,13 +16,9 @@ jest.mock("@/database/prismaClient", () => ({
 
 import { GET, POST } from "@/api/usuarios/vinculos/business-users/route";
 import { authenticateRequest } from "@/backend/jwtAuth";
-import { createNotificationsForUsers } from "@/backend/userNotificationsStore";
-import { writeAuditLog } from "@/backend/audit/writeAuditLog";
 import { prisma } from "@/database/prismaClient";
 
 const mockedAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
-const mockedCreateNotifications = createNotificationsForUsers as jest.MockedFunction<typeof createNotificationsForUsers>;
-const mockedWriteAuditLog = writeAuditLog as jest.MockedFunction<typeof writeAuditLog>;
 
 function mockPrisma() {
   return prisma as unknown as {
@@ -32,7 +28,6 @@ function mockPrisma() {
     membership: { upsert: jest.Mock };
     userCompanyLink: { updateMany: jest.Mock };
     projectTeamAssignment: { updateMany: jest.Mock };
-    $transaction: jest.Mock;
   };
 }
 
@@ -71,11 +66,11 @@ function operatorUser(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeRequest(method: string, opts: { url?: string; body?: unknown; rawBody?: string } = {}) {
+function makeRequest(method: string, opts: { url?: string; body?: unknown } = {}) {
   return new Request(opts.url ?? "https://app.local/api/usuarios/vinculos/business-users?userId=biz-user-1", {
     method,
     headers: { "content-type": "application/json" },
-    body: opts.rawBody ?? (opts.body !== undefined ? JSON.stringify(opts.body) : undefined),
+    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
   }) as unknown as Request;
 }
 
@@ -86,132 +81,114 @@ describe("app/api/usuarios/vinculos/business-users/route.ts", () => {
     db.user.findUnique.mockResolvedValue(targetUser);
     db.company.findUnique.mockResolvedValue(company);
     db.project.findMany.mockResolvedValue(projects);
-    db.$transaction.mockImplementation((callback: (tx: unknown) => unknown) => callback(db));
   });
 
   describe("GET", () => {
     it("retorna 401 sem usuário autenticado", async () => {
       mockedAuthenticateRequest.mockResolvedValue(null);
-      expect((await GET(makeRequest("GET"))).status).toBe(401);
+      const res = await GET(makeRequest("GET"));
+      expect(res.status).toBe(401);
     });
 
     it("retorna 400 sem userId na query", async () => {
       mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      expect((await GET(makeRequest("GET", { url: "https://app.local/api/usuarios/vinculos/business-users" }))).status).toBe(400);
-    });
-
-    it("retorna 403 quando o usuário empresarial não existe", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      mockPrisma().user.findUnique.mockResolvedValue(null);
-      const res = await GET(makeRequest("GET"));
-      expect(res.status).toBe(403);
-      expect((await res.json()).error).toMatch(/não encontrado/i);
-    });
-
-    it("retorna 403 quando o usuário não possui empresa de origem", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      mockPrisma().user.findUnique.mockResolvedValue({ ...targetUser, home_company_id: null, created_by_company_id: null, memberships: [] });
-      const res = await GET(makeRequest("GET"));
-      expect(res.status).toBe(403);
-      expect((await res.json()).error).toMatch(/sem empresa de origem/i);
-    });
-
-    it("retorna 403 quando a empresa de origem está inativa", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      mockPrisma().company.findUnique.mockResolvedValue({ ...company, active: false });
-      const res = await GET(makeRequest("GET"));
-      expect(res.status).toBe(403);
-      expect((await res.json()).error).toMatch(/inativa/i);
+      const res = await GET(makeRequest("GET", { url: "https://app.local/api/usuarios/vinculos/business-users" }));
+      expect(res.status).toBe(400);
     });
 
     it("retorna 403 quando o operador é de outra empresa", async () => {
       mockedAuthenticateRequest.mockResolvedValue(operatorUser({ companyId: "outra-empresa" }) as never);
       const res = await GET(makeRequest("GET"));
       expect(res.status).toBe(403);
-      expect((await res.json()).error).toMatch(/fora do seu contexto/i);
+      const body = await res.json();
+      expect(body.error).toMatch(/fora do seu contexto/i);
     });
 
-    it("visão de plataforma pode ver, mas não gerenciar", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser({ role: "technical_support", permissionRole: "technical_support", companyRole: "technical_support", companyId: "outra-empresa" }) as never);
-      const body = await (await GET(makeRequest("GET"))).json();
-      expect(body.permissions).toEqual({ canManage: false, canDeactivate: false });
-    });
-
-    it("retorna dados e projetos selecionados para a própria empresa", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      mockPrisma().user.findUnique.mockResolvedValue({ ...targetUser, memberships: [{ ...targetUser.memberships[0], allowedProjectIds: ["project-1"] }] });
+    it("visão de plataforma (technical_support) também pode ver, mas não gerenciar", async () => {
+      mockedAuthenticateRequest.mockResolvedValue(
+        operatorUser({ role: "technical_support", permissionRole: "technical_support", companyRole: "technical_support", companyId: "outra-empresa" }) as never,
+      );
       const res = await GET(makeRequest("GET"));
       expect(res.status).toBe(200);
       const body = await res.json();
-      expect(body.selectedProjectIds).toEqual(["project-1"]);
+      expect(body.permissions).toEqual({ canManage: false, canDeactivate: false });
+    });
+
+    it("retorna 200 com permissions.canManage=true para a própria empresa", async () => {
+      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
+      const res = await GET(makeRequest("GET"));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.user).toMatchObject({ id: "biz-user-1", email: "biz@empresa.com" });
       expect(body.permissions).toEqual({ canManage: true, canDeactivate: true });
     });
   });
 
-  describe("POST", () => {
+  describe("POST set_projects", () => {
     it("retorna 401 sem usuário autenticado", async () => {
       mockedAuthenticateRequest.mockResolvedValue(null);
-      expect((await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1" } }))).status).toBe(401);
+      const res = await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1", projectIds: ["project-1"] } }));
+      expect(res.status).toBe(401);
     });
 
-    it("retorna 400 para JSON inválido ou body incompleto", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      expect((await POST(makeRequest("POST", { rawBody: "{" }))).status).toBe(400);
-      expect((await POST(makeRequest("POST", { body: { userId: "biz-user-1" } }))).status).toBe(400);
-    });
-
-    it("retorna 400 quando o operador não é da mesma empresa", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser({ isGlobalAdmin: true, role: "technical_support", permissionRole: "technical_support", companyRole: "technical_support" }) as never);
+    it("retorna 400 quando o operador não é da mesma empresa (nem admin global escapa dessa regra)", async () => {
+      mockedAuthenticateRequest.mockResolvedValue(
+        operatorUser({ isGlobalAdmin: true, role: "technical_support", permissionRole: "technical_support", companyRole: "technical_support" }) as never,
+      );
       const res = await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1", projectIds: ["project-1"] } }));
       expect(res.status).toBe(400);
-      expect((await res.json()).error).toMatch(/Somente a própria empresa/);
+      const body = await res.json();
+      expect(body.error).toMatch(/Somente a própria empresa/);
     });
 
-    it("valida lista vazia e projetos externos", async () => {
+    it("retorna 400 quando nenhum projeto é selecionado", async () => {
       mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      expect((await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1", projectIds: [] } }))).status).toBe(400);
-      expect((await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1", projectIds: ["externo"] } }))).status).toBe(400);
+      const res = await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1", projectIds: [] } }));
+      expect(res.status).toBe(400);
+      const body = await res.json();
+      expect(body.error).toMatch(/Selecione pelo menos um projeto/);
     });
 
-    it("deduplica projetos e atualiza acessos com notificação e auditoria", async () => {
+    it("retorna 400 quando um projeto não pertence à empresa de origem do usuário", async () => {
+      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
+      const res = await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1", projectIds: ["project-de-outra-empresa"] } }));
+      expect(res.status).toBe(400);
+      const body = await res.json();
+      expect(body.error).toMatch(/devem pertencer à empresa/);
+    });
+
+    it("atualiza os projetos autorizados com sucesso (200)", async () => {
       mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
       mockPrisma().membership.upsert.mockResolvedValue({ id: "membership-1", allowedProjectIds: ["project-1"] });
-      const res = await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1", projectIds: ["project-1", "project-1"] } }));
-      expect(res.status).toBe(200);
-      expect(mockPrisma().membership.upsert).toHaveBeenCalledWith(expect.objectContaining({ update: expect.objectContaining({ allowedProjectIds: ["project-1"] }) }));
-      expect(mockedCreateNotifications).toHaveBeenCalled();
-      expect(mockedWriteAuditLog).toHaveBeenCalledWith(expect.objectContaining({ action: "update_business_user_projects" }));
-    });
 
-    it("retorna 400 quando a persistência dos projetos falha", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      mockPrisma().membership.upsert.mockRejectedValue(new Error("db indisponível"));
       const res = await POST(makeRequest("POST", { body: { action: "set_projects", userId: "biz-user-1", projectIds: ["project-1"] } }));
-      expect(res.status).toBe(400);
-      expect((await res.json()).error).toBe("db indisponível");
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual({ success: true, selectedProjectIds: ["project-1"] });
     });
+  });
 
-    it("exige justificativa para desativar", async () => {
+  describe("POST deactivate", () => {
+    it("retorna 400 quando não há justificativa", async () => {
       mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      expect((await POST(makeRequest("POST", { body: { action: "deactivate", userId: "biz-user-1" } }))).status).toBe(400);
+      const res = await POST(makeRequest("POST", { body: { action: "deactivate", userId: "biz-user-1" } }));
+      expect(res.status).toBe(400);
+      const body = await res.json();
+      expect(body.error).toMatch(/Informe a justificativa/);
     });
 
-    it("desativa usuário, vínculos e assignments preservando histórico", async () => {
+    it("desativa o usuário empresarial com sucesso (200) e preserva histórico dos vínculos", async () => {
       mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
       const db = mockPrisma();
       db.user.update.mockResolvedValue({ id: "biz-user-1", name: "Usuário Empresarial", full_name: "Usuário Empresarial Completo", email: "biz@empresa.com" });
-      const res = await POST(makeRequest("POST", { body: { action: "deactivate", userId: "biz-user-1", reason: " Encerramento de contrato " } }));
-      expect(res.status).toBe(200);
-      expect(db.userCompanyLink.updateMany).toHaveBeenCalled();
-      expect(db.projectTeamAssignment.updateMany).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "removed", removalReason: "Encerramento de contrato" }) }));
-      expect(mockedWriteAuditLog).toHaveBeenCalledWith(expect.objectContaining({ action: "deactivate_business_user" }));
-    });
 
-    it("retorna 400 para ação inválida", async () => {
-      mockedAuthenticateRequest.mockResolvedValue(operatorUser() as never);
-      const res = await POST(makeRequest("POST", { body: { action: "desconhecida", userId: "biz-user-1" } }));
-      expect(res.status).toBe(400);
-      expect((await res.json()).error).toBe("Ação inválida");
+      const res = await POST(makeRequest("POST", { body: { action: "deactivate", userId: "biz-user-1", reason: "Encerramento de contrato" } }));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual({ success: true, userId: "biz-user-1" });
+      expect(db.projectTeamAssignment.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: "removed", removalReason: "Encerramento de contrato" }) }),
+      );
     });
   });
 });

@@ -94,7 +94,7 @@ describe("local auth store disk mode", () => {
     expect(result.memberships).toHaveLength(1);
     expect(result.memberships?.[0]).toEqual(expect.objectContaining({
       id: "m1",
-      role: "suporte_tecnico",
+      role: "technical_support",
     }));
   });
 

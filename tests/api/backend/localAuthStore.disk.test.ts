@@ -1,3 +1,5 @@
+import { join } from "node:path";
+
 describe("local auth store disk mode", () => {
   const ORIGINAL_ENV = process.env;
 
@@ -115,7 +117,7 @@ describe("local auth store disk mode", () => {
 
     expect(mkdir).toHaveBeenCalledWith("/tmp/qc-auth-tests", { recursive: true });
     expect(writeFile).toHaveBeenCalledWith(
-      "/tmp/qc-auth-tests/local-auth-store.json",
+      join("/tmp/qc-auth-tests", "local-auth-store.json"),
       expect.stringContaining('"memberships": []'),
       "utf8",
     );

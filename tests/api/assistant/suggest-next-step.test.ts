@@ -102,4 +102,53 @@ describe("toolSuggestNextStep", () => {
     expect(result.success).toBe(true);
     expect(result.actions[0]?.label).toBe("Explicar por que um perfil não vê um módulo");
   });
+
+  it.each([
+    ["brain", "/brain", "Resumir o Brain e o que ele já sabe"],
+    ["test_plans", "/test_plans", "Gerar caso de teste a partir do bug atual"],
+    ["dashboard", "/dashboard", "Analisar métricas de qualidade do período"],
+    ["releases", "/releases", "Verificar status do último deploy"],
+  ])(
+    "cobre os contextos ainda não exercitados: %s",
+    async (module, route, expectedLabel) => {
+      const result = await toolSuggestNextStep(
+        user,
+        context(module, route),
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.actions[0]?.label).toBe(expectedLabel);
+    },
+  );
+
+  it("usa sugestões administrativas quando company não é usuário de empresa", async () => {
+    empresaUser.mockReturnValue(false);
+
+    const result = await toolSuggestNextStep(
+      user,
+      context("company", "/company"),
+    );
+
+    expect(result.actions.map((action) => action.label)).toEqual([
+      "Resumir perfil da empresa",
+      "Analisar métricas de atendimento do cliente",
+      "Listar integrações ativas",
+      "Ver usuários vinculados à empresa",
+    ]);
+  });
+
+  it("aceita criação pelo módulo support quando tickets não permite", async () => {
+    permission.mockImplementation(
+      (_permissions, module) => module === "support",
+    );
+
+    const result = await toolSuggestNextStep(
+      user,
+      context("support", "/support"),
+    );
+
+    expect(result.actions.map((action) => action.label)).toContain(
+      "Criar novo ticket a partir de descrição",
+    );
+  });
 });

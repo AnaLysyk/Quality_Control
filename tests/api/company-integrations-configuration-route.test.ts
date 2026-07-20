@@ -35,6 +35,14 @@ function request(body: unknown) {
   });
 }
 
+function invalidJsonRequest() {
+  return new Request("https://app.local/api/company-integrations/empresa/configuration", {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: "{",
+  });
+}
+
 const context = { params: Promise.resolve({ slug: "empresa" }) };
 
 describe("company integrations configuration route", () => {
@@ -45,8 +53,9 @@ describe("company integrations configuration route", () => {
     mockedCompany.update.mockResolvedValue({ id: "company-1" });
   });
 
-  it("retorna 400 para payload inválido, URL inválida e e-mail inválido", async () => {
+  it("retorna 400 para payload e JSON inválidos", async () => {
     expect((await PATCH(request({}), context)).status).toBe(400);
+    expect((await PATCH(invalidJsonRequest(), context)).status).toBe(400);
     expect((await PATCH(request({ provider: "jira", baseUrl: "x", email: "invalido", token: "t" }), context)).status).toBe(400);
   });
 
@@ -72,22 +81,34 @@ describe("company integrations configuration route", () => {
     }));
   });
 
-  it("mapeia erro de autenticação do Qase", async () => {
+  it("mapeia erro autenticado e erro genérico do Qase", async () => {
     mockedCreateQaseClient.mockReturnValue({
       listProjects: jest.fn().mockRejectedValue(new QaseError("inválido", 401)),
     } as never);
     expect((await PATCH(request({ provider: "qase", token: "token" }), context)).status).toBe(401);
+
+    mockedCreateQaseClient.mockReturnValue({
+      listProjects: jest.fn().mockRejectedValue(new Error("timeout")),
+    } as never);
+    expect((await PATCH(request({ provider: "qase", token: "token" }), context)).status).toBe(400);
   });
 
-  it("retorna erro de validação do Jira", async () => {
+  it("retorna erro de validação do Jira com status explícito ou fallback 400", async () => {
     mockedValidateJira.mockResolvedValue({ valid: false, errorMessage: "Credenciais inválidas", status: 401 } as never);
-    const response = await PATCH(request({
+    expect((await PATCH(request({
       provider: "jira",
       baseUrl: "https://empresa.atlassian.net",
       email: "qa@empresa.com",
       token: "token",
-    }), context);
-    expect(response.status).toBe(401);
+    }), context)).status).toBe(401);
+
+    mockedValidateJira.mockResolvedValue({ valid: false, errorMessage: "Falha", status: null } as never);
+    expect((await PATCH(request({
+      provider: "jira",
+      baseUrl: "https://empresa.atlassian.net",
+      email: "qa@empresa.com",
+      token: "token",
+    }), context)).status).toBe(400);
   });
 
   it("normaliza, valida e salva configuração do Jira", async () => {
@@ -105,6 +126,7 @@ describe("company integrations configuration route", () => {
     }), context);
 
     expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, provider: "jira", accountName: "Ana" });
     expect(mockedCompany.update).toHaveBeenCalledWith(expect.objectContaining({
       data: {
         jira_base_url: "https://empresa.atlassian.net",

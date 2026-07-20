@@ -1,4 +1,4 @@
-import { buildAccessRequestsBrainGraph } from "@/app/brain/_utils/brainGraphBuilder";
+import { buildAccessRequestsBrainGraph } from "@/brain/_utils/brainGraphBuilder";
 
 describe("brain graph removal history", () => {
   it("adiciona solicitacao removida e decisao de remocao", () => {

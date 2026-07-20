@@ -1,18 +1,20 @@
 const INTERNAL_NOTES_LIMIT = 1200;
 
+type NotesPanelProps = Readonly<{
+  value: string;
+  locked: boolean;
+  saving?: boolean;
+  onChange: (value: string) => void;
+  onSave: (value: string) => void;
+}>;
+
 export function NotesPanel({
   value,
   locked,
   saving,
   onChange,
   onSave,
-}: {
-  value: string;
-  locked: boolean;
-  saving?: boolean;
-  onChange: (value: string) => void;
-  onSave: (value: string) => void;
-}) {
+}: NotesPanelProps) {
   const limitedValue = value.slice(0, INTERNAL_NOTES_LIMIT);
   const remaining = INTERNAL_NOTES_LIMIT - limitedValue.length;
 

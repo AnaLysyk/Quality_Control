@@ -4,7 +4,9 @@ import { BrainAccessRequestFlowPanel } from "./_components/BrainAccessRequestFlo
 import "./brain-universe-dark.css";
 import styles from "./brain-theme.module.css";
 
-export default async function BrainLayout({ children }: { children: ReactNode }) {
+type BrainLayoutProps = Readonly<{ children: ReactNode }>;
+
+export default async function BrainLayout({ children }: BrainLayoutProps) {
   await requireScreenAccess("brain", "view", { loginNext: "/brain" });
 
   return (

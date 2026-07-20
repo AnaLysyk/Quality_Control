@@ -1,0 +1,48 @@
+name: Sonar test diagnostics
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      NEXT_DISABLE_FONT_DOWNLOAD: "1"
+      SKIP_PRISMA_MIGRATE: "true"
+      E2E_USE_JSON: "1"
+      AUTH_STORE: "json"
+      USE_JSON_STORE: "true"
+      DATABASE_URL: "postgresql://user:password@localhost:5432/quality_control_ci"
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --silent
+      - run: npx prisma generate
+      - name: Capture coverage failure
+        shell: bash
+        run: |
+          set +e
+          npm run test:coverage > test-output.txt 2>&1
+          test_exit=$?
+          printf '%s\n' "$test_exit" > test-exit-code.txt
+          tail -n 500 test-output.txt
+          exit 0
+      - name: Upload diagnostic output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sonar-test-diagnostics
+          path: |
+            test-output.txt
+            test-exit-code.txt
+          if-no-files-found: error

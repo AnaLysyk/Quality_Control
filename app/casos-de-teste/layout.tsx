@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { requireScreenAccess } from "@/backend/auth/pageAccessGuard";
 
-export default async function CasosDeTesteLayout({ children }: { children: ReactNode }) {
+type CasosDeTesteLayoutProps = Readonly<{ children: ReactNode }>;
+
+export default async function CasosDeTesteLayout({ children }: CasosDeTesteLayoutProps) {
   await requireScreenAccess("test_repository", "read", { loginNext: "/casos-de-teste" });
   return <>{children}</>;
 }

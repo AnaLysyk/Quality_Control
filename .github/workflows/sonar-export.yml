@@ -11,35 +11,56 @@ permissions:
 jobs:
   export:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Export SonarQube Cloud measures and issues
+
+      - name: Export SonarQube Cloud measures, history and all issues
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_PROJECT_KEY: AnaLysyk_Quality_Control
         shell: bash
         run: |
           set -euo pipefail
-          auth=()
-          if [ -n "${SONAR_TOKEN:-}" ]; then
-            auth=(-u "${SONAR_TOKEN}:")
+          if [ -z "${SONAR_TOKEN:-}" ]; then
+            echo "SONAR_TOKEN não configurado" >&2
+            exit 1
           fi
-          curl --fail --silent --show-error "${auth[@]}" \
+
+          curl --fail --silent --show-error -u "${SONAR_TOKEN}:" \
             --get 'https://sonarcloud.io/api/measures/component' \
             --data-urlencode "component=${SONAR_PROJECT_KEY}" \
             --data-urlencode 'metricKeys=alert_status,bugs,vulnerabilities,code_smells,coverage,new_coverage,duplicated_lines_density,new_duplicated_lines_density,reliability_rating,security_rating,sqale_rating,security_hotspots,ncloc' \
             -o sonar-measures.json
-          curl --fail --silent --show-error "${auth[@]}" \
-            --get 'https://sonarcloud.io/api/issues/search' \
-            --data-urlencode "componentKeys=${SONAR_PROJECT_KEY}" \
-            --data-urlencode 'issueStatuses=OPEN,CONFIRMED' \
-            --data-urlencode 'ps=500' \
-            --data-urlencode 'additionalFields=_all' \
-            -o sonar-issues.json
+
+          curl --fail --silent --show-error -u "${SONAR_TOKEN}:" \
+            --get 'https://sonarcloud.io/api/measures/search_history' \
+            --data-urlencode "component=${SONAR_PROJECT_KEY}" \
+            --data-urlencode 'metrics=coverage,new_coverage,code_smells,duplicated_lines_density' \
+            --data-urlencode 'ps=1000' \
+            -o sonar-history.json
+
+          page=1
+          total=1
+          printf '{"issues":[]}' > sonar-issues-all.json
+          while [ $(((page - 1) * 500)) -lt "$total" ]; do
+            curl --fail --silent --show-error -u "${SONAR_TOKEN}:" \
+              --get 'https://sonarcloud.io/api/issues/search' \
+              --data-urlencode "componentKeys=${SONAR_PROJECT_KEY}" \
+              --data-urlencode 'issueStatuses=OPEN,CONFIRMED' \
+              --data-urlencode 'ps=500' \
+              --data-urlencode "p=${page}" \
+              --data-urlencode 'additionalFields=_all' \
+              -o "sonar-issues-page-${page}.json"
+
+            total=$(node -e "const d=require('./sonar-issues-page-${page}.json'); console.log(d.total || 0)")
+            node -e "const fs=require('fs'); const all=require('./sonar-issues-all.json'); const page=require('./sonar-issues-page-${page}.json'); all.issues.push(...(page.issues||[])); fs.writeFileSync('sonar-issues-all.json', JSON.stringify(all));"
+            page=$((page + 1))
+          done
+
           node - <<'NODE'
           const fs = require('fs');
-          const data = JSON.parse(fs.readFileSync('sonar-issues.json', 'utf8'));
+          const data = JSON.parse(fs.readFileSync('sonar-issues-all.json', 'utf8'));
           const rows = (data.issues || []).map(issue => ({
             key: issue.key,
             severity: issue.severity,
@@ -51,17 +72,30 @@ jobs:
             effort: issue.effort || null,
             creationDate: issue.creationDate,
           }));
-          fs.writeFileSync('sonar-issues-summary.json', JSON.stringify({ total: data.total, issues: rows }, null, 2));
-          console.log(`Sonar issues exportados: ${data.total}`);
-          console.log(rows.slice(0, 50));
+          const byRule = Object.entries(rows.reduce((acc, issue) => {
+            const key = `${issue.severity}|${issue.rule}`;
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+          }, {})).sort((a, b) => b[1] - a[1]);
+          const byFile = Object.entries(rows.reduce((acc, issue) => {
+            const key = issue.component.replace(/^.*?:/, '');
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+          }, {})).sort((a, b) => b[1] - a[1]);
+          fs.writeFileSync('sonar-issues-summary.json', JSON.stringify({ total: rows.length, byRule, byFile, issues: rows }, null, 2));
+          console.log(`Sonar issues exportados: ${rows.length}`);
+          console.log('Top regras:', byRule.slice(0, 20));
+          console.log('Top arquivos:', byFile.slice(0, 20));
           NODE
+
       - name: Upload SonarQube export
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: sonar-project-export
+          name: sonar-project-export-full
           path: |
             sonar-measures.json
-            sonar-issues.json
+            sonar-history.json
+            sonar-issues-all.json
             sonar-issues-summary.json
           if-no-files-found: error

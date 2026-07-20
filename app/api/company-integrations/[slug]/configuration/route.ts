@@ -8,17 +8,22 @@ import { validateJiraCloudCredentials } from "@/backend/jiraCloud";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const trimmedUrl = z.string().trim().pipe(z.url());
+const trimmedEmail = z.string().trim().pipe(z.email());
+
 const Schema = z.discriminatedUnion("provider", [
   z.object({ provider: z.literal("qase"), token: z.string().trim().min(1) }),
   z.object({
     provider: z.literal("jira"),
-    baseUrl: z.string().trim().url(),
-    email: z.string().trim().email(),
+    baseUrl: trimmedUrl,
+    email: trimmedEmail,
     token: z.string().trim().min(1),
   }),
 ]);
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+type RouteContext = Readonly<{ params: Promise<{ slug: string }> }>;
+
+export async function PATCH(request: Request, { params }: RouteContext) {
   const { slug } = await params;
   const parsed = Schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });

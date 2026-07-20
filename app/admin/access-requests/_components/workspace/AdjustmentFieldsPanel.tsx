@@ -1,18 +1,20 @@
 ﻿import type { AdjustmentFieldOptionView } from "../../_types/accessRequests.types";
 
+type AdjustmentFieldsPanelProps = Readonly<{
+  options: AdjustmentFieldOptionView[];
+  selectedFields: string[];
+  comments: Record<string, string>;
+  onToggle: (field: string) => void;
+  onCommentChange: (field: string, value: string) => void;
+}>;
+
 export function AdjustmentFieldsPanel({
   options,
   selectedFields,
   comments,
   onToggle,
   onCommentChange,
-}: {
-  options: AdjustmentFieldOptionView[];
-  selectedFields: string[];
-  comments: Record<string, string>;
-  onToggle: (field: string) => void;
-  onCommentChange: (field: string, value: string) => void;
-}) {
+}: AdjustmentFieldsPanelProps) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
@@ -78,4 +80,3 @@ export function AdjustmentFieldsPanel({
     </section>
   );
 }
-

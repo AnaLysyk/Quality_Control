@@ -21,7 +21,13 @@ describe("local auth store CRUD", () => {
       mkdir: jest.fn(),
       access: jest.fn().mockRejectedValue(new Error("missing")),
     }));
-    jest.doMock("crypto", () => ({ randomUUID: jest.fn(() => "12345678-abcd-efgh-ijkl-123456789012") }));
+    jest.doMock("crypto", () => {
+      const actual = jest.requireActual<typeof import("crypto")>("crypto");
+      return {
+        ...actual,
+        randomUUID: jest.fn(() => "12345678-abcd-efgh-ijkl-123456789012"),
+      };
+    });
 
     const globalStore = globalThis as typeof globalThis & {
       __qcLocalAuthStore?: unknown;
